@@ -19,6 +19,7 @@ Write comprehensive static web based user documentation on `Pokemon Emerald Rogu
   - How the different routes work (e.g. what the naming of the routes mean, what different route types are available, etc).
   - Any other mechanics which you find based on the source code.
 - UX must be modern and easy to use, with a pleasing aesthetic that would appeal to gamers.
+- The game has a `Vanilla` and an `EX` version - these are represented by different git branches. You should focus on the `EX` version of the game, and the UI should be separated accordingly when documentating the two versions.
 
 ## References
 
