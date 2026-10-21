@@ -1,0 +1,99 @@
+/* ==========================================================================
+   tokens.css — Emerald Rogue Docs · design tokens
+
+   The design contract lives in site/css/DESIGN.md — read it before adding
+   markup or CSS. Rules in one line: no colors outside this file's tokens,
+   no font families beyond the two below, contract classes only.
+
+   Sheet order (fixed): tokens.css → base.css → components.css → pages.css
+   ========================================================================== */
+
+:root {
+  /* ---------------------------------------------------------------------
+     Palette — 6 named hex (the whole identity).
+     Grounding: the palette is a night Hoenn forest — deep green-tinted
+     darks (NOT neutral black), two load-bearing accents: Emerald for the
+     Vanilla edition and Amber Gold for EX (after the gold "EX" card
+     symbol from the Pokémon TCG).
+     --------------------------------------------------------------------- */
+  --color-bg:      #10241b; /* Deep Pine   — page background */
+  --color-surface: #152a20; /* Canopy      — header, cards, tables, panels */
+  --color-raised:  #1b3529; /* Moss        — hover states, table headers, chips */
+  --color-ink:     #eaf5ee; /* Moonlight   — primary text */
+  --color-muted:   #96b5a4; /* Fern        — secondary text, meta, labels */
+  --color-emerald: #2ec27e; /* Emerald     — Vanilla accent + primary interactive */
+  --color-gold:    #f2b63c; /* Amber       — EX accent */
+
+  /* Derived — pre-computed shades/mixes of the six above. Do not add new
+     hues here; new hues require a named core token + a DESIGN.md entry. */
+  --color-both:    #90bc5d; /* 50/50 emerald + amber — the "Both" badge */
+  --color-line:    #2f4a3d; /* 2px borders, rules */
+  --color-grid:    #173127; /* faint pixel-grid page texture */
+
+  /* ---------------------------------------------------------------------
+     Typography — exactly two web font families (CDN <link> in each shell's
+     <head>), each with full system fallbacks so the site works offline.
+     Display: pixel face (GBA vocabulary) used with restraint — brand,
+     h1/h2/h3, eyebrows, stat values, never below 14px.
+     Body: humanist sans. Mono: system stack for data, paths, citations.
+     --------------------------------------------------------------------- */
+  --font-display: "Pixelify Sans", "Trebuchet MS", Verdana, sans-serif;
+  --font-body:    "IBM Plex Sans", "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono:    ui-monospace, "SF Mono", "Cascadia Code", Consolas, Menlo, monospace;
+
+  --text-xs:   0.75rem;   /* 12  badges, mono meta, footer source line */
+  --text-sm:   0.875rem;  /* 14  nav links, eyebrows, card descriptions */
+  --text-base: 1rem;      /* 16  body text */
+  --text-md:   1.125rem;  /* 18  brand, card titles, hero subtitle */
+  --text-lg:   1.375rem;  /* 22  h3 */
+  --text-xl:   1.75rem;   /* 28  h2 */
+  --text-2xl:  2.375rem;  /* 38  h1 (inner pages) */
+  --text-3xl:  3.25rem;   /* 52  hero / 404 display */
+
+  /* ---------------------------------------------------------------------
+     Space — 4px base scale; --space-6/7/8 are the section rhythm.
+     --------------------------------------------------------------------- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+
+  --container: 1120px; /* max content width */
+  --gutter: 24px;      /* page side padding (16px below 560px) */
+
+  /* ---------------------------------------------------------------------
+     Radius — small and deliberate (GBA menu panels), never pill-shaped.
+     --------------------------------------------------------------------- */
+  --radius-sm: 4px; /* badges, chips */
+  --radius-md: 8px; /* cards, toggle, tables, inputs */
+  --radius-lg: 12px; /* reserved for future large panels */
+
+  /* ---------------------------------------------------------------------
+     Motion — fast micro-interactions, one slow page entrance.
+     Every animation/transform in the site is gated behind
+     `prefers-reduced-motion: no-preference` (see base.css).
+     --------------------------------------------------------------------- */
+  --motion-fast: 120ms; /* hover colors, borders */
+  --motion-med:  220ms; /* toggle, card lift */
+  --motion-slow: 480ms; /* page entrance, run-path pulse cycle */
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+
+  /* ---------------------------------------------------------------------
+     Elevation
+     --------------------------------------------------------------------- */
+  --z-header: 20;
+}
+
+/* --------------------------------------------------------------------------
+   Breakpoints — media queries cannot read custom properties, so these are
+   documented here and in DESIGN.md §9 and kept in sync with base.css /
+   components.css / pages.css:
+     1024px (lg) — wide grid columns
+     820px  (md) — header wraps: brand + toggle on row 1, nav scrolls on row 2
+     560px  (sm) — gutter 16px, brand/toggle compact, hero stats 2×2
+   -------------------------------------------------------------------------- */

@@ -1,0 +1,156 @@
+{
+  "meta": {
+    "id": "game-modes",
+    "title": "Game Modes",
+    "description": "The three selectable rule sets — Classic, Gauntlet and Fast Path — with their full rule tables, the dedicated adventure generators, and the cross-cutting interactions applied when a run's rules are generated. Identical between the Vanilla and EX versions."
+  },
+  "prose": [
+    {
+      "id": "overview",
+      "heading": "Choosing a rule set",
+      "text": "The Game Modes menu (in the settings screen, opened from the hub's Config Room) offers three rule sets for your runs: Classic, the standard adventure; Gauntlet, a pre-built team versus back-to-back endgame trainers; and Fast Path, a speed-focused variant with richer rewards. A run's rules are generated from the selected mode when the run begins, and changing the mode in the settings screen updates the stored rules immediately. The settings screen can only be edited while no run is active, so the mode is locked for the duration of a run. All three modes exist identically in the Vanilla and EX versions."
+    },
+    {
+      "id": "rule-application",
+      "heading": "How a run's rules are assembled",
+      "text": "When a run's rules are generated, the game copies the selected mode's rule table, then layers two cross-cutting rules on top of it. First, if the Trainer Order setting is Official, challenge quests are disabled for the whole run regardless of mode. Second, if any charm is active when the rules are generated, both main quests and challenge quests are disabled. Gauntlet's own rule set additionally disables challenge quests, so in Gauntlet runs challenge quests never appear even without those settings."
+    }
+  ],
+  "records": [
+    {
+      "id": "classic",
+      "name": "Classic",
+      "code": "ROGUE_GAME_MODE_STANDARD",
+      "category": "game-mode",
+      "versions": ["vanilla", "ex"],
+      "description": "Standard Adventure with slow pacing. Provides decent Encounters, Items and Pokémon at the cost of slower Runs.",
+      "source": "src/rogue_settings.c @vanilla L46 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L116, L336-341",
+      "rules": [
+        {
+          "id": "classic-default-rules",
+          "label": "No rule overrides",
+          "detail": "Classic is the baseline rule set: its entry in the rule table is intentionally empty, so every mode flag defaults to off and the standard adventure generator produces paths of the usual length (three columns plus the opening split and the final boss column) with the normal mix of routes, rest stops and special encounters.",
+          "source": "src/rogue_settings.c @vanilla L46 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1189-1191 (identical @origin/expansion)"
+        }
+      ]
+    },
+    {
+      "id": "gauntlet",
+      "name": "Gauntlet",
+      "code": "ROGUE_GAME_MODE_GAUNTLET",
+      "category": "game-mode",
+      "versions": ["vanilla", "ex"],
+      "description": "Prepare your team and then fight Mighty Trainers back to back without a chance to catch any Pokémon. (Disables Challenges)",
+      "source": "src/rogue_settings.c @vanilla L47-63 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L117, L342-347",
+      "rules": [
+        {
+          "id": "gauntlet-start-level",
+          "label": "Start at level 100",
+          "detail": "Every Pokémon in your party enters the run at level 100, and the per-boss level offset never grows (offset 0, interval 0).",
+          "source": "src/rogue_settings.c @vanilla L49-51 (identical @origin/expansion); src/rogue_controller.c @vanilla L4399-4401 / @origin/expansion L4390-4392"
+        },
+        {
+          "id": "gauntlet-full-party",
+          "label": "Bring your full party",
+          "detail": "Your starting party size is a full party (six) regardless of the battle format setting.",
+          "source": "src/rogue_settings.c @vanilla L52, L612-620 (identical @origin/expansion)"
+        },
+        {
+          "id": "gauntlet-challenge-quests",
+          "label": "Challenge quests disabled",
+          "detail": "Challenge quests are disabled for the whole run as part of the mode's own rule set.",
+          "source": "src/rogue_settings.c @vanilla L53 (identical @origin/expansion)"
+        },
+        {
+          "id": "gauntlet-mighty-trainers",
+          "label": "Back-to-back Mighty Trainers",
+          "detail": "All trainer teams — including the bosses — are generated at final champion difficulty (the highest difficulty tier), and the per-badge level caps are removed so trainer levels scale to the maximum.",
+          "source": "src/rogue_settings.c @vanilla L54-55 (identical @origin/expansion); src/rogue_trainers.c @vanilla L1598-1601, L327 (identical @origin/expansion)"
+        },
+        {
+          "id": "gauntlet-boss-rhythm",
+          "label": "Short runs between bosses",
+          "detail": "A dedicated adventure generator builds the first path (difficulty 0) as a seven-column path — five route columns plus the opening split and the final boss column — generated under late-game difficulty balance (so you can prepare), with the early routes turned into full rest stops. Every subsequent path is only two columns long — the opening split and the boss column — so the Mighty Trainer battles come back to back. A shrine is always offered, and honey trees, mysterious signs, battle sims, labs and game shows are excluded from the path.",
+          "source": "src/rogue_settings.c @vanilla L62 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1173-1181 (totalLength: 7, then 2), L665-676 (early routes become full rest stops), L740-741 (shrine always offered), L786-791 (labs and game shows off, dark deal always allowed) (identical @origin/expansion)"
+        },
+        {
+          "id": "gauntlet-route-trainers",
+          "label": "Route trainers disabled",
+          "detail": "The regular route trainers that would spawn along the path are disabled.",
+          "source": "src/rogue_settings.c @vanilla L59 (identical @origin/expansion); src/rogue_controller.c @vanilla L10106 / @origin/expansion L10097"
+        },
+        {
+          "id": "gauntlet-rivals",
+          "label": "Rival encounters disabled",
+          "detail": "Rival encounters are disabled for the whole run.",
+          "source": "src/rogue_settings.c @vanilla L58 (identical @origin/expansion); src/rogue_trainers.c @vanilla L1218 (identical @origin/expansion)"
+        },
+        {
+          "id": "gauntlet-items",
+          "label": "End-game route items",
+          "detail": "Route item drops roll at the highest (final champion) quality tier.",
+          "source": "src/rogue_settings.c @vanilla L56 (identical @origin/expansion); src/rogue_controller.c @vanilla L10322-10325 / @origin/expansion L10313-10316"
+        },
+        {
+          "id": "gauntlet-random-trader",
+          "label": "Random trader always active",
+          "detail": "The random trader (in-game: Randoman) that normally spawns on a chance is always active.",
+          "source": "src/rogue_settings.c @vanilla L57 (identical @origin/expansion); src/rogue_controller.c @vanilla L5724-5730 / @origin/expansion L5715-5721 (TryRandomanSpawn)"
+        },
+        {
+          "id": "gauntlet-shops",
+          "label": "Full shop inventory",
+          "detail": "Shops stock their complete inventories instead of a random subset.",
+          "source": "src/rogue_settings.c @vanilla L60 (identical @origin/expansion); src/rogue_controller.c @vanilla L9079, L9307 / @origin/expansion L9070, L9298"
+        },
+        {
+          "id": "gauntlet-tutors",
+          "label": "Full tutor move list",
+          "detail": "The move tutor offers its complete list of tutor moves.",
+          "source": "src/rogue_settings.c @vanilla L61 (identical @origin/expansion); src/party_menu.c @vanilla L2041 / @origin/expansion L2320"
+        },
+        {
+          "id": "gauntlet-catching-note",
+          "label": "No real catching opportunities",
+          "detail": "The in-game text says there is no chance to catch any Pokémon: honey trees, mysterious signs and battle sims are excluded from Gauntlet paths and every trainer fights with final-champion-tier teams, so there is no real catching loop. Wild dens are the exception — the first (prep) path still applies the generic wild-dens conversion, so some of its routes can become dens — and a catching-contest room can rarely appear, but neither is part of the intended loop.",
+          "source": "src/rogue_settings_ui.c @vanilla L342-347 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L727-779 (honey tree, sign and battle sim excluded from Gauntlet; catching contest at 33% is not), L869-935 (wild-dens phase: the generic per-difficulty conversion applies to Gauntlet's first path) (identical @origin/expansion)"
+        }
+      ]
+    },
+    {
+      "id": "fast-path",
+      "name": "Fast Path",
+      "code": "ROGUE_GAME_MODE_FAST_PATH",
+      "category": "game-mode",
+      "versions": ["vanilla", "ex"],
+      "description": "Standard Adventure with fast pacing. Provides fast Runs at the cost of fewer Encounters, Items and Pokémon.",
+      "source": "src/rogue_settings.c @vanilla L64-70 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L118, L348-353",
+      "rules": [
+        {
+          "id": "fast-path-drop-rarity",
+          "label": "+1 item drop rarity",
+          "detail": "A flat +1 rarity bonus is added to item drops (including route item drops), skewing every drop table toward better items.",
+          "source": "src/rogue_settings.c @vanilla L66 (identical @origin/expansion); src/rogue_controller.c @vanilla L10232-10244 / @origin/expansion L10223-10235 (GetCurrentDropRarity)"
+        },
+        {
+          "id": "fast-path-winnings",
+          "label": "125% battle winnings",
+          "detail": "Money won from trainer battles is multiplied by 125%.",
+          "source": "src/rogue_settings.c @vanilla L67 (identical @origin/expansion); src/rogue_controller.c @vanilla L1823-1825 / @origin/expansion L1821-1823"
+        },
+        {
+          "id": "fast-path-rival-level",
+          "label": "Rival matches your level",
+          "detail": "The rival's Pokémon levels follow your own level instead of the standard boss level curve. Exception: when the Trainers difficulty slider is set to Brutal, the rival falls back to the standard level cap.",
+          "source": "src/rogue_settings.c @vanilla L68 (identical @origin/expansion); src/rogue_trainers.c @vanilla L443-448 (identical @origin/expansion)"
+        },
+        {
+          "id": "fast-path-generator",
+          "label": "Dedicated fast-path adventure generator",
+          "detail": "A dedicated generator produces shorter, faster runs: on odd-numbered difficulty steps the path shrinks to four columns and every route is replaced — the generator first places the qualified special encounters (repeatable rest stops, weight 100/20/5/1, plus one-off honey trees, mysterious signs, shrines, catching contests and dark deals/labs/game shows where applicable), with only the leftover routes falling through to wild dens; even steps keep the routes (six columns). On the champion ladder (final two boss tiers) the full five-column path is used.",
+          "source": "src/rogue_settings.c @vanilla L69 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L631-637 (odd/even route hiding), L829-866 (replace every route on hidden steps via weighted special encounters), L352-466 (rest-stop 100/20/5/1 weights, one-off encounters zero once placed), L486-490 (wild-den fallback), L870-880 (leftover routes become wild dens), L1183-1188 (totalLengths) (identical @origin/expansion)"
+        }
+      ]
+    }
+  ]
+}

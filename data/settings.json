@@ -1,0 +1,550 @@
+{
+  "meta": {
+    "id": "settings",
+    "title": "Run Configuration",
+    "description": "Complete reference for the in-game settings screen: every difficulty toggle, range and slider, the trainer-region switches (EX adds Sinnoh through Paldea), the difficulty presets with their forced toggles, and the 0–13 boss difficulty scale. Shared sources are cited from the vanilla working tree; rogue_settings.c and rogue_settings_ui.c are byte-identical on the expansion branch (rogue_strings.h differs only in the version string), and files that differ are cited per branch."
+  },
+  "prose": [
+    {
+      "id": "where-settings-live",
+      "heading": "Where you change settings",
+      "text": "The settings screen is opened from the hub's Config Room and has a top-level Difficulty preset plus four submenus: Edit Difficulty (the fine-grained toggles and the Trainers slider), Adventure (battle format, visible wild Pokémon and experience sharing), Trainers (trainer order and the per-region switches) and Game Modes (Classic, Gauntlet, Fast Path). Settings can only be edited while no run is active — changing anything mid-run is rejected with an error sound. A new run generates its rules from the saved settings when it begins, and changing the game mode updates the stored rules immediately, even from the hub."
+    },
+    {
+      "id": "difficulty-scale",
+      "heading": "The 0–13 difficulty scale",
+      "text": "Each run climbs a fixed ladder of 14 boss stages, one per difficulty point from 0 to 13: eight gym bosses (0–7), four Elite Four members (8–11) and two champion slots (12–13). Trainer level caps rise with each stage, and key trainers apply their preferred weather as the stage number climbs (from stage 4 with the Trainers slider on Average, from stage 2 on Hard, and always on Brutal — never on Easy). Difficulty 13 — the final champion difficulty — is the highest tier in the game: it is the tier that rules like Gauntlet's forced endgame trainers and endgame route items reference."
+    },
+    {
+      "id": "custom-and-rewards",
+      "heading": "Custom difficulty and reward level",
+      "text": "The four presets (Easy, Average, Hard, Brutal) each force a specific combination of difficulty toggles. The moment you change any of those toggles or the Trainers/Items/Legendaries sliders away from a preset's values, the difficulty is shown as Custom (\"Your rules, your way!\"). Your rewards are then based on the reward level: the highest preset whose forced toggles you still match exactly and whose slider values you meet at least. The Easy preset is the one true baseline — it forces nothing, so any setting combination is at least as hard as Easy."
+    }
+  ],
+  "records": [
+    {
+      "id": "toggle-exp-all",
+      "name": "Exp. All",
+      "code": "CONFIG_TOGGLE_EXP_ALL",
+      "category": "toggle",
+      "menu": "Adventure",
+      "versions": ["vanilla", "ex"],
+      "description": "Controls whether your whole party shares battle experience or only the Pokémon actually in the fight.",
+      "values": {
+        "on": "All Pokémon in the party will be awarded Exp. even if they didn't enter the battle.",
+        "off": "Only Pokémon send into battle will be awarded Exp. (Not recommended)"
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L356-370 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L103; include/constants/rogue.h @vanilla L549 / @origin/expansion L551"
+    },
+    {
+      "id": "toggle-over-level",
+      "name": "Over Level",
+      "code": "CONFIG_TOGGLE_OVER_LVL",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Whether your Pokémon keep leveling past the per-badge level cap.",
+      "values": {
+        "on": "Pokémon can gain levels over the Level Cap. (After the Level Cap, will Level slowly)",
+        "off": "Pokémon will stop gaining lvls once they reach the Level Cap."
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L173-187 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L104; include/constants/rogue.h @vanilla L550 / @origin/expansion L552"
+    },
+    {
+      "id": "toggle-ev-gain",
+      "name": "EV Gain",
+      "code": "CONFIG_TOGGLE_EV_GAIN",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Whether your Pokémon gain EVs from trainer battles.",
+      "values": {
+        "on": "Pokémon gain EVs from Trainer battles based on their nature. (Trainers never have EVs)",
+        "off": "All Pokémon will never have EVs."
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L390-403 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L105; include/constants/rogue.h @vanilla L551 / @origin/expansion L553"
+    },
+    {
+      "id": "toggle-visible-wild",
+      "name": "Visible Wild Pokémon",
+      "code": "CONFIG_TOGGLE_OVERWORLD_MONS",
+      "category": "toggle",
+      "menu": "Adventure",
+      "versions": ["vanilla", "ex"],
+      "description": "How wild Pokémon appear: as visible overworld encounters you can walk up to, or as classic random encounters while moving.",
+      "values": {
+        "on": "Wild Pokémon can be encounted and interacted with in the overworld.",
+        "off": "Wild Pokémon will spawn randomly as you move. (Classic Pokémon Game style encounters)"
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L373-387 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L106; include/constants/rogue.h @vanilla L552 / @origin/expansion L554"
+    },
+    {
+      "id": "toggle-fresh-start",
+      "name": "Fresh Start",
+      "code": "CONFIG_TOGGLE_BAG_WIPE",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Whether your meta-progression (items, day-care storage, etc.) carries into runs.",
+      "values": {
+        "on": "Only your Partner Pokémon and Key Items will be taken into runs.",
+        "off": "You can take all Meta-Progression into Adventures. (e.g. Items, Day Care)"
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L423-437 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L107; include/constants/rogue.h @vanilla L553 / @origin/expansion L555"
+    },
+    {
+      "id": "toggle-switch-mode",
+      "name": "Switch Mode",
+      "code": "CONFIG_TOGGLE_SWITCH_MODE",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Whether you get to switch out immediately after knocking out an opposing Pokémon.",
+      "values": {
+        "on": "After fainting an opposing Pokémon you will be given a chance to switch out immediately.",
+        "off": "After fainting an opposing Pokémon, you will not be able to switch out until your turn."
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L406-420 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L108; include/constants/rogue.h @vanilla L554 / @origin/expansion L556"
+    },
+    {
+      "id": "toggle-diverse-trainers",
+      "name": "Diverse Trainer Pokémon",
+      "code": "CONFIG_TOGGLE_DIVERSE_TRAINERS",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "How strictly trainers stick to their type specialty.",
+      "values": {
+        "on": "Trainers can have wider type specialties e.g. Brock has a mix of Rock & Steel",
+        "off": "Trainers will mostly stick to their type specialties e.g. Brock has Rock"
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L122, L267-281 (identical @origin/expansion); include/constants/rogue.h @vanilla L555 / @origin/expansion L557"
+    },
+    {
+      "id": "toggle-affection",
+      "name": "Affection FX",
+      "code": "CONFIG_TOGGLE_AFFECTION",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["ex"],
+      "description": "Pokémon with high friendship may have special effects e.g. enduring, extra crits etc.",
+      "differences": {
+        "vanilla": "The toggle does not exist in the Vanilla settings menu and the affection mechanics are compiled out (the enable check always returns false), so the option is unavailable in Vanilla builds.",
+        "ex": "Shown in the Edit Difficulty submenu and fully functional."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L120, L244-248, L1135-1137; src/rogue_controller.c @vanilla L381-389 / @origin/expansion L381-389 (Vanilla build hard-returns FALSE, EX reads the toggle); include/constants/rogue.h @vanilla L556 / @origin/expansion L558"
+    },
+    {
+      "id": "toggle-release-fainted",
+      "name": "Release Fainted Pokémon",
+      "code": "CONFIG_TOGGLE_RELEASE_MONS",
+      "category": "toggle",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "What happens to a Pokémon that faints during a run.",
+      "values": {
+        "on": "When Pokémon faint, they will be released from your party.",
+        "off": "Fainted Pokémon will remain in your party, but can only be revived by Nurses or Revives."
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L121, L250-265 (identical @origin/expansion); include/constants/rogue.h @vanilla L557 / @origin/expansion L559"
+    },
+    {
+      "id": "toggle-region-rogue",
+      "name": "Rogue",
+      "code": "CONFIG_TOGGLE_TRAINER_ROGUE",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["vanilla", "ex"],
+      "description": "Enables trainers from the… Rogue region? (Rainbow mode not supported)",
+      "note": "Rogue-region trainers are excluded when the Trainer Order is set to Rainbow.",
+      "source": "src/rogue_settings_ui.c @vanilla L124, L283-287 (identical @origin/expansion); src/rogue_trainers.c @vanilla L890 (identical @origin/expansion); include/constants/rogue.h @vanilla L558 / @origin/expansion L560"
+    },
+    {
+      "id": "toggle-region-kanto",
+      "name": "Kanto",
+      "code": "CONFIG_TOGGLE_TRAINER_KANTO",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["vanilla", "ex"],
+      "description": "Enables trainers from the Kanto region.",
+      "source": "src/rogue_settings_ui.c @vanilla L125, L289-292 (identical @origin/expansion); include/constants/rogue.h @vanilla L559 / @origin/expansion L561"
+    },
+    {
+      "id": "toggle-region-johto",
+      "name": "Johto",
+      "code": "CONFIG_TOGGLE_TRAINER_JOHTO",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["vanilla", "ex"],
+      "description": "Enables trainers from the Johto region.",
+      "source": "src/rogue_settings_ui.c @vanilla L126, L294-297 (identical @origin/expansion); include/constants/rogue.h @vanilla L560 / @origin/expansion L562"
+    },
+    {
+      "id": "toggle-region-hoenn",
+      "name": "Hoenn",
+      "code": "CONFIG_TOGGLE_TRAINER_HOENN",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["vanilla", "ex"],
+      "description": "Enables trainers from the Hoenn region.",
+      "source": "src/rogue_settings_ui.c @vanilla L127, L299-302 (identical @origin/expansion); include/constants/rogue.h @vanilla L561 / @origin/expansion L563"
+    },
+    {
+      "id": "toggle-region-sinnoh",
+      "name": "Sinnoh",
+      "code": "CONFIG_TOGGLE_TRAINER_SINNOH",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Sinnoh region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L129, L305-308, L1163; include/constants/rogue.h @origin/expansion L566 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "toggle-region-unova",
+      "name": "Unova",
+      "code": "CONFIG_TOGGLE_TRAINER_UNOVA",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Unova region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L130, L310-313, L1164; include/constants/rogue.h @origin/expansion L567 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "toggle-region-kalos",
+      "name": "Kalos",
+      "code": "CONFIG_TOGGLE_TRAINER_KALOS",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Kalos region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L131, L315-318, L1165; include/constants/rogue.h @origin/expansion L568 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "toggle-region-alola",
+      "name": "Alola",
+      "code": "CONFIG_TOGGLE_TRAINER_ALOLA",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Alola region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L132, L320-323, L1166; include/constants/rogue.h @origin/expansion L569 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "toggle-region-galar",
+      "name": "Galar",
+      "code": "CONFIG_TOGGLE_TRAINER_GALAR",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Galar region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L133, L325-328, L1167; include/constants/rogue.h @origin/expansion L570 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "toggle-region-paldea",
+      "name": "Paldea",
+      "code": "CONFIG_TOGGLE_TRAINER_PALDEA",
+      "category": "toggle",
+      "menu": "Trainers",
+      "versions": ["ex"],
+      "description": "Enables trainers from the Paldea region.",
+      "differences": {
+        "vanilla": "Not present in the Vanilla settings menu (the toggle slot exists but is not referenced in Vanilla builds).",
+        "ex": "Shown in the Trainers submenu."
+      },
+      "source": "src/rogue_settings_ui.c @origin/expansion L134, L330-333, L1168; include/constants/rogue.h @origin/expansion L571 (inside #ifdef ROGUE_EXPANSION)"
+    },
+    {
+      "id": "range-trainer-level",
+      "name": "Trainers",
+      "code": "CONFIG_RANGE_TRAINER_LVL",
+      "category": "range",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Adjusts quality, quantity and strength of all Trainer's Pokémon.",
+      "options": ["Easy", "Average", "Hard", "Brutal"],
+      "optionValues": [0, 1, 2, 3],
+      "source": "src/rogue_settings_ui.c @vanilla L880-886 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L110, L126-130; include/constants/rogue.h @vanilla L576 / @origin/expansion L578; src/rogue_trainers.c @vanilla L295-325 (identical @origin/expansion)"
+    },
+    {
+      "id": "range-item",
+      "name": "Items",
+      "code": "CONFIG_RANGE_ITEM",
+      "category": "range",
+      "menu": "Edit Difficulty (hidden slider)",
+      "versions": ["vanilla", "ex"],
+      "description": "A reserved difficulty slider for item scaling. It is still set by the difficulty presets, but no game logic reads it yet — the header marks it unused and the in-game description is a placeholder (\"TODO. This needs a rework...\").",
+      "options": ["Easy", "Average", "Hard", "Brutal"],
+      "optionValues": [0, 1, 2, 3],
+      "source": "include/constants/rogue.h @vanilla L577 / @origin/expansion L579 (\"// unused\"); src/data/rogue_strings.h @vanilla L111, L132-135 (placeholder description); src/rogue_settings.c @vanilla L93, L110, L129, L150 (identical @origin/expansion)"
+    },
+    {
+      "id": "range-legendary",
+      "name": "Legendaries",
+      "code": "CONFIG_RANGE_LEGENDARY",
+      "category": "range",
+      "menu": "Edit Difficulty (hidden slider)",
+      "versions": ["vanilla", "ex"],
+      "description": "Intended to decrease the quality and quantity of Legendary Pokémon encounters. Like the Items slider it is only set by the difficulty presets and is not yet read by any game logic (marked unused in the header).",
+      "options": ["Easy", "Average", "Hard", "Brutal"],
+      "optionValues": [0, 1, 2, 3],
+      "source": "include/constants/rogue.h @vanilla L578 / @origin/expansion L580 (\"// unused\"); src/data/rogue_strings.h @vanilla L112, L137-141; src/rogue_settings.c @vanilla L94, L111, L130, L151 (identical @origin/expansion)"
+    },
+    {
+      "id": "range-battle-format",
+      "name": "Battle Format",
+      "code": "CONFIG_RANGE_BATTLE_FORMAT",
+      "category": "range",
+      "menu": "Adventure",
+      "versions": ["vanilla", "ex"],
+      "description": "The format used for trainer battles throughout your runs. Choosing Doubles or Mixed also starts runs with two Pokémon in your party instead of one.",
+      "options": ["Singles", "Doubles", "Mixed"],
+      "optionValues": [0, 1, 2],
+      "optionDescriptions": {
+        "Singles": "Trainer Battles will always be 1v1.",
+        "Doubles": "Trainer Battles will always be 2v2.",
+        "Mixed": "Trainer Battles will randomly be 1v1 or 2v2. (Equal chance for both)"
+      },
+      "source": "src/rogue_settings_ui.c @vanilla L106-109, L201-219 (identical @origin/expansion); include/constants/rogue.h @vanilla L616-619 / @origin/expansion L618-621; src/rogue_settings.c @vanilla L612-622 (identical @origin/expansion)"
+    },
+    {
+      "id": "range-pokedex-variant",
+      "name": "Pokédex Variant",
+      "code": "CONFIG_RANGE_POKEDEX_VARIANT",
+      "category": "range",
+      "menu": "Pokédex (unlocked after meeting Pokabbie at the hub's Adventure Entrance)",
+      "versions": ["vanilla", "ex"],
+      "description": "Which Pokédex list your in-game Pokédex follows, grouped by region (regional dexes, national dexes per generation, and special extras).",
+      "optionsByVersion": {
+        "vanilla": [
+          "Red/Blue/Yellow",
+          "Gold/Silver/Crystal",
+          "Ruby/Sapphire/Emerald",
+          "Gen. 1",
+          "Gen. 2",
+          "Gen. 3",
+          "Colosseum + XD"
+        ],
+        "ex": [
+        "Modern",
+        "Classic Plus",
+        "Red/Blue/Yellow",
+        "Let'sGo",
+        "Gold/Silver/Crystal",
+        "HeartGold/SoulSilver",
+        "Ruby/Sapphire/Emerald",
+        "OmegaRuby/AlphaSapphire",
+        "Diamond/Pearl",
+        "Platinum",
+        "Black/White",
+        "Black2/White2",
+        "X/Y",
+        "Sun/Moon",
+        "UltraSun/UltraMoon",
+        "Sword/Shield",
+        "IsleOfArmor",
+        "CrownTundra",
+        "Sword/Shield + DLC",
+        "Scarlet/Violet",
+        "The Teal Mask",
+        "Indigo Disk",
+        "Scarlet/Violet + DLC",
+        "Conquest",
+        "Arceus",
+        "Gen. 1",
+        "Gen. 2",
+        "Gen. 3",
+        "Gen. 4",
+        "Gen. 5",
+        "Gen. 6",
+        "Gen. 7",
+        "Gen. 8",
+        "Gen. 9",
+        "Z-A",
+        "Z-A + DLC",
+        "Colosseum + XD"
+        ]
+      },
+      "differences": {
+        "vanilla": "Seven variants only: Red/Blue/Yellow, Gold/Silver/Crystal, Ruby/Sapphire/Emerald, National Gen. 1–Gen. 3, and Colosseum + XD. The default is the Gen. 3 national dex.",
+        "ex": "Thirty-seven variants: the two Rogue dexes (Modern, the default, and Classic Plus), every regional dex up to Paldea, National Gen. 1–Gen. 9, Legends (Arceus, Z-A and Z-A + DLC), Conquest, and Colosseum + XD."
+      },
+      "source": "include/constants/rogue_pokedex.h @vanilla L8-16 / @origin/expansion L8-41; src/data/rogue_pokedex.h @vanilla L6-1433 / @origin/expansion L6-13609 (player-facing variant names); include/constants/rogue.h @vanilla L750-758 / @origin/expansion L752-760 (default variant); src/rogue_pokedex.c @vanilla L4140-4161, L4182-4185 (identical @origin/expansion) (variant get/set/unlock)"
+    },
+    {
+      "id": "range-game-mode",
+      "name": "Game Mode",
+      "code": "CONFIG_RANGE_GAME_MODE_NUM",
+      "category": "range",
+      "menu": "Game Modes",
+      "versions": ["vanilla", "ex"],
+      "description": "Choose custom rule sets or scenarios to play with. See the Game Modes section for each mode's full rule set.",
+      "options": ["Classic", "Gauntlet", "Fast Path"],
+      "optionValues": [0, 1, 2],
+      "source": "src/rogue_settings_ui.c @vanilla L116-118, L195-199, L1174-1183 (identical @origin/expansion); include/constants/rogue.h @vanilla L643-646 / @origin/expansion L645-648"
+    },
+    {
+      "id": "range-difficulty-preset",
+      "name": "Difficulty",
+      "code": "CONFIG_RANGE_DIFFICULTY_PRESET",
+      "category": "range",
+      "menu": "Top level",
+      "versions": ["vanilla", "ex"],
+      "description": "The active difficulty preset. Editing any of the preset-controlled difficulty toggles or sliders moves the setting to Custom; the reward level shown next to it is the highest preset your configuration still qualifies for.",
+      "options": ["Easy", "Average", "Hard", "Brutal", "Custom"],
+      "optionValues": [0, 1, 2, 3, 4],
+      "source": "src/data/rogue_strings.h @vanilla L83, L93-97, L114-118 (identical @origin/expansion); include/constants/rogue.h @vanilla L537-545 / @origin/expansion L539-547; src/rogue_settings.c @vanilla L497-549, L600-607 (identical @origin/expansion)"
+    },
+    {
+      "id": "range-revision-mode",
+      "name": "Revised Mode",
+      "code": "CONFIG_RANGE_REVISION_MODE",
+      "category": "range",
+      "menu": "Edit Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Enable Pokémon edits, indicated by the revised icon. Revised Typings, Abilities, Moves etc.",
+      "options": ["Disabled", "Enabled in Runs", "Enabled Always"],
+      "optionValues": [0, 1, 2],
+      "optionDescriptions": {
+        "Disabled": "No changes active.",
+        "Enabled in Runs": "Changes are only active while on an Adventure. (Can be viewed in the Pokédex)",
+        "Enabled Always": "Changes are always active. This cannot be turned off once Enabled. (Can be viewed in the Pokédex)"
+      },
+      "note": "Switching to Enabled Always asks for confirmation: \"Are you sure? Your save file will be permanently locked to this setting.\"",
+      "source": "src/rogue_settings_ui.c @vanilla L439-476 (identical @origin/expansion); include/constants/rogue.h @vanilla L621-624 / @origin/expansion L623-626"
+    },
+    {
+      "id": "range-trainer-order",
+      "name": "Trainer Order",
+      "code": "CONFIG_RANGE_TRAINER_ORDER",
+      "category": "range",
+      "menu": "Trainers",
+      "versions": ["vanilla", "ex"],
+      "description": "How the bosses and key trainers are selected as you climb the run's difficulty ladder.",
+      "options": ["Default", "Rainbow", "Official"],
+      "optionValues": [0, 1, 2],
+      "optionDescriptions": {
+        "Default": "Trainers appear somewhat randomly based on their Trainer Class.",
+        "Rainbow": "Trainers appear randomly without repeating types e.g. E4 can be Gyms",
+        "Official": "Trainers appear in the order they appear in official games. (Disables Challenges)"
+      },
+      "note": "In Rainbow order, boss trainers of any class (gym, Elite or champion) can appear at any stage, Rogue-region trainers are excluded, and trainers flagged rainbow-excluded are skipped. In Official order the stage is locked to the canonical order (Gym 1, Gym 2, … Elite 4, Champion) and challenge quests are disabled for the run.",
+      "source": "src/rogue_settings_ui.c @vanilla L111-114, L221-242 (identical @origin/expansion); include/constants/rogue.h @vanilla L649-652 / @origin/expansion L651-654; src/rogue_trainers.c @vanilla L890, L926-930, L1033-1060 (identical @origin/expansion); src/rogue_settings.c @vanilla L289-292 (identical @origin/expansion)"
+    },
+    {
+      "id": "preset-easy",
+      "name": "Easy",
+      "code": "DIFFICULTY_LEVEL_EASY",
+      "category": "preset",
+      "menu": "Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "For those who want a casual experience, comparable to modern Pokémon games.",
+      "forcedToggles": [],
+      "forcedRanges": [
+        { "name": "Trainers", "value": "Easy" },
+        { "name": "Items", "value": "Easy" },
+        { "name": "Legendaries", "value": "Easy" }
+      ],
+      "note": "Easy forces no toggles at all — it is the baseline every configuration qualifies for, so its preset values are recommendations rather than requirements.",
+      "source": "src/rogue_settings.c @vanilla L83-96 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L139-143 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L93"
+    },
+    {
+      "id": "preset-average",
+      "name": "Average",
+      "code": "DIFFICULTY_LEVEL_AVERAGE",
+      "category": "preset",
+      "menu": "Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Recommended for those who have good Pokémon knowledge and enjoy a challenge.",
+      "forcedToggles": [
+        { "name": "Switch Mode", "value": "off" },
+        { "name": "Affection FX", "value": "off" },
+        { "name": "Release Fainted Pokémon", "value": "on" }
+      ],
+      "forcedRanges": [
+        { "name": "Trainers", "value": "Average" },
+        { "name": "Items", "value": "Average" },
+        { "name": "Legendaries", "value": "Average" }
+      ],
+      "source": "src/rogue_settings.c @vanilla L98-113 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L144-148 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L94"
+    },
+    {
+      "id": "preset-hard",
+      "name": "Hard",
+      "code": "DIFFICULTY_LEVEL_HARD",
+      "category": "preset",
+      "menu": "Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "A punishing experience intended for those who enjoy increased difficulty.",
+      "forcedToggles": [
+        { "name": "Over Level", "value": "off" },
+        { "name": "EV Gain", "value": "off" },
+        { "name": "Switch Mode", "value": "off" },
+        { "name": "Affection FX", "value": "off" },
+        { "name": "Release Fainted Pokémon", "value": "on" }
+      ],
+      "forcedRanges": [
+        { "name": "Trainers", "value": "Hard" },
+        { "name": "Items", "value": "Hard" },
+        { "name": "Legendaries", "value": "Hard" }
+      ],
+      "source": "src/rogue_settings.c @vanilla L115-132 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L149-153 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L95"
+    },
+    {
+      "id": "preset-brutal",
+      "name": "Brutal",
+      "code": "DIFFICULTY_LEVEL_BRUTAL",
+      "category": "preset",
+      "menu": "Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "An even more punishing experience than Hard, for those who want to suffer.",
+      "forcedToggles": [
+        { "name": "Over Level", "value": "off" },
+        { "name": "EV Gain", "value": "off" },
+        { "name": "Switch Mode", "value": "off" },
+        { "name": "Affection FX", "value": "off" },
+        { "name": "Release Fainted Pokémon", "value": "on" },
+        { "name": "Fresh Start", "value": "on" },
+        { "name": "Diverse Trainer Pokémon", "value": "on" }
+      ],
+      "forcedRanges": [
+        { "name": "Trainers", "value": "Brutal" },
+        { "name": "Items", "value": "Brutal" },
+        { "name": "Legendaries", "value": "Brutal" }
+      ],
+      "source": "src/rogue_settings.c @vanilla L134-154 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L154-158 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L96"
+    },
+    {
+      "id": "preset-custom",
+      "name": "Custom",
+      "code": "DIFFICULTY_LEVEL_CUSTOM",
+      "category": "preset",
+      "menu": "Difficulty",
+      "versions": ["vanilla", "ex"],
+      "description": "Your rules, your way!",
+      "forcedToggles": [],
+      "forcedRanges": [],
+      "note": "Custom is not a preset you select — it appears whenever your toggles or sliders deviate from every preset's forced values. Your rewards use the highest preset you still match (toggles must match exactly, sliders must be at least that preset's value).",
+      "source": "src/rogue_settings.c @vanilla L173-229, L243-262, L497-549, L600-607 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L159-162 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L97, L114-118"
+    }
+  ]
+}

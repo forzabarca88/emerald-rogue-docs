@@ -1,0 +1,122 @@
+{
+  "meta": {
+    "id": "followmons",
+    "title": "Overworld Followmons",
+    "description": "How wild Pokémon live in the overworld during a run: the six spawn slots, the spawn timers and placement rules, water and Safari Zone spawning, shiny sparkles, the lead Pokémon follower, encounter chains, and what happens when you catch one. The whole system is identical between Vanilla and EX — only the species available to spawn differs."
+  },
+  "prose": [
+    {
+      "id": "what-they-are",
+      "heading": "Pokémon you can see before the battle",
+      "text": "During a run, wild Pokémon don't just appear out of tall grass when you walk — they are visible, wandering sprites in the overworld. Up to six of them can be on screen at once, each drawn from the current route's wild table at a random level (and, with very bad luck, shiny). You choose which ones to engage: walk into one to battle it, or walk around it and keep going. This is the default mode; if you turn off the Visible Wild Pokémon setting you get classic random encounters while moving instead."
+    },
+    {
+      "id": "how-they-spawn",
+      "heading": "Spawning is paced, not constant",
+      "text": "Spawn slots refill on a countdown. When the screen is nearly empty, new Pokémon appear almost immediately; as the screen fills up, refills slow to a comfortable pace, and a Pokémon that you defeated takes longer to be replaced than one that simply wandered off. The game also refuses to spawn over the top of you — it picks a random tile a short distance away (a wider ring when you're surfing), skips elevation changes and bridges, and won't put one directly in front of you so it never seems to 'spawn in' as you run. In the Safari Zone the same follower slots are fed from your Safari pool instead of the route table."
+    },
+    {
+      "id": "why-they-matter",
+      "heading": "Catching is a rhythm game",
+      "text": "Because you can see exactly what is about to battle you, followmons turn catching into a deliberate activity: spot the species you want, let the screen fill, and work through the useful ones. Defeating consecutive wild Pokémon of the same species builds an encounter chain (broken-chain popups tell you how long it ran), shiny or 'unique' Pokémon trigger a special slow-motion battle intro, and a caught Pokémon is always healed to at least half health, cured of status, and rolled for IV adjustments from any Strength Charms or Curses you hold."
+    }
+  ],
+  "records": [
+    {
+      "id": "overworld-spawns",
+      "name": "Overworld wild spawns",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "During a run, each room with wild encounters has visible wandering Pokémon in the overworld instead of (or alongside) random-encounter grass. Each spawn is drawn from the current route's wild table — grass or water species at a random level with the usual shiny odds — and playing the run's legendary roamer cry if the spawned species happens to be it.",
+      "source": "src/rogue_followmon.c @vanilla L905-930 (Rogue_CreateWildMon from the route table, roamer cry) (identical @origin/expansion); src/rogue_controller.c @vanilla L8383-8400 (spawns enabled while a run room has wild encounters) (identical @origin/expansion)"
+    },
+    {
+      "id": "spawn-capacity",
+      "name": "Six spawn slots",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "At most six wild followmons can exist at once (plus the lead Pokémon follower, which uses a separate slot). The cap exists partly to limit palette usage and partly to avoid lag — if the map already has eight or more active object events, no new followmon will spawn until one leaves.",
+      "source": "include/constants/rogue.h @vanilla L795-797 (FOLLOWMON_MAX_SPAWN_SLOTS 6, FOLLOWMON_IDEAL_OBJECT_EVENT_COUNT 8) (identical @origin/expansion); src/rogue_followmon.c @vanilla L842-855 (valid slot count), L894-898 (lag guard) (identical @origin/expansion)"
+    },
+    {
+      "id": "spawn-timer",
+      "name": "Spawn countdown",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Slots refill on a frame countdown that adapts to how full the screen is: up to 15 frames when one or fewer followmons are out, up to 60 frames when below capacity, and 180–240 frames to replace a followmon after it is gone. During a Catching Contest the interval is fixed at 120 frames so the catch flow stays steady.",
+      "source": "src/rogue_followmon.c @vanilla L1086-1099 (fast/slow countdown clamps), L1132 (180–240-frame respawn), L1134-1138 (fixed contest interval) (identical @origin/expansion)"
+    },
+    {
+      "id": "spawn-positions",
+      "name": "Where they appear",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "A spawn tile is picked at random in a band around you (roughly ±7 tiles wide, ±4 tall) with three attempts per spawn. Tiles immediately in front of you are rejected — the excluded radius widens while surfing — as are elevation changes and multi-elevation tiles like bridges, so followmons never pop into existence mid-step or on awkward terrain.",
+      "source": "src/rogue_followmon.c @vanilla L950-1015 (TrySelectTile: tile range, facing-direction exclusion, elevation/bridge rejection) (identical @origin/expansion)"
+    },
+    {
+      "id": "water-spawns",
+      "name": "Water followmons",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "While surfing, followmons spawn from the route's water table instead of the grass table, with a wider spawn ring around you and the sprite's reflection hidden (it looks odd on water).",
+      "source": "src/rogue_followmon.c @vanilla L914-915 (water table used while surfing), L962-965 (wider ring), L1126-1130 (reflection hidden) (identical @origin/expansion)"
+    },
+    {
+      "id": "safari-spawns",
+      "name": "Safari Zone followmons",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "In the hub's Safari Zone, the same follower slots spawn your own pooled Pokémon: each slot picks a mon from the pool, shown as its first-evolution (egg) form with its shiny state, and any custom/unique mon in the pool keeps its custom set. Battles here are the pool's catch battles.",
+      "source": "src/rogue_followmon.c @vanilla L900-920 (RogueSafari_ChooseSafariMonForSlot feeds the spawn slots with pool mons) (identical @origin/expansion)"
+    },
+    {
+      "id": "shiny-followmons",
+      "name": "Shiny sparkles",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Shiny followmons use their shiny sprite palettes and a sparkle animation so you can spot them in the overworld before the battle. The sparkle plays as soon as the spawn is on screen — except in the hub's Safari Zone tutorial layout and when wild Pokémon are disabled, where it waits until you're within a few tiles of the spawn.",
+      "source": "src/rogue_followmon.c @vanilla L207 (shiny offset in follow species id), L431-440 (shiny palettes), L1059-1076 (sparkle animation range: instant for wild spawns; within 4 tiles only in the Safari Zone tutorial layout or with wild mons disabled) (identical @origin/expansion)"
+    },
+    {
+      "id": "partner-follower",
+      "name": "Your lead Pokémon follows you",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Separate from wild followmons, your lead Pokémon — the first usable mon in your party — walks with you in the overworld, as standard in the series. While you're riding, the ride Pokémon takes its place. The follower uses its own sprite slot and its own (possibly unique-mon) palette.",
+      "source": "src/rogue_followmon.c @vanilla L472-495 (lead mon / ride mon selection), L509-519 (partner species for the follower object) (identical @origin/expansion)"
+    },
+    {
+      "id": "encounter-chains",
+      "name": "Encounter chains",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "The game tracks consecutive wild encounters of the same species. Once the chain reaches three, a green 'N Chain' popup confirms the streak, and if the chain breaks after running four or more, a red 'Broken Chain' popup names the species — a handy signal that you've been farming one area for a while.",
+      "source": "src/rogue_followmon.c @vanilla L327-346 (chain count per species: 'N Chain' popup at count ≥ 3, 'Broken Chain' popup when breaking at count > 3) (identical @origin/expansion); src/rogue_popup.c @vanilla L305-306 (popup texts) (identical @origin/expansion); src/rogue_controller.c @vanilla L7269-7275 (chain updated on wild battle win/loss) (identical @origin/expansion)"
+    },
+    {
+      "id": "important-battles",
+      "name": "Important battles",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "A wild battle is flagged 'important' — getting the slow, cinematic battle intro — when the opponent is shiny or is one of your run's unique (custom-set) Pokémon, or when it is the Game Show's Electrode. Normal wild followmons use the standard fast intro.",
+      "source": "src/rogue_controller.c @vanilla L543-547 (shiny or unique wilds treated as important battles) (identical @origin/expansion)"
+    },
+    {
+      "id": "traditional-mode",
+      "name": "Classic random encounters",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "If you turn off the Visible Wild Pokémon setting, runs use classic movement-based random encounters instead of overworld spawns — the followmon system is simply bypassed, and no wandering sprites appear during the run.",
+      "source": "src/rogue_controller.c @vanilla L8373-8381 (CONFIG_TOGGLE_OVERWORLD_MONS gates overworld spawning; the toggle is documented on the Configuration page) (identical @origin/expansion)"
+    },
+    {
+      "id": "catching-followmons",
+      "name": "Catching a followmon",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Catching works exactly like any wild battle, with run adjustments: your new Pokémon is healed to at least half its HP and cured of status, your Strength Charms/Curses adjust its IVs, and if it matched one of your run's unique Pokémon it converts to that custom set (see Unique Pokémon). The followmon's slot then refills on the normal respawn timer.",
+      "source": "src/rogue_controller.c @vanilla L1225-1280 (Rogue_ModifyCaughtMon: heal, status cure, IV charm/curse, unique conversion) (identical @origin/expansion)"
+    }
+  ]
+}

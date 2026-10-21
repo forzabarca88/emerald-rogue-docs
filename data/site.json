@@ -1,0 +1,97 @@
+{
+  "meta": {
+    "id": "site",
+    "title": "Site configuration",
+    "description": "Central configuration for the docs site: navigation order, page titles and descriptions, version labels, hero, and footer."
+  },
+  "site": {
+    "name": "Emerald Rogue Docs",
+    "tagline": "A field guide to the Pokémon Emerald Rogue romhack",
+    "footer": {
+      "text": "Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent companion guide, not affiliated with Nintendo, Game Freak, or the romhack's authors.",
+      "source": "Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations."
+    }
+  },
+  "defaultVersion": "ex",
+  "versions": {
+    "order": [
+      "vanilla",
+      "ex"
+    ],
+    "labels": {
+      "vanilla": "Vanilla",
+      "ex": "EX",
+      "both": "Both"
+    }
+  },
+  "nav": [
+    "index",
+    "gameplay",
+    "versions",
+    "quests",
+    "config",
+    "hub",
+    "safari",
+    "routes",
+    "mechanics"
+  ],
+  "pages": {
+    "index": {
+      "title": "Home",
+      "description": "Overview and quick links to every section of the Pokémon Emerald Rogue docs."
+    },
+    "gameplay": {
+      "title": "Gameplay",
+      "description": "The core gameplay loop: hub, generated runs, room types, boss ladder, and rewards."
+    },
+    "versions": {
+      "title": "Versions",
+      "description": "How the Vanilla and EX branches differ, feature by feature."
+    },
+    "quests": {
+      "title": "Quests",
+      "description": "Every main quest, challenge, and mastery, grouped by category."
+    },
+    "config": {
+      "title": "Configuration",
+      "description": "Game modes, difficulty presets, toggles, and every configuration option."
+    },
+    "hub": {
+      "title": "Hub",
+      "description": "The persistent hub: buildable areas, upgrades, wander mons, and time of day."
+    },
+    "safari": {
+      "title": "Safari Zone",
+      "description": "How Pokémon enter the Safari pool and how hub legendary catching works."
+    },
+    "routes": {
+      "title": "Routes",
+      "description": "Route naming scheme, route types, regions, and wild typings."
+    },
+    "mechanics": {
+      "title": "Mechanics",
+      "description": "Charms and curses, followmons, the Game Show, campaigns, and other systems."
+    }
+  },
+  "hero": {
+    "eyebrow": "Roguelite romhack · Pokémon Emerald",
+    "title": "Pokémon Emerald Rogue",
+    "subtitle": "Build your hub, run generated adventure paths, and fight through the boss ladder in the Vanilla and EX editions of the romhack.",
+    "stats": [
+      { "value": "36", "label": "Routes" },
+      { "value": "14", "label": "Bosses" },
+      { "value": "60", "label": "Safari slots" },
+      { "value": "9", "label": "Quest groups" }
+    ]
+  },
+  "prose": [
+    {
+      "id": "about",
+      "heading": "About these docs",
+      "text": "This site documents Pokémon Emerald Rogue, a roguelite romhack for Pokémon Emerald. It covers the core gameplay loop, every quest, all configuration options, and the game's unique mechanics — the hub, the Safari Zone, the routes, and more — with every fact cited to the game's source code on the vanilla and expansion branches."
+    }
+  ],
+  "quickLinks": {
+    "heading": "Explore the docs"
+  }
+}

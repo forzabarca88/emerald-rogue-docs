@@ -1,0 +1,417 @@
+/* ==========================================================================
+   base.css — reset, base typography, layout scaffolding, header/footer,
+   version toggle, focus + reduced-motion policy.
+   Design contract: site/css/DESIGN.md. Tokens: tokens.css.
+   This sheet owns: reset, elements, .container/.page, #site-header,
+   .site-*, .version-toggle, #site-footer, :focus-visible, motion policy.
+   Component classes live in components.css; page overrides in pages.css.
+   ========================================================================== */
+
+/* --- Reset --------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* --- Base typography ----------------------------------------------------- */
+
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  background-image:
+    linear-gradient(var(--color-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
+  background-size: 28px 28px; /* GBA tile-grid texture */
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
+h1 {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-4);
+}
+
+h2 {
+  font-size: var(--text-xl);
+  margin-bottom: var(--space-3);
+}
+
+h3 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+}
+
+h4 {
+  font-size: var(--text-md);
+}
+
+p {
+  line-height: 1.7;
+}
+
+a {
+  color: var(--color-emerald);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+a:hover {
+  color: var(--color-gold);
+}
+
+ul,
+ol {
+  padding-left: 1.4em;
+}
+
+code,
+kbd,
+pre {
+  font-family: var(--font-mono);
+}
+
+code {
+  font-size: 0.9em;
+  background: var(--color-raised);
+  border-radius: var(--radius-sm);
+  padding: 1px 5px;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+/* neutral base for bare <button>s; .version-toggle__option and
+   .tabs__tab reset background/border/padding explicitly */
+button {
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+button:hover {
+  border-color: var(--color-emerald);
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--color-emerald);
+  color: var(--color-bg);
+}
+
+/* --- Keyboard focus (visible everywhere, one consistent style) ----------- */
+
+:focus-visible {
+  outline: 2px solid var(--color-emerald);
+  outline-offset: 2px;
+}
+
+/* --- Layout scaffolding --------------------------------------------------- */
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.page {
+  flex: 1 1 auto; /* pushes the footer to the bottom of the viewport */
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-8);
+}
+
+/* --- Header (injected into #site-header by js/nav.js) --------------------- */
+
+#site-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: var(--color-surface);
+  border-bottom: 2px solid var(--color-line);
+}
+
+/* One row above the 820px breakpoint: brand | scrollable nav | toggle.
+   The nav shrinks (and scrolls internally) instead of letting the toggle
+   wrap to a second line; wrapping only happens ≤820px (see below). */
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: 10px;
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+/* the pixel square mark — the site's "S" stands for square */
+.site-brand::before {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: var(--color-emerald);
+}
+
+.site-brand:hover {
+  color: var(--color-ink);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto; /* take the middle; shrink + scroll instead of wrapping */
+  gap: 2px;
+  min-width: 0; /* allow the row to scroll instead of breaking the header */
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.site-nav__link {
+  white-space: nowrap;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  padding: 8px 10px 7px;
+  border-bottom: 2px solid transparent;
+  transition: color var(--motion-fast) var(--ease-out);
+}
+
+.site-nav__link:hover {
+  color: var(--color-ink);
+}
+
+/* active page: GBA menu-cursor triangle + emerald underline */
+.site-nav__link--active {
+  color: var(--color-ink);
+  font-weight: 600;
+  border-bottom-color: var(--color-emerald);
+}
+
+.site-nav__link--active::before {
+  content: "▶";
+  font-size: 0.55em;
+  color: var(--color-emerald);
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+
+/* --- Version toggle (Vanilla | EX) ---------------------------------------
+   A deliberate segmented switch: each edition carries its own accent hue
+   when active — Vanilla fills Emerald, EX fills Amber Gold. The active
+   state is styled from BOTH the --active modifier (added by js/nav.js)
+   and [aria-pressed="true"], so it is a11y-state-driven. */
+
+.version-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.version-toggle__option {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 5px;
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out);
+}
+
+.version-toggle__option:hover {
+  color: var(--color-ink);
+  background: var(--color-raised);
+}
+
+.version-toggle__option--active,
+.version-toggle__option[aria-pressed="true"] {
+  color: var(--color-bg);
+  background: var(--color-emerald);
+}
+
+.version-toggle__option--active[data-version="ex"],
+.version-toggle__option[aria-pressed="true"][data-version="ex"] {
+  background: var(--color-gold);
+}
+
+/* --- Footer (injected into #site-footer by js/nav.js) --------------------- */
+
+#site-footer {
+  background: var(--color-surface);
+  border-top: 2px solid var(--color-line);
+  padding-block: var(--space-5);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.site-footer__inner p {
+  max-width: 90ch;
+}
+
+.site-footer__inner p + p {
+  margin-top: var(--space-2);
+}
+
+.site-footer__source {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  opacity: 0.8;
+}
+
+/* --- Motion policy ---------------------------------------------------------
+   All movement lives inside `no-preference`; the `reduce` block below is a
+   hard kill switch. No animation may be written outside these blocks. */
+
+@keyframes base-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes base-page-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  #site-header {
+    animation: base-fade-in var(--motion-slow) var(--ease-out) both;
+  }
+
+  .page {
+    animation: base-page-rise var(--motion-slow) var(--ease-out) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Responsive ------------------------------------------------------------
+   1024px (lg) · 820px (md) · 560px (sm) — see tokens.css + DESIGN.md §9. */
+
+@media (max-width: 820px) {
+  /* row 1: brand + toggle · row 2: scrollable nav */
+  .site-header__inner {
+    flex-wrap: wrap;
+  }
+
+  .site-brand {
+    font-size: var(--text-base);
+  }
+
+  .site-nav {
+    order: 3;
+    flex: 1 1 100%;
+    padding-block: 2px;
+  }
+}
+
+@media (max-width: 560px) {
+  :root {
+    --gutter: 16px;
+  }
+
+  h1 {
+    font-size: 2rem;
+  }
+
+  .site-brand {
+    font-size: 0.95rem;
+    gap: 8px;
+  }
+
+  .version-toggle {
+    padding: 3px;
+  }
+
+  .version-toggle__option {
+    padding: 6px 10px;
+  }
+}

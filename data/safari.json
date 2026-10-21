@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "id": "safari",
+    "title": "Safari Zone",
+    "description": "The hub's Safari Zone: the 60-slot Pokémon pool (slots 0–44 regular, 45–59 legendary), the four ways Pokémon enter it, the priority and eviction system that decides who stays, and the Legends Cave flow for re-battling the legendaries you've caught. All of the mechanics are identical between Vanilla and EX — what differs is which legendary species exist to catch."
+  },
+  "prose": [
+    {
+      "id": "where-it-fits",
+      "heading": "The Safari Zone in the hub",
+      "text": "The Safari Area is one of the four hub areas that already exists when you start, always attached to the Town Exit (which is itself attached to the Labs) — so the zone is always two hops from the Labs and never directly next to them. Its introduction tutorial plays the first time you visit. The zone is a catch practice ground for the Pokémon of your own save: up to 6 of the pooled Pokémon are visible in the grass at a time, battles are safari-style catch battles (you pick which ball to throw from your bag mid-battle), and a sign in the area lets you view the current regular pool in a special Pokédex view or “Dismiss” all regular Pokémon at once."
+    },
+    {
+      "id": "the-pool",
+      "heading": "The 60-slot pool",
+      "text": "The pool is 60 slots. Slots 0–44 (45 slots) hold “regular” Pokémon — these are the only ones that ever spawn in the open zone. Slots 45–59 (15 slots) hold legendaries — they never spawn in the open zone and can only be encountered through the Legends Cave. (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.) On top of that, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” is placed on each pushed Pokémon so the same mon can't be added twice."
+    },
+    {
+      "id": "entry-criteria",
+      "heading": "How Pokémon enter the pool",
+      "text": "Four events push Pokémon into the pool. During a run: a Pokémon you release from your party, and any Pokémon that faints and is removed from your party (right after each battle you win). When the run ends: every Pokémon still in your party plus every Pokémon in the Day Care are added. Separately, a Pokémon you just caught in a battle but chose to discard (not keep) is added at low priority — in practice it only survives in the pool if it is shiny. Legendaries land in the legendary slots; everything else goes into the regular slots."
+    },
+    {
+      "id": "priority-eviction",
+      "heading": "Priority and eviction",
+      "text": "Every pool entry has a priority score: (levels gained from when you caught it to when it was added × 2) ÷ 5 — so a mon that has only been caught and immediately released scores 0. Shinies get a flat +30 (exactly half the pool size), and any IV bonus from IV-boosting charms is stripped off before the mon is stored, so charmed mons can't fake their way in. When the relevant range (regular or legendary) is full, the game evicts in batches: every mon sharing the lowest priority is removed at once, every remaining mon's priority is lowered by that batch's count, and one of the freed slots is then taken for the new arrival. Discarded mons enter at priority 0, so they are the first to be evicted — unless they are shiny, in which case the +30 makes them as safe as any long-kept mon."
+    },
+    {
+      "id": "legends-cave",
+      "heading": "The Legends Cave",
+      "text": "Completing the “True Legend” quest (catch a legendary during an adventure) grants the hidden “Legend Cave” upgrade, which puts a cave entrance on the Safari Area. Inside stands an odd statue. If any legendaries are in the pool, you can “Make an Offering”: pick the legendary from a special Pokédex view, choose a Pokéblock whose flavor type matches one of the legendary's two types, and hand over 10 of them. The cave shakes, the legend-appears theme plays, the cry rings out — and it's a wild battle. “Dismiss Pokémon” clears every legendary out of the cave. If the pool has no legendaries, the cave is silent."
+    }
+  ],
+  "records": [
+    {
+      "id": "entry-released",
+      "name": "Released from your party",
+      "category": "entry-criterion",
+      "versions": ["vanilla", "ex"],
+      "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the victory lap after the final boss). Legendaries go to the legendary slots, everything else to the regular slots.",
+      "source": "src/rogue_controller.c @vanilla L6426-6452 (RemoveMonAtSlot, push at L6451) / @origin/expansion L6417-6443 (push at L6442); src/rogue_safari.c @vanilla L94-105 (RogueSafari_PushMon, identical @origin/expansion)"
+    },
+    {
+      "id": "entry-fainted",
+      "name": "Fainted and removed mid-run",
+      "category": "entry-criterion",
+      "versions": ["vanilla", "ex"],
+      "description": "After every battle you win in a run, any party Pokémon left at 0 HP is removed from your party and pushed into the pool the same way a release would be.",
+      "source": "src/rogue_controller.c @vanilla L6511-6562 (RemoveAnyFaintedMons, push at L6570; called after victories at L7202) / @origin/expansion L6502-6553 (push at L6561; L7193)"
+    },
+    {
+      "id": "entry-run-end",
+      "name": "When the run ends",
+      "category": "entry-criterion",
+      "versions": ["vanilla", "ex"],
+      "description": "When an adventure ends (victory or defeat), every Pokémon still in your party is added to the pool, and then every Pokémon in your Day Care is added too — so a run you lose still restocks the Safari Zone.",
+      "source": "src/rogue_controller.c @vanilla L4855-4890 (EndRogueRun; party push L4878, Day Care push L4889) / @origin/expansion L4846-4881 (party push L4869, Day Care push L4880); src/rogue_safari.c @vanilla L94-131 (identical @origin/expansion)"
+    },
+    {
+      "id": "entry-discarded",
+      "name": "Discarded after capture",
+      "category": "entry-criterion",
+      "versions": ["vanilla", "ex"],
+      "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at low priority (0) — it is evicted before any normally-added mon unless it is shiny, where it earns the +30 shiny bonus. (During a catching contest, non-shiny discards are skipped entirely.)",
+      "source": "src/battle_script_commands.c @vanilla L10283-10300 (rogue_caughtmon battle command) / @origin/expansion L15521-15538; src/rogue_controller.c @vanilla L1335-1350 (Rogue_DiscardedCaughtMon, push at L1343; identical @origin/expansion); src/rogue_safari.c @vanilla L107-118 (RogueSafari_PushLowPriorityMon, identical @origin/expansion)"
+    },
+    {
+      "id": "pool-slot-layout",
+      "name": "Slot layout (60 pool slots)",
+      "category": "pool-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "The pool is exactly 60 slots: 0–44 are regular slots (45 total — the only slots the open zone spawns from, cycling through them in order), and 45–59 are legendary slots (15 total — reachable only via the Legends Cave). A separate table of 16 “custom” slots maps unique/gift Pokémon so they keep their special sets while pooled. (The in-code comment “45-49 are for legends” is outdated; the allocation, reset and any-legends loops all use 45–59.)",
+      "source": "include/constants/rogue.h @vanilla L806-810 / @origin/expansion L808-812 (ROGUE_SAFARI_TOTAL_MONS 60, LEGENDS_START_INDEX 45, TOTAL_CUSTOM_MONS 16); src/rogue_safari.c @vanilla L313-375 (AllocSafariMonSlotFor: regular → 0..44, legendary → 45..59; identical @origin/expansion)"
+    },
+    {
+      "id": "priority-eviction",
+      "name": "Priority and eviction",
+      "category": "pool-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Each entry's priority is (levels gained since capture × 2) ÷ 5 — a freshly caught-and-released mon scores 0; shinies add a flat +30 (half the pool size); and any IV bonus from IV-boosting charms is stripped before the mon is stored. When a range (regular or legendary) is full, all mons sharing the lowest priority are evicted together as a batch, the survivors' priorities are each decremented by the batch count, and one freed slot takes the new arrival. Regular and legendary ranges never evict each other.",
+      "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88) and L313-375 (eviction batching in AllocSafariMonSlotFor; identical @origin/expansion)"
+    },
+    {
+      "id": "legends-cave",
+      "name": "Legends Cave legendary catch",
+      "category": "legends-cave",
+      "versions": ["vanilla", "ex"],
+      "steps": [
+        "Complete the “True Legend” quest (catch a legendary during an adventure) — its reward is the hidden “Legend Cave” upgrade, which adds the cave entrance to the Safari Area.",
+        "Enter the cave and talk to the odd statue. If no legendaries are in the pool, “the cave is silent.”",
+        "Choose “Make Offering” from the statue menu.",
+        "Pick the legendary you want from the special Pokédex view of your pooled legendaries.",
+        "Choose a Pokéblock to offer. Its flavor type must match one of the legendary's two types, or it “won't like that type of Pokéblock.”",
+        "Confirm the cost of 10 of that Pokéblock and scatter them near the statue.",
+        "The cave shakes, the legendary-appears theme plays, the cry rings out — and a wild battle with that legendary begins (safari-style, catchable).",
+        "Alternatively, “Dismiss Pokémon” clears every legendary out of the cave at once."
+      ],
+      "description": "The Legends Cave is how legendaries in the pool (slots 45–59) become re-encounterable: a statue that turns 10 of a liked-flavor Pokéblock into a wild battle with the legendary you pick. The whole flow is identical between versions — what differs is the roster of legendaries that can exist in the pool, since EX adds every Gen 4–9 legendary, their alternate forms, and the Z-A Floettes on top of Vanilla's Gen 1–3 set.",
+      "differences": {
+        "vanilla": "Mechanically identical cave; the catchable legendaries are limited to the Gen 1–3 legendary species (and forms) that exist in the Vanilla build.",
+        "ex": "Same cave and flow, but the legendary encounter roster adds all Gen 4–9 legendaries, alternate forms and the Z-A Floettes — so far more species can fill slots 45–59."
+      },
+      "source": "src/data/rogue/quests/default_quests.json @vanilla L647-666 (True Legend quest + reward, identical @origin/expansion); src/data/rogue_hub.h @vanilla L480-486 (Legend Cave upgrade, identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 (cave entrance metatiles, identical @origin/expansion); data/maps/Rogue_Interior_SafariCave/scripts.pory @vanilla (identical @origin/expansion); src/rogue_script.c @vanilla L1898-1910 (any-legends check), L1913-1941 (Pokéblock flavor-type check), L2013-2020 (battle enqueue; identical @origin/expansion); src/field_specials.c @vanilla L202-205 (legendary Pokédex selection); include/constants/rogue.h @vanilla L810 (cost = 10 Pokéblocks)"
+    },
+    {
+      "id": "pool-sign",
+      "name": "View and dismiss the pool",
+      "category": "pool-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "The sign in the Safari Area offers two actions: “View Pokémon” opens the regular pool (slots 0–44) in a special Pokédex view showing each mon's name, level and shininess, and “Dismiss Pokémon” clears all regular pool entries at once (the Legends Cave has its own separate “Dismiss” for the legendary slots).",
+      "source": "data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_safari.c @vanilla L524-541 (ResetAllRegularEntries L524, ResetAllLegendEntries L534; identical @origin/expansion)"
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "id": "gameshow",
+    "title": "Game Show",
+    "description": "Mr. Randoman's Game Show room: choose a Game of Skill or a Game of Luck, play through up to six rounds of trivia, memory and pure luck, and decide after every round whether to bank your prizes or risk them for a better one. It's all or nothing — lose a round and the whole shelf vanishes. The room and its games are the same in both versions, with only a cosmetic difference in how the prize shelf behaves."
+  },
+  "prose": [
+    {
+      "id": "how-it-works",
+      "heading": "Meet Mr. Randoman",
+      "text": "The Game Show is one of the special rooms that can appear on your adventure path. The host, Randoman (you'll recognize him from the random-trade encounters — he's a WAHEY person), lays out a shelf of six prizes that were pre-rolled for your visit. You pick a category: a Game of Skill (guessing games based on Pokémon knowledge) or a Game of Luck (coin flips and number guessing). A specific game is then chosen for you, and you play through its rounds."
+    },
+    {
+      "id": "rounds-and-rewards",
+      "heading": "Risk it or bank it",
+      "text": "Each game runs up to six rounds (Voltorb Flip is three). After every correct round the next prize on the shelf lights up and Randoman asks you to choose: stop now and take the prizes you've earned, or risk it for the bigger prize on offer. The answer options get harder each round — the first round offers four choices, the second five, and so on (3 + the round number). If you ever answer wrong, the game ends immediately and the entire shelf is hidden: it's all or nothing, and you leave empty-handed. Bank it, and you walk up to the shelf and collect your prizes one by one."
+    },
+    {
+      "id": "winning-and-cheating",
+      "heading": "Winning big (and what happens if you cheat)",
+      "text": "Clear all the rounds and the game ends on a high note: every prize is yours, and finishing the Game Show with a perfect run fires a special quest event. One more thing: the prize counter keeps a grudge. Interact with it when there's no active prize — Randoman takes it as cheating, a note appears ('Cheaters never prosper ke ke ke - Randoman'), and an Electrode is sent after you. The battle is treated like a legendary encounter, so it's the one thing in the Game Show you cannot catch."
+    }
+  ],
+  "records": [
+    {
+      "id": "gameshow-room",
+      "name": "Game Show Room",
+      "category": "gameshow-overview",
+      "versions": ["vanilla", "ex"],
+      "description": "A special adventure-path room (preview: 'It's a… Game Show?'). Six prize items are rolled for your visit and displayed on a shelf; the host NPC, the Game Show host sprite and the prize counter are placed in the room. The shelf's item sprites behave slightly differently between versions (see the Rewards record).",
+      "source": "data/maps/Rogue_Encounter_GameShow/map.json @vanilla (host, prize shelf local ids 11–16, prize counter object) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L18 (OBJ_LOCAL_ID_ITEM_START 11) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-whos-that",
+      "name": "Who's that Pokémon?",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "A silhouette of a random Pokémon (from the species pool available to your Pokédex, avoiding species shown recently) is displayed, and you pick its name from a list. Carries one in four of the skill-game weight.",
+      "source": "src/rogue_gameshow.c @vanilla L50-108 (random species selection from the active dex, recently-shown species excluded, 3+round options) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L194-245 (silhouette + prompt), L98-140 (skill-game selection: random(4), this game is case 0) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-whats-that-cry",
+      "name": "What's that Cry?",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "The same silhouette-and-guess format, but the prompt is the Pokémon's cry instead of its sprite. Carries two in four of the skill-game weight, so it's the most common skill game.",
+      "source": "src/rogue_gameshow.c @vanilla L50-108 (species selection shared with Who's that) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L248-308 (cry prompt), L98-140 (skill-game selection: random(4), this game is cases 1–2) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-voltorb-flip",
+      "name": "Voltorb Flip",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "The classic Voltorb Flip board: flip cards and collect all the 2s and 3s without turning over a Voltorb. Three rounds (each round counts as two prizes, and the board difficulty steps up after each clear), one in four of the skill-game weight.",
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L311-346 (3 rounds, +2 reward counter per round, difficulty level +2) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L98-140 (skill-game selection: random(4), Voltorb Flip is case 3) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-team-trivia",
+      "name": "Team Trivia (currently disabled)",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "A sixth skill game where you answer questions about your own party ('Which of your Pokémon has the highest HP?' and similar). The game is fully scripted with stat-based questions, but the validity check that gates it is hard-coded to fail with a TODO comment, so the game is never actually offered — the random(5) selection branch that would include it is dead code, and the live skill-game pool contains only the three games above (weighted 1/4, 2/4, 1/4).",
+      "source": "src/rogue_gameshow.c @vanilla L163-167 (GameShow_IsTeamTriviaRoundValid hard-coded FALSE with TODO), L179-243 (stat-based trivia question buffers) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L98-125 (selection: the validity-gated random(5) branch, whose case 4 is dead code), L348-404 (scripted game) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-coin-flip",
+      "name": "Coin Flip",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "Six rounds of pure luck: guess Heads or Tails on a fair coin each round.",
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L478-529 (Coin Flip: 6 rounds, random(2) each round), L127-139 (luck-game selection: random(2)) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-higher-lower",
+      "name": "Higher or Lower",
+      "category": "gameshow-game",
+      "versions": ["vanilla", "ex"],
+      "description": "Six rounds of number guessing: a number from 1 to 100 is shown and you guess whether the next random number will be higher or lower. Ties count against you.",
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L529-607 (Higher or Lower: 6 rounds, random numbers 1–100) (identical @origin/expansion)"
+    },
+    {
+      "id": "gameshow-rounds",
+      "name": "Rounds and escalating options",
+      "category": "gameshow-overview",
+      "versions": ["vanilla", "ex"],
+      "description": "Skill and luck games run six rounds (Voltorb Flip three). The silhouette/cry guessing games build their answer list dynamically with 3 + round number options — four choices in round one, nine by round six — so the odds of guessing right drift against you as the shelf fills.",
+      "source": "src/rogue_gameshow.c @vanilla L71-108 (GameShow_AppendSpeciesMultichoiceOptions: 3 + currentRound options, correct answer included once) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L191-310 (round loops) (identical @origin/expansion)"
+    },
+    {
+      "id": "gameshow-rewards",
+      "name": "All-or-nothing rewards",
+      "category": "gameshow-overview",
+      "versions": ["vanilla", "ex"],
+      "description": "Each of the six shelf prizes is a distinct pre-rolled item. A correct round lights up the next prize and offers you the choice to stop and collect, or risk it for the next (better) prize. A wrong answer hides the whole shelf — everything you had earned is gone. If you clear every round the game ends automatically, all prizes are collected, and a map-specific quest event is triggered. Item quantities are adjusted by the run's pickup rules when you collect.",
+      "differences": {
+        "vanilla": "The prize sprites are physically repositioned every time the shelf updates: lit prizes are snapped back to their shelf spots and hidden prizes are moved off to (0,0), so the shelf visibly reshuffles as the game plays.",
+        "ex": "Only the visibility of the prize sprites is toggled — the shelf items stay in place and simply appear and disappear."
+      },
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L431-476 (risk/stop choice, all-rounds-clear quest trigger), L478-529 (failure hides rewards via FAIL_ROUND_COUNTER) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L138-161 (UpdateRewardVisibility: all hidden on failure) / @origin/expansion L117-128 (visibility toggle only; Vanilla additionally repositions sprites via TryGetRewardOriginalCoords); data/scripts/Rogue/Rogue_Manager.pory @vanilla L1474-1508 (per-shelf pickup scripts with adjusted quantities) (identical @origin/expansion)"
+    },
+    {
+      "id": "gameshow-cheating",
+      "name": "The Cheater's Electrode",
+      "category": "gameshow-overview",
+      "versions": ["vanilla", "ex"],
+      "description": "The prize counter is wired to a trap: interacting with it while there is no active prize to claim shows a note — 'Cheaters never prosper ke ke ke - Randoman' — and starts a battle against an Electrode. The battle runs through the legendary-battle flow, so the Electrode cannot be caught.",
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L158-173 (Rogue_Interact_GiveReward: no-prize path → note + Electrode via legendary battle setup) (identical @origin/expansion)"
+    }
+  ]
+}

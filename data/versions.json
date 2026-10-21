@@ -1,0 +1,186 @@
+{
+  "meta": {
+    "id": "versions",
+    "title": "Vanilla vs Expansion",
+    "description": "How the two builds relate: the Expansion (EX) build is not a fork but the same game tree compiled with EXPANSION=1, which flips a single feature flag (-D ROGUE_EXPANSION=1) and unlocks Generations 4–9 of Pokémon, mechanics, trainers, music and hub content. Everything else — the adventure path generator, followmons, the clock, campaigns, the Safari Zone and the game modes — behaves identically in both builds, with only behaviour-neutral code differences (listed with the verified identical core below). This page is the master list of what differs and where each difference is documented in detail."
+  },
+  "prose": [
+    {
+      "id": "one-codebase-two-builds",
+      "heading": "One codebase, two builds",
+      "text": "Vanilla and EX are compiled from the same source tree. Building with EXPANSION=1 adds -D ROGUE_EXPANSION=1 to the compile (and a ROGUE_VERSION_EXPANSION flag to the pory scripts), and every version difference in the game is an #ifdef ROGUE_EXPANSION block — in the C, in the pory scripts or at build time in the generated data. Nothing is 'EX-only code that Vanilla lacks'; it is all present in both trees and selected at build time. That's why, when a file contains no such blocks, the two builds behave exactly the same in it."
+    },
+    {
+      "id": "what-stays-the-same",
+      "heading": "What does not change",
+      "text": "The core loop is version-proof: the adventure-path generator and every room type, the overworld followmon system, the time-of-day and season clocks, the legacy campaigns, the Safari Zone rules, the three game modes (Classic, Gauntlet, Fast Path), and the 36-route wild table layout (save for six Fairy typing swaps in EX) all behave identically between the builds (the only per-file code differences outside the documented ones are behaviour-neutral — see 'The identical core (verified)' below). The 138 quests that exist in both builds are byte-identical; EX adds 94 of its own on top."
+    },
+    {
+      "id": "what-changes",
+      "heading": "What changes",
+      "text": "EX is fundamentally a much bigger game: Generations 4–9 species with Mega Evolution, Z-Moves, Dynamax and Terastallization, a 37-variant Pokédex defaulting to the Gen 1–9 'Modern' dex, trainer pools from Sinnoh all the way to Paldea, Gen 4–9 music and sprites, a bigger set of boss aces and balls, six Fairy-typed routes, HM items removed from the item economy, the affection system, Mints in the hub, and different default exotic Pokémon for the Unique Lab. Most of these are documented on their own pages; the records below are the master list with pointers."
+    }
+  ],
+  "records": [
+    {
+      "id": "ex-build",
+      "name": "The EXPANSION build flag",
+      "category": "version-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "EX is produced by building the same tree with EXPANSION=1 in the Makefile: the C compiler gets -D ROGUE_EXPANSION=1 and the pory script compiler gets ROGUE_VERSION=ROGUE_VERSION_EXPANSION. Every difference on this page is an #ifdef ROGUE_EXPANSION (or build-time #if) in that shared tree, so the two builds always agree on anything not gated by the flag.",
+      "source": "Makefile @vanilla L4 (EXPANSION := 0 by default), L50-51 (pory version flag), L133-134 (assembly defsym), L177-178 (-D ROGUE_EXPANSION=1) / @origin/expansion L4 (default flipped to EXPANSION := 1), L149-150, L206-207"
+    },
+    {
+      "id": "roster-and-pokedex",
+      "name": "Roster and Pokédex",
+      "category": "roster",
+      "versions": ["vanilla", "ex"],
+      "description": "Vanilla's roster is the Gen 1–3 national dex (214 final evolution stages, 202 egg stages) with seven Pokédex variants (RBY, GSC, RSE, National Gen 1–3, Colosseum + XD), defaulting to the Gen 3 national. EX's roster is Generations 1–9 (606 final stages, 569 egg stages) with 37 Pokédex variants — the two Rogue dexes ('Modern', the default, generated from the project's Rogue Dex.csv, and 'Classic Plus'), every regional dex up to Paldea, National Gen 1–9, the Legends (Arceus/Z-A) and Conquest dexes — plus the expanded regional content in between. The per-variant list is documented on the Configuration page.",
+      "differences": {
+        "vanilla": "214 final / 202 egg species; 7 Pokédex variants; default National Gen. 3.",
+        "ex": "606 final / 569 egg species; 37 Pokédex variants; default 'Modern' (Gen 1–9 Rogue dex)."
+      },
+      "source": "include/constants/rogue.h @vanilla L750-758 (default variant + max gen per branch) / @origin/expansion L752-760, @vanilla L773-779 (species stage counts per branch) / @origin/expansion L775-781; tools/Pokabbie/PokemonDataGenerator/PokemonDataGenerator/Pokedex/PokedexGenerator.cs @vanilla L40-70 (variant lists, 'rogue_modern' from Rogue Dex.csv) (identical @origin/expansion); data/settings.json (range-pokedex-variant record) (site data, both versions)"
+    },
+    {
+      "id": "gen-mechanics",
+      "name": "Mega Evolution, Z-Moves, Dynamax, Terastallization",
+      "category": "mechanics",
+      "versions": ["ex"],
+      "description": "EX's Gen 4–9 battle mechanics — Mega Evolution, Z-Moves, Dynamax and Terastallization — are gated by items in your bag: a Mega Ring, Z-Power Ring, Dynamax Band or Tera Orb respectively. The check happens once when a run begins and the result is cached for the whole run (picking up or dropping the item mid-run has no effect until the next one). None of these exist in Vanilla builds — the checks compile to false.",
+      "source": "src/rogue_controller.c @vanilla L2685-2744 (the four enabled checks; each compiles to return FALSE) / @origin/expansion L2672-2731 (the same checks, gated on CheckBagHasItem for the Mega Ring, Z-Power Ring, Dynamax Band and Tera Orb); src/rogue_controller.c @vanilla L4652-4659 / @origin/expansion L4643-4650 (run-start cache of the four results); include/constants/items.h @origin/expansion L858-860, L942 (the four items)"
+    },
+    {
+      "id": "trainer-pool",
+      "name": "Trainer regions (Sinnoh → Paldea)",
+      "category": "roster",
+      "versions": ["ex"],
+      "description": "Vanilla's trainer pool is limited to the Gen 1–3 regions (Kanto, Johto, Hoenn) plus the Rogue-specific trainers. EX opens the Sinnoh, Unova, Kalos, Alola, Galar and Paldea region toggles in the Config Lab, so gyms, routes' trainer battles and the boss ladder can draw on the whole Gen 1–9 trainer roster. The region toggles themselves are documented on the Configuration page.",
+      "source": "include/constants/rogue.h @vanilla L297-313 (region flag bits Kanto → Paldea) (identical @origin/expansion); data/settings.json (toggle-region-sinnoh … toggle-region-paldea records, EX-only) (site data)"
+    },
+    {
+      "id": "boss-aces",
+      "name": "Boss aces and signature balls",
+      "category": "roster",
+      "versions": ["vanilla", "ex"],
+      "description": "A handful of named boss trainers carry a shiny ace Pokémon, and the ace (and the balls bosses throw) differ per build. The aces: the glitch-team Elite Four Raven, Erma and Kate, plus the four Gen 4+ villain bosses Cyrus, Ghetsis, Colress and Lysander. EX: Goomy (Raven), Fomantis (Erma), Tarountula (Kate), Giratina (Cyrus), Kyurem (Ghetsis), Genesect (Colress), Zygarde (Lysander). Vanilla: Raven and Erma have no ace at all, Kate's ace is Gastly, and all four villain bosses ace Rayquaza. Balls: EX uses Cherish Balls for the final trainers, the final boss and custom mons (and Park Balls for the special 'Pokabbie' custom mons, like Pikin), while Vanilla uses Premier for final trainers and Luxury for the final boss, custom and Pokabbie mons.",
+      "differences": {
+        "vanilla": "Aces: none (Raven/Erma), Gastly (Kate), Rayquaza (Cyrus/Ghetsis/Colress/Lysander). Balls: Premier (final trainers), Luxury (final boss, custom and Pokabbie mons).",
+        "ex": "Aces: Goomy (Raven), Fomantis (Erma), Tarountula (Kate), Giratina/Kyurem/Genesect/Zygarde (the four villain bosses). Balls: Cherish (final trainers, final boss, custom mons), Park Ball (Pokabbie mons)."
+      },
+      "source": "include/constants/rogue.h @vanilla L392-405 (EX ball + ace #defines) / L407-421 (Vanilla ball + ace #defines) (same lines @origin/expansion); src/data/rogue/trainers/rogue.json @vanilla L666-670, L794-798, L1125-1129 (KATE/ERMA/RAVEN shiny_species), team_galactic.json L36-42 (CYRUS), team_plasma.json L42, team_neoplasma.json L42-43, team_flare.json L42-43 (boss shiny aces) (identical @origin/expansion)"
+    },
+    {
+      "id": "fairy-typing",
+      "name": "Fairy typing on six routes",
+      "category": "roster",
+      "versions": ["vanilla", "ex"],
+      "description": "Six routes swap one of their three wild typing slots to Fairy in EX (Hoenn Mountain 1, Hoenn Urban 1, Kanto Urban 0, Johto Cave 0, Sinnoh 209 and Sinnoh 210), so Fairy-type wilds (and Fairy-type weather) appear on those routes in EX only. The per-route tables are on the Routes page.",
+      "source": "src/data/rogue_routes.h @vanilla L50, L84, L106, L146, L203, L222 (six #ifdef ROGUE_EXPANSION wildTypeTable swaps to Fairy) (identical @origin/expansion); data/routes.json (the six route records with differences) (site data)"
+    },
+    {
+      "id": "hm-items-removed",
+      "name": "HM items removed",
+      "category": "mechanics",
+      "versions": ["ex"],
+      "description": "EX removes the Hidden Machines from the item economy: the TM/HM item mapping covers TMs only, so HM items (Cut, Surf and friends) are not part of the run's item pool, shops or drops. Vanilla keeps the full TM + HM item range.",
+      "source": "include/constants/rogue.h @vanilla L27-29 (ROGUE_FEATURE_REMOVE_HIDDEN_MACHINES defined only under ROGUE_EXPANSION) (same lines @origin/expansion); src/party_menu.c @vanilla L5533-5538, L5551-5559 / @origin/expansion L6412-6417, L6430-6438 (TM/HM move mapping branches on the flag), src/rogue_baked.c @vanilla L1070-1081 (SanitizeItemId maps HM items to ITEM_NONE), src/rogue_query.c @vanilla L1731 (same flag) (identical @origin/expansion)"
+    },
+    {
+      "id": "affection",
+      "name": "Affection system",
+      "category": "mechanics",
+      "versions": ["ex"],
+      "description": "The affection mechanics (bonding with your Pokémon) and their run toggle exist only in EX — in Vanilla builds the enable check is compiled to always return false, so the toggle never appears in the settings menu. Documented on the Configuration page.",
+      "source": "data/settings.json (toggle-affection record) (site data); src (affection enable check gated by ROGUE_EXPANSION) / @origin/expansion (toggle present and functional)"
+    },
+    {
+      "id": "grace-cap",
+      "name": "Grace Charm/Curse cap",
+      "category": "charms",
+      "versions": ["vanilla", "ex"],
+      "description": "The one mechanical difference in the charm system: the Grace pair's stacked multiplier caps at 90 in Vanilla and 150 in EX, so in EX two Grace Charms (or Curses) still stack past the first. One line of code — the only divergence in the whole charm file.",
+      "source": "src/rogue_charms.c @vanilla L202-203 (min(count × 75, 90)) / @origin/expansion L202-203 (min(count × 75, 150)); data/charms.json (charm-grace and curse-grace records) (site data)"
+    },
+    {
+      "id": "bst-cup-gen-cap",
+      "name": "BST Cup generation cap",
+      "category": "campaigns",
+      "versions": ["vanilla", "ex"],
+      "description": "The legacy BST Cup campaign force-resets the Config Lab with a Pokédex generation cap: Gen 1–3 in Vanilla, Gen 1–8 in EX (leaving out the newest generation's mons on purpose). Everything else about the campaign is identical.",
+      "source": "src/rogue_campaign.c @vanilla L121-173 (gen limit 3 vanilla / 8 EX under #ifdef) (identical @origin/expansion); data/campaigns.json (campaign-bst-cup record) (site data)"
+    },
+    {
+      "id": "hub-divergences",
+      "name": "Hub shop and lab divergences",
+      "category": "hub",
+      "versions": ["vanilla", "ex"],
+      "description": "Four hub differences: the Unique Typings lab upgrade (9 Build Parts in Vanilla, an EX-only quest reward in EX), the Treat Shop (sells Pokéblocks in Vanilla; sells Mints for natures in EX), the Pokéblock Shop (unbuildable in Vanilla because it requires itself; buildable in EX behind the Treat Shop), and home decor (the 'Appliances' decor set is EX-only, unlocked by the Rotom mastery quest). All four are documented on the Hub page.",
+      "source": "data/hub.json (upgrade-unique-typings, upgrade-treat-shop, upgrade-pokeblock-shop, home-styles-decor records) (site data)"
+    },
+    {
+      "id": "item-naming",
+      "name": "Item naming style",
+      "category": "cosmetic",
+      "versions": ["vanilla", "ex"],
+      "description": "A surface-level difference that shows up everywhere: item names in Vanilla builds are rendered in ALL CAPS (GRACE CHARM, DISCOUND CURSE — typo included), while EX renders them in title case (Grace Charm, Discount Curse). The #ifdef pairs live in the shared items header, so this is purely a build-time string choice. These pages use the title-case (EX) names as canonical.",
+      "source": "src/data/rogue_items.h @vanilla (77 #ifdef name pairs across the file) (identical @origin/expansion)"
+    },
+    {
+      "id": "unique-mon-pools",
+      "name": "Unique Lab pools",
+      "category": "unique-mons",
+      "versions": ["vanilla", "ex"],
+      "description": "The Unique Lab's bonus pools differ: the special-ability pool is a 44-ability Gen 1–3 list in Vanilla versus a 63-ability Gen 1–9 list in EX, the curated bonus-move pool is extended in EX, and the default-spawn Exotic species swap (Vanilla: Chimecho, Aron, Misdreavus, Hoothoot, Azurill, Ekans; EX: Tympole, Burmy, Carbink, Wattrel, Shinx, Venipede, Trapinch). Documented on the Unique Pokémon page.",
+      "source": "src/rogue_gifts.c @vanilla L118-161 (Vanilla ability pool, 44 entries) / @origin/expansion L54-116 (expanded pool, 63 entries); src/data/rogue/custom_mons.json @vanilla (build-time #if species gates) (identical @origin/expansion); data/unique-mons.json (bonus-abilities and static-custom-mons records) (site data)"
+    },
+    {
+      "id": "seasonal-forms",
+      "name": "Seasonal species gating",
+      "category": "timeofday",
+      "versions": ["ex"],
+      "description": "EX's seasonal forms are gated to their season when wild encounters roll (Deerling/Sawsbuck in their matching form only, Lycanroc excluded from Dusk/Night pools). In Vanilla the gating block simply does not exist — and neither do the species. Documented on the Time of Day & Seasons page.",
+      "source": "src/rogue_controller.c @origin/expansion L9504-9527 (wild-encounter weight gating inside the EX-only block)"
+    },
+    {
+      "id": "quest-availability",
+      "name": "Quest availability",
+      "category": "quests",
+      "versions": ["vanilla", "ex"],
+      "description": "The quest catalogue is shared for 138 quests (identical in both builds); EX adds 94 quests of its own, built on the new regions, species and mechanics. The per-quest version flags and source citations are on the Quests page.",
+      "source": "data/quests.json (per-quest versions fields: 138 shared, 94 EX-only) (site data); src/data/rogue/quests.json @vanilla (quest data with build-time #if gates) (identical @origin/expansion)"
+    },
+    {
+      "id": "game-show-shelf",
+      "name": "Game Show prize shelf",
+      "category": "cosmetic",
+      "versions": ["vanilla", "ex"],
+      "description": "The one cosmetic divergence in the Game Show: Vanilla physically repositions the shelf's prize sprites as the game plays (lit prizes snap back to their shelf spots, hidden ones move off to 0,0), while EX only toggles sprite visibility and leaves the shelf in place. The games, rounds and rewards are otherwise identical.",
+      "source": "src/rogue_gameshow.c @vanilla L118-161 (UpdateRewardVisibility with TryGetRewardOriginalCoords repositioning) / @origin/expansion L117-128 (visibility toggle only); data/gameshow.json (gameshow-rewards record) (site data)"
+    },
+    {
+      "id": "pikin-mega",
+      "name": "Pikin's Mega form",
+      "category": "unique-mons",
+      "versions": ["ex"],
+      "description": "An EX-only internal fix: the Easter-egg Mareep 'Pikin' (a gift custom mon present in both builds — Abbie's Mareep — not a default spawn; its final move and Mega form unlock via the Pikin Easter-egg flag) can Mega Evolve in EX, and the Mega form is explicitly excluded from the custom-mon lookup because the Mega has its own ability. Pikin's move set itself also differs per build (Gen 3 set in Vanilla, EX moves with Fluffy/Teravolt in EX), with its final move hidden until the Easter egg is unlocked.",
+      "source": "src/rogue_gifts.c @origin/expansion L577-581 (EX-only SPECIES_PIKIN_MEGA exception in the custom-mon lookup — the file's only functional divergence, absent from @vanilla); src/rogue_gifts.c @vanilla L638 / @origin/expansion L644 (final move hidden until the flag is set), src/rogue_pokedex.c @vanilla L1150 (identical @origin/expansion, Mega alt form enabled), src/rogue_script.c @vanilla L2453 (identical @origin/expansion, easter-egg activation); src/data/rogue/custom_mons.json @vanilla L62-100 (Pikin's per-build move sets) (identical @origin/expansion)"
+    },
+    {
+      "id": "asset-differences",
+      "name": "Assets: sprites, sounds, animations",
+      "category": "cosmetic",
+      "versions": ["vanilla", "ex"],
+      "description": "Behind the mechanics, the two builds differ massively in content assets — the full diff between the branches touches ~16,400 files: thousands of Gen 4–9 Pokémon sprites and backs, item and trainer graphics, Gen 4–9 music and sound samples, battle animations, and the battle-test suite. This is what makes EX visibly and audibly a different game even before a single Gen 4 mon appears.",
+      "source": "git diff --shortstat origin/vanilla origin/expansion (16,359 files changed, 613,317 insertions(+), 139,372 deletions(-)); top deltas (git diff --name-only --no-renames, second-level counts): graphics/pokemon (8,465 files), graphics/object_events (2,409), graphics/items (1,414), src/data (1,304), sound/direct_sound_samples (1,118)"
+    },
+    {
+      "id": "identical-core",
+      "name": "The identical core (verified)",
+      "category": "version-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Verified between the branches: both builds behave the same in the adventure-path generator and room weights (rogue_adventurepaths.c), overworld followmons (rogue_followmon.c), time-of-day and seasons (rogue_timeofday.c), legacy campaigns (rogue_campaign.c), the adventure-path and all encounter-room pory scripts, trainer generation (rogue_trainers.c), baked battle flows (rogue_baked.c), the run script hub (rogue_script.c), the Safari Zone rules and the three game modes. The per-file code diffs outside the documented differences are behaviour-neutral: a commented-out unused variable in rogue_safari.c, small cleanups in rogue_hub.c (a SPECIES_OR_EGG check, an UNUSED marker and a struct initialisation), rogue_assistant.c (an unused forward declaration), rogue_assistantbox.c and rogue_worldmap.c (malloc→Alloc), rogue_player_customisation.c (an unused variable), rogue_voltorbflip.c (u8→u32) and src/data/rogue_strings.h (the version string); the SafariZone map.json files differ only in key order, and the hub's pory scripts only in the EXPANSION-flag-gated multichoice counts. The only functional divergences in the run's core code are the single-line Grace cap, the Game Show shelf repositioning, the Pikin Mega exception and the small roster/mechanics blocks listed above.",
+      "source": "git diff origin/vanilla origin/expansion -- src/ (no diff for rogue_adventurepaths.c, rogue_followmon.c, rogue_timeofday.c, rogue_campaign.c, rogue_trainers.c, rogue_baked.c, rogue_script.c; behaviour-neutral diffs in rogue_safari.c, rogue_hub.c, rogue_assistant.c, rogue_assistantbox.c, rogue_player_customisation.c, rogue_voltorbflip.c, rogue_worldmap.c and src/data/rogue_strings.h) and all encounter map scripts under data/maps/ (Rogue_AdventurePaths, all Rogue_Encounter_* maps — 0 diffs)"
+    }
+  ]
+}

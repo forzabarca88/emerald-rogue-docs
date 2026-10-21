@@ -1,0 +1,12 @@
+{
+  "name": "emerald-rogue-docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Static, zero-dependency docs site for the Pokémon Emerald Rogue romhack (Vanilla + EX), deployed to GitHub Pages.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test \"test/**/*.test.mjs\"",
+    "extract:quests": "node scripts/extract/quests.mjs"
+  }
+}

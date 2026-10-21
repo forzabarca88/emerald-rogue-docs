@@ -1,0 +1,449 @@
+{
+  "meta": {
+    "id": "routes",
+    "title": "Routes",
+    "description": "The 36 route maps that adventure paths are built from: the ROGUE_ROUTE naming scheme, the six terrain types, each route's three-type wild Pokémon table, forest/cave item drop rarity bonuses, the calm/average/tough route sub-types, and the six FAIRY typing swaps EX makes. The route table itself is byte-identical between Vanilla and EX — all 36 routes (including Sinnoh's) exist in both versions."
+  },
+  "prose": [
+    {
+      "id": "naming-scheme",
+      "heading": "The route naming scheme",
+      "text": "Every route is its own dedicated map with the name ROGUE_ROUTE_<Region>_<Type><N>. Hoenn routes carry no region prefix (ROGUE_ROUTE_FIELD0, ROGUE_ROUTE_CAVE0, ROGUE_ROUTE_MOUNTAIN1…), while Kanto, Johto and Sinnoh routes are prefixed (ROGUE_ROUTE_KANTO_FIELD0, ROGUE_ROUTE_JOHTO_CAVE0, ROGUE_ROUTE_SINNOH_201). Sinnoh routes use the region's real route numbers — 201, 205, 207, 209, 210, 212, 214, 215, 217 — plus three named locations: EternaForest, MtCoronet and IronIsland. The complete table holds 36 routes: 12 Hoenn, 6 Kanto, 6 Johto, 12 Sinnoh. The table is identical between the Vanilla and EX versions — all 36 routes, including Sinnoh's, exist in both; the only branch difference in the file is the wild type table of six routes (EX swaps one type to Fairy) and the legendary encounter table that lives in the same header."
+    },
+    {
+      "id": "type-taxonomy",
+      "heading": "Route types and wild Pokémon",
+      "text": "Routes come in six terrain types — Field, Forest, Cave, Mountain, WaterFront and Urban — and each route carries a wild type table of exactly three types (for example, Hoenn Forest 0: Bug, Ghost, Poison). While you are on a route, wild Pokémon are not filtered by those three types as a set: instead, each route room picks a single hint type (cycling through the route's three), and only the very first wild encounter must match it — if no valid species has that type, the game falls back to any species — while the rest of the encounters roll unfiltered. Each route can also define an item drop rarity bonus, which is added to every item drop it makes: of the three forest routes, two (Hoenn Forest 0 and Kanto Forest 0) have rarity 1 — Sinnoh's Eterna Forest has no bonus — and all three cave routes (Hoenn, Kanto and Johto Cave 0) have rarity 2, as do Sinnoh's two named maps Mt. Coronet and Iron Island. Forests and caves are therefore the best routes for item hunting."
+    },
+    {
+      "id": "calm-average-tough",
+      "heading": "Calm, Average and Tough routes",
+      "text": "Every Route room on a generated path rolls a difficulty sub-type: calm, average or tough. From boss difficulty 0 up to and including 8 — the first Elite Four path — the roll is calm 3 / average 4 / tough 1; from difficulty 9 (the second Elite Four path) onwards it switches to calm 0 / average 1 / tough 8, so tough routes dominate the late game. The sub-type tunes what the route offers: calm routes spawn 5 wild grass encounters, average 3 and tough 2 (water encounters are 2/1/1); trainer spawns are 20 points less likely on calm routes; item drops land 65% / 80% / 95% of the time with item rarity adjusted −1 / 0 / +1; and the chance the route has themed weather — matched to one of its three wild types — is 5% / 25% / 45%."
+    },
+    {
+      "id": "on-the-path",
+      "heading": "How routes appear on the adventure path",
+      "text": "A Route room is one of the 16 room types a generated adventure path can contain, alongside rest stops, team hideouts, honey trees, labs, shrines, signs and the final boss room. When a Route room is placed, the game picks a route from the full 36-route table with a seeded weighted roll: every route has a fixed delay seed (one of three), and for the current boss-difficulty tier only routes whose seed matches that tier are eligible — a pacing rule that brings different route groups into play as the ladder climbs (if none match, every route becomes eligible again as a fallback). Repetition is handled separately: an 18-slot history buffer remembers every route already placed on the current path, and those routes get zero weight, so the same route can never appear twice on one path. The room's warp then leads into the chosen route map. A route's region flag also sets its battle music: Kanto routes play Red/Green (Gen 1) tracks, Johto routes HeartGold/SoulSilver-style, Sinnoh routes Diamond/Pearl-style, and Hoenn routes keep the default Emerald themes."
+    }
+  ],
+  "records": [
+    {
+      "id": "hoenn-field-0",
+      "name": "Hoenn Field 0",
+      "code": "ROGUE_ROUTE_FIELD0",
+      "region": "Hoenn",
+      "terrain": "Field",
+      "type": ["Grass", "Normal", "Flying"],
+      "versions": ["vanilla", "ex"],
+      "description": "Open grassland with wild Grass, Normal and Flying-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L20-24 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-field-1",
+      "name": "Hoenn Field 1",
+      "code": "ROGUE_ROUTE_FIELD1",
+      "region": "Hoenn",
+      "terrain": "Field",
+      "type": ["Electric", "Steel", "Ice"],
+      "versions": ["vanilla", "ex"],
+      "description": "Open grassland with wild Electric, Steel and Ice-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L26-29 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-forest-0",
+      "name": "Hoenn Forest 0",
+      "code": "ROGUE_ROUTE_FOREST0",
+      "region": "Hoenn",
+      "terrain": "Forest",
+      "type": ["Bug", "Ghost", "Poison"],
+      "dropRarity": 1,
+      "versions": ["vanilla", "ex"],
+      "description": "Dense forest with wild Bug, Ghost and Poison-type Pokémon; item drops roll at +1 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L31-35 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-cave-0",
+      "name": "Hoenn Cave 0",
+      "code": "ROGUE_ROUTE_CAVE0",
+      "region": "Hoenn",
+      "terrain": "Cave",
+      "type": ["Rock", "Ice", "Dragon"],
+      "dropRarity": 2,
+      "versions": ["vanilla", "ex"],
+      "description": "Cave with wild Rock, Ice and Dragon-type Pokémon; item drops roll at +2 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L37-41 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-mountain-0",
+      "name": "Hoenn Mountain 0",
+      "code": "ROGUE_ROUTE_MOUNTAIN0",
+      "region": "Hoenn",
+      "terrain": "Mountain",
+      "type": ["Ground", "Fire", "Fighting"],
+      "versions": ["vanilla", "ex"],
+      "description": "Mountain terrain with wild Ground, Fire and Fighting-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L43-46 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-mountain-1",
+      "name": "Hoenn Mountain 1",
+      "code": "ROGUE_ROUTE_MOUNTAIN1",
+      "region": "Hoenn",
+      "terrain": "Mountain",
+      "type": ["Fairy", "Dark", "Psychic"],
+      "versions": ["vanilla", "ex"],
+      "description": "Mountain terrain. EX swaps the first wild type from Fighting to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Fighting, Dark, Psychic.",
+        "ex": "Wild types: Fairy, Dark, Psychic — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L48-54 / @origin/expansion L48-54 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L53 / @origin/expansion L51)"
+    },
+    {
+      "id": "hoenn-mountain-2",
+      "name": "Hoenn Mountain 2",
+      "code": "ROGUE_ROUTE_MOUNTAIN2",
+      "region": "Hoenn",
+      "terrain": "Mountain",
+      "type": ["Ground", "Ghost", "Fire"],
+      "versions": ["vanilla", "ex"],
+      "description": "Mountain terrain with wild Ground, Ghost and Fire-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L57-60 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-mountain-3",
+      "name": "Hoenn Mountain 3",
+      "code": "ROGUE_ROUTE_MOUNTAIN3",
+      "region": "Hoenn",
+      "terrain": "Mountain",
+      "type": ["Rock", "Dragon", "Poison"],
+      "versions": ["vanilla", "ex"],
+      "description": "Mountain terrain with wild Rock, Dragon and Poison-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L62-65 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-water-front-0",
+      "name": "Hoenn Water Front 0",
+      "code": "ROGUE_ROUTE_WATER_FRONT0",
+      "region": "Hoenn",
+      "terrain": "WaterFront",
+      "type": ["Water", "Flying", "Grass"],
+      "versions": ["vanilla", "ex"],
+      "description": "Coastal terrain with wild Water, Flying and Grass-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L67-70 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-water-front-1",
+      "name": "Hoenn Water Front 1",
+      "code": "ROGUE_ROUTE_WATER_FRONT1",
+      "region": "Hoenn",
+      "terrain": "WaterFront",
+      "type": ["Normal", "Fighting", "Dark"],
+      "versions": ["vanilla", "ex"],
+      "description": "Coastal terrain with wild Normal, Fighting and Dark-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L72-75 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-urban-0",
+      "name": "Hoenn Urban 0",
+      "code": "ROGUE_ROUTE_URBAN0",
+      "region": "Hoenn",
+      "terrain": "Urban",
+      "type": ["Steel", "Electric", "Psychic"],
+      "versions": ["vanilla", "ex"],
+      "description": "Urban terrain with wild Steel, Electric and Psychic-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L77-80 (identical @origin/expansion)"
+    },
+    {
+      "id": "hoenn-urban-1",
+      "name": "Hoenn Urban 1",
+      "code": "ROGUE_ROUTE_URBAN1",
+      "region": "Hoenn",
+      "terrain": "Urban",
+      "type": ["Fairy", "Ice", "Bug"],
+      "versions": ["vanilla", "ex"],
+      "description": "Urban terrain. EX swaps the first wild type from Water to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Water, Ice, Bug.",
+        "ex": "Wild types: Fairy, Ice, Bug — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L82-88 / @origin/expansion L82-88 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L87 / @origin/expansion L85)"
+    },
+    {
+      "id": "kanto-field-0",
+      "name": "Kanto Field 0",
+      "code": "ROGUE_ROUTE_KANTO_FIELD0",
+      "region": "Kanto",
+      "terrain": "Field",
+      "type": ["Normal", "Flying", "Grass"],
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled open grassland with wild Normal, Flying and Grass-type Pokémon; battles use Red/Green (Gen 1) music.",
+      "source": "src/data/rogue_routes.h @vanilla L93-97 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Kanto → MUS_RG_*); include/constants/songs.h @vanilla L418-493 / @origin/expansion L418-493 (the 'FRLG Music' section: Gen 1 Red/Green tracks)"
+    },
+    {
+      "id": "kanto-mountain-0",
+      "name": "Kanto Mountain 0",
+      "code": "ROGUE_ROUTE_KANTO_MOUNTAIN0",
+      "region": "Kanto",
+      "terrain": "Mountain",
+      "type": ["Fighting", "Rock", "Electric"],
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled mountain with wild Fighting, Rock and Electric-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L99-102 (identical @origin/expansion)"
+    },
+    {
+      "id": "kanto-urban-0",
+      "name": "Kanto Urban 0",
+      "code": "ROGUE_ROUTE_KANTO_URBAN0",
+      "region": "Kanto",
+      "terrain": "Urban",
+      "type": ["Water", "Fairy", "Steel"],
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled urban route. EX swaps the second wild type from Psychic to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Water, Psychic, Steel.",
+        "ex": "Wild types: Water, Fairy, Steel — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L104-110 / @origin/expansion L104-110 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L109 / @origin/expansion L107)"
+    },
+    {
+      "id": "kanto-forest-0",
+      "name": "Kanto Forest 0",
+      "code": "ROGUE_ROUTE_KANTO_FOREST0",
+      "region": "Kanto",
+      "terrain": "Forest",
+      "type": ["Bug", "Poison", "Dark"],
+      "dropRarity": 1,
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled forest with wild Bug, Poison and Dark-type Pokémon; item drops roll at +1 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L113-117 (identical @origin/expansion)"
+    },
+    {
+      "id": "kanto-cave-0",
+      "name": "Kanto Cave 0",
+      "code": "ROGUE_ROUTE_KANTO_CAVE0",
+      "region": "Kanto",
+      "terrain": "Cave",
+      "type": ["Ground", "Fire", "Dragon"],
+      "dropRarity": 2,
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled cave with wild Ground, Fire and Dragon-type Pokémon; item drops roll at +2 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L119-123 (identical @origin/expansion)"
+    },
+    {
+      "id": "kanto-urban-1",
+      "name": "Kanto Urban 1",
+      "code": "ROGUE_ROUTE_KANTO_URBAN1",
+      "region": "Kanto",
+      "terrain": "Urban",
+      "type": ["Ghost", "Ice", "Psychic"],
+      "versions": ["vanilla", "ex"],
+      "description": "Kanto-styled urban route with wild Ghost, Ice and Psychic-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L125-128 (identical @origin/expansion)"
+    },
+    {
+      "id": "johto-field-0",
+      "name": "Johto Field 0",
+      "code": "ROGUE_ROUTE_JOHTO_FIELD0",
+      "region": "Johto",
+      "terrain": "Field",
+      "type": ["Electric", "Grass", "Dark"],
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled open grassland with wild Electric, Grass and Dark-type Pokémon; battles use HeartGold/SoulSilver-style music.",
+      "source": "src/data/rogue_routes.h @vanilla L133-136 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Johto → MUS_HG_*); include/constants/songs.h @vanilla L548-615 / @origin/expansion L549-616 (MUS_HG_* HeartGold tracks)"
+    },
+    {
+      "id": "johto-field-1",
+      "name": "Johto Field 1",
+      "code": "ROGUE_ROUTE_JOHTO_FIELD1",
+      "region": "Johto",
+      "terrain": "Field",
+      "type": ["Bug", "Normal", "Poison"],
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled open grassland with wild Bug, Normal and Poison-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L138-141 (identical @origin/expansion)"
+    },
+    {
+      "id": "johto-cave-0",
+      "name": "Johto Cave 0",
+      "code": "ROGUE_ROUTE_JOHTO_CAVE0",
+      "region": "Johto",
+      "terrain": "Cave",
+      "type": ["Ice", "Fairy", "Ground"],
+      "dropRarity": 2,
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled cave with item drops at +2 rarity. EX swaps the second wild type from Dark to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Ice, Dark, Ground.",
+        "ex": "Wild types: Ice, Fairy, Ground — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L143-150 / @origin/expansion L143-150 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L149 / @origin/expansion L147)"
+    },
+    {
+      "id": "johto-water-front-0",
+      "name": "Johto Water Front 0",
+      "code": "ROGUE_ROUTE_JOHTO_WATER_FRONT0",
+      "region": "Johto",
+      "terrain": "WaterFront",
+      "type": ["Water", "Dragon", "Ghost"],
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled coast with wild Water, Dragon and Ghost-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L153-156 (identical @origin/expansion)"
+    },
+    {
+      "id": "johto-urban-0",
+      "name": "Johto Urban 0",
+      "code": "ROGUE_ROUTE_JOHTO_URBAN0",
+      "region": "Johto",
+      "terrain": "Urban",
+      "type": ["Steel", "Psychic", "Flying"],
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled urban route with wild Steel, Psychic and Flying-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L158-161 (identical @origin/expansion)"
+    },
+    {
+      "id": "johto-mountain-0",
+      "name": "Johto Mountain 0",
+      "code": "ROGUE_ROUTE_JOHTO_MOUNTAIN0",
+      "region": "Johto",
+      "terrain": "Mountain",
+      "type": ["Fire", "Rock", "Fighting"],
+      "versions": ["vanilla", "ex"],
+      "description": "Johto-styled mountain with wild Fire, Rock and Fighting-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L163-166 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-201",
+      "name": "Sinnoh Route 201",
+      "code": "ROGUE_ROUTE_SINNOH_201",
+      "region": "Sinnoh",
+      "type": ["Normal", "Bug", "Flying"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (201, Lake Valor), with wild Normal, Bug and Flying-type Pokémon; battles use Diamond/Pearl-style music.",
+      "source": "src/data/rogue_routes.h @vanilla L210-213 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Sinnoh → MUS_DP_*); include/constants/songs.h @vanilla L617-671 / @origin/expansion L618-672 (MUS_DP_* Diamond/Pearl tracks)"
+    },
+    {
+      "id": "sinnoh-route-205",
+      "name": "Sinnoh Route 205",
+      "code": "ROGUE_ROUTE_SINNOH_205",
+      "region": "Sinnoh",
+      "type": ["Flying", "Water", "Rock"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (205, Lake Veronia), with wild Flying, Water and Rock-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L171-174 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-207",
+      "name": "Sinnoh Route 207",
+      "code": "ROGUE_ROUTE_SINNOH_207",
+      "region": "Sinnoh",
+      "type": ["Rock", "Fire", "Dragon"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (207, Snowpoint Pass), with wild Rock, Fire and Dragon-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L181-184 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-209",
+      "name": "Sinnoh Route 209",
+      "code": "ROGUE_ROUTE_SINNOH_209",
+      "region": "Sinnoh",
+      "type": ["Fairy", "Ghost", "Electric"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (209, Lake Acuity). EX swaps the first wild type from Normal to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Normal, Ghost, Electric.",
+        "ex": "Wild types: Fairy, Ghost, Electric — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L220-226 / @origin/expansion L220-226 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L225 / @origin/expansion L223)"
+    },
+    {
+      "id": "sinnoh-route-210",
+      "name": "Sinnoh Route 210",
+      "code": "ROGUE_ROUTE_SINNOH_210",
+      "region": "Sinnoh",
+      "type": ["Dragon", "Psychic", "Fairy"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (210, the Waypoint). EX swaps the third wild type from Ghost to Fairy.",
+      "differences": {
+        "vanilla": "Wild types: Dragon, Psychic, Ghost.",
+        "ex": "Wild types: Dragon, Psychic, Fairy — EX adds a Fairy typing."
+      },
+      "source": "src/data/rogue_routes.h @vanilla L201-207 / @origin/expansion L201-207 (wildTypeTable inside #ifdef ROGUE_EXPANSION: @vanilla L206 / @origin/expansion L204)"
+    },
+    {
+      "id": "sinnoh-route-212",
+      "name": "Sinnoh Route 212",
+      "code": "ROGUE_ROUTE_SINNOH_212",
+      "region": "Sinnoh",
+      "type": ["Water", "Poison", "Ground"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (212, the Canyon), with wild Water, Poison and Ground-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L191-194 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-214",
+      "name": "Sinnoh Route 214",
+      "code": "ROGUE_ROUTE_SINNOH_214",
+      "region": "Sinnoh",
+      "type": ["Dark", "Fighting", "Grass"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (214, Valor Village), with wild Dark, Fighting and Grass-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L215-218 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-215",
+      "name": "Sinnoh Route 215",
+      "code": "ROGUE_ROUTE_SINNOH_215",
+      "region": "Sinnoh",
+      "type": ["Poison", "Normal", "Ice"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (215, Canalave), with wild Poison, Normal and Ice-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L186-189 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-route-217",
+      "name": "Sinnoh Route 217",
+      "code": "ROGUE_ROUTE_SINNOH_217",
+      "region": "Sinnoh",
+      "type": ["Ice", "Fighting", "Dark"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh route named for its real region route number (217, Canalave coastal area), with wild Ice, Fighting and Dark-type Pokémon.",
+      "source": "src/data/rogue_routes.h @vanilla L196-199 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-eterna-forest",
+      "name": "Sinnoh Eterna Forest",
+      "code": "ROGUE_ROUTE_SINNOH_ETERNA_FOREST",
+      "region": "Sinnoh",
+      "terrain": "Forest",
+      "type": ["Grass", "Bug", "Ghost"],
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh's named forest route (Eterna Forest), with wild Grass, Bug and Ghost-type Pokémon. Unlike the Hoenn and Kanto forests it has no item drop rarity bonus.",
+      "source": "src/data/rogue_routes.h @vanilla L176-179 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-mt-coronet",
+      "name": "Sinnoh Mt. Coronet",
+      "code": "ROGUE_ROUTE_SINNOH_MT_CORONET",
+      "region": "Sinnoh",
+      "terrain": "Mountain",
+      "type": ["Psychic", "Ground", "Steel"],
+      "dropRarity": 2,
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh's named mountain route (Mt. Coronet), with wild Psychic, Ground and Steel-type Pokémon; item drops roll at +2 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L229-233 (identical @origin/expansion)"
+    },
+    {
+      "id": "sinnoh-iron-island",
+      "name": "Sinnoh Iron Island",
+      "code": "ROGUE_ROUTE_SINNOH_IRON_ISLAND",
+      "region": "Sinnoh",
+      "terrain": "Island",
+      "type": ["Steel", "Electric", "Fire"],
+      "dropRarity": 2,
+      "versions": ["vanilla", "ex"],
+      "description": "Sinnoh's named island route (Iron Island), with wild Steel, Electric and Fire-type Pokémon; item drops roll at +2 rarity.",
+      "source": "src/data/rogue_routes.h @vanilla L235-239 (identical @origin/expansion)"
+    }
+  ]
+}
