@@ -26,6 +26,11 @@ jobs:
           node-version: 24
       - run: node scripts/build.mjs
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 1
 
   deploy:
     environment:
@@ -35,6 +40,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/configure-pages@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
