@@ -23,4 +23,4 @@ Write comprehensive static web based user documentation on `Pokemon Emerald Rogu
 
 ## References
 
-- The git source for `pokeemerald-rogue` available in the `references` directory must be the primary reference for all documentation.
+- The git source for `pokeemerald-rogue` available in the `references` directory must be the primary reference for all documentation. **Always** ensure the latest code has been fetched prior to reading files.
