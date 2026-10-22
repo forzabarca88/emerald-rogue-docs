@@ -68,3 +68,6 @@
 - `site/js/pages/routes.js` — renders the routes page: the naming-scheme explainer, the terrain taxonomy with a terrain chip row, the 36 routes as a region-grouped card grid with an All/region filter (the selection survives version re-renders), wild-type chips scoped to the active version (the six FAIRY-swap routes re-read their Vanilla variant from `differences`), drop rarity, difference notes, and the sub-type and path-placement prose, all from `data/routes.json`.
 - `site/js/pages/mechanics.js` — renders the mechanics page: one section per system in order (Charms & Curses as a 17/26 two-card-column split, then Followmons, Game Show, Time of Day & Seasons, Unique mons and Legacy Campaigns), each with its prose blocks, version-badged cards and per-version difference notes, plus an in-page anchor-chip nav, all from the six mechanics data files.
 - `test/e2e.test.mjs` — end-to-end tests: the build output is valid and the served home, gameplay, versions, quests, configuration, hub, safari, routes, mechanics and 404 pages return 200 with their static markers.
+
+### Project Maintenance - Subject Matter Expert Notes
+
