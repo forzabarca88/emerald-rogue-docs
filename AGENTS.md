@@ -20,7 +20,7 @@
 - `SPEC.md` — the project's original requirements brief: goal, technical constraints and the per-page functional requirements the site must cover.
 - `package.json` — zero-dependency manifest defining the `build`, `test`, `extract:quests`, and `verify:citations` npm scripts.
 - `.gitignore` — ignores the vendored `references/` game source and the generated `dist/` build output.
-- `.github/workflows/pages.yml` — GitHub Actions workflow that builds and runs the test suite on `main` (or manual dispatch), then deploys `dist/` to GitHub Pages (major-tag action pins, with a note that SHA-pinning is the stronger option for deploy workflows).
+- `.github/workflows/pages.yml` — GitHub Actions workflow that runs the test suite on pushes to `main`, pull requests targeting `main` and manual dispatch, and (for non-PR events) builds and deploys `dist/` to GitHub Pages (major-tag action pins, with a note that SHA-pinning is the stronger option for deploy workflows).
 - `data/adventure.json` — adventure-path reference data: how each run's path is generated, all 16 room types with their placement rules and weights, the 14-boss ladder (8 gyms, 4 Elite Four, Champion, final) and the victory lap.
 - `data/campaigns.json` — legacy-campaigns reference data: the seven hidden-phrase campaign modes (BST Cup, Classic, Battle Addict, Auto Battler, LaterManner, Limited Capture, One Hit), their unlock phrases, per-mode rules and the low-is-better scoring system.
 - `data/charms.json` — charms-and-curses reference data: all 17 Charms and 26 Curses with per-item effects, stacking/cap formulas and item sources, plus the one Vanilla-vs-EX mechanical divergence (the Grace cap: 90 vs 150) and the Vanilla 'DISCOUND CURSE' typo.
