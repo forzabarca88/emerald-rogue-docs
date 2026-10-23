@@ -28,7 +28,7 @@
       "category": "unique-mon-overview",
       "versions": ["vanilla", "ex"],
       "description": "Five save slots (DYNAMIC_UNIQUE_MON_COUNT 5) hold 'dynamic' custom mons: species rolled from your active Pokédex, each with a rarity and a countdown. The slots are refreshed when a run begins and ends, and any species currently on your route triggers the detection alert. The system is identical in both versions; the pools of bonus abilities and default exotic species differ.",
-      "source": "include/constants/rogue.h @vanilla L814 (DYNAMIC_UNIQUE_MON_COUNT 5) (identical @origin/expansion); src/rogue_gifts.c @vanilla L1222-1330 (slot fill/refresh logic) (identical @origin/expansion); src/rogue_controller.c @vanilla L4649 (refresh at run start), L4895 (refresh at run end), L3482-3484 (countdown ticks every in-game minute) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L814 / @origin/expansion L816 (DYNAMIC_UNIQUE_MON_COUNT 5); src/rogue_gifts.c @vanilla L1222-1330 / @origin/expansion L1228-1336 (slot fill/refresh logic); src/rogue_controller.c @vanilla L4649 (refresh at run start), L4895 (refresh at run end), L3482-3484 (countdown ticks every in-game minute) / @origin/expansion L4640, L4886, L3473-3475"
     },
     {
       "id": "lab-slots",
@@ -36,7 +36,7 @@
       "category": "unique-mon-overview",
       "versions": ["vanilla", "ex"],
       "description": "The base Unique Lab hub upgrade unlocks slots 1–3; two further upgrades ('Lab Slots') unlock slot 4 and slot 5. Each active slot counts down in in-game minutes, starting faster for lower slots: slot 1 starts at 60 minutes and each higher slot starts 30 minutes later (60, 90, 120, 150, 180 for slots 1–5), so slots expire on a rolling basis and are re-rolled at the start of your next run. Expired slots are compacted so the active unique mons always sit in the first slots.",
-      "source": "src/rogue_gifts.c @vanilla L1150-1165 (slot unlock: base lab → slots 0–2, slot 3 → SLOTS0 upgrade, slot 4 → SLOTS1 upgrade), L1301 (countdown 60 + 30 × slot), L1265-1283 (invalid slots compacted and re-rolled) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1150-1165 (slot unlock: base lab → slots 0–2, slot 3 → SLOTS0 upgrade, slot 4 → SLOTS1 upgrade), L1301 (countdown 60 + 30 × slot), L1265-1283 (invalid slots compacted and re-rolled) / @origin/expansion L1156-1171, L1307, L1271-1289"
     },
     {
       "id": "rarity-roll",
@@ -44,7 +44,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "Each slot roll is Random() % 7: one in seven is Exotic, two in seven Epic, two in seven Rare and two in seven Common. The result is then downgraded through any rarities your lab upgrades don't yet support (Exotic→Epic without the Exotic upgrade, Epic→Rare, Rare→Common), so a brand-new lab only ever rolls Commons until it is upgraded.",
-      "source": "src/rogue_gifts.c @vanilla L1107-1148 (RandomRarity: 1/7 Exotic, 2/7 Epic, 2/7 Rare, 2/7 Common, then downgrade chain by lab rarity upgrades) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1107-1148 / @origin/expansion L1113-1154 (RandomRarity: 1/7 Exotic, 2/7 Epic, 2/7 Rare, 2/7 Common, then downgrade chain by lab rarity upgrades)"
     },
     {
       "id": "rarity-common",
@@ -52,7 +52,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "The everyday rarity: two bonus moves drawn from the curated pool. With the Unique Typings lab upgrade, a Common roll can instead be a type-swapped mon (a single random type, no bonus moves).",
-      "source": "src/rogue_gifts.c @vanilla L1008-1012 (Common: move1+move2, original format), L1032-1034 (Common: type only, mon-type format) (identical @origin/expansion); include/rogue_gifts.h @vanilla L5-11 (rarity comments) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1008-1012 (Common: move1+move2, original format), L1032-1034 (Common: type only, mon-type format) / @origin/expansion L1014-1018, L1038-1040; include/rogue_gifts.h @vanilla L5-11 (rarity comments) (identical @origin/expansion)"
     },
     {
       "id": "rarity-rare",
@@ -60,7 +60,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "One bonus move plus a special ability from the curated pool. With the Unique Typings lab upgrade, a Rare roll can instead be a type-swapped mon with two bonus moves.",
-      "source": "src/rogue_gifts.c @vanilla L1014-1017 (Rare: move1 + ability, original format), L1036-1039 (Rare: type + 2 moves, mon-type format) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1014-1017 (Rare: move1 + ability, original format), L1036-1039 (Rare: type + 2 moves, mon-type format) / @origin/expansion L1020-1023, L1042-1045"
     },
     {
       "id": "rarity-epic",
@@ -68,7 +68,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "Three bonus moves plus a special ability — the strongest 'rolled' rarity. With the Unique Typings lab upgrade, an Epic roll can instead be a type-swapped mon with two bonus moves and a special ability.",
-      "source": "src/rogue_gifts.c @vanilla L1019-1024 (Epic: move1+move2+move3 + ability, original format), L1041-1045 (Epic: type + 2 moves + ability, mon-type format) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1019-1024 (Epic: move1+move2+move3 + ability, original format), L1041-1045 (Epic: type + 2 moves + ability, mon-type format) / @origin/expansion L1025-1030, L1047-1051"
     },
     {
       "id": "rarity-exotic",
@@ -76,7 +76,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "The jackpot roll (1 in 7): instead of a random bonus set, the slot holds a bespoke 'Exotic' mon from the static custom pool — the special mons tied to quests and default spawns. An Exotic slot picks an unused unlocked Exotic mon, and if every one is already in play it falls back to an Epic roll. Requires the Exotic lab upgrade or it downgrades.",
-      "source": "src/rogue_gifts.c @vanilla L1107-1129 (1/7 Exotic), L1303-1314 (Exotic slot: unused unlocked exotic mon, Epic fallback), L1138-1139 (Exotic requires the Exotic lab upgrade) (identical @origin/expansion); src/rogue_gifts.c @vanilla L1181-1220 (SelectUnusedUnlockedExoticMon: default-spawn custom mons + unlocked quest mons) (identical @origin/expansion)"
+      "source": "src/rogue_gifts.c @vanilla L1107-1129 (1/7 Exotic), L1303-1314 (Exotic slot: unused unlocked exotic mon, Epic fallback), L1138-1139 (Exotic requires the Exotic lab upgrade) / @origin/expansion L1113-1135, L1309-1320, L1144-1145; src/rogue_gifts.c @vanilla L1181-1220 / @origin/expansion L1187-1226 (SelectUnusedUnlockedExoticMon: default-spawn custom mons + unlocked quest mons)"
     },
     {
       "id": "bonus-moves",
@@ -84,7 +84,7 @@
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
       "description": "Bonus moves are drawn from a curated in-game list (the sDynamicCustomMonMoves table), excluding anything the species already learns by level-up or from tutors — so a unique mon's bonus set is always genuinely new to it. The available pool grows in EX, which adds newer-generation moves to the table.",
-      "source": "src/rogue_gifts.c @vanilla L983-995 (query: include curated move pool, exclude the species' level-up and tutor moves) (identical @origin/expansion); src/rogue_gifts.c @vanilla (sDynamicCustomMonMoves table, extended in EX) / @origin/expansion (larger table)"
+      "source": "src/rogue_gifts.c @vanilla L983-995 / @origin/expansion L989-1001 (query: include curated move pool, exclude the species' level-up and tutor moves); src/rogue_gifts.c @vanilla (sDynamicCustomMonMoves table, extended in EX) / @origin/expansion (larger table)"
     },
     {
       "id": "bonus-abilities",
@@ -104,7 +104,7 @@
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
       "description": "A lab upgrade that changes the format of rolled unique mons: instead of bonus moves and abilities, a mon can get a swapped type — its primary type is replaced with a random one that fits its typing rules. Available from Common (type only) up to Epic (type + two moves + ability). Without the upgrade, all rolls use the standard bonus-move format.",
-      "source": "src/rogue_gifts.c @vanilla L975-981 (mon-type format locked behind HUB_UPGRADE_LAB_UNIQUE_TYPINGS), L1028-1046 (per-rarity mon-type payloads) (identical @origin/expansion); data/hub.json (the lab upgrade's cost and requirements are documented on the Hub page)"
+      "source": "src/rogue_gifts.c @vanilla L975-981 (mon-type format locked behind HUB_UPGRADE_LAB_UNIQUE_TYPINGS), L1028-1046 (per-rarity mon-type payloads) / @origin/expansion L981-987, L1034-1052; data/hub.json (the lab upgrade's cost and requirements are documented on the Hub page)"
     },
     {
       "id": "unique-detection",
@@ -112,7 +112,7 @@
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
       "description": "When you enter a route, the game checks the route's wild encounter table against your active unique slots, and any match fires the 'Unique Pokémon — Detected nearby!' alert so you know a catchable unique is in the area. The check is route-only — wild dens and legendary rooms are never checked, though a unique can still appear there. Shiny and unique wilds also get the slow 'important battle' intro when you engage them.",
-      "source": "src/rogue_controller.c @vanilla L5843-5883 (route room-entry case: wild encounter table vs active unique slots, popup pushed on match — the den and legendary room cases have no such check) (identical @origin/expansion); src/rogue_popup.c @vanilla L298-299 (alert text), L1793-1801 (popup push) (identical @origin/expansion); src/rogue_controller.c @vanilla L543-547 (shiny/unique wilds are 'important battles') (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L5843-5883 / @origin/expansion L5834-5874 (route room-entry case: wild encounter table vs active unique slots, popup pushed on match — the den and legendary room cases have no such check); src/rogue_popup.c @vanilla L298-299 (alert text), L1793-1801 (popup push) (identical @origin/expansion); src/rogue_controller.c @vanilla L543-547 / @origin/expansion L543-547 (shiny/unique wilds are 'important battles')"
     },
     {
       "id": "unique-wild-battle",
@@ -120,7 +120,7 @@
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
       "description": "Not every matching wild is the unique one: when a wild mon's species matches an active unique slot, there's a 50% chance the battle uses the custom set (bonus moves/ability/type) — otherwise it fights as a normal wild. The conversion happens in place and deliberately preserves the mon's shiny state.",
-      "source": "src/rogue_controller.c @vanilla L8470-8505 (TryApplyCustomMon: only in Route/Wild Den/Legendary rooms, 1-in-2 chance, shiny preserved, wildBattleCustomMonId set) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L8470-8505 / @origin/expansion L8461-8496 (TryApplyCustomMon: only in Route/Wild Den/Legendary rooms, 1-in-2 chance, shiny preserved, wildBattleCustomMonId set)"
     },
     {
       "id": "catching-unique-mons",
@@ -128,7 +128,7 @@
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
       "description": "When you catch the unique form, the mon is converted to its custom set while keeping its IVs, shiny, gender and nickname. It's then healed to at least half of its max HP, cured of any status, and its IVs are adjusted by your net Strength Charms/Curses. The lab slot that produced it is consumed — that unique is now yours, not a rolling slot.",
-      "source": "src/rogue_controller.c @vanilla L1229-1280 (Rogue_ModifyCaughtMon: convert, remove the dynamic mon, heal to 1/2, cure status, IV charm/curse) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L1229-1280 / @origin/expansion L1229-1280 (Rogue_ModifyCaughtMon: convert, remove the dynamic mon, heal to 1/2, cure status, IV charm/curse)"
     },
     {
       "id": "static-custom-mons",

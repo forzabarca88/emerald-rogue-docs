@@ -18,7 +18,7 @@
 
 - `AGENTS.md` — agent guidelines for this repo: the core principles plus a one-line description of every project file.
 - `SPEC.md` — the project's original requirements brief: goal, technical constraints and the per-page functional requirements the site must cover.
-- `package.json` — zero-dependency manifest defining the `build`, `test`, and `extract:quests` npm scripts.
+- `package.json` — zero-dependency manifest defining the `build`, `test`, `extract:quests`, and `verify:citations` npm scripts.
 - `.gitignore` — ignores the vendored `references/` game source and the generated `dist/` build output.
 - `.github/workflows/pages.yml` — GitHub Actions workflow that builds and runs the test suite on `main` (or manual dispatch), then deploys `dist/` to GitHub Pages (major-tag action pins, with a note that SHA-pinning is the stronger option for deploy workflows).
 - `data/adventure.json` — adventure-path reference data: how each run's path is generated, all 16 room types with their placement rules and weights, the 14-boss ladder (8 gyms, 4 Elite Four, Champion, final) and the victory lap.
@@ -38,6 +38,8 @@
 - `data/versions.json` — vanilla-vs-EX reference data: the EXPANSION build flag, the Gen 1–9 roster/Pokédex, Gen 4–9 mechanics, extended trainer regions, boss aces and balls, the six Fairy route swaps, HM removal, affection, item naming, and the master list of every version divergence with the verified byte-identical core.
 - `scripts/build.mjs` — zero-dep Node build that copies `site/` to `dist/`, validates the `data/*.json` envelope plus the four UI prose contracts the pages regex-parse at run time (quest display groups, the safari slot-layout ranges, the routes "Wild types:" differences, the ≥5 campaign phrases), and emits `dist/data/bundle.js` (never reads `references/`).
 - `scripts/extract/quests.mjs` — dev-only zero-dep quest extractor that replicates the game's CustomJson quest loader (includes, file defaults, `#if` version gates, template expansion, `UNLOCKED_BY_DEFAULT`) and regenerates `data/quests.json`, reading vanilla from the working tree and expansion via `git show origin/expansion`.
+- `scripts/verify/baseline.json` — machine-readable baseline of the game revision the site documents (Vanilla/expansion SHAs + in-game versions), read by verify:citations --changed — the only place those SHAs are recorded.
+- `scripts/verify/citations.mjs` — dev-only zero-dep citation verifier (`npm run verify:citations`, plus `-- --changed` for the since-baseline impact report): checks every `source` citation in `data/*.json` for file existence, line ranges, glob matches and `(identical @origin/expansion)` byte-identity claims (one `git cat-file --batch`), printing all FAIL lines and exiting 1 on any failure.
 - `site/index.html` — home page shell (static `<h1>` for the no-JS fallback) whose hero with the run-path motif, stats, about prose and quick-link cards are rendered from `data/site.json` by `home.js`.
 - `site/gameplay.html` — gameplay loop page (hub → run → room types → boss ladder → post-run → back to hub) with a no-JS fallback line, rendered from `adventure`/`hub`/`safari` data by `gameplay.js`.
 - `site/versions.html` — Vanilla vs EX comparison page (intro prose + the 19-record difference list with toggle-driven column highlighting) with a no-JS fallback line, rendered from `versions` data by `versions.js`.
@@ -67,7 +69,39 @@
 - `site/js/pages/safari.js` — renders the Safari Zone page: intro prose, the 60-slot pool as a two-block slot diagram (ranges and counts parsed from the layout record, not hardcoded), the four entry criteria, the priority/eviction card, the Legends Cave catch flow as a numbered step list (from the record's `steps`) with the per-version roster note, and the pool-sign card, all from `data/safari.json`.
 - `site/js/pages/routes.js` — renders the routes page: the naming-scheme explainer, the terrain taxonomy with a terrain chip row, the 36 routes as a region-grouped card grid with an All/region filter (the selection survives version re-renders), wild-type chips scoped to the active version (the six FAIRY-swap routes re-read their Vanilla variant from `differences`), drop rarity, difference notes, and the sub-type and path-placement prose, all from `data/routes.json`.
 - `site/js/pages/mechanics.js` — renders the mechanics page: one section per system in order (Charms & Curses as a 17/26 two-card-column split, then Followmons, Game Show, Time of Day & Seasons, Unique mons and Legacy Campaigns), each with its prose blocks, version-badged cards and per-version difference notes, plus an in-page anchor-chip nav, all from the six mechanics data files.
+- `test/citations.test.mjs` — node:test tests for the citation verifier (spawn-based, no mocks): verify mode passes on the vendored repo and `--changed` on the identical baseline reports 0 changed cited files; both skip in CI (repo absent) and the latter also skips once the repo moves off the baseline.
 - `test/e2e.test.mjs` — end-to-end tests: the build output is valid and the served home, gameplay, versions, quests, configuration, hub, safari, routes, mechanics and 404 pages return 200 with their static markers.
 
 ### Project Maintenance - Subject Matter Expert Notes
+
+Navigation only — the game repo (`references/pokeemerald-rogue`) and the cited data files own the detail.
+
+**Baseline.** The site documents the in-game version **2.2.1** (Vanilla `v2.2.1a`, EX `v2.2.1`), not a GitHub release (git tags stop at v2.1). Version string: `src/data/rogue_strings.h` L6; save-compat marker `SAVE_VER_ID_*` in `include/rogue_save.h`. Authoritative branch SHAs: `scripts/verify/baseline.json` (bump only after the docs are refreshed and `verify:citations` passes). The `CHANGELOG.md` on `origin/expansion` is the stale upstream (Pokeemerald-Expansion 1.6/1.7-era) changelog — do not use it as release notes.
+
+**Repo access.** Working tree = Vanilla (clean, branch `vanilla`); EX is read-only via `git show origin/expansion:<path>`; never check out branches in the game repo; `git fetch origin` before reading (SPEC.md).
+
+**Citation legend.** `file @vanilla L123-125 (note) (identical @origin/expansion) / @origin/expansion L125-127`; `;` separates multiple cites; dual cites use different line numbers per branch (never assume parity); no `L` = drift-proof file-level cite; `(site data)` self-cites and `git …` method cites are non-verifiable.
+
+**Data file → game code map** (the data files own the line numbers; rows list the primary files per data file, not exhaustive — a few secondary cited files, e.g. `src/rogue_trainers.c`, `src/pokemon.c`, `src/battle_util.c`, appear in citations without a row):
+- `adventure.json` → `src/rogue_adventurepaths.c`; `include/constants/rogue.h` (room enum, boss-ladder consts); `src/rogue_controller.c`; `src/data/rogue/trainers/rogue.json`; `data/maps/Rogue_AdventurePaths/scripts.pory`
+- `campaigns.json` → `src/rogue_campaign.c`; `data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory`
+- `charms.json` → `src/rogue_charms.c` (CalcValueInternal); `src/battle_script_commands.c`; `data/scripts/Rogue/Strings/Rogue_Strings_Items.pory`
+- `followmons.json` → `src/rogue_followmon.c` (+ `rogue_controller.c` calls; `include/constants/rogue.h` spawn-slot consts)
+- `game-modes.json` → `src/rogue_settings.c`; `src/rogue_settings_ui.c`; `src/rogue_controller.c`; `src/rogue_adventurepaths.c` (fast path)
+- `gameshow.json` → `data/maps/Rogue_Encounter_GameShow/{scripts,map}.pory/json`; `src/rogue_gameshow.c`
+- `hub.json` → `src/data/rogue_hub.h` (all 48 upgrades); `Rogue_Strings_Items.pory` (names); `src/rogue_hub.c`
+- `quests.json` → `src/data/rogue/quests.json` + 13 included files under `src/data/rogue/quests/` (byte-identical across branches; EX split via `#if defined(ROGUE_EXPANSION)` gates)
+- `routes.json` → `src/data/rogue_routes.h` (36 route records + wild tables); `src/rogue_controller.c` (sub-types); `include/constants/songs.h`
+- `safari.json` → `src/rogue_safari.c` (pool/eviction); `include/constants/rogue.h` (60-slot consts); `data/maps/Rogue_Interior_SafariCave/scripts.pory`
+- `settings.json` → `src/rogue_settings_ui.c` (19 toggles/9 ranges); `include/constants/rogue.h` (`CONFIG_TOGGLE_*`); `src/data/rogue_strings.h`; `src/rogue_settings.c`
+- `timeofday.json` → `src/rogue_timeofday.c`; `src/rogue_controller.c` (clock); `data/maps/Rogue_Area_Home/scripts.pory` (bed presets)
+- `unique-mons.json` → `src/rogue_gifts.c` (lab slots/rarity/ability pools); `src/data/rogue/custom_mons.json`
+- `versions.json` → one record per divergence, each citing its own implementing file (`Makefile` L4 EXPANSION flag, `include/constants/rogue.h` pokedex variants, `rogue_gifts.c`, `rogue_charms.c` Grace cap, …)
+- `site.json` → footer source line only
+
+**Drift hotspots.** Most-cited: `src/data/rogue/quests/default_masteries.json` (104) · `data/scripts/Rogue/Strings/Rogue_Strings_Items.pory` (95) · `src/data/rogue_hub.h` (60) · `include/constants/rogue.h` (53) · `src/rogue_controller.c` (51 — 6000+ lines, also one of the 14 divergent files). The 14 rogue files differing between branches (74 ins/74 del): `src/rogue_assistant.c`, `rogue_assistantbox.c`, `rogue_charms.c`, `rogue_controller.c`, `rogue_gameshow.c`, `rogue_gifts.c`, `rogue_hub.c`, `rogue_player_customisation.c`, `rogue_safari.c`, `rogue_voltorbflip.c`, `rogue_worldmap.c`, `include/rogue.h`, `include/constants/rogue.h`, `include/constants/rogue_pokedex.h` — changes to these need both the Vanilla and EX cite re-checked.
+
+**Maintenance workflow.** `git -C references/pokeemerald-rogue fetch origin` → `npm run verify:citations` (fail = stale citations, fix the data first) → `npm run verify:citations -- --changed` (precise "what to review since the baseline" list) → update affected `data/*.json` (facts first, then line cites; quests regenerate via `npm run extract:quests`) → `npm run verify:citations && npm test` → bump `scripts/verify/baseline.json`. Known historical failure modes: wrong-unit formula misreads (not machine-checkable — read the code) and stale line cites (the verifier catches these).
+
+**Hard rules.** Build/test never touch `references/`; only dev-only scripts read the game repo; zero dependencies.
 

@@ -28,7 +28,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Reduces shop prices by 50% per item held (stacking, so two make everything nearly free).",
-      "source": "src/rogue_charms.c @vanilla L187-188 (CalcValueInternal EFFECT_SHOP_PRICE: count × 50) (identical @origin/expansion); src/data/rogue_items.h @vanilla L777-791 (item name, ALL CAPS in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L177-179 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE: count × 50); src/data/rogue_items.h @vanilla L777-791 (item name, ALL CAPS in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L177-179 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-flinch",
@@ -36,7 +36,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon's moves have up to a 20% chance per item to make the opponent flinch, capped at 90%.",
-      "source": "src/rogue_charms.c @vanilla L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE: min(count × 20, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L186-188 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE: min(count × 20, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L186-188 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-crit",
@@ -44,7 +44,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Raises your critical-hit stage by one per item held (no cap applied to the count itself), making critical hits far more likely.",
-      "source": "src/rogue_charms.c @vanilla L217 (CalcValueInternal default: value = item count) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1295-1300 (crit chance stage += charm value on your side) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L195-197 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L218 / @origin/expansion L218 (CalcValueInternal default: value = item count); src/battle_script_commands.c @vanilla L1295-1300 / @origin/expansion L2011-2013, L2019-2020 (crit chance stage += charm value on your side; upstream: clamp split by a new RecordAbilityBattle block); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L195-197 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-shed-skin",
@@ -52,7 +52,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon have a 33% chance per item to cure their status condition at the end of their turn, capped at 90%.",
-      "source": "src/rogue_charms.c @vanilla L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE: min(count × 33, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L204-206 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L193-194 / @origin/expansion L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE: min(count × 33, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L204-206 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-strength",
@@ -60,7 +60,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Pokémon you catch come out stronger: after netting against any Strength Curses, each net charm sets a floor of 20 on all six of a caught Pokémon's IVs (up to 31 per IV) — one net charm means every IV is 20 or better, two net charms max them out.",
-      "source": "src/rogue_charms.c @vanilla L196-197 (CalcValueInternal EFFECT_WILD_IV_RATE: count × 20) (identical @origin/expansion); src/rogue_controller.c @vanilla L1245-1282 (caught mon: netted IV bonus applied post-hoc as a per-IV floor, capped at 31) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L213-215 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L196-197 / @origin/expansion L196-197 (CalcValueInternal EFFECT_WILD_IV_RATE: count × 20); src/rogue_controller.c @vanilla L1245-1282 / @origin/expansion L1245-1282 (caught mon: netted IV bonus applied post-hoc as a per-IV floor, capped at 31); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L213-215 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-catching",
@@ -68,7 +68,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Ball effectiveness is increased by 200% per item held — the single biggest catch-rate booster — netted against any Catching Curses.",
-      "source": "src/rogue_charms.c @vanilla L199-200 (CalcValueInternal EFFECT_CATCH_RATE: count × 200) (identical @origin/expansion); src/rogue_controller.c @vanilla L1140-1165 (net charm/curse percentage applied to catch rate) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L222-224 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE: count × 200); src/rogue_controller.c @vanilla L1140-1165 / @origin/expansion L1140-1165 (net charm/curse percentage applied to catch rate); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L222-224 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-grace",
@@ -88,7 +88,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Routes hold 2 extra wild Pokémon per item held, so you encounter (and can catch) more per visit.",
-      "source": "src/rogue_charms.c @vanilla L205-206 (CalcValueInternal EFFECT_WILD_ENCOUNTER_COUNT: count × 2) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L240-242 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L205-206 / @origin/expansion L205-206 (CalcValueInternal EFFECT_WILD_ENCOUNTER_COUNT: count × 2); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L240-242 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-priority",
@@ -96,7 +96,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your moves have a 20% chance per item to gain priority (behaves like a Quick Claw), capped at 90%.",
-      "source": "src/rogue_charms.c @vanilla L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE: min(count × 20, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L249-251 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L208-209 / @origin/expansion L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE: min(count × 20, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L249-251 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-endure",
@@ -104,7 +104,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon can shrug off a would-be knockout blow, but only at full health: if a full-HP Pokémon takes a hit that would KO it, there's a 60% chance per item (capped at 90%) it survives with 1 HP.",
-      "source": "src/rogue_charms.c @vanilla L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE: min(count × 60, 90)) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO), L1796-1801 (damage clamped to 1 HP); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L258-260 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L214-215 / @origin/expansion L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE: min(count × 60, 90)); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO), L1796-1801 (damage clamped to 1 HP); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L258-260 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-torment",
@@ -112,7 +112,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon cannot use the same move twice in a row. A status effect, so only one is needed.",
-      "source": "src/rogue_controller.c @vanilla L1705-1710 (applies Torment status to the opponent side while held) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L267-269 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L1705-1711 / @origin/expansion L1703-1709 (applies Torment status to the opponent side while held); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L267-269 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-pressure",
@@ -120,7 +120,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon consume one extra PP per move used, draining their PP reserves faster. A status effect — one is all you need.",
-      "source": "src/battle_script_commands.c @vanilla L1241-1244 (+1 PP deduction on the opponent side while held) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L276-278 (player-facing description) (identical @origin/expansion)"
+      "source": "src/battle_script_commands.c @vanilla L1241-1245 / @origin/expansion L1922-1926, L1933-1937 (+1 PP deduction on the opponent side while held; upstream: duplicated in both move-target branches); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L276-278 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-unaware",
@@ -128,7 +128,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon's stat increases are ignored by your side — their Swords Dance and Nasty Plot simply don't land. A status effect — one is all you need.",
-      "source": "src/pokemon.c @vanilla L3271-3287 (positive stat stages clamped to zero on the charmed side) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L285-287 (player-facing description) (identical @origin/expansion)"
+      "source": "src/pokemon.c @vanilla L3271-3287 (ModifyStatStage: positive stat stages clamped to zero on the charmed side); src/battle_util.c @origin/expansion L9663-9678 (EX equivalent: ApplyUnawareCurse predicate, clamp applied at battle_util.c L9725, L9934 and battle_script_commands.c L1707, L1712); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L285-287 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-adaptability",
@@ -136,7 +136,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Raises your Pokémon's same-type attack bonus by 50% per item held: one charm lifts STAB from 1.5× to 2.0×, two to 2.5×, and the +150% cap (3.0× STAB) is reached at three items.",
-      "source": "src/rogue_charms.c @vanilla L211-212 (CalcValueInternal EFFECT_ADAPTABILITY_RATE: min(count × 5, 15); each 5 is 50%) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1403-1427 (STAB applied as damage × (15 + boost) / 10 — base 1.5× plus the boost); src/battle_util.c @origin/expansion L10073-10099 (EX equivalent: boost in multiples of 10% added to the 1.5× STAB base); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L294-296 (player-facing description: 'STAB increased by 50%') (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L211-212 / @origin/expansion L211-212 (CalcValueInternal EFFECT_ADAPTABILITY_RATE: min(count × 5, 15); each 5 is 50%); src/battle_script_commands.c @vanilla L1403-1427 (STAB applied as damage × (15 + boost) / 10 — base 1.5× plus the boost); src/battle_util.c @origin/expansion L10073-10099 (EX equivalent: boost in multiples of 10% added to the 1.5× STAB base); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L294-296 (player-facing description: 'STAB increased by 50%') (identical @origin/expansion)"
     },
     {
       "id": "charm-sacred-ash",
@@ -144,7 +144,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "A one-time run insurance item: if your entire party faints, it shines, revives all of your Pokémon and teleports you back to the adventure path for a second chance. It is consumed when it triggers. The Mysterious Shrine is the main source, traded against a Capacity Curse.",
-      "source": "src/rogue_charms.c @vanilla L434-453 (Rogue_ExecuteExtraLife: removes the Sacred Ash and warps to the path overview) (identical @origin/expansion); data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L27-47 (shrine dialogue: revives the whole party and teleports to safety) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L434-453 / @origin/expansion L434-453 (Rogue_ExecuteExtraLife: removes the Sacred Ash and warps to the path overview); data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L27-47 (shrine dialogue: revives the whole party and teleports to safety) (identical @origin/expansion)"
     },
     {
       "id": "charm-retry",
@@ -152,7 +152,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "The permanent version of the Sacred Ash: your whole party revives and the run rewinds to the path overview every time you wipe — with no item consumed. Effectively infinite extra lives.",
-      "source": "src/rogue_charms.c @vanilla L434-440 (Rogue_ExecuteExtraLife: no item removed while the infinite-life charm is active) (identical @origin/expansion); src/data/rogue_items.h @vanilla L1031-1046 (item definition) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L303-305 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L434-440 / @origin/expansion L434-440 (Rogue_ExecuteExtraLife: no item removed while the infinite-life charm is active); src/data/rogue_items.h @vanilla L1031-1046 (item definition) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L303-305 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-save",
@@ -160,7 +160,7 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Allows normal saving and reloading (save-scumming) while a run is active — otherwise runs are one continuous take.",
-      "source": "src/rogue_charms.c @vanilla L74-75 (EFFECT_ALLOW_SAVE_SCUM → Save Charm) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L307-309 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L74-75 / @origin/expansion L74-75 (EFFECT_ALLOW_SAVE_SCUM → Save Charm); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L307-309 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-discount",
@@ -172,7 +172,7 @@
         "vanilla": "Item name reads 'DISCOUND CURSE' (a typo in the Vanilla build).",
         "ex": "Item name reads 'Discount Curse'."
       },
-      "source": "src/rogue_charms.c @vanilla L187-188 (CalcValueInternal EFFECT_SHOP_PRICE curse side: count × 40) (identical @origin/expansion); src/data/rogue_items.h @vanilla L1131-1145 (item name, 'DISCOUND CURSE' in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L181-183 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE curse side: count × 40); src/data/rogue_items.h @vanilla L1131-1145 (item name, 'DISCOUND CURSE' in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L181-183 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-flinch",
@@ -180,7 +180,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent moves have a 10% chance per item to flinch your Pokémon, capped at 90%.",
-      "source": "src/rogue_charms.c @vanilla L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE curse side: min(count × 10, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L190-192 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE curse side: min(count × 10, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L190-192 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-crit",
@@ -188,7 +188,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon get a higher critical-hit stage — one stage per item held.",
-      "source": "src/rogue_charms.c @vanilla L217 (CalcValueInternal default: value = item count) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1295-1296 (crit stage += curse value on the opponent side) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L199-201 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L218 / @origin/expansion L218 (CalcValueInternal default: value = item count); src/battle_script_commands.c @vanilla L1295-1296 / @origin/expansion L2011-2012 (crit stage += curse value on the opponent side); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L199-201 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-shed-skin",
@@ -196,7 +196,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon have a 15% chance per item to cure their own status, capped at 90% — their poison and burns wear off faster.",
-      "source": "src/rogue_charms.c @vanilla L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE curse side: min(count × 15, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L208-210 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L193-194 / @origin/expansion L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE curse side: min(count × 15, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L208-210 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-strength",
@@ -204,7 +204,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Pokémon you catch come out weaker: after netting against any Strength Charms, each net curse caps all six of a caught Pokémon's IVs at 31 minus 20 per item — one net curse leaves every IV at 11 or worse, two net curses zero them all out.",
-      "source": "src/rogue_charms.c @vanilla L196-197 (CalcValueInternal EFFECT_WILD_IV_RATE curse side: count × 20) (identical @origin/expansion); src/rogue_controller.c @vanilla L1245-1282 (caught mon: netted IV penalty applied post-hoc as a per-IV ceiling, floored at 0) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L217-219 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L196-197 / @origin/expansion L196-197 (CalcValueInternal EFFECT_WILD_IV_RATE curse side: count × 20); src/rogue_controller.c @vanilla L1245-1282 / @origin/expansion L1245-1282 (caught mon: netted IV penalty applied post-hoc as a per-IV ceiling, floored at 0); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L217-219 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-catching",
@@ -212,7 +212,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Ball effectiveness is decreased by 40% per item held — catches take noticeably more tries.",
-      "source": "src/rogue_charms.c @vanilla L199-200 (CalcValueInternal EFFECT_CATCH_RATE curse side: count × 40) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L226-228 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE curse side: count × 40); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L226-228 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-grace",
@@ -232,7 +232,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Routes hold one fewer wild Pokémon per item held — fewer chances to catch on each route.",
-      "source": "src/rogue_charms.c @vanilla L205-206 (CalcValueInternal EFFECT_WILD_ENCOUNTER_COUNT curse side: count × 1) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L244-246 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L205-206 / @origin/expansion L205-206 (CalcValueInternal EFFECT_WILD_ENCOUNTER_COUNT curse side: count × 1); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L244-246 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-priority",
@@ -240,7 +240,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent moves have a 10% chance per item to gain priority (Quick Claw), capped at 90% — their faster moves land before yours.",
-      "source": "src/rogue_charms.c @vanilla L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE curse side: min(count × 10, 90)) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L253-255 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L208-209 / @origin/expansion L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE curse side: min(count × 10, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L253-255 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-endure",
@@ -248,7 +248,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon can shrug off a would-be knockout blow the same way — but only at full health: a 20% chance per item (capped at 90%) that a full-HP opponent survives with 1 HP.",
-      "source": "src/rogue_charms.c @vanilla L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE curse side: min(count × 20, 90)) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L262-264 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L214-215 / @origin/expansion L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE curse side: min(count × 20, 90)); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L262-264 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-torment",
@@ -256,7 +256,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Your own Pokémon cannot use the same move twice in a row — the Torment effect pointed at you.",
-      "source": "src/rogue_controller.c @vanilla L1705-1708 (applies Torment status to the player side while held) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L271-273 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L1705-1708 / @origin/expansion L1703-1706 (applies Torment status to the player side while held); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L271-273 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-pressure",
@@ -264,7 +264,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon consume one extra PP per move used — your PP reserves drain faster.",
-      "source": "src/battle_script_commands.c @vanilla L1241-1242 (+1 PP deduction on the player side while held) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L280-282 (player-facing description) (identical @origin/expansion)"
+      "source": "src/battle_script_commands.c @vanilla L1241-1242 / @origin/expansion L1922-1923, L1933-1934 (+1 PP deduction on the player side while held; upstream: duplicated in both move-target branches); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L280-282 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-unaware",
@@ -272,7 +272,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon ignore your stat increases — your Swords Dance and Nasty Plot don't land.",
-      "source": "src/pokemon.c @vanilla L3271-3287 (positive stat stages clamped to zero for the opponent) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L289-291 (player-facing description) (identical @origin/expansion)"
+      "source": "src/pokemon.c @vanilla L3271-3287 (ModifyStatStage: positive stat stages clamped to zero for the opponent); src/battle_util.c @origin/expansion L9663-9678 (EX equivalent: ApplyUnawareCurse predicate, clamp applied at battle_util.c L9725, L9934 and battle_script_commands.c L1707, L1712); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L289-291 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-adaptability",
@@ -280,7 +280,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon's same-type attack bonus is raised by 30% per item held: one curse lifts their STAB from 1.5× to 1.8×, and the shared +150% cap (3.0× STAB) is reached at five curses.",
-      "source": "src/rogue_charms.c @vanilla L211-212 (CalcValueInternal EFFECT_ADAPTABILITY_RATE curse side: min(count × 3, 15); each 3 is 30%) (identical @origin/expansion); src/battle_script_commands.c @vanilla L1414-1427 (opponent-side boost applied to their STAB); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L298-300 (player-facing description: 'Opponent Pokémon STAB increased by 30%') (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L211-212 / @origin/expansion L211-212 (CalcValueInternal EFFECT_ADAPTABILITY_RATE curse side: min(count × 3, 15); each 3 is 30%); src/battle_script_commands.c @vanilla L1414-1427 (opponent-side boost applied to their STAB); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L298-300 (player-facing description: 'Opponent Pokémon STAB increased by 30%') (identical @origin/expansion)"
     },
     {
       "id": "curse-capacity",
@@ -288,7 +288,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Reduces the maximum number of Pokémon in your party by one. This is the price the Mysterious Shrine charges for the Sacred Ash — you can't take the Ash without carrying the curse.",
-      "source": "src/rogue_charms.c @vanilla L142-143 (EFFECT_PARTY_SIZE → Capacity Curse) (identical @origin/expansion); data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L43, L93 (shrine requires the Capacity Curse as the price) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L312-314 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L142-143 / @origin/expansion L142-143 (EFFECT_PARTY_SIZE → Capacity Curse); data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L43, L93 (shrine requires the Capacity Curse as the price) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L312-314 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-everstone",
@@ -296,7 +296,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "All regular evolutions are disabled for the duration you hold it — your Pokémon stay in their current form no matter how many levels they gain.",
-      "source": "src/rogue_charms.c @vanilla L145-146 (EFFECT_EVERSTONE_EVOS → Everstone Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L317-319 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L145-146 / @origin/expansion L145-146 (EFFECT_EVERSTONE_EVOS → Everstone Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L317-319 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-embargo",
@@ -304,7 +304,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Items cannot be used in battle (except Poké Balls) — no Potions, no TMs, no X-Items mid-fight.",
-      "source": "src/rogue_charms.c @vanilla L148-149 (EFFECT_BATTLE_ITEM_BAN → Embargo Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L322-324 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L148-149 / @origin/expansion L148-149 (EFFECT_BATTLE_ITEM_BAN → Embargo Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L322-324 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-species",
@@ -312,7 +312,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "You can't catch a Pokémon if its species is already in your party — duplicate species become uncathable while you hold it.",
-      "source": "src/rogue_charms.c @vanilla L151-152 (EFFECT_SPECIES_CLAUSE → Species Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L327-329 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L151-152 / @origin/expansion L151-152 (EFFECT_SPECIES_CLAUSE → Species Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L327-329 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-shuffle",
@@ -320,7 +320,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Every time you enter a battle, held items are shuffled between your Pokémon — your carefully planned held-item setup gets randomised.",
-      "source": "src/rogue_charms.c @vanilla L154-155 (EFFECT_ITEM_SHUFFLE → Shuffle Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L332-334 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L154-155 / @origin/expansion L154-155 (EFFECT_ITEM_SHUFFLE → Shuffle Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L332-334 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-snowball",
@@ -328,7 +328,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "For every badge you earn, you gain an extra random Curse — the run gets progressively more punishing as you progress.",
-      "source": "src/rogue_charms.c @vanilla L157-158 (EFFECT_SNOWBALL_CURSES → Snowball Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L337-339 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L157-158 / @origin/expansion L157-158 (EFFECT_SNOWBALL_CURSES → Snowball Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L337-339 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-wahey",
@@ -336,7 +336,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Mr. Randoman — the random-trader from the Game Show — will occasionally appear on routes to offer trades while you hold it.",
-      "source": "src/rogue_charms.c @vanilla L160-161 (EFFECT_RANDOMAN_ROUTE_SPAWN → Wahey Curse) (identical @origin/expansion); src/rogue_controller.c @vanilla L5742-5745 (route spawn check for the curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L342-344 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L160-161 / @origin/expansion L160-161 (EFFECT_RANDOMAN_ROUTE_SPAWN → Wahey Curse); src/rogue_controller.c @vanilla L5742-5745 / @origin/expansion L5733-5736 (route spawn check for the curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L342-344 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-wahey-plus",
@@ -344,7 +344,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "The stronger Wahey: Mr. Randoman will always appear on routes whenever possible, not just occasionally.",
-      "source": "src/rogue_charms.c @vanilla L163-164 (EFFECT_RANDOMAN_ALWAYS_SPAWN → Wahey+ Curse) (identical @origin/expansion); src/rogue_controller.c @vanilla L5724-5726 (always-active spawn check) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L347-349 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L163-164 / @origin/expansion L163-164 (EFFECT_RANDOMAN_ALWAYS_SPAWN → Wahey+ Curse); src/rogue_controller.c @vanilla L5724-5726 / @origin/expansion L5715-5717 (always-active spawn check); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L347-349 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-auto-move",
@@ -352,7 +352,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Both you and your opponents pick moves at random — every battle becomes a coin flip on move selection.",
-      "source": "src/rogue_charms.c @vanilla L166-167 (EFFECT_AUTO_MOVE_SELECT → Auto Move Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L352-354 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L166-167 / @origin/expansion L166-167 (EFFECT_AUTO_MOVE_SELECT → Auto Move Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L352-354 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-ohko",
@@ -360,7 +360,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon will faint in one hit in Trainer Battles — every trainer fight is an extreme glass cannon.",
-      "source": "src/rogue_charms.c @vanilla L169-170 (EFFECT_ONE_HIT → OHKO Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L357-359 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L169-170 / @origin/expansion L169-170 (EFFECT_ONE_HIT → OHKO Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L357-359 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-snag",
@@ -368,7 +368,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "You can only catch opponent (Trainer) Pokémon after a trainer battle — wild catching is off the table while you hold it.",
-      "source": "src/rogue_charms.c @vanilla L172-173 (EFFECT_SNAG_TRAINER_MON → Snag Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L362-364 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L172-173 / @origin/expansion L172-173 (EFFECT_SNAG_TRAINER_MON → Snag Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L362-364 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-baby",
@@ -376,7 +376,7 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Wild Pokémon appear as their first evolution stage — the wild tables effectively shift down to baby forms.",
-      "source": "src/rogue_charms.c @vanilla L175-176 (EFFECT_WILD_EGG_SPECIES → Baby Curse) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L367-369 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L175-176 / @origin/expansion L175-176 (EFFECT_WILD_EGG_SPECIES → Baby Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L367-369 (player-facing description) (identical @origin/expansion)"
     }
   ]
 }

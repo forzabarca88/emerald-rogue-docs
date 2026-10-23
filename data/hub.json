@@ -41,7 +41,7 @@
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
       "description": "The hub's research district, present from the start: Professor Elm's Lab — the Config Lab where you adjust run settings — plus a dilapidated “Unique Lab” that tracks your special Unique Pokémon and the sets they can run. Its in-game sign text is still a development placeholder in both versions.",
-      "source": "src/data/rogue_hub.h @vanilla L73-90 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L376-380 (identical @origin/expansion); src/rogue_hub.c @vanilla L319-347 (initial layout, identical @origin/expansion)"
+      "source": "src/data/rogue_hub.h @vanilla L73-90 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L376-380 (identical @origin/expansion); src/rogue_hub.c @vanilla L319-347 / @origin/expansion L319-347 (initial layout)"
     },
     {
       "id": "area-town-exit",
@@ -85,7 +85,7 @@
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
       "description": "Present from the start — the home of the hub's Safari Zone, where Pokémon you release or lose in runs come back as catchable encounters. Contains the “View / Dismiss Pokémon” sign and, once unlocked by the “True Legend” quest, the Legends Cave entrance.",
-      "source": "src/data/rogue_hub.h @vanilla L146-162 (identical @origin/expansion); data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 (identical @origin/expansion)"
+      "source": "src/data/rogue_hub.h @vanilla L146-162 (identical @origin/expansion); data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 / @origin/expansion L1316-1320"
     },
     {
       "id": "area-park",
@@ -129,7 +129,7 @@
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
       "description": "“Access various new quests and items…” A free-to-build postgame area that only becomes available after meeting Pokabbie; it is the hub's home for Challenge-based quests (such as the region-style battles and, in EX, the Z-A Royale).",
-      "source": "src/data/rogue_hub.h @vanilla L223-241 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L381-385 (identical @origin/expansion); src/rogue_hub.c @vanilla L1002-1013 (Pokabbie requirement, identical @origin/expansion)"
+      "source": "src/data/rogue_hub.h @vanilla L223-241 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L381-385 (identical @origin/expansion); src/rogue_hub.c @vanilla L1002-1013 / @origin/expansion L1002-1013 (Pokabbie requirement)"
     },
     {
       "id": "area-day-care",
@@ -419,7 +419,7 @@
       "requirements": [],
       "versions": ["vanilla", "ex"],
       "description": "Hidden upgrade — it cannot be bought and is only granted as a quest reward: complete “True Legend” (catch a legendary during an adventure). It opens the Legends Cave entrance on the Safari Area, where you can re-battle legendaries you have caught by offering them Pokéblocks they like.",
-      "source": "src/data/rogue_hub.h @vanilla L480-486 (isHidden, identical @origin/expansion); src/data/rogue/quests/default_quests.json @vanilla L647-666 (identical @origin/expansion, “True Legend” quest reward); src/rogue_hub.c @vanilla L1316-1320 (identical @origin/expansion)"
+      "source": "src/data/rogue_hub.h @vanilla L480-486 (isHidden, identical @origin/expansion); src/data/rogue/quests/default_quests.json @vanilla L647-666 (identical @origin/expansion, “True Legend” quest reward); src/rogue_hub.c @vanilla L1316-1320 / @origin/expansion L1316-1320"
     },
     {
       "id": "upgrade-general-stock",
@@ -671,7 +671,7 @@
       "requirements": ["Day Care Exp+"],
       "versions": ["vanilla", "ex"],
       "description": "“Day Care Pokémon gain 100% of the levels the partner does.”",
-      "source": "src/data/rogue_hub.h @vanilla L658-664 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L629-633 (identical @origin/expansion)"
+      "source": "src/data/rogue_hub.h @vanilla L658-664 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L629-632 (identical @origin/expansion)"
     },
     {
       "id": "upgrade-pokeblock-blender",
@@ -753,7 +753,7 @@
         "vanilla": "The decor menu excludes the “Appliances” set (the code skips it in non-Expansion builds).",
         "ex": "The “Appliances” decor set is available, unlocked through the Rotom mastery quest (EX-only quest data)."
       },
-      "source": "include/constants/rogue_hub.h @vanilla L105-140 (styles/decor ids, identical @origin/expansion); src/rogue_hub.c @vanilla L2315-2321 (decor menu, #ifndef ROGUE_EXPANSION skips Appliances; file identical @origin/expansion); src/data/rogue/quests/default_masteries.json @origin/expansion (EX-only, Rotom mastery grants decor)"
+      "source": "include/constants/rogue_hub.h @vanilla L105-140 (styles/decor ids, identical @origin/expansion); src/rogue_hub.c @vanilla L2315-2321 / @origin/expansion L2315-2321 (decor menu, #ifndef ROGUE_EXPANSION skips Appliances); src/data/rogue/quests/default_masteries.json @origin/expansion (EX-only, Rotom mastery grants decor)"
     }
   ]
 }

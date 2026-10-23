@@ -38,7 +38,7 @@
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the victory lap after the final boss). Legendaries go to the legendary slots, everything else to the regular slots.",
-      "source": "src/rogue_controller.c @vanilla L6426-6452 (RemoveMonAtSlot, push at L6451) / @origin/expansion L6417-6443 (push at L6442); src/rogue_safari.c @vanilla L94-105 (RogueSafari_PushMon, identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L6426-6452 (RemoveMonAtSlot, push at L6451) / @origin/expansion L6417-6443 (push at L6442); src/rogue_safari.c @vanilla L94-105 / @origin/expansion L94-105 (RogueSafari_PushMon)"
     },
     {
       "id": "entry-fainted",
@@ -54,7 +54,7 @@
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "When an adventure ends (victory or defeat), every Pokémon still in your party is added to the pool, and then every Pokémon in your Day Care is added too — so a run you lose still restocks the Safari Zone.",
-      "source": "src/rogue_controller.c @vanilla L4855-4890 (EndRogueRun; party push L4878, Day Care push L4889) / @origin/expansion L4846-4881 (party push L4869, Day Care push L4880); src/rogue_safari.c @vanilla L94-131 (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L4855-4890 (EndRogueRun; party push L4878, Day Care push L4889) / @origin/expansion L4846-4881 (party push L4869, Day Care push L4880); src/rogue_safari.c @vanilla L94-131 / @origin/expansion L94-131"
     },
     {
       "id": "entry-discarded",
@@ -62,7 +62,7 @@
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at low priority (0) — it is evicted before any normally-added mon unless it is shiny, where it earns the +30 shiny bonus. (During a catching contest, non-shiny discards are skipped entirely.)",
-      "source": "src/battle_script_commands.c @vanilla L10283-10300 (rogue_caughtmon battle command) / @origin/expansion L15521-15538; src/rogue_controller.c @vanilla L1335-1350 (Rogue_DiscardedCaughtMon, push at L1343; identical @origin/expansion); src/rogue_safari.c @vanilla L107-118 (RogueSafari_PushLowPriorityMon, identical @origin/expansion)"
+      "source": "src/battle_script_commands.c @vanilla L10283-10300 (rogue_caughtmon battle command) / @origin/expansion L15521-15538; src/rogue_controller.c @vanilla L1335-1350 / @origin/expansion L1335-1350 (Rogue_DiscardedCaughtMon, push at L1343); src/rogue_safari.c @vanilla L107-118 / @origin/expansion L107-118 (RogueSafari_PushLowPriorityMon)"
     },
     {
       "id": "pool-slot-layout",
@@ -70,7 +70,7 @@
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The pool is exactly 60 slots: 0–44 are regular slots (45 total — the only slots the open zone spawns from, cycling through them in order), and 45–59 are legendary slots (15 total — reachable only via the Legends Cave). A separate table of 16 “custom” slots maps unique/gift Pokémon so they keep their special sets while pooled. (The in-code comment “45-49 are for legends” is outdated; the allocation, reset and any-legends loops all use 45–59.)",
-      "source": "include/constants/rogue.h @vanilla L806-810 / @origin/expansion L808-812 (ROGUE_SAFARI_TOTAL_MONS 60, LEGENDS_START_INDEX 45, TOTAL_CUSTOM_MONS 16); src/rogue_safari.c @vanilla L313-375 (AllocSafariMonSlotFor: regular → 0..44, legendary → 45..59; identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L806-810 / @origin/expansion L808-812 (ROGUE_SAFARI_TOTAL_MONS 60, LEGENDS_START_INDEX 45, TOTAL_CUSTOM_MONS 16); src/rogue_safari.c @vanilla L313-375 / @origin/expansion L313-375 (AllocSafariMonSlotFor: regular → 0..44, legendary → 45..59)"
     },
     {
       "id": "priority-eviction",
@@ -78,7 +78,7 @@
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "Each entry's priority is (levels gained since capture × 2) ÷ 5 — a freshly caught-and-released mon scores 0; shinies add a flat +30 (half the pool size); and any IV bonus from IV-boosting charms is stripped before the mon is stored. When a range (regular or legendary) is full, all mons sharing the lowest priority are evicted together as a batch, the survivors' priorities are each decremented by the batch count, and one freed slot takes the new arrival. Regular and legendary ranges never evict each other.",
-      "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88) and L313-375 (eviction batching in AllocSafariMonSlotFor; identical @origin/expansion)"
+      "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88) and L313-375 (eviction batching in AllocSafariMonSlotFor) / @origin/expansion L37-92, L313-375"
     },
     {
       "id": "legends-cave",
@@ -100,7 +100,7 @@
         "vanilla": "Mechanically identical cave; the catchable legendaries are limited to the Gen 1–3 legendary species (and forms) that exist in the Vanilla build.",
         "ex": "Same cave and flow, but the legendary encounter roster adds all Gen 4–9 legendaries, alternate forms and the Z-A Floettes — so far more species can fill slots 45–59."
       },
-      "source": "src/data/rogue/quests/default_quests.json @vanilla L647-666 (True Legend quest + reward, identical @origin/expansion); src/data/rogue_hub.h @vanilla L480-486 (Legend Cave upgrade, identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 (cave entrance metatiles, identical @origin/expansion); data/maps/Rogue_Interior_SafariCave/scripts.pory @vanilla (identical @origin/expansion); src/rogue_script.c @vanilla L1898-1910 (any-legends check), L1913-1941 (Pokéblock flavor-type check), L2013-2020 (battle enqueue; identical @origin/expansion); src/field_specials.c @vanilla L202-205 (legendary Pokédex selection); include/constants/rogue.h @vanilla L810 (cost = 10 Pokéblocks)"
+      "source": "src/data/rogue/quests/default_quests.json @vanilla L647-666 (True Legend quest + reward, identical @origin/expansion); src/data/rogue_hub.h @vanilla L480-486 (Legend Cave upgrade, identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 / @origin/expansion L1316-1320 (cave entrance metatiles); data/maps/Rogue_Interior_SafariCave/scripts.pory @vanilla (identical @origin/expansion); src/rogue_script.c @vanilla L1898-1910 (any-legends check), L1913-1941 (Pokéblock flavor-type check), L2013-2020 (battle enqueue; identical @origin/expansion); src/field_specials.c @vanilla L202-205 (legendary Pokédex selection); include/constants/rogue.h @vanilla L810 (cost = 10 Pokéblocks)"
     },
     {
       "id": "pool-sign",
@@ -108,7 +108,7 @@
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The sign in the Safari Area offers two actions: “View Pokémon” opens the regular pool (slots 0–44) in a special Pokédex view showing each mon's name, level and shininess, and “Dismiss Pokémon” clears all regular pool entries at once (the Legends Cave has its own separate “Dismiss” for the legendary slots).",
-      "source": "data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_safari.c @vanilla L524-541 (ResetAllRegularEntries L524, ResetAllLegendEntries L534; identical @origin/expansion)"
+      "source": "data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_safari.c @vanilla L524-541 / @origin/expansion L524-541 (ResetAllRegularEntries L524, ResetAllLegendEntries L534)"
     }
   ]
 }

@@ -28,7 +28,7 @@
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The overworld and battle palettes are tinted by a six-keyframe lookup: 5:00 night, 6:00 sunrise, 8:00 daylight, 19:00 daylight, 21:00 sunset, 23:00 night. Between keyframes the colour is interpolated frame by frame, so sunsets and dawns fade smoothly. Indoor maps are never tinted, and the tint can be temporarily disabled while a special visual is active.",
-      "source": "src/rogue_timeofday.c @vanilla L93-134 (sToDPaletteLookup keyframes), L519-575 (interpolation between keyframes) (identical @origin/expansion); src/rogue_timeofday.c @vanilla L427-438 (indoor maps excluded, temp-disable switch) (identical @origin/expansion)"
+      "source": "src/rogue_timeofday.c @vanilla L93-134 (sToDPaletteLookup keyframes), L500-561 (interpolation between keyframes) (identical @origin/expansion); src/rogue_timeofday.c @vanilla L427-438 (indoor maps excluded, temp-disable switch) (identical @origin/expansion)"
     },
     {
       "id": "time-codes",
@@ -36,7 +36,7 @@
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The clock maps to four named periods: Dawn 6:00–8:00, Day 8:00–21:00, Dusk 21:00–23:00 and Night 23:00–6:00. The period is taken from the start of the active keyframe interval, so the 19:00–21:00 fade is still counted as Day while the colour drifts toward sunset. These labels appear in the bed's wake-up menu; the run's status screen shows the season name and a numeric clock instead.",
-      "source": "src/rogue_timeofday.c @vanilla L84-91 (TIME_CODE enum), L519-566 (time code = start keyframe of the interval), L252-270 (IsDawn/IsDay/IsDusk/IsNight) (identical @origin/expansion); src/strings.c @vanilla L808-811 / @origin/expansion L819-822 (player-facing Dawn/Day/Dusk/Night labels); src/data/script_menu.h @vanilla L881-887 / @origin/expansion L882-888 (bed wake-up multi-select options); src/rogue_controller.c @vanilla L2929-2949 (status screen: season name + numeric clock, no time labels)"
+      "source": "src/rogue_timeofday.c @vanilla L81-88 (TIME_CODE enum), L549-557 (time code = start keyframe of the interval), L252-270 (IsDawn/IsDay/IsDusk/IsNight) (identical @origin/expansion); src/strings.c @vanilla L808-811 / @origin/expansion L819-822 (player-facing Dawn/Day/Dusk/Night labels); src/data/script_menu.h @vanilla L881-887 / @origin/expansion L882-888 (bed wake-up multi-select options); src/rogue_controller.c @vanilla L2929-2949 (status screen: season name + numeric clock, no time labels)"
     },
     {
       "id": "run-clock",
@@ -44,7 +44,7 @@
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "A run always starts at 10:00. Each room change during an active run adds one hour, so a run covers roughly one in-game day from morning through the night. When the clock wraps past 24:00 a new day is counted and the season day-counter advances.",
-      "source": "src/rogue_controller.c @vanilla L3328 (run start: RogueToD_SetTime(60 × 10)), L5686-5688 (+60 min per warp while a run is active) (identical @origin/expansion); src/rogue_timeofday.c @vanilla L152-165 (time set with 24h wrap and day counter increment) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L3328 (run start: RogueToD_SetTime(60 × 10)), L5686-5688 (+60 min per warp while a run is active) / @origin/expansion L3315, L5677-5679; src/rogue_timeofday.c @vanilla L152-165 (time set with 24h wrap and day counter increment) (identical @origin/expansion)"
     },
     {
       "id": "hub-clock",
@@ -52,7 +52,7 @@
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "In the hub (outside a run) time moves a quarter hour per room change, so the hub's time of day drifts slowly as you explore between runs. In a multiplayer hub, clients simply adopt the host's time and season.",
-      "source": "src/rogue_controller.c @vanilla L5713-5720 (hub: clients copy host time/season, host +15 min per warp) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L5713-5720 / @origin/expansion L5704-5711 (hub: clients copy host time/season, host +15 min per warp)"
     },
     {
       "id": "bed-presets",
@@ -68,7 +68,7 @@
       "category": "season-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The year cycles Spring → Summer → Autumn → Winter, and each season lasts two in-game days (so the season changes every two days on the run clock). Your current season is stamped on the run's status screen alongside the clock and badges, and the hub's music changes with it: spring plays a New Bark Town–style theme, summer Sandgem Town, autumn Floaroma Town and winter Snowpoint Town.",
-      "source": "src/rogue_timeofday.c @vanilla L62 (DAYS_PER_SEASON 2), L180-212 (season from day counter) (identical @origin/expansion); include/constants/rogue.h @vanilla L847-851 (season enum) (identical @origin/expansion); src/rogue_controller.c @vanilla L2929-2945 (season stamp on the status screen), L915-930 (seasonal hub music) (identical @origin/expansion)"
+      "source": "src/rogue_timeofday.c @vanilla L62 (DAYS_PER_SEASON 2), L180-212 (season from day counter) (identical @origin/expansion); include/constants/rogue.h @vanilla L847-851 / @origin/expansion L849-853 (season enum); src/rogue_controller.c @vanilla L2929-2945 (season stamp on the status screen), L915-930 (seasonal hub music) / @origin/expansion L2916-2932, L915-930"
     },
     {
       "id": "snowy-maps",

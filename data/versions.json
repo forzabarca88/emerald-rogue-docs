@@ -56,7 +56,7 @@
       "category": "roster",
       "versions": ["ex"],
       "description": "Vanilla's trainer pool is limited to the Gen 1–3 regions (Kanto, Johto, Hoenn) plus the Rogue-specific trainers. EX opens the Sinnoh, Unova, Kalos, Alola, Galar and Paldea region toggles in the Config Lab, so gyms, routes' trainer battles and the boss ladder can draw on the whole Gen 1–9 trainer roster. The region toggles themselves are documented on the Configuration page.",
-      "source": "include/constants/rogue.h @vanilla L297-313 (region flag bits Kanto → Paldea) (identical @origin/expansion); data/settings.json (toggle-region-sinnoh … toggle-region-paldea records, EX-only) (site data)"
+      "source": "include/constants/rogue.h @vanilla L297-313 / @origin/expansion L297-313 (region flag bits Kanto → Paldea); data/settings.json (toggle-region-sinnoh … toggle-region-paldea records, EX-only) (site data)"
     },
     {
       "id": "boss-aces",
@@ -68,7 +68,7 @@
         "vanilla": "Aces: none (Raven/Erma), Gastly (Kate), Rayquaza (Cyrus/Ghetsis/Colress/Lysander). Balls: Premier (final trainers), Luxury (final boss, custom and Pokabbie mons).",
         "ex": "Aces: Goomy (Raven), Fomantis (Erma), Tarountula (Kate), Giratina/Kyurem/Genesect/Zygarde (the four villain bosses). Balls: Cherish (final trainers, final boss, custom mons), Park Ball (Pokabbie mons)."
       },
-      "source": "include/constants/rogue.h @vanilla L392-405 (EX ball + ace #defines) / L407-421 (Vanilla ball + ace #defines) (same lines @origin/expansion); src/data/rogue/trainers/rogue.json @vanilla L666-670, L794-798, L1125-1129 (KATE/ERMA/RAVEN shiny_species), team_galactic.json L36-42 (CYRUS), team_plasma.json L42, team_neoplasma.json L42-43, team_flare.json L42-43 (boss shiny aces) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L392-405 (EX ball + ace #defines) / L407-421 (Vanilla ball + ace #defines) / @origin/expansion L392-405, L407-421; src/data/rogue/trainers/rogue.json @vanilla L666-670, L794-798, L1125-1129 (KATE/ERMA/RAVEN shiny_species), team_galactic.json L36-42 (CYRUS), team_plasma.json L42, team_neoplasma.json L42-43, team_flare.json L42-43 (boss shiny aces) (identical @origin/expansion)"
     },
     {
       "id": "fairy-typing",
@@ -84,7 +84,7 @@
       "category": "mechanics",
       "versions": ["ex"],
       "description": "EX removes the Hidden Machines from the item economy: the TM/HM item mapping covers TMs only, so HM items (Cut, Surf and friends) are not part of the run's item pool, shops or drops. Vanilla keeps the full TM + HM item range.",
-      "source": "include/constants/rogue.h @vanilla L27-29 (ROGUE_FEATURE_REMOVE_HIDDEN_MACHINES defined only under ROGUE_EXPANSION) (same lines @origin/expansion); src/party_menu.c @vanilla L5533-5538, L5551-5559 / @origin/expansion L6412-6417, L6430-6438 (TM/HM move mapping branches on the flag), src/rogue_baked.c @vanilla L1070-1081 (SanitizeItemId maps HM items to ITEM_NONE), src/rogue_query.c @vanilla L1731 (same flag) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L27-29 / @origin/expansion L27-29 (ROGUE_FEATURE_REMOVE_HIDDEN_MACHINES defined only under ROGUE_EXPANSION); src/party_menu.c @vanilla L5533-5538, L5551-5559 / @origin/expansion L6412-6417, L6430-6438 (TM/HM move mapping branches on the flag), src/rogue_baked.c @vanilla L1070-1081 (SanitizeItemId maps HM items to ITEM_NONE), src/rogue_query.c @vanilla L1731 (same flag) (identical @origin/expansion)"
     },
     {
       "id": "affection",
