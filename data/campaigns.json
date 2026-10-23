@@ -23,7 +23,7 @@
       "category": "campaign-overview",
       "versions": ["vanilla", "ex"],
       "description": "The assistant in the hub's Config Room opens an Easy Chat screen titled 'What to say?'. If the phrase you type matches one of the hidden two-word campaign phrases, that campaign unlocks and becomes the desired campaign for your next run. The known phrases: 'SMALL HOLIDAY' (BST Cup), 'REFLECT ADVENTURE' (Classic), 'BATTLETOWER NOW' (Battle Addict), 'ATTACK WHAT' (Auto Battler), 'LATER MAN' (LaterManner), 'BALL OUT' (Limited Capture) and 'PLEASE MISS' (One Hit Mode). Once unlocked, the assistant offers the campaign by name with your best score.",
-      "source": "src/easy_chat.c @vanilla L672-683 (Easy Chat screen type EASY_CHAT_TYPE_ROGUE_CAMPAIGN, title 'What to say?') / @origin/expansion L684-695, @vanilla L3010-3016 / @origin/expansion L3031-3037 (phrase stored and passed to Rogue_TryUpdateDesiredCampaign); src/strings.c @vanilla L1262 / @origin/expansion L1273 (gText_CampaignPhrase 'What to say?'); src/rogue_campaign.c @vanilla L81-105 (phrase word-pairs to campaign ids), L107-119 (unlock + desired campaign) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla (assistant: unlock, confirm, best-score display) (identical @origin/expansion)"
+      "source": "src/easy_chat.c @vanilla L672-683 (Easy Chat screen type EASY_CHAT_TYPE_ROGUE_CAMPAIGN, title 'What to say?') / @origin/expansion L684-695, @vanilla L3010-3016 / @origin/expansion L3031-3037 (phrase stored and passed to Rogue_TryUpdateDesiredCampaign); src/strings.c @vanilla L1262 / @origin/expansion L1273 (gText_CampaignPhrase 'What to say?'); src/rogue_campaign.c @vanilla L81-105 (phrase word-pairs to campaign ids), L107-119 (unlock + desired campaign) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L130-365 (assistant: unlock, confirm, best-score display) / @origin/expansion L130-365"
     },
     {
       "id": "campaign-activation",
@@ -43,7 +43,7 @@
         "vanilla": "The forced Pokédex generation cap is Gen 1–3.",
         "ex": "The forced Pokédex generation cap is Gen 1–8 deliberately leaving Gen 9 species out of the pool. EX also carries an unused mega-evolution recheck for the tracked total (no code path calls it), which would let a Mega Evolution raise the score."
       },
-      "source": "src/rogue_campaign.c @vanilla L121-173 (pre-activation: config reset, gen limit 3 vanilla / 8 EX), L179-198 (post-activation: Sunkern Lv15, Everstone+Species Curses, 50 Link Cables, 8 Rare Candies, score init), L327-342 (recheck when the total-battles stat increments, i.e. at battle start), L360-377 (form-change recheck), L379-398 (EX-only mega-evolution recheck — no call sites in either branch), L401-427 (Campaign_LowBst_RecalculateScore: ratchet — keeps the highest-BST species ever carried, never decreases), L300-309 (TM06 banned) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L135-136 (in-game description, including the 'catch and release' note) (identical @origin/expansion)"
+      "source": "src/rogue_campaign.c @vanilla L121-173 (pre-activation: config reset, gen limit 3 vanilla / 8 EX), L179-198 (post-activation: Sunkern Lv15, Everstone+Species Curses, 50 Link Cables, 8 Rare Candies, score init), L327-342 (recheck when the total-battles stat increments, i.e. at battle start), L360-377 (form-change recheck), L379-398 (EX-only mega-evolution recheck — no call sites in either branch), L401-427 (Campaign_LowBst_RecalculateScore: ratchet — keeps the highest-BST species ever carried, never decreases), L300-309 (TM06 banned) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L135-136 / @origin/expansion L135-136 (in-game description, including the 'catch and release' note)"
     },
     {
       "id": "campaign-classic",
@@ -51,7 +51,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "A legacy campaign that unlocks but has no active rules in the run code today: it carries a title, an unlock phrase and a Config Room description, but no campaign check anywhere in the run behaves differently while it is active. It exists so the phrase still unlocks cleanly.",
-      "source": "src/rogue_campaign.c @vanilla L27-46 (title case only), L85-86 (phrase mapping) — no behaviour cases for ROGUE_CAMPAIGN_CLASSIC anywhere in the run code (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L138-139 (in-game description) (identical @origin/expansion)"
+      "source": "src/rogue_campaign.c @vanilla L27-46 (title case only), L85-86 (phrase mapping) — no behaviour cases for ROGUE_CAMPAIGN_CLASSIC anywhere in the run code (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L138-139 / @origin/expansion L138-139 (in-game description)"
     },
     {
       "id": "campaign-battle-addict",
@@ -59,7 +59,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "The trainer-fight campaign: the Config Room description promises a run with no route encounters, only Strong Trainer (miniboss) battles, and your score is the number of your Pokémon that faint over the run — lower is better. The faint-count scoring is live; the 'no routes, only minibosses' path change is part of the legacy behaviour set (the path generator no longer special-cases this campaign), so in practice you get the score challenge on an otherwise normal path.",
-      "source": "src/rogue_campaign.c @vanilla L175-224 (post-activation: score init), L290-305 (faint-count scoring), L243-271 (scored, low-is-better) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L142-144 (in-game description) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla (no campaign special-casing in room selection) (identical @origin/expansion)"
+      "source": "src/rogue_campaign.c @vanilla L175-224 (post-activation: score init), L290-305 (faint-count scoring), L243-271 (scored, low-is-better) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L142-144 / @origin/expansion L142-144 (in-game description); src/rogue_adventurepaths.c @vanilla (no campaign special-casing in room selection) (identical @origin/expansion)"
     },
     {
       "id": "campaign-auto-battler",
@@ -67,7 +67,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "Both you and your opponents pick moves at random in every battle — the same auto-move behaviour as the Auto Move Curse, applied for the whole run. Score is the faint count of your party over the run; lower is better. Works in any adventure type.",
-      "source": "src/battle_controller_player.c @vanilla L3024-3026 (player moves auto-selected while the campaign is active), src/rogue_baked.c @vanilla L941, L955 (auto-pick in baked battle flows) (identical @origin/expansion); src/rogue_campaign.c @vanilla L290-305 (faint-count scoring) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L146-147 (in-game description) (identical @origin/expansion)"
+      "source": "src/battle_controller_player.c @vanilla L3024-3026 (player moves auto-selected while the campaign is active), src/rogue_baked.c @vanilla L941, L955 (auto-pick in baked battle flows) (identical @origin/expansion); src/rogue_campaign.c @vanilla L290-305 (faint-count scoring) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L146-147 / @origin/expansion L146-147 (in-game description)"
     },
     {
       "id": "campaign-latermanner",
@@ -75,7 +75,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "A campaign 'made for the streamer himself': the run forces a fresh start with a single level 15 Farfetch'd, wild encounters are allowed to repeat species back-to-back (the usual anti-repeat filter is disabled), and your score is the faint count of your party — lower is better. The in-game description is deliberately vague: 'You'll figure out the rest.'",
-      "source": "src/rogue_campaign.c @vanilla L121-173 (pre-activation: config reset), L200-212 (post-activation: Farfetch'd Lv15) (identical @origin/expansion); src/rogue_controller.c @vanilla L8345-8352 (anti-repeat wild-encounter filter disabled while active) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L150-152 (in-game description) (identical @origin/expansion)"
+      "source": "src/rogue_campaign.c @vanilla L121-173 (pre-activation: config reset), L200-212 (post-activation: Farfetch'd Lv15) (identical @origin/expansion); src/rogue_controller.c @vanilla L8345-8352 / @origin/expansion L8336-8343 (anti-repeat wild-encounter filter disabled while active); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L150-152 / @origin/expansion L150-152 (in-game description)"
     },
     {
       "id": "campaign-limited-capture",
@@ -83,7 +83,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "The no-catching challenge: every ball in your bag is banned for the run (all ball items, from Poké Balls up), and on activation five Poké Balls are removed and five Ultra Balls added for flavour. The goal is simply to complete the adventure without catching anything — Pokémon that are simply given to you (like the Lab's take-back) can still arrive. Unscored — it's about finishing, not scoring. Works in any adventure type.",
-      "source": "src/rogue_campaign.c @vanilla L175-224 (post-activation: -5 Poké Balls, +5 Ultra Balls), L300-315 (all ball items banned while active) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L155-156 (in-game description) (identical @origin/expansion)"
+      "source": "src/rogue_campaign.c @vanilla L175-224 (post-activation: -5 Poké Balls, +5 Ultra Balls), L300-315 (all ball items banned while active) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L155-156 / @origin/expansion L155-156 (in-game description)"
     },
     {
       "id": "campaign-one-hit",
@@ -91,7 +91,7 @@
       "category": "campaign-mode",
       "versions": ["vanilla", "ex"],
       "description": "Every hit a trainer's Pokémon lands on your party faints you — in Trainer Battles, damage against your side is overridden to far exceed your max HP. Wild battles play normally, and damage-over-time and status effects work as usual, so the challenge is managing PP, status and which mon faces which trainer. Score is the faint count of your party over the run; lower is better. Works in any adventure type.",
-      "source": "src/battle_script_commands.c @vanilla L1327-1333 (trainer-battle damage vs the player side forced to maxHP × 4 while active) (identical @origin/expansion); src/rogue_campaign.c @vanilla L290-305 (faint-count scoring) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L159-160 (in-game description) (identical @origin/expansion)"
+      "source": "src/battle_script_commands.c @vanilla L1327-1333 / @origin/expansion L2088-2094 (trainer-battle damage vs the player side forced to maxHP × 4 while active); src/rogue_campaign.c @vanilla L290-305 (faint-count scoring) (identical @origin/expansion); data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory @vanilla L159-160 / @origin/expansion L159-160 (in-game description)"
     },
     {
       "id": "campaign-scores",
@@ -99,7 +99,7 @@
       "category": "campaign-overview",
       "versions": ["vanilla", "ex"],
       "description": "Five campaigns are scored — BST Cup, Battle Addict, Auto Battler, LaterManner and One Hit — and in all of them lower is better. While a scored campaign is active, the run's status screen grows a score line. Best scores are saved when the run completes at or past the final boss, and are shown next to the campaign name in the Config Room and on the hall of fame.",
-      "source": "src/rogue_campaign.c @vanilla L226-271 (completion + best score, scored-campaign list, low-is-better), L273-282 (score value: highest party BST for the Cup, faint count otherwise) (identical @origin/expansion); src/rogue_controller.c @vanilla L2967-2973 (score line added to the run status screen for scored campaigns) (identical @origin/expansion); src/rogue_script.c @vanilla L861-890 (best score + campaign name buffering for the Config Room) (identical @origin/expansion); src/hall_of_fame.c @vanilla L1486-1497 / @origin/expansion L1490-1499 (campaign title + run score on the hall of fame)"
+      "source": "src/rogue_campaign.c @vanilla L226-271 (completion + best score, scored-campaign list, low-is-better), L273-282 (score value: highest party BST for the Cup, faint count otherwise) (identical @origin/expansion); src/rogue_controller.c @vanilla L2967-2973 / @origin/expansion L2954-2960 (score line added to the run status screen for scored campaigns); src/rogue_script.c @vanilla L861-890 (best score + campaign name buffering for the Config Room) (identical @origin/expansion); src/hall_of_fame.c @vanilla L1486-1497 / @origin/expansion L1490-1499 (campaign title + run score on the hall of fame)"
     }
   ]
 }

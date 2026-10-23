@@ -28,7 +28,7 @@
       "category": "gameshow-overview",
       "versions": ["vanilla", "ex"],
       "description": "A special adventure-path room (preview: 'It's a… Game Show?'). Six prize items are rolled for your visit and displayed on a shelf; the host NPC, the Game Show host sprite and the prize counter are placed in the room. The shelf's item sprites behave slightly differently between versions (see the Rewards record).",
-      "source": "data/maps/Rogue_Encounter_GameShow/map.json @vanilla (host, prize shelf local ids 11–16, prize counter object) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L18 (OBJ_LOCAL_ID_ITEM_START 11) (identical @origin/expansion)"
+      "source": "data/maps/Rogue_Encounter_GameShow/map.json @vanilla (host, prize shelf local ids 11–16, prize counter object) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L18 / @origin/expansion L17 (OBJ_LOCAL_ID_ITEM_START 11)"
     },
     {
       "id": "game-whos-that",
@@ -36,7 +36,7 @@
       "category": "gameshow-game",
       "versions": ["vanilla", "ex"],
       "description": "A silhouette of a random Pokémon (from the species pool available to your Pokédex, avoiding species shown recently) is displayed, and you pick its name from a list. Carries one in four of the skill-game weight.",
-      "source": "src/rogue_gameshow.c @vanilla L50-108 (random species selection from the active dex, recently-shown species excluded, 3+round options) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L194-245 (silhouette + prompt), L98-140 (skill-game selection: random(4), this game is case 0) (identical @origin/expansion)"
+      "source": "src/rogue_gameshow.c @vanilla L50-108 / @origin/expansion L49-107 (random species selection from the active dex, recently-shown species excluded, 3+round options); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L194-245 (silhouette + prompt), L98-140 (skill-game selection: random(4), this game is case 0) (identical @origin/expansion)"
     },
     {
       "id": "game-whats-that-cry",
@@ -44,7 +44,7 @@
       "category": "gameshow-game",
       "versions": ["vanilla", "ex"],
       "description": "The same silhouette-and-guess format, but the prompt is the Pokémon's cry instead of its sprite. Carries two in four of the skill-game weight, so it's the most common skill game.",
-      "source": "src/rogue_gameshow.c @vanilla L50-108 (species selection shared with Who's that) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L248-308 (cry prompt), L98-140 (skill-game selection: random(4), this game is cases 1–2) (identical @origin/expansion)"
+      "source": "src/rogue_gameshow.c @vanilla L50-108 / @origin/expansion L49-107 (species selection shared with Who's that); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L248-308 (cry prompt), L98-140 (skill-game selection: random(4), this game is cases 1–2) (identical @origin/expansion)"
     },
     {
       "id": "game-voltorb-flip",
@@ -60,7 +60,7 @@
       "category": "gameshow-game",
       "versions": ["vanilla", "ex"],
       "description": "A sixth skill game where you answer questions about your own party ('Which of your Pokémon has the highest HP?' and similar). The game is fully scripted with stat-based questions, but the validity check that gates it is hard-coded to fail with a TODO comment, so the game is never actually offered — the random(5) selection branch that would include it is dead code, and the live skill-game pool contains only the three games above (weighted 1/4, 2/4, 1/4).",
-      "source": "src/rogue_gameshow.c @vanilla L163-167 (GameShow_IsTeamTriviaRoundValid hard-coded FALSE with TODO), L179-243 (stat-based trivia question buffers) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L98-125 (selection: the validity-gated random(5) branch, whose case 4 is dead code), L348-404 (scripted game) (identical @origin/expansion)"
+      "source": "src/rogue_gameshow.c @vanilla L163-167 (GameShow_IsTeamTriviaRoundValid hard-coded FALSE with TODO), L179-243 (stat-based trivia question buffers) / @origin/expansion L130-134, L146-210; data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L98-125 (selection: the validity-gated random(5) branch, whose case 4 is dead code), L348-404 (scripted game) (identical @origin/expansion)"
     },
     {
       "id": "game-coin-flip",
@@ -84,7 +84,7 @@
       "category": "gameshow-overview",
       "versions": ["vanilla", "ex"],
       "description": "Skill and luck games run six rounds (Voltorb Flip three). The silhouette/cry guessing games build their answer list dynamically with 3 + round number options — four choices in round one, nine by round six — so the odds of guessing right drift against you as the shelf fills.",
-      "source": "src/rogue_gameshow.c @vanilla L71-108 (GameShow_AppendSpeciesMultichoiceOptions: 3 + currentRound options, correct answer included once) (identical @origin/expansion); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L191-310 (round loops) (identical @origin/expansion)"
+      "source": "src/rogue_gameshow.c @vanilla L71-108 / @origin/expansion L70-107 (GameShow_AppendSpeciesMultichoiceOptions: 3 + currentRound options, correct answer included once); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L191-310 (round loops) (identical @origin/expansion)"
     },
     {
       "id": "gameshow-rewards",

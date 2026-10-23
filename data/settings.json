@@ -412,7 +412,7 @@
       "description": "The active difficulty preset. Editing any of the preset-controlled difficulty toggles or sliders moves the setting to Custom; the reward level shown next to it is the highest preset your configuration still qualifies for.",
       "options": ["Easy", "Average", "Hard", "Brutal", "Custom"],
       "optionValues": [0, 1, 2, 3, 4],
-      "source": "src/data/rogue_strings.h @vanilla L83, L93-97, L114-118 (identical @origin/expansion); include/constants/rogue.h @vanilla L537-545 / @origin/expansion L539-547; src/rogue_settings.c @vanilla L497-549, L600-607 (identical @origin/expansion)"
+      "source": "src/data/rogue_strings.h @vanilla L83, L93-97, L114-118 / @origin/expansion L83, L93-97, L114-118; include/constants/rogue.h @vanilla L537-545 / @origin/expansion L539-547; src/rogue_settings.c @vanilla L497-549, L600-607 (identical @origin/expansion)"
     },
     {
       "id": "range-revision-mode",

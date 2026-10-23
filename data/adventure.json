@@ -28,7 +28,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "The default room. Every column of the path starts out as a route and only becomes a special encounter if one is placed. Routes come in three sub-types — Calm, Average and Tough. The sub-type does not shift the wild Pokémon's level range (wild levels scale with your own level) — it tunes what the route offers: trainer mon levels (Calm at the tier's start level, Average at the midpoint between the start level and your level, Tough at your level minus 5), encounter counts (grass 5/3/2, water 2/1/1), trainer spawn chance (20 points less on Calm), item drop chance (65/80/95) with rarity adjusted (−1/0/+1), and themed-weather chance (5/25/45). The three-type wild table itself is defined per route; see the Routes page.",
-      "source": "include/constants/rogue.h @vanilla L241, L262-264 (ADVPATH_ROOM_ROUTE, sub-types) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L651-660 (routes pre-fill all columns) (identical @origin/expansion); src/rogue_controller.c @vanilla L9969-10005 (CalculateWildLevel: wild levels come from player level, never the sub-type) / @origin/expansion L9960-9996; src/rogue_trainers.c @vanilla L389-434 (Rogue_CalculateTrainerMonLvl: Calm = start, Average = midpoint, Tough = player − 5) (identical @origin/expansion); src/rogue_controller.c @vanilla L8029-8108, L10154-10175, L10251-10260, L5843-5863 (encounter counts, trainer spawn −20 on Calm, item drops 65/80/95, rarity −1/0/+1, weather 5/25/45) / @origin/expansion L8020-8099, L10145-10166, L10242-10251, L5834-5854; data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L100-107 (Calm/Average/Tough preview text) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L241, L262-264 / @origin/expansion L241, L262-264 (ADVPATH_ROOM_ROUTE, sub-types); src/rogue_adventurepaths.c @vanilla L651-660 (routes pre-fill all columns) (identical @origin/expansion); src/rogue_controller.c @vanilla L9969-10005 (CalculateWildLevel: wild levels come from player level, never the sub-type) / @origin/expansion L9960-9996; src/rogue_trainers.c @vanilla L389-434 (Rogue_CalculateTrainerMonLvl: Calm = start, Average = midpoint, Tough = player − 5) (identical @origin/expansion); src/rogue_controller.c @vanilla L8029-8108, L10154-10175, L10251-10260, L5843-5863 (encounter counts, trainer spawn −20 on Calm, item drops 65/80/95, rarity −1/0/+1, weather 5/25/45) / @origin/expansion L8020-8099, L10145-10166, L10242-10251, L5834-5854; data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L100-107 (Calm/Average/Tough preview text) (identical @origin/expansion)"
     },
     {
       "id": "room-boss",
@@ -36,7 +36,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "The boss room, always placed at the very end of the path (preview: 'It's a Mighty Trainer!'). It is the only mandatory room: which boss appears depends on your badge count — a Gym Leader, Elite Four member, the Champion or the final rival. After the boss, a new path is generated for the next ladder step.",
-      "source": "include/constants/rogue.h @vanilla L257 (ADVPATH_ROOM_BOSS) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L648-649 (boss placed at path end), L1860-1881 (SetBossRoomWarp maps difficulty to the boss room) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L257 / @origin/expansion L257 (ADVPATH_ROOM_BOSS); src/rogue_adventurepaths.c @vanilla L648-649 (boss placed at path end), L1860-1881 (SetBossRoomWarp maps difficulty to the boss room) (identical @origin/expansion)"
     },
     {
       "id": "room-reststop",
@@ -44,7 +44,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A safe room with four sub-types: Full (healing), Mart (item shop), Battle Prep (tutors) and Day Care. The generator strongly wants at least one (weight 100 when none is on the path, 20 for a second, dropping to 1 after four). In Gauntlet, the route column closest to the boss is replaced with a Full Rest Stop — the path always ends with a free full heal right before the final battle.",
-      "source": "include/constants/rogue.h @vanilla L242, L266-269 (ADVPATH_ROOM_RESTSTOP, sub-types) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L358-370 (rest stop weights), L665-676 (gauntlet: final route column becomes a Full Rest Stop) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L81-91 (sub-type preview text) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L242, L266-269 / @origin/expansion L242, L266-269 (ADVPATH_ROOM_RESTSTOP, sub-types); src/rogue_adventurepaths.c @vanilla L358-370 (rest stop weights), L665-676 (gauntlet: final route column becomes a Full Rest Stop) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L81-91 (sub-type preview text) (identical @origin/expansion)"
     },
     {
       "id": "room-legendary",
@@ -52,7 +52,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A lone legendary roamer battle (preview: 'It's a Pokémon of Legends!'). Exactly one is placed per run with the highest weight of any room (200), and it can only appear on the badge where the run assigned it: a Roamer legendary at badges 1–5, a Minor legendary at badges 3–5, or the Box legendary at badges 7–8 (collisions are shifted apart). In Fast Path, the assigned badge snaps to the nearest even-numbered column — the columns where routes are hidden. In EX the pool of legendaries grows with each generation; in Vanilla it is the Gen 1–3 set.",
-      "source": "src/rogue_adventurepaths.c @vanilla L373-379 (Legendary weight 200, one per run), L746-755 (placed only on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5042-5095 (roamer 1–5 / minor 3–5 / Box 7–8 badge assignment, Fast Path snap to even badges, de-collision) / @origin/expansion L5033-5086; include/constants/rogue.h @vanilla L275-278 (three legendary slots) (identical @origin/expansion)"
+      "source": "src/rogue_adventurepaths.c @vanilla L373-379 (Legendary weight 200, one per run), L746-755 (placed only on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5042-5095 (roamer 1–5 / minor 3–5 / Box 7–8 badge assignment, Fast Path snap to even badges, de-collision) / @origin/expansion L5033-5086; include/constants/rogue.h @vanilla L275-278 / @origin/expansion L275-278 (three legendary slots)"
     },
     {
       "id": "room-team-hideout",
@@ -68,7 +68,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A honey tree habitat with a wild encounter and a honey reward (preview: 'It's a Honey Tree Habitat!'). Rolled into 60% of runs from badge 1 up; the generator cycles its weight by badge parity (15 on odd badges, 1 on even), so some runs simply don't get one. One per run.",
-      "source": "include/constants/rogue.h @vanilla L247 (ADVPATH_ROOM_HONEY_TREE) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L390-403 (honey tree weight, one per run), L732-733 (60% roll, badge ≥ 1) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L247 / @origin/expansion L247 (ADVPATH_ROOM_HONEY_TREE); src/rogue_adventurepaths.c @vanilla L390-403 (honey tree weight, one per run), L732-733 (60% roll, badge ≥ 1) (identical @origin/expansion)"
     },
     {
       "id": "room-dark-deal",
@@ -108,7 +108,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A catch practice arena (preview: 'It's a Catching Contest.'). Wild Pokémon spawn on a fixed interval while you catch them; the more you land, the better the reward. Rolled into a third of runs (33%), one per run.",
-      "source": "include/constants/rogue.h @vanilla L252 (ADVPATH_ROOM_CATCHING_CONTEST) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L446-451 (contest weight), L768-770 (33% roll) (identical @origin/expansion); src/rogue_followmon.c @vanilla L1134-1139 (fixed 120-tick spawn interval during contests) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L252 / @origin/expansion L252 (ADVPATH_ROOM_CATCHING_CONTEST); src/rogue_adventurepaths.c @vanilla L446-451 (contest weight), L768-770 (33% roll) (identical @origin/expansion); src/rogue_followmon.c @vanilla L1134-1139 (fixed 120-tick spawn interval during contests) (identical @origin/expansion)"
     },
     {
       "id": "room-sign",
@@ -124,7 +124,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A practice battle (preview: 'It's a Battle Simulator.'). A fully randomised trainer battle against a team the AI assembles for you — useful for grinding experience without a real trainer's team composition. One per run, from badge 1 up (50% of runs pick the Simulator, the rest pick the Battle Tower).",
-      "source": "include/constants/rogue.h @vanilla L254 (ADVPATH_ROOM_BATTLE_SIM) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L438-444 (Battle Sim weight, one per run), L772-779 (50/50 vs Battle Tower) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L254 / @origin/expansion L254 (ADVPATH_ROOM_BATTLE_SIM); src/rogue_adventurepaths.c @vanilla L438-444 (Battle Sim weight, one per run), L772-779 (50/50 vs Battle Tower) (identical @origin/expansion)"
     },
     {
       "id": "room-battle-tower",
@@ -132,7 +132,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A frontier-style battle (preview: 'It's a Battle Tower.'). Another randomised trainer battle, but with a random weather condition set for the fight — Sunny, Sandstorm, Drought, Downpour, Falling Leaves, Rain and Thunderstorm, Psychic Fog, Snow or Misty Fog, with no weather as a possible roll — never rolled on Easy. One per run, from badge 1 up.",
-      "source": "include/constants/rogue.h @vanilla L255 (ADVPATH_ROOM_BATTLE_TOWER) (identical @origin/expansion); src/rogue_controller.c @vanilla L6025-6049 (9-condition weather list, rolled per entry, skipped on Easy) / @origin/expansion L6016-6040"
+      "source": "include/constants/rogue.h @vanilla L255 / @origin/expansion L255 (ADVPATH_ROOM_BATTLE_TOWER); src/rogue_controller.c @vanilla L6025-6049 (9-condition weather list, rolled per entry, skipped on Easy) / @origin/expansion L6016-6040"
     },
     {
       "id": "room-wild-den",
@@ -140,7 +140,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A habitat of one specific species (preview: 'It's a {species} Habitat of a Trained Pokémon!'). A den of trained Pokémon of a single species for you to fight or catch. In Fast Path runs with hidden routes, every remaining route column is converted into a wild den, so the whole run is den-hopping.",
-      "source": "include/constants/rogue.h @vanilla L246 (ADVPATH_ROOM_WILD_DEN) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L869-880 (fast path with hidden routes converts all routes to dens) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L48-49 (den preview text) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L246 / @origin/expansion L246 (ADVPATH_ROOM_WILD_DEN); src/rogue_adventurepaths.c @vanilla L869-880 (fast path with hidden routes converts all routes to dens) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L48-49 (den preview text) (identical @origin/expansion)"
     },
     {
       "id": "room-none",
@@ -148,7 +148,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A gap in the path — a route column that was blanked out so the trail has open space. The chance of a gap grows with the difficulty (5% early, 20% for the Elite Four, 30% for the Champion and beyond, falling off a few points per gap), and never happens on the very first badge or in Gauntlet.",
-      "source": "include/constants/rogue.h @vanilla L240 (ADVPATH_ROOM_NONE) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L678-721 (gap chance by difficulty), zero on badge 0 and gauntlet) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L240 / @origin/expansion L240 (ADVPATH_ROOM_NONE); src/rogue_adventurepaths.c @vanilla L678-721 (gap chance by difficulty), zero on badge 0 and gauntlet) (identical @origin/expansion)"
     },
     {
       "id": "room-miniboss",
@@ -156,7 +156,7 @@
       "category": "room-type",
       "versions": ["vanilla", "ex"],
       "description": "A 'Strong Trainer' room type that is fully wired (map, reward flow — a Charm plus two Pokémon — and preview text) but is not currently placed by the path generator; the code even marks it 'unused'. It exists so a future update can drop minibosses onto paths.",
-      "source": "include/constants/rogue.h @vanilla L244 (ADVPATH_ROOM_MINIBOSS, marked 'unused') (identical @origin/expansion); data/maps/Rogue_Encounter_MiniBoss/scripts.pory @vanilla L127-133 (charm + two-mon reward) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L45-46 ('It's a Strong Trainer!' preview) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L244 / @origin/expansion L244 (ADVPATH_ROOM_MINIBOSS, marked 'unused'); data/maps/Rogue_Encounter_MiniBoss/scripts.pory @vanilla L127-133 (charm + two-mon reward) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L45-46 ('It's a Strong Trainer!' preview) (identical @origin/expansion)"
     },
     {
       "id": "boss-gyms",
@@ -164,7 +164,7 @@
       "category": "boss",
       "versions": ["vanilla", "ex"],
       "description": "The first eight bosses on the ladder, one per badge, fought in the generic gym boss room. Each leader's team scales with the difficulty setting and is assembled from the enabled trainer pool (in EX you can include Sinnoh through Paldea leaders).",
-      "source": "include/constants/rogue.h @vanilla L377-383 (14 = 8 gyms + 4 elite + 2 champion, ROGUE_ELITE_START_DIFFICULTY 8) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1876-1880 (badge < 8 uses the generic gym boss room) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L377-383 / @origin/expansion L377-383 (14 = 8 gyms + 4 elite + 2 champion, ROGUE_ELITE_START_DIFFICULTY 8); src/rogue_adventurepaths.c @vanilla L1876-1880 (badge < 8 uses the generic gym boss room) (identical @origin/expansion)"
     },
     {
       "id": "boss-elite-four",
@@ -172,7 +172,7 @@
       "category": "boss",
       "versions": ["vanilla", "ex"],
       "description": "Badges 8 through 11 are Elite Four battles. The four members are drawn from a named pool — the regional Elite Four of your enabled regions plus the Rogue glitch-team elites (Kate, Erma, Raven and friends) — and the generator picks each elite's preferred arena map, so the four members get distinct battlegrounds rather than reusing the gym room. Some elites carry a shiny ace Pokémon that differs between versions (see the Versions page).",
-      "source": "include/constants/rogue.h @vanilla L381 (ROGUE_ELITE_START_DIFFICULTY 8) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1872-1875 (elite members use their preferred map) (identical @origin/expansion); src/data/rogue/trainers/rogue.json @vanilla L666, L790, L1121 (glitch elites KATE/ERMA/RAVEN with shiny aces), all regional trainer files (BOSS_ANY_ELITE pool) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L381 / @origin/expansion L381 (ROGUE_ELITE_START_DIFFICULTY 8); src/rogue_adventurepaths.c @vanilla L1872-1875 (elite members use their preferred map) (identical @origin/expansion); src/data/rogue/trainers/rogue.json @vanilla L666, L790, L1121 (glitch elites KATE/ERMA/RAVEN with shiny aces), all regional trainer files (BOSS_ANY_ELITE pool) (identical @origin/expansion)"
     },
     {
       "id": "boss-champion",
@@ -180,7 +180,7 @@
       "category": "boss",
       "versions": ["vanilla", "ex"],
       "description": "Badge 12 is the Champion, fought in the dedicated Champion arena. Your opponent is Randoman — the same contest judge who hosts the Game Show — and his team is a six-Pokémon party the generator assembles with a soft bias toward unique types: a candidate whose type is already in the team simply gets no extra weight, so duplicate types can still appear. Only the final battle stands between you and the victory lap.",
-      "source": "src/data/rogue/trainers/rogue.json @vanilla L1511-1543 (RANDOMAN champ entry: 6-mon team, unique-type weight script, FINAL_BOSS_POKEBALL) (identical @origin/expansion); src/rogue_query_script.c @vanilla L322-327 (HasUniqueTypeInTeam), L409-415 (IncFavour: +1 weight only) (identical @origin/expansion); include/constants/rogue.h @vanilla L380 (ROGUE_CHAMP_START_DIFFICULTY 12) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1867-1871 (badge 12 uses the Champion boss room) (identical @origin/expansion)"
+      "source": "src/data/rogue/trainers/rogue.json @vanilla L1511-1543 (RANDOMAN champ entry: 6-mon team, unique-type weight script, FINAL_BOSS_POKEBALL) (identical @origin/expansion); src/rogue_query_script.c @vanilla L322-327 (HasUniqueTypeInTeam), L409-415 (IncFavour: +1 weight only) (identical @origin/expansion); include/constants/rogue.h @vanilla L380 / @origin/expansion L380 (ROGUE_CHAMP_START_DIFFICULTY 12); src/rogue_adventurepaths.c @vanilla L1867-1871 (badge 12 uses the Champion boss room) (identical @origin/expansion)"
     },
     {
       "id": "boss-final",
@@ -188,7 +188,7 @@
       "category": "boss",
       "versions": ["vanilla", "ex"],
       "description": "The top of the ladder: the final quest battle, fought in the final boss arena against a rival drawn at random from the rivals of every enabled region — Alola (2), Galar (3), Hoenn (3), Johto (1), Kalos (3), Kanto (1), Paldea (3), Sinnoh (1), Unova (4), plus the rogue-region developer rival Pokabbie — so any enabled rival can show up. The final boss throws a Cherish Ball in EX and a Luxury Ball in Vanilla, and the version differences in the boss aces around it are on the Versions page.",
-      "source": "include/constants/rogue.h @vanilla L379 (ROGUE_FINAL_CHAMP_DIFFICULTY 13), L394 (EX: FINAL_BOSS = Cherish) / L409 (Vanilla: Luxury) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1862-1866 (badge 13 uses the final boss room) (identical @origin/expansion); src/rogue_trainers.c @vanilla L1160-1167 (Rogue_ChooseRivalTrainerId: random draw from all CLASS_RIVAL trainers of the enabled regions) (identical @origin/expansion); src/data/rogue/trainers/<region>.json @vanilla (CLASS_RIVAL entries: Alola 2, Galar 3, Hoenn 3, Johto 1, Kalos 3, Kanto 1, Paldea 3, Rogue 1 (Pokabbie), Sinnoh 1, Unova 4) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L379 (ROGUE_FINAL_CHAMP_DIFFICULTY 13), L394 (EX: FINAL_BOSS = Cherish) / L409 (Vanilla: Luxury) / @origin/expansion L379, L394, L409; src/rogue_adventurepaths.c @vanilla L1862-1866 (badge 13 uses the final boss room) (identical @origin/expansion); src/rogue_trainers.c @vanilla L1160-1167 (Rogue_ChooseRivalTrainerId: random draw from all CLASS_RIVAL trainers of the enabled regions) (identical @origin/expansion); src/data/rogue/trainers/<region>.json @vanilla (CLASS_RIVAL entries: Alola 2, Galar 3, Hoenn 3, Johto 1, Kalos 3, Kanto 1, Paldea 3, Rogue 1 (Pokabbie), Sinnoh 1, Unova 4) (identical @origin/expansion)"
     },
     {
       "id": "boss-victory-lap",

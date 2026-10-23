@@ -28,7 +28,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "During a run, each room with wild encounters has visible wandering Pokémon in the overworld instead of (or alongside) random-encounter grass. Each spawn is drawn from the current route's wild table — grass or water species at a random level with the usual shiny odds — and playing the run's legendary roamer cry if the spawned species happens to be it.",
-      "source": "src/rogue_followmon.c @vanilla L905-930 (Rogue_CreateWildMon from the route table, roamer cry) (identical @origin/expansion); src/rogue_controller.c @vanilla L8383-8400 (spawns enabled while a run room has wild encounters) (identical @origin/expansion)"
+      "source": "src/rogue_followmon.c @vanilla L905-930 (Rogue_CreateWildMon from the route table, roamer cry) (identical @origin/expansion); src/rogue_controller.c @vanilla L8383-8400 / @origin/expansion L8374-8391 (spawns enabled while a run room has wild encounters)"
     },
     {
       "id": "spawn-capacity",
@@ -36,7 +36,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "At most six wild followmons can exist at once (plus the lead Pokémon follower, which uses a separate slot). The cap exists partly to limit palette usage and partly to avoid lag — if the map already has eight or more active object events, no new followmon will spawn until one leaves.",
-      "source": "include/constants/rogue.h @vanilla L795-797 (FOLLOWMON_MAX_SPAWN_SLOTS 6, FOLLOWMON_IDEAL_OBJECT_EVENT_COUNT 8) (identical @origin/expansion); src/rogue_followmon.c @vanilla L842-855 (valid slot count), L894-898 (lag guard) (identical @origin/expansion)"
+      "source": "include/constants/rogue.h @vanilla L795-797 / @origin/expansion L797-799 (FOLLOWMON_MAX_SPAWN_SLOTS 6, FOLLOWMON_IDEAL_OBJECT_EVENT_COUNT 8); src/rogue_followmon.c @vanilla L842-855 (valid slot count), L894-898 (lag guard) (identical @origin/expansion)"
     },
     {
       "id": "spawn-timer",
@@ -92,7 +92,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "The game tracks consecutive wild encounters of the same species. Once the chain reaches three, a green 'N Chain' popup confirms the streak, and if the chain breaks after running four or more, a red 'Broken Chain' popup names the species — a handy signal that you've been farming one area for a while.",
-      "source": "src/rogue_followmon.c @vanilla L327-346 (chain count per species: 'N Chain' popup at count ≥ 3, 'Broken Chain' popup when breaking at count > 3) (identical @origin/expansion); src/rogue_popup.c @vanilla L305-306 (popup texts) (identical @origin/expansion); src/rogue_controller.c @vanilla L7269-7275 (chain updated on wild battle win/loss) (identical @origin/expansion)"
+      "source": "src/rogue_followmon.c @vanilla L327-346 (chain count per species: 'N Chain' popup at count ≥ 3, 'Broken Chain' popup when breaking at count > 3) (identical @origin/expansion); src/rogue_popup.c @vanilla L305-306 (popup texts) (identical @origin/expansion); src/rogue_controller.c @vanilla L7269-7275 / @origin/expansion L7260-7266 (chain updated on wild battle win/loss)"
     },
     {
       "id": "important-battles",
@@ -100,7 +100,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "A wild battle is flagged 'important' — getting the slow, cinematic battle intro — when the opponent is shiny or is one of your run's unique (custom-set) Pokémon, or when it is the Game Show's Electrode. Normal wild followmons use the standard fast intro.",
-      "source": "src/rogue_controller.c @vanilla L543-547 (shiny or unique wilds treated as important battles) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L543-547 / @origin/expansion L543-547 (shiny or unique wilds treated as important battles)"
     },
     {
       "id": "traditional-mode",
@@ -108,7 +108,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "If you turn off the Visible Wild Pokémon setting, runs use classic movement-based random encounters instead of overworld spawns — the followmon system is simply bypassed, and no wandering sprites appear during the run.",
-      "source": "src/rogue_controller.c @vanilla L8373-8381 (CONFIG_TOGGLE_OVERWORLD_MONS gates overworld spawning; the toggle is documented on the Configuration page) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L8373-8381 / @origin/expansion L8364-8372 (CONFIG_TOGGLE_OVERWORLD_MONS gates overworld spawning; the toggle is documented on the Configuration page)"
     },
     {
       "id": "catching-followmons",
@@ -116,7 +116,7 @@
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "Catching works exactly like any wild battle, with run adjustments: your new Pokémon is healed to at least half its HP and cured of status, your Strength Charms/Curses adjust its IVs, and if it matched one of your run's unique Pokémon it converts to that custom set (see Unique Pokémon). The followmon's slot then refills on the normal respawn timer.",
-      "source": "src/rogue_controller.c @vanilla L1225-1280 (Rogue_ModifyCaughtMon: heal, status cure, IV charm/curse, unique conversion) (identical @origin/expansion)"
+      "source": "src/rogue_controller.c @vanilla L1225-1280 / @origin/expansion L1225-1280 (Rogue_ModifyCaughtMon: heal, status cure, IV charm/curse, unique conversion)"
     }
   ]
 }
