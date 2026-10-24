@@ -120,7 +120,14 @@ test('adventure.json records make no wrong per-run placement or goal claims', ()
     'useful for grinding experience',
     "try to pocket an item you haven't earned",
     'dropping to 1 after four',
+    'the whole run is den-hopping',
   ];
+  // "Victory Lap" / "Final Battle (Badge 13)" are allowed as ladder labels in
+  // record names, and "source" fields are citations — so "victory lap" is
+  // banned in descriptions only.
+  const bannedInDescriptions = ['victory lap'];
+  // Banned in every record field (name, description, source).
+  const bannedAnywhere = ['Pokabbie'];
 
   // ACT — scan every record's description and source, case-insensitively
   const hits = [];
@@ -128,6 +135,20 @@ test('adventure.json records make no wrong per-run placement or goal claims', ()
     for (const field of ['description', 'source']) {
       const text = String(record[field] ?? '').toLowerCase();
       for (const phrase of bannedPhrases) {
+        if (text.includes(phrase.toLowerCase())) {
+          hits.push(`${record.id}.${field} contains "${phrase}"`);
+        }
+      }
+    }
+    const description = String(record.description ?? '').toLowerCase();
+    for (const phrase of bannedInDescriptions) {
+      if (description.includes(phrase)) {
+        hits.push(`${record.id}.description contains "${phrase}"`);
+      }
+    }
+    for (const field of ['name', 'description', 'source']) {
+      const text = String(record[field] ?? '').toLowerCase();
+      for (const phrase of bannedAnywhere) {
         if (text.includes(phrase.toLowerCase())) {
           hits.push(`${record.id}.${field} contains "${phrase}"`);
         }
