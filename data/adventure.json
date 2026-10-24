@@ -2,7 +2,7 @@
   "meta": {
     "id": "adventure",
     "title": "Adventure Paths & Bosses",
-    "description": "How every run's adventure path is generated: the 16 room types and the rules that decide which ones appear, the 14-boss ladder (8 gyms, 4 Elite Four, Champion and the final battle), and the endless victory lap that follows it. The path generator is identical between Vanilla and EX — what differs is which species, trainers and legendaries can show up in the rooms."
+    "description": "How every run's adventure path is generated: the 16 room types and the rules that decide which ones appear, and the boss ladder — eight gyms, four Elite Four, the Champion, and two final steps we'll leave you to discover. The path generator is identical between Vanilla and EX — what differs is which species, trainers and legendaries can show up in the rooms."
   },
   "prose": [
     {
@@ -13,7 +13,7 @@
     {
       "id": "boss-ladder",
       "heading": "Climbing the ladder",
-      "text": "Every run ends at a boss, and the boss you face is determined by how many badges you've earned: badges 0–7 are the eight Gym Leaders, badges 8–11 are the Elite Four, badge 12 is the Champion, and badge 13 is the final battle against the rival. There are 14 bosses in total, and the room at the end of the path is always the next one on the ladder — you can't skip ahead or fight a boss out of order. Once you beat the final battle, the run doesn't have to end: the victory lap keeps spawning endless trainer battles at the top of the difficulty scale."
+      "text": "Every run ends at a boss, and the boss you face is determined by how many badges you've earned: badges 0–7 are the eight Gym Leaders, badges 8–11 are the Elite Four, and badge 12 is the Champion. There are 14 bosses in total, and the room at the end of the path is always the next one on the ladder — you can't skip ahead or fight a boss out of order. Past the Champion the ladder has two more steps — what they are is best left for you to find in-game."
     },
     {
       "id": "reading-the-rooms",
@@ -35,7 +35,7 @@
       "name": "Mighty Trainer (Boss)",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "The boss room, always placed at the very end of the path (preview: 'It's a Mighty Trainer!'). It is the only mandatory room: which boss appears depends on your badge count — a Gym Leader, Elite Four member, the Champion or the final rival. After the boss, a new path is generated for the next ladder step.",
+      "description": "The boss room, always placed at the very end of the path (preview: 'It's a Mighty Trainer!'). It is the only mandatory room: which boss appears depends on your badge count — a Gym Leader, Elite Four member, the Champion — or, at the very top of the ladder, a final battle we won't spoil. After the boss, a new path is generated for the next ladder step.",
       "source": "include/constants/rogue.h @vanilla L257 / @origin/expansion L257 (ADVPATH_ROOM_BOSS); src/rogue_adventurepaths.c @vanilla L648-649 (boss placed at path end), L1860-1881 (SetBossRoomWarp maps difficulty to the boss room) (identical @origin/expansion)"
     },
     {
@@ -179,7 +179,7 @@
       "name": "Champion (Badge 12)",
       "category": "boss",
       "versions": ["vanilla", "ex"],
-      "description": "Badge 12 is the Champion, fought in the dedicated Champion arena. Your opponent is Randoman — the same contest judge who hosts the Game Show — and his team is a six-Pokémon party the generator assembles with a soft bias toward unique types: a candidate whose type is already in the team simply gets no extra weight, so duplicate types can still appear. Only the final battle stands between you and the victory lap.",
+      "description": "Badge 12 is the Champion, fought in the dedicated Champion arena. Your opponent is Randoman — the same contest judge who hosts the Game Show — and his team is a six-Pokémon party the generator assembles with a soft bias toward unique types: a candidate whose type is already in the team simply gets no extra weight, so duplicate types can still appear. It's the last battle you'd expect — what comes after is best left to the game.",
       "source": "src/data/rogue/trainers/rogue.json @vanilla L1511-1543 (RANDOMAN champ entry: 6-mon team, unique-type weight script, FINAL_BOSS_POKEBALL) (identical @origin/expansion); src/rogue_query_script.c @vanilla L322-327 (HasUniqueTypeInTeam), L409-415 (IncFavour: +1 weight only) (identical @origin/expansion); include/constants/rogue.h @vanilla L380 / @origin/expansion L380 (ROGUE_CHAMP_START_DIFFICULTY 12); src/rogue_adventurepaths.c @vanilla L1867-1871 (badge 12 uses the Champion boss room) (identical @origin/expansion)"
     },
     {
@@ -187,15 +187,15 @@
       "name": "Final Battle (Badge 13)",
       "category": "boss",
       "versions": ["vanilla", "ex"],
-      "description": "The top of the ladder: the final quest battle, fought in the final boss arena against a rival drawn at random from the rivals of every enabled region — Alola (2), Galar (3), Hoenn (3), Johto (1), Kalos (3), Kanto (1), Paldea (3), Sinnoh (1), Unova (4), plus the rogue-region developer rival Pokabbie — so any enabled rival can show up. The final boss throws a Cherish Ball in EX and a Luxury Ball in Vanilla, and the version differences in the boss aces around it are on the Versions page.",
-      "source": "include/constants/rogue.h @vanilla L379 (ROGUE_FINAL_CHAMP_DIFFICULTY 13), L394 (EX: FINAL_BOSS = Cherish) / L409 (Vanilla: Luxury) / @origin/expansion L379, L394, L409; src/rogue_adventurepaths.c @vanilla L1862-1866 (badge 13 uses the final boss room) (identical @origin/expansion); src/rogue_trainers.c @vanilla L1160-1167 (Rogue_ChooseRivalTrainerId: random draw from all CLASS_RIVAL trainers of the enabled regions) (identical @origin/expansion); src/data/rogue/trainers/<region>.json @vanilla (CLASS_RIVAL entries: Alola 2, Galar 3, Hoenn 3, Johto 1, Kalos 3, Kanto 1, Paldea 3, Rogue 1 (Pokabbie), Sinnoh 1, Unova 4) (identical @origin/expansion)"
+      "description": "Badge 13 — the top of the ladder. Who you face here, and what the fight throws at you, are left as a surprise; the citation below points at the code if you'd rather peek.",
+      "source": "include/constants/rogue.h @vanilla L379 (ROGUE_FINAL_CHAMP_DIFFICULTY 13), L394 (EX: FINAL_BOSS = Cherish) / L409 (Vanilla: Luxury) / @origin/expansion L379, L394, L409; src/rogue_adventurepaths.c @vanilla L1862-1866 (badge 13 uses the final boss room) (identical @origin/expansion); src/rogue_trainers.c @vanilla L1160-1167 (Rogue_ChooseRivalTrainerId: random draw from the enabled regions' rival pool) (identical @origin/expansion); src/data/rogue/trainers/<region>.json @vanilla (CLASS_RIVAL entries) (identical @origin/expansion)"
     },
     {
       "id": "boss-victory-lap",
       "name": "Victory Lap",
       "category": "boss",
       "versions": ["vanilla", "ex"],
-      "description": "After the final battle the run can continue as an endless 'victory lap': a dedicated room that keeps serving up random top-tier trainer battles in a rotating order, so you can keep grinding after you've technically won.",
+      "description": "After the top of the ladder, a run can continue in an endless trainer-battle mode. What exactly that is best left for you to discover in-game.",
       "source": "src/rogue_script.c @vanilla L1147-1166 (Rogue_BeginVictoryLap / next victory lap trainer) (identical @origin/expansion); data/maps/Rogue_Boss_VictoryLap/scripts.pory @vanilla (victory lap arena) (identical @origin/expansion)"
     }
   ]

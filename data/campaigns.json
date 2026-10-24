@@ -13,7 +13,7 @@
     {
       "id": "how-scores-work",
       "heading": "Scores and best runs",
-      "text": "Five of the seven campaigns are scored, and in every case lower is better. Four count how many of your Pokémon faint over the whole run; the BST Cup instead scores the highest Base Stat Total among everything you've carried. Your live score shows in the pause screen (the status menu grows a score line while a campaign is active), and if you finish a campaign run past the final boss, your best score is saved and shown next to the campaign when you talk to the assistant again. Completing a campaign run also marks it as done for your hall of fame."
+      "text": "Five of the seven campaigns are scored, and in every case lower is better. Four count how many of your Pokémon faint over the whole run; the BST Cup instead scores the highest Base Stat Total among everything you've carried. Your live score shows in the pause screen (the status menu grows a score line while a campaign is active), and once a campaign run completes the boss ladder, your best score is saved and shown next to the campaign when you talk to the assistant again. Completing a campaign run also marks it as done for your hall of fame."
     }
   ],
   "records": [
@@ -30,7 +30,7 @@
       "name": "How a campaign activates",
       "category": "campaign-overview",
       "versions": ["vanilla", "ex"],
-      "description": "When a run starts with an unlocked desired campaign, it is activated (unless you started the run by skipping straight to a difficulty, which disables campaigns) — but no announcement is ever shown: the 'Campaign Active!' and 'Aim for Low Score!' popup strings exist in the code, yet no code path ever pushes them, so the announcement the Config Room dialogue promises ('it'll be announced to you at the start of the Adventure') was never implemented. The BST Cup is the exception to 'works anywhere': it is cancelled if the run is in Gauntlet mode. Finishing the run at or past the final boss records your best score and marks the campaign complete.",
+      "description": "When a run starts with an unlocked desired campaign, it is activated (unless you started the run by skipping straight to a difficulty, which disables campaigns) — but no announcement is ever shown: the 'Campaign Active!' and 'Aim for Low Score!' popup strings exist in the code, yet no code path ever pushes them, so the announcement the Config Room dialogue promises ('it'll be announced to you at the start of the Adventure') was never implemented. The BST Cup is the exception to 'works anywhere': it is cancelled if the run is in Gauntlet mode. Completing the boss ladder records your best score and marks the campaign complete.",
       "source": "src/rogue_campaign.c @vanilla L121-173 (activation: skip-to-difficulty disables, Gauntlet cancels BST Cup, per-campaign setup), L226-241 (completion at difficulty ≥ 14, best score saved) (identical @origin/expansion); src/rogue_popup.c @vanilla L328, L330 ('Campaign Active!' / 'Aim for Low Score!' strings — defined but never pushed, no call sites) (identical @origin/expansion)"
     },
     {
@@ -98,7 +98,7 @@
       "name": "Campaign scores",
       "category": "campaign-overview",
       "versions": ["vanilla", "ex"],
-      "description": "Five campaigns are scored — BST Cup, Battle Addict, Auto Battler, LaterManner and One Hit — and in all of them lower is better. While a scored campaign is active, the run's status screen grows a score line. Best scores are saved when the run completes at or past the final boss, and are shown next to the campaign name in the Config Room and on the hall of fame.",
+      "description": "Five campaigns are scored — BST Cup, Battle Addict, Auto Battler, LaterManner and One Hit — and in all of them lower is better. While a scored campaign is active, the run's status screen grows a score line. Best scores are saved when the run completes the boss ladder, and are shown next to the campaign name in the Config Room and on the hall of fame.",
       "source": "src/rogue_campaign.c @vanilla L226-271 (completion + best score, scored-campaign list, low-is-better), L273-282 (score value: highest party BST for the Cup, faint count otherwise) (identical @origin/expansion); src/rogue_controller.c @vanilla L2967-2973 / @origin/expansion L2954-2960 (score line added to the run status screen for scored campaigns); src/rogue_script.c @vanilla L861-890 (best score + campaign name buffering for the Config Room) (identical @origin/expansion); src/hall_of_fame.c @vanilla L1486-1497 / @origin/expansion L1490-1499 (campaign title + run score on the hall of fame)"
     }
   ]
