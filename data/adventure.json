@@ -43,7 +43,7 @@
       "name": "Rest Stop",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A safe room with four sub-types: Full (healing), Mart (item shop), Battle Prep (tutors) and Day Care. The generator strongly wants at least one (weight 100 when none is on the path, 20 for a second, dropping to 1 after four). In Gauntlet, the route column closest to the boss is replaced with a Full Rest Stop — the path always ends with a free full heal right before the final battle.",
+      "description": "An outdoor respite area with four sub-types: Full (healing), Mart (item shop), Battle Prep (tutors) and Day Care — resting here doesn't pause the run, and rival encounters can still trigger on the path here or at the exit. The generator strongly wants at least one (weight 100 when none is on the current path, 20 when one is already placed, 1 once four are). In Gauntlet, the route column closest to the boss is replaced with a Full Rest Stop — so the path ends with a free full heal right before the boss battle.",
       "source": "include/constants/rogue.h @vanilla L242, L266-269 / @origin/expansion L242, L266-269 (ADVPATH_ROOM_RESTSTOP, sub-types); src/rogue_adventurepaths.c @vanilla L358-370 (rest stop weights), L665-676 (gauntlet: final route column becomes a Full Rest Stop) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L81-91 (sub-type preview text) (identical @origin/expansion)"
     },
     {
@@ -51,63 +51,63 @@
       "name": "Legendary Encounter",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A lone legendary roamer battle (preview: 'It's a Pokémon of Legends!'). Exactly one is placed per run with the highest weight of any room (200), and it can only appear on the badge where the run assigned it: a Roamer legendary at badges 1–5, a Minor legendary at badges 3–5, or the Box legendary at badges 7–8 (collisions are shifted apart). In Fast Path, the assigned badge snaps to the nearest even-numbered column — the columns where routes are hidden. In EX the pool of legendaries grows with each generation; in Vanilla it is the Gen 1–3 set.",
-      "source": "src/rogue_adventurepaths.c @vanilla L373-379 (Legendary weight 200, one per run), L746-755 (placed only on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5042-5095 (roamer 1–5 / minor 3–5 / Box 7–8 badge assignment, Fast Path snap to even badges, de-collision) / @origin/expansion L5033-5086; include/constants/rogue.h @vanilla L275-278 / @origin/expansion L275-278 (three legendary slots)"
+      "description": "A lone legendary roamer battle (preview: 'It's a Pokémon of Legends!'). A run is assigned up to three legendary slots — a Roamer legendary at badges 1–5, a Minor legendary at badges 3–5, and the Box legendary at badges 7–8, with collisions shifted apart — and each slot is placed on its assigned badge's path with the highest weight of any room (200), at most one per path, so a run can meet up to three legendaries. In Fast Path, the assigned badge snaps to the nearest even-numbered column — the columns where routes are hidden. In EX the pool of legendaries grows with each generation; in Vanilla it is the Gen 1–3 set.",
+      "source": "src/rogue_adventurepaths.c @vanilla L373-379 (Legendary weight 200, one per path), L746-755 (placed only on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5042-5095 (roamer 1–5 / minor 3–5 / Box 7–8 badge assignment, Fast Path snap to even badges, de-collision) / @origin/expansion L5033-5086; include/constants/rogue.h @vanilla L275-278 / @origin/expansion L275-278 (three legendary slots)"
     },
     {
       "id": "room-team-hideout",
       "name": "Team Hideout",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A multi-battle raid on a villain team's hideout (preview: 'It's a Team Hideout!'). One per run, at weight 50: the Early hideout lands on a random badge between 2 and 4 — re-rolled until it misses the Roamer and Minor legendary badges (the Box legendary's badge is not checked) — and the Pre-Legend hideout lands on the same badge as the Box legendary. In Fast Path the Early badge snaps to an even-numbered column. Each villain team has its own pair of hideout maps, one per encounter: Rocket (Kanto and Johto) raid the Rocket Hideout then the Silph Co, Aqua raid the Aqua Hideout then the Seafloor Cavern, and Magma raid Mt. Chimney then the Magma Hideout. The raiding team is drawn from the teams of your enabled regions, and EX adds three more, each with dedicated maps: Galactic (Lake Valor / Galactic HQ), Plasma (Charge Stone Cave / Dragon Spiral Tower) and Flare (Poké Ball Factory / Lysandre Labs) — Neo Plasma has map entries but is disabled while it is being completed.",
-      "source": "src/rogue_adventurepaths.c @vanilla L382-388 (Team Hideout weight 50, one per run), L757-766 (placed on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5184-5205 (pre-legend mirrors the Box legendary; early = 2 + range(0..3), i.e. badges 2–4 — the in-code comment '2 to badge 5' disagrees with the code; Fast Path snaps early to even badges; collision re-roll skips only the Roamer/Minor legendary badges) / @origin/expansion L5175-5196; src/rogue_controller.c @vanilla L5098-5138 (team pool by region toggles; EX adds Galactic/Plasma/Flare, Neo Plasma include commented out and explicitly excluded as incomplete) / @origin/expansion L5089-5129; src/data/rogue_routes.h @vanilla L409-434 (sRogueTeamEncounters: 8 teams × early + pre-legend maps — Magma early = Mt. Chimney, Magma pre-legend = Magma Hideout) (identical @origin/expansion)"
+      "description": "A multi-battle raid on a villain team's hideout (preview: 'It's a Team Hideout!'). Two per run (Early + Pre-Legend), at weight 50, one per path: the Early hideout lands on a random badge between 2 and 4 — re-rolled until it misses the Roamer and Minor legendary badges (the Box legendary's badge is not checked) — and the Pre-Legend hideout lands on the same badge as the Box legendary. In Fast Path the Early badge snaps to an even-numbered column. Each villain team has its own pair of hideout maps, one per encounter: Rocket (Kanto and Johto) raid the Rocket Hideout then the Silph Co, Aqua raid the Aqua Hideout then the Seafloor Cavern, and Magma raid Mt. Chimney then the Magma Hideout. The raiding team is drawn from the teams of your enabled regions, and EX adds three more, each with dedicated maps: Galactic (Lake Valor / Galactic HQ), Plasma (Charge Stone Cave / Dragon Spiral Tower) and Flare (Poké Ball Factory / Lysandre Labs) — Neo Plasma has map entries but is disabled while it is being completed.",
+      "source": "src/rogue_adventurepaths.c @vanilla L382-388 (weight 50, one per path), L757-766 (placed on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5184-5205 (pre-legend mirrors the Box legendary; early = 2 + range(0..3), i.e. badges 2–4 — the in-code comment '2 to badge 5' disagrees with the code; Fast Path snaps early to even badges; collision re-roll skips only the Roamer/Minor legendary badges) / @origin/expansion L5175-5196; src/rogue_controller.c @vanilla L5098-5138 (team pool by region toggles; EX adds Galactic/Plasma/Flare, Neo Plasma include commented out and explicitly excluded as incomplete) / @origin/expansion L5089-5129; src/data/rogue_routes.h @vanilla L409-434 (sRogueTeamEncounters: 8 teams × early + pre-legend maps — Magma early = Mt. Chimney, Magma pre-legend = Magma Hideout) (identical @origin/expansion)"
     },
     {
       "id": "room-honey-tree",
       "name": "Honey Tree",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A honey tree habitat with a wild encounter and a honey reward (preview: 'It's a Honey Tree Habitat!'). Rolled into 60% of runs from badge 1 up; the generator cycles its weight by badge parity (15 on odd badges, 1 on even), so some runs simply don't get one. One per run.",
-      "source": "include/constants/rogue.h @vanilla L247 / @origin/expansion L247 (ADVPATH_ROOM_HONEY_TREE); src/rogue_adventurepaths.c @vanilla L390-403 (honey tree weight, one per run), L732-733 (60% roll, badge ≥ 1) (identical @origin/expansion)"
+      "description": "A honey tree habitat with a wild encounter and a honey reward (preview: 'It's a Honey Tree Habitat!'). From badge 1 up it passes a 60% roll on each path; when it does, the generator cycles its placement weight by badge parity (15 on odd badges, 1 on even) and places at most one per path — so picking up several honey trees across a run's segments is normal.",
+      "source": "include/constants/rogue.h @vanilla L247 / @origin/expansion L247 (ADVPATH_ROOM_HONEY_TREE); src/rogue_adventurepaths.c @vanilla L390-403 (honey tree weight, one per path), L732-733 (60% roll, badge ≥ 1) (identical @origin/expansion)"
     },
     {
       "id": "room-dark-deal",
       "name": "Dark Deal",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A graveyard encounter (preview: 'It's a Dark Deal…?'). A devil salesman offers a choice of three Charms — take one, and he 'afflicts' you with a random Curse as the price. It can only be offered from badge 3 up (earlier badges are Game Show territory), needs a 25% roll for the path and is skipped on badges that are multiples of three; from badge 6 up it's the only special encounter offered. Gauntlet runs ignore the multiple-of-three skip but still need the same 25% roll. Placement weight cycles with badge parity (15 on odd, 1 on even) and one per run.",
-      "source": "data/maps/Rogue_Encounter_Graveyard/scripts.pory @vanilla L28, L44-85 (charm choice + curse affliction) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L406-414 (Dark Deal weight, one per run), L782-819 (25% roll, mod-3 badge skip, badge 3–5 shared with Game Show, badge 6+ dark deal only; gauntlet bypasses the mod-3 skip but still needs the 25% roll) (identical @origin/expansion); src/rogue_controller.c @vanilla L10357-10371 (RandomiseCharmItems rolls 3 charms + 1 curse) / @origin/expansion L10348-10362"
+      "description": "A graveyard encounter (preview: 'It's a Dark Deal…?'). A devil salesman offers a choice of three Charms — take one, and he 'afflicts' you with a random Curse as the price. It can only be offered from badge 3 up (earlier badges are Game Show territory), needs a 25% roll for the path and is skipped on badges that are multiples of three; from badge 6 up it's the only special encounter offered. Gauntlet runs ignore the multiple-of-three skip but still need the same 25% roll. Placement weight cycles with badge parity (15 on odd, 1 on even), and at most one per path (per badge step).",
+      "source": "data/maps/Rogue_Encounter_Graveyard/scripts.pory @vanilla L28, L44-85 (charm choice + curse affliction) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L406-414 (Dark Deal weight, one per path), L782-819 (25% roll, mod-3 badge skip, badge 3–5 shared with Game Show, badge 6+ dark deal only; gauntlet bypasses the mod-3 skip but still needs the 25% roll) (identical @origin/expansion); src/rogue_controller.c @vanilla L10357-10371 (RandomiseCharmItems rolls 3 charms + 1 curse) / @origin/expansion L10348-10362"
     },
     {
       "id": "room-lab",
       "name": "Professor Birch's Lab",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A lab encounter (preview: 'It's a Pokémon Lab.'). Birch has caught up to three Pokémon you released during the run and will let you take one back; the others wait at the lab, sometimes holding an item — occasionally a Curse. It can only be offered from badge 3 up, needs a 25% roll for the path and is skipped on badges where (badge mod 3) is 1; the placement weight is 20 on even-numbered badges and 1 on odd-numbered ones (of the seven badges it can appear on, only three get the high weight), one per run, and never in Gauntlet.",
-      "source": "data/maps/Rogue_Encounter_Lab/scripts.pory @vanilla L14-19 (take one back), L136-152 (lab mons may hold a Curse) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L417-425 (Lab weight: 20 on even badges, 1 on odd, one per run), L783-802 (25% roll, (badge mod 3) = 1 skip, badge ≥ 3, gauntlet exclusion) (identical @origin/expansion); include/constants/rogue.h @vanilla L812 / @origin/expansion L814 (LAB_MON_COUNT 3)"
+      "description": "A lab encounter (preview: 'It's a Pokémon Lab.'). Birch has caught up to three Pokémon you released during the run and will let you take one back; the others wait at the lab, sometimes holding an item — occasionally a Curse. It can only be offered from badge 3 up, needs a 25% roll for the path and is skipped on badges where (badge mod 3) is 1; the placement weight is 20 on even-numbered badges and 1 on odd-numbered ones (of the seven badges it can appear on, only three get the high weight), at most one per path, and never in Gauntlet.",
+      "source": "data/maps/Rogue_Encounter_Lab/scripts.pory @vanilla L14-19 (take one back), L136-152 (lab mons may hold a Curse) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L417-425 (Lab weight: 20 on even badges, 1 on odd, one per path), L783-802 (25% roll, (badge mod 3) = 1 skip, badge ≥ 3, gauntlet exclusion) (identical @origin/expansion); include/constants/rogue.h @vanilla L812 / @origin/expansion L814 (LAB_MON_COUNT 3)"
     },
     {
       "id": "room-shrine",
       "name": "Mysterious Shrine",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A shrine encounter (preview: 'It's a Mysterious Shrine.'). The shrine keeper will gift you the Sacred Ash — a one-time 'whole party revives and teleports to safety' insurance — but carrying it requires taking the Capacity Curse, which reduces your maximum party size by one. The generator strongly wants it when it appears (weight 100), on one pre-rolled badge per run, or always in Gauntlet.",
-      "source": "data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L27-46, L92-93 (Sacred Ash in exchange for the Capacity Curse) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L454-458 (Shrine weight 100, one per run), L739-741 (spawn badge or gauntlet) (identical @origin/expansion); src/rogue_controller.c @vanilla L4806 / @origin/expansion L4797 (shrine badge is rolled 1–14)"
+      "description": "A shrine encounter (preview: 'It's a Mysterious Shrine.'). The shrine keeper will gift you the Sacred Ash — a one-time 'whole party revives and teleports to safety' insurance — but carrying it requires taking the Capacity Curse, which reduces your maximum party size by one. The generator strongly wants it when it appears (weight 100), on one pre-rolled badge per run — unlike most of the other special rooms, whose cap of one is per path — or always in Gauntlet.",
+      "source": "data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L27-46, L92-93 (Sacred Ash in exchange for the Capacity Curse) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L454-458 (Shrine weight 100, on the pre-rolled badge), L739-741 (spawn badge or gauntlet) (identical @origin/expansion); src/rogue_controller.c @vanilla L4806 / @origin/expansion L4797 (shrine badge is rolled 1–14)"
     },
     {
       "id": "room-gameshow",
       "name": "Game Show",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "Mr. Randoman's Game Show (preview: 'It's a… Game Show?'). Pick a Game of Skill or a Game of Luck, play up to six rounds, and cash out at any time — every round you complete adds another item to your haul, all or nothing. Try to pocket an item you haven't earned and an Electrode is on its way. It's only offered on badges 0–5 (50% roll per path; from badge 3 up it shares the slot with the Dark Deal) and never in Gauntlet.",
-      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L56-142 (host, categories, game selection), L158-175 (cheating triggers the Electrode battle) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L428-435 (Game Show weight, one per run), L784-825 (50% roll, badges 0–2 only, 3–5 shared with Dark Deal, none from badge 6, gauntlet exclusion) (identical @origin/expansion)"
+      "description": "Mr. Randoman's Game Show (preview: 'It's a… Game Show?'). Pick a Game of Skill or a Game of Luck, play up to six rounds, and cash out at any time — every round you complete adds another item to your haul, all or nothing. Interact with the prize shelf or counter while a prize slot is still unearned — no item currently won — and Randoman replies with a note, 'Cheaters never prosper ke ke ke', followed by a wild Electrode battle that cannot be caught. It's only offered on badges 0–5 (50% roll per path; from badge 3 up it shares the slot with the Dark Deal) and never in Gauntlet.",
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L56-142 (host, categories, game selection), L158-175 (cheating triggers the Electrode battle) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L428-435 (Game Show weight, one per path), L784-825 (50% roll, badges 0–2 only, 3–5 shared with Dark Deal, none from badge 6, gauntlet exclusion) (identical @origin/expansion)"
     },
     {
       "id": "room-catching-contest",
       "name": "Catching Contest",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A catch practice arena (preview: 'It's a Catching Contest.'). Wild Pokémon spawn on a fixed interval while you catch them; the more you land, the better the reward. Rolled into a third of runs (33%), one per run.",
+      "description": "A catch practice arena (preview: 'It's a Catching Contest.'). The host announces a species type and a base stat, then 10–29 non-legendary Pokémon of that type spawn on a fixed interval; your party is stashed away and you are given exactly 3 contest Poké Balls. You win if the mon you keep has a base value in the announced stat at least equal to the highest among the spawned ones — the reward is a fixed ¥5,000, ¥10,000 or ¥15,000 by difficulty — and you keep the catch regardless (releasing a party mon to make room if needed). Rolled into a third of paths (33%), at most one per path.",
       "source": "include/constants/rogue.h @vanilla L252 / @origin/expansion L252 (ADVPATH_ROOM_CATCHING_CONTEST); src/rogue_adventurepaths.c @vanilla L446-451 (contest weight), L768-770 (33% roll) (identical @origin/expansion); src/rogue_followmon.c @vanilla L1134-1139 (fixed 120-tick spawn interval during contests) (identical @origin/expansion)"
     },
     {
@@ -115,23 +115,23 @@
       "name": "Mysterious Sign",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A sign maker's workshop (preview: 'It's a Mysterious Sign.'). The maker produces the signs inside the gyms, and will give you advance intel on the next Gym Leader: its specialisation type for free, the leader's lead Pokémon for ¥4,000, or their strongest Pokémon for ¥2,500 (once paid, each answer sticks). Only offered before the Elite Four (rolled into 40% of runs).",
-      "source": "data/maps/Rogue_Encounter_Sign/scripts.pory @vanilla L21-39 (free type hint), L77-169 (¥4,000 lead / ¥2,500 strongest Pokémon reveals, paid-once flags) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L428-435 (Sign weight, one per run), L736-737 (only below Elite Four difficulty, 40% roll) (identical @origin/expansion)"
+      "description": "A sign maker's workshop (preview: 'It's a Mysterious Sign.'). The maker produces the signs inside the gyms, and will give you advance intel on the next Gym Leader: its specialisation type for free, the leader's lead Pokémon for ¥4,000, or their strongest Pokémon for ¥2,500 (once paid, each answer sticks). Only offered before the Elite Four (40% roll per path, below Elite Four only).",
+      "source": "data/maps/Rogue_Encounter_Sign/scripts.pory @vanilla L21-39 (free type hint), L77-169 (¥4,000 lead / ¥2,500 strongest Pokémon reveals, paid-once flags) (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L428-435 (Sign weight, one per path), L736-737 (only below Elite Four difficulty, 40% roll) (identical @origin/expansion)"
     },
     {
       "id": "room-battle-sim",
       "name": "Battle Simulator",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A practice battle (preview: 'It's a Battle Simulator.'). A fully randomised trainer battle against a team the AI assembles for you — useful for grinding experience without a real trainer's team composition. One per run, from badge 1 up (50% of runs pick the Simulator, the rest pick the Battle Tower).",
-      "source": "include/constants/rogue.h @vanilla L254 / @origin/expansion L254 (ADVPATH_ROOM_BATTLE_SIM); src/rogue_adventurepaths.c @vanilla L438-444 (Battle Sim weight, one per run), L772-779 (50/50 vs Battle Tower) (identical @origin/expansion)"
+      "description": "A wager battle (preview: 'It's a Battle Simulator.'). Each side fields 3 random Lv50 Pokémon and you pick the stake before the fight: money (win ¥5,000 / ¥10,000 / ¥15,000 by difficulty; lose = half your money), IVs (nominate a party mon — win raises all six of its IVs by 10, capped at 31; lose lowers them by 10 — a legitimate way to invest in a mon's IVs), or items (win = a valuable item stack worth about 10× a Rare Candy's price; lose = up to 5 stacks removed to match that value). One battle per visit; from badge 1 up, 50/50 against the Battle Tower, at most one per path.",
+      "source": "include/constants/rogue.h @vanilla L254 / @origin/expansion L254 (ADVPATH_ROOM_BATTLE_SIM); src/rogue_adventurepaths.c @vanilla L438-444 (Battle Sim weight, one per path), L772-779 (50/50 vs Battle Tower) (identical @origin/expansion)"
     },
     {
       "id": "room-battle-tower",
       "name": "Battle Tower",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A frontier-style battle (preview: 'It's a Battle Tower.'). Another randomised trainer battle, but with a random weather condition set for the fight — Sunny, Sandstorm, Drought, Downpour, Falling Leaves, Rain and Thunderstorm, Psychic Fog, Snow or Misty Fog, with no weather as a possible roll — never rolled on Easy. One per run, from badge 1 up.",
+      "description": "A frontier-style battle (preview: 'It's a Battle Tower.'). Another randomised trainer battle, but with a random weather condition set for the fight — Sunny, Sandstorm, Drought, Downpour, Falling Leaves, Rain and Thunderstorm, Psychic Fog, Snow or Misty Fog, with no weather as a possible roll — never rolled on Easy. From badge 1 up, at most one per path (the 50/50 alternative to the Battle Simulator).",
       "source": "include/constants/rogue.h @vanilla L255 / @origin/expansion L255 (ADVPATH_ROOM_BATTLE_TOWER); src/rogue_controller.c @vanilla L6025-6049 (9-condition weather list, rolled per entry, skipped on Easy) / @origin/expansion L6016-6040"
     },
     {
@@ -139,8 +139,8 @@
       "name": "Wild Den",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A habitat of one specific species (preview: 'It's a {species} Habitat of a Trained Pokémon!'). A den of trained Pokémon of a single species for you to fight or catch. In Fast Path runs with hidden routes, every remaining route column is converted into a wild den, so the whole run is den-hopping.",
-      "source": "include/constants/rogue.h @vanilla L246 / @origin/expansion L246 (ADVPATH_ROOM_WILD_DEN); src/rogue_adventurepaths.c @vanilla L869-880 (fast path with hidden routes converts all routes to dens) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L48-49 (den preview text) (identical @origin/expansion)"
+      "description": "A habitat of one specific species (preview: 'It's a {species} Habitat of a Trained Pokémon!'). A den of trained Pokémon of a single species for you to fight or catch. Dens can appear on any path: every remaining route column rolls to become one, with a chance by tier — 90% at the Champion and beyond, 60% for the Elite Four, 40% on badges 1–7, 5% on badge 0 — falling a few points with each den placed, while a minimum number of regular routes is always kept (1 at the Champion and beyond, 2 for the Elite Four, 3 on badges 0–7). On Fast Path hidden-route steps, every remaining route of that segment becomes a den — that segment is den-hopping, not the whole run.",
+      "source": "include/constants/rogue.h @vanilla L246 / @origin/expansion L246 (ADVPATH_ROOM_WILD_DEN); src/rogue_adventurepaths.c @vanilla L869-880 (fast path with hidden routes: every remaining route of the path becomes a den) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L48-49 (den preview text) (identical @origin/expansion)"
     },
     {
       "id": "room-none",

@@ -110,6 +110,35 @@ test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () =>
   }
 });
 
+test('adventure.json records make no wrong per-run placement or goal claims', () => {
+  // ARRANGE — the room-type/boss records in data/adventure.json
+  const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
+  const bannedPhrases = [
+    'one per run',
+    'exactly one is placed per run',
+    'the more you land, the better the reward',
+    'useful for grinding experience',
+    "try to pocket an item you haven't earned",
+    'dropping to 1 after four',
+  ];
+
+  // ACT — scan every record's description and source, case-insensitively
+  const hits = [];
+  for (const record of adventure.records) {
+    for (const field of ['description', 'source']) {
+      const text = String(record[field] ?? '').toLowerCase();
+      for (const phrase of bannedPhrases) {
+        if (text.includes(phrase.toLowerCase())) {
+          hits.push(`${record.id}.${field} contains "${phrase}"`);
+        }
+      }
+    }
+  }
+
+  // ASSERT — the flagged wrong-claim phrases must all be gone
+  assert.deepEqual(hits, [], `wrong-claim phrases still present:\n  ${hits.join('\n  ')}`);
+});
+
 test('served index page returns 200 and contains the hero marker from site.json', async () => {
   // ARRANGE
   const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
