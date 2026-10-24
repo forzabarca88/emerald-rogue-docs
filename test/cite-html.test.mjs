@@ -140,6 +140,35 @@ test('glob cite links its parent directory (trailing slash)', () => {
   assert.ok(!html.includes('#L'), `glob cite must have no line fragment:\n${html}`);
 });
 
+test('continuation after a glob links the glob’s parent directory (no broken <…> URL)', () => {
+  // ARRANGE — a continuation inheriting a glob file (defensive: no such
+  // citation exists in data/ today, but the verifier models it via isGlob)
+  const rogue = rogueWithCitations();
+  const source = 'src/data/rogue/trainers/<region>.json @vanilla (CLASS_RIVAL entries) / @origin/expansion L12 (dual)';
+
+  // ACT
+  const html = rogue.citeHtml(source);
+
+  // ASSERT — the glob links its vanilla directory, the continuation's
+  // "@origin/expansion" tail links the same directory at the expansion SHA,
+  // no href ever carries a literal glob, and glob segments carry no line anchors
+  assert.ok(
+    html.includes(
+      `<a href="${REPO}/blob/${VANILLA_SHA}/src/data/rogue/trainers/" target="_blank" rel="noopener">src/data/rogue/trainers/&lt;region&gt;.json @vanilla</a>`
+    ),
+    `missing glob directory anchor:\n${html}`
+  );
+  assert.ok(
+    html.includes(
+      `<a href="${REPO}/blob/${EXPANSION_SHA}/src/data/rogue/trainers/" target="_blank" rel="noopener">@origin/expansion</a>`
+    ),
+    `missing continuation directory anchor at the expansion SHA:\n${html}`
+  );
+  assert.ok(!/<a [^>]*&lt;/.test(html), `no href may contain a literal glob "<…>":\n${html}`);
+  assert.ok(!html.includes('#L'), `glob segments carry no line anchors:\n${html}`);
+  assert.ok(html.endsWith(' (dual)'), `annotation should stay plain text:\n${html}`);
+});
+
 test('claim tokens and non-citation sources render as plain text (no anchors)', () => {
   // ARRANGE
   const rogue = rogueWithCitations();

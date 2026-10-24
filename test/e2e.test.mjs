@@ -110,7 +110,7 @@ test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () =>
   }
 });
 
-test('adventure.json records make no wrong per-run placement or goal claims', () => {
+test('adventure.json makes no wrong per-run placement or goal claims (records, meta description and prose)', () => {
   // ARRANGE — the room-type/boss records in data/adventure.json
   const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
   const bannedPhrases = [
@@ -128,6 +128,10 @@ test('adventure.json records make no wrong per-run placement or goal claims', ()
   const bannedInDescriptions = ['victory lap'];
   // Banned in every record field (name, description, source).
   const bannedAnywhere = ['Pokabbie'];
+  // meta.description and the prose blocks (both touched by the same passes as
+  // the records) are free prose — every phrase above applies there (no
+  // record-name or citation exemptions).
+  const bannedInProse = [...bannedPhrases, ...bannedInDescriptions, ...bannedAnywhere];
 
   // ACT — scan every record's description and source, case-insensitively
   const hits = [];
@@ -156,8 +160,22 @@ test('adventure.json records make no wrong per-run placement or goal claims', ()
     }
   }
 
-  // ASSERT — the flagged wrong-claim phrases must all be gone
+  // ACT (cont.) — scan meta.description and every prose block the same way
+  const proseHits = [];
+  const proseTargets = [['meta.description', adventure.meta && adventure.meta.description]];
+  for (const block of Array.isArray(adventure.prose) ? adventure.prose : []) {
+    proseTargets.push([`prose:${block.id}`, block.text]);
+  }
+  for (const [where, raw] of proseTargets) {
+    const text = String(raw ?? '').toLowerCase();
+    for (const phrase of bannedInProse) {
+      if (text.includes(phrase.toLowerCase())) proseHits.push(`${where} contains "${phrase}"`);
+    }
+  }
+
+  // ASSERT — the flagged wrong-claim phrases must all be gone (records and prose)
   assert.deepEqual(hits, [], `wrong-claim phrases still present:\n  ${hits.join('\n  ')}`);
+  assert.deepEqual(proseHits, [], `wrong-claim phrases in meta description or prose:\n  ${proseHits.join('\n  ')}`);
 });
 
 test('served index page returns 200 and contains the hero marker from site.json', async () => {

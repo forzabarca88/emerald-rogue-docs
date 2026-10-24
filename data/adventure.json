@@ -2,7 +2,7 @@
   "meta": {
     "id": "adventure",
     "title": "Adventure Paths & Bosses",
-    "description": "How every run's adventure path is generated: the 16 room types and the rules that decide which ones appear, and the boss ladder — eight gyms, four Elite Four, the Champion, and two final steps we'll leave you to discover. The path generator is identical between Vanilla and EX — what differs is which species, trainers and legendaries can show up in the rooms."
+    "description": "How every run's adventure path is generated: the 16 room types and the rules that decide which ones appear, and the boss ladder — eight gyms, four Elite Four, the Champion, and one final step we'll leave you to discover. The path generator is identical between Vanilla and EX — what differs is which species, trainers and legendaries can show up in the rooms."
   },
   "prose": [
     {
@@ -13,7 +13,7 @@
     {
       "id": "boss-ladder",
       "heading": "Climbing the ladder",
-      "text": "Every run ends at a boss, and the boss you face is determined by how many badges you've earned: badges 0–7 are the eight Gym Leaders, badges 8–11 are the Elite Four, and badge 12 is the Champion. There are 14 bosses in total, and the room at the end of the path is always the next one on the ladder — you can't skip ahead or fight a boss out of order. Past the Champion the ladder has two more steps — what they are is best left for you to find in-game."
+      "text": "Every run ends at a boss, and the boss you face is determined by how many badges you've earned: badges 0–7 are the eight Gym Leaders, badges 8–11 are the Elite Four, and badge 12 is the Champion. There are 14 bosses in total, and the room at the end of the path is always the next one on the ladder — you can't skip ahead or fight a boss out of order. Past the Champion the ladder has one more step — what it is is best left for you to find in-game."
     },
     {
       "id": "reading-the-rooms",
@@ -43,7 +43,7 @@
       "name": "Rest Stop",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "An outdoor respite area with four sub-types: Full (healing), Mart (item shop), Battle Prep (tutors) and Day Care — resting here doesn't pause the run, and rival encounters can still trigger on the path here or at the exit. The generator strongly wants at least one (weight 100 when none is on the current path, 20 when one is already placed, 1 once four are). In Gauntlet, the route column closest to the boss is replaced with a Full Rest Stop — so the path ends with a free full heal right before the boss battle.",
+      "description": "An outdoor respite area with four sub-types: Full (healing), Mart (item shop), Battle Prep (tutors) and Day Care — resting here doesn't pause the run, and rival encounters can still trigger on the path here or at the exit. The generator strongly wants at least one (weight 100 when none is on the current path, 20 when one is already placed, a low weight of 5 for two or three, and 1 once four are). In the badge-0 Gauntlet path, the route column closest to the boss is replaced with a Full Rest Stop — so that path ends with a free full heal right before the boss battle.",
       "source": "include/constants/rogue.h @vanilla L242, L266-269 / @origin/expansion L242, L266-269 (ADVPATH_ROOM_RESTSTOP, sub-types); src/rogue_adventurepaths.c @vanilla L358-370 (rest stop weights), L665-676 (gauntlet: final route column becomes a Full Rest Stop) (identical @origin/expansion); data/maps/Rogue_AdventurePaths/scripts.pory @vanilla L81-91 (sub-type preview text) (identical @origin/expansion)"
     },
     {
@@ -51,7 +51,7 @@
       "name": "Legendary Encounter",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A lone legendary roamer battle (preview: 'It's a Pokémon of Legends!'). A run is assigned up to three legendary slots — a Roamer legendary at badges 1–5, a Minor legendary at badges 3–5, and the Box legendary at badges 7–8, with collisions shifted apart — and each slot is placed on its assigned badge's path with the highest weight of any room (200), at most one per path, so a run can meet up to three legendaries. In Fast Path, the assigned badge snaps to the nearest even-numbered column — the columns where routes are hidden. In EX the pool of legendaries grows with each generation; in Vanilla it is the Gen 1–3 set.",
+      "description": "A lone legendary roamer battle (preview: 'It's a Pokémon of Legends!'). A run is assigned up to three legendary slots — a Roamer legendary at badges 1–5, a Minor legendary at badges 3–5, and the Box legendary at badges 7–8, with collisions shifted apart — and each slot is placed on its assigned badge's path with the highest weight of any room (200), at most one per path, so a run can meet up to three legendaries. In Fast Path, the assigned badge snaps down to the even-numbered column — hidden-route segments don't host legendaries at all. In EX the pool of legendaries grows with each generation; in Vanilla it is the Gen 1–3 set.",
       "source": "src/rogue_adventurepaths.c @vanilla L373-379 (Legendary weight 200, one per path), L746-755 (placed only on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5042-5095 (roamer 1–5 / minor 3–5 / Box 7–8 badge assignment, Fast Path snap to even badges, de-collision) / @origin/expansion L5033-5086; include/constants/rogue.h @vanilla L275-278 / @origin/expansion L275-278 (three legendary slots)"
     },
     {
@@ -59,7 +59,7 @@
       "name": "Team Hideout",
       "category": "room-type",
       "versions": ["vanilla", "ex"],
-      "description": "A multi-battle raid on a villain team's hideout (preview: 'It's a Team Hideout!'). Two per run (Early + Pre-Legend), at weight 50, one per path: the Early hideout lands on a random badge between 2 and 4 — re-rolled until it misses the Roamer and Minor legendary badges (the Box legendary's badge is not checked) — and the Pre-Legend hideout lands on the same badge as the Box legendary. In Fast Path the Early badge snaps to an even-numbered column. Each villain team has its own pair of hideout maps, one per encounter: Rocket (Kanto and Johto) raid the Rocket Hideout then the Silph Co, Aqua raid the Aqua Hideout then the Seafloor Cavern, and Magma raid Mt. Chimney then the Magma Hideout. The raiding team is drawn from the teams of your enabled regions, and EX adds three more, each with dedicated maps: Galactic (Lake Valor / Galactic HQ), Plasma (Charge Stone Cave / Dragon Spiral Tower) and Flare (Poké Ball Factory / Lysandre Labs) — Neo Plasma has map entries but is disabled while it is being completed.",
+      "description": "A multi-battle raid on a villain team's hideout (preview: 'It's a Team Hideout!'). Two per run in Classic and Fast Path (Early + Pre-Legend) — Gauntlet runs have none — at weight 50, one per path: the Early hideout lands on a random badge between 2 and 4 — re-rolled until it misses the Roamer and Minor legendary badges (the Box legendary's badge is not checked) — and the Pre-Legend hideout lands on the same badge as the Box legendary. In Fast Path the Early badge snaps to an even-numbered column. Each villain team has its own pair of hideout maps, one per encounter: Rocket (Kanto and Johto) raid the Rocket Hideout then the Silph Co, Aqua raid the Aqua Hideout then the Seafloor Cavern, and Magma raid Mt. Chimney then the Magma Hideout. The raiding team is drawn from the teams of your enabled regions, and EX adds three more, each with dedicated maps: Galactic (Lake Valor / Galactic HQ), Plasma (Charge Stone Cave / Dragon Spiral Tower) and Flare (Poké Ball Factory / Lysandre Labs) — Neo Plasma has map entries but is disabled while it is being completed.",
       "source": "src/rogue_adventurepaths.c @vanilla L382-388 (weight 50, one per path), L757-766 (placed on its assigned difficulty) (identical @origin/expansion); src/rogue_controller.c @vanilla L5184-5205 (pre-legend mirrors the Box legendary; early = 2 + range(0..3), i.e. badges 2–4 — the in-code comment '2 to badge 5' disagrees with the code; Fast Path snaps early to even badges; collision re-roll skips only the Roamer/Minor legendary badges) / @origin/expansion L5175-5196; src/rogue_controller.c @vanilla L5098-5138 (team pool by region toggles; EX adds Galactic/Plasma/Flare, Neo Plasma include commented out and explicitly excluded as incomplete) / @origin/expansion L5089-5129; src/data/rogue_routes.h @vanilla L409-434 (sRogueTeamEncounters: 8 teams × early + pre-legend maps — Magma early = Mt. Chimney, Magma pre-legend = Magma Hideout) (identical @origin/expansion)"
     },
     {

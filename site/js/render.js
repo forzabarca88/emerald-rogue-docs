@@ -190,7 +190,9 @@
    * `identical`/`lines` are byte-identity claims (never linked); a
    * bare extension-less token (the `/` of `… / @origin/expansion L…`) is a
    * continuation of the previous citation's file on the other branch; `<…>`
-   * is a glob (linked to its parent directory). No citation at all (method
+   * is a glob (linked to its parent directory) — and a continuation that
+   * inherits a glob links that glob's parent directory on the new branch's
+   * SHA instead of a broken literal `<…>` URL. No citation at all (method
    * cites, `(site data)`) or missing config → the whole string escaped
    * plain, so a page can never break on a source field.
    */
@@ -262,20 +264,30 @@
       }
       var baseHref = repo + '/blob/' + sha + '/' + file;
 
-      if (kind === 'glob') {
-        // Link the parent directory: strip the `<…>` suffix, keep a trailing "/".
+      if (kind === 'glob' || (kind === 'continuation' && file.indexOf('<') !== -1)) {
+        // Glob — or a continuation inheriting a glob file: link the parent
+        // directory (strip the `<…>` suffix, keep a trailing "/"); the
+        // segment carries no line anchors (the verifier skips glob line refs
+        // too, so the two parsers stay behaviorally identical).
         var dirPrefix = file.slice(0, file.indexOf('<'));
         if (dirPrefix.indexOf('/') === -1) {
-          // No directory to link to — render plain.
+          // No directory to link to — render the citation plain.
           html += ROGUE.esc(match.text);
         } else {
           if (dirPrefix.charAt(dirPrefix.length - 1) !== '/') dirPrefix += '/';
-          html += anchor(repo + '/blob/' + sha + '/' + dirPrefix, ROGUE.esc(match.text));
+          if (kind === 'continuation') {
+            // The bare token stays plain; the "@ref" tail links the inherited
+            // glob's parent directory on this branch's SHA.
+            var at = match.text.indexOf('@');
+            html += ROGUE.esc(match.text.slice(0, at));
+            html += anchor(repo + '/blob/' + sha + '/' + dirPrefix, ROGUE.esc('@' + match.ref));
+          } else {
+            html += anchor(repo + '/blob/' + sha + '/' + dirPrefix, ROGUE.esc(match.text));
+          }
         }
-        // Glob segments carry no line anchors (the verifier skips them too).
         html += ROGUE.esc(segment);
         cursor = segmentEnd;
-        lastValid = match.token;
+        if (kind === 'glob') lastValid = match.token;
         continue;
       }
 
