@@ -85,17 +85,31 @@ offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
 
 ## 5. Signature elements
 
-### 5.1 The run path (home hero)
+### 5.1 The run path (home hero + gameplay diagrams)
 
 A pure-CSS rendering of a generated adventure path:
 hub (filled emerald square) → route node → **fork of two lanes** → boss
-(gold diamond, rotated square). One instance per site, in the index hero,
-decorative (`aria-hidden="true"`). **The binding markup is in the comment
-block above `.run-path` in `pages.css`** — copy it verbatim; nodes are
-`<span>`s, never images. Node classes: base `.run-path__node`, `--hub`,
-`--rest` (dashed), `--boss` (gold diamond). Motion: a slow staggered
-brightness wave, already gated behind `prefers-reduced-motion:
-no-preference` — do not add per-page animations to it.
+(gold diamond, rotated square). Three instances, all decorative
+(`aria-hidden="true"` on the root, with the meaning carried by visible
+captions or surrounding prose):
+
+- **Index hero** — one per site. **The binding markup is in the comment
+  block above `.run-path` in `pages.css`** — copy it verbatim.
+- **Gameplay labelled segment** (`.run-path--labeled`) — the Classic
+  5-column segment read left to right: hub → 3 room nodes → split (the
+  fork of two lanes) → boss. Each step sits in a `.run-path__cell`
+  column wrapper with a mono `.run-path__label` caption under it (in
+  `--font-mono` / `--text-xs` / `--color-muted`); links are a touch
+  tighter so the labelled row fits at 360px.
+- **Gameplay wild-den callout** — a Fast Path hidden-route segment
+  (hub → den nodes → boss) drawn with the same labelled structure.
+
+Nodes are `<span>`s, never images. Node classes: base `.run-path__node`,
+`--hub` (filled emerald), `--rest` (dashed outline), `--den` (gold
+square outline — the hollow sibling of the boss diamond), `--boss`
+(gold diamond). Motion: a slow staggered brightness wave, already gated
+behind `prefers-reduced-motion: no-preference` — do not add per-page
+animations to it.
 
 ### 5.2 The version toggle
 
@@ -140,7 +154,7 @@ under your own `.page--<stem>`):
 | `.tabs` / `.tabs__tab` | `role="tablist"` / `role="tab"` buttons with `aria-selected`; see markup convention in `components.css` |
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
 | `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not hand-write or restyle |
-| `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); styled in `pages.css` under `.page--index` |
+| `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
 
 ## 7. Motion
 
