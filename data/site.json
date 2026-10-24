@@ -8,7 +8,7 @@
     "name": "Emerald Rogue Docs",
     "tagline": "A field guide to the Pokémon Emerald Rogue romhack",
     "footer": {
-      "text": "Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent companion guide, not affiliated with Nintendo, Game Freak, or the romhack's authors.",
+      "text": "Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent AI generated guide based on its Github source code, and is not affiliated with the romhack's authors.",
       "source": "Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations."
     }
   },
