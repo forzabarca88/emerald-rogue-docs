@@ -110,6 +110,74 @@ test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () =>
   }
 });
 
+test('adventure.json makes no wrong per-run placement or goal claims (records, meta description and prose)', () => {
+  // ARRANGE — the room-type/boss records in data/adventure.json
+  const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
+  const bannedPhrases = [
+    'one per run',
+    'exactly one is placed per run',
+    'the more you land, the better the reward',
+    'useful for grinding experience',
+    "try to pocket an item you haven't earned",
+    'dropping to 1 after four',
+    'the whole run is den-hopping',
+  ];
+  // "Victory Lap" / "Final Battle (Badge 13)" are allowed as ladder labels in
+  // record names, and "source" fields are citations — so "victory lap" is
+  // banned in descriptions only.
+  const bannedInDescriptions = ['victory lap'];
+  // Banned in every record field (name, description, source).
+  const bannedAnywhere = ['Pokabbie'];
+  // meta.description and the prose blocks (both touched by the same passes as
+  // the records) are free prose — every phrase above applies there (no
+  // record-name or citation exemptions).
+  const bannedInProse = [...bannedPhrases, ...bannedInDescriptions, ...bannedAnywhere];
+
+  // ACT — scan every record's description and source, case-insensitively
+  const hits = [];
+  for (const record of adventure.records) {
+    for (const field of ['description', 'source']) {
+      const text = String(record[field] ?? '').toLowerCase();
+      for (const phrase of bannedPhrases) {
+        if (text.includes(phrase.toLowerCase())) {
+          hits.push(`${record.id}.${field} contains "${phrase}"`);
+        }
+      }
+    }
+    const description = String(record.description ?? '').toLowerCase();
+    for (const phrase of bannedInDescriptions) {
+      if (description.includes(phrase)) {
+        hits.push(`${record.id}.description contains "${phrase}"`);
+      }
+    }
+    for (const field of ['name', 'description', 'source']) {
+      const text = String(record[field] ?? '').toLowerCase();
+      for (const phrase of bannedAnywhere) {
+        if (text.includes(phrase.toLowerCase())) {
+          hits.push(`${record.id}.${field} contains "${phrase}"`);
+        }
+      }
+    }
+  }
+
+  // ACT (cont.) — scan meta.description and every prose block the same way
+  const proseHits = [];
+  const proseTargets = [['meta.description', adventure.meta && adventure.meta.description]];
+  for (const block of Array.isArray(adventure.prose) ? adventure.prose : []) {
+    proseTargets.push([`prose:${block.id}`, block.text]);
+  }
+  for (const [where, raw] of proseTargets) {
+    const text = String(raw ?? '').toLowerCase();
+    for (const phrase of bannedInProse) {
+      if (text.includes(phrase.toLowerCase())) proseHits.push(`${where} contains "${phrase}"`);
+    }
+  }
+
+  // ASSERT — the flagged wrong-claim phrases must all be gone (records and prose)
+  assert.deepEqual(hits, [], `wrong-claim phrases still present:\n  ${hits.join('\n  ')}`);
+  assert.deepEqual(proseHits, [], `wrong-claim phrases in meta description or prose:\n  ${proseHits.join('\n  ')}`);
+});
+
 test('served index page returns 200 and contains the hero marker from site.json', async () => {
   // ARRANGE
   const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));

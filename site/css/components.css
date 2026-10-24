@@ -129,6 +129,12 @@
   overflow-wrap: anywhere;
 }
 
+/* citation permalinks (ROGUE.citeHtml) — long mono paths must wrap in narrow cards;
+   the link color/hover comes from the base `a` rule */
+.card__source a {
+  word-break: break-word;
+}
+
 .card--link {
   color: inherit;
   text-decoration: none;

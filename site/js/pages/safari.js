@@ -53,7 +53,7 @@
         '</div>';
       if (record.description) html += '<p class="card__desc">' + ROGUE.esc(record.description) + '</p>';
       html += ROGUE.diffNote(record);
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 

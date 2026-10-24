@@ -37,6 +37,55 @@
       return ROGUE.filter(ROGUE.byCategory(Array.isArray(data && data.records) ? data.records : [], category));
     }
 
+    /* Run-path diagram building blocks for the labelled variant
+       (DESIGN.md §5.1): one column wrapper per step — node on top,
+       mono caption below. The diagram root stays aria-hidden; the
+       visible <p> caption next to it carries the meaning. */
+    var LINK = '<span class="run-path__link"></span>';
+
+    function cell(nodeClass, label) {
+      return (
+        '<span class="run-path__cell"><span class="run-path__node' +
+        (nodeClass ? ' ' + nodeClass : '') +
+        '"></span><span class="run-path__label">' +
+        label +
+        '</span></span>'
+      );
+    }
+
+    /* The Classic 5-column segment: hub → 3 room columns → split
+       (fork of two lanes) → boss. */
+    var labeledSegment =
+      '<div class="run-path run-path--labeled" aria-hidden="true">' +
+      cell('run-path__node--hub', 'Hub') +
+      LINK +
+      cell('', 'Room') +
+      LINK +
+      cell('', 'Room') +
+      LINK +
+      cell('', 'Room') +
+      LINK +
+      '<span class="run-path__cell"><span class="run-path__fork">' +
+      '<span class="run-path__lane"><span class="run-path__link"></span></span>' +
+      '<span class="run-path__lane"><span class="run-path__link"></span></span>' +
+      '</span><span class="run-path__label">Split</span></span>' +
+      LINK +
+      cell('run-path__node--boss', 'Boss') +
+      '</div>';
+
+    /* The Fast Path hidden-route segment (2 room columns): every
+       leftover route of the segment becomes a wild den. */
+    var denSegment =
+      '<div class="run-path run-path--labeled" aria-hidden="true">' +
+      cell('run-path__node--hub', 'Hub') +
+      LINK +
+      cell('run-path__node--den', 'Den') +
+      LINK +
+      cell('run-path__node--den', 'Den') +
+      LINK +
+      cell('run-path__node--boss', 'Boss') +
+      '</div>';
+
     var html = '<h1>' + ROGUE.esc((pages.gameplay || {}).title || 'Gameplay') + '</h1>';
 
     /* Phase strip — in-page navigation through the loop. */
@@ -64,10 +113,22 @@
       html += ROGUE.section('gp-hub', 'The hub', hubIntro.heading, null, ROGUE.paragraphs(hubIntro.text) + guideLink('hub', hubLabel));
     }
 
-    /* Phase 2 — the run: the freshly generated path. */
+    /* Phase 2 — the run: the freshly generated path, with the labelled
+       path-segment diagram (DESIGN.md §5.1). */
     var pathProse = ROGUE.proseById(adventure, 'how-the-path-works');
     if (pathProse) {
-      html += ROGUE.section('gp-run', 'The run', pathProse.heading, null, ROGUE.paragraphs(pathProse.text));
+      html +=
+        ROGUE.section(
+          'gp-run',
+          'The run',
+          pathProse.heading,
+          null,
+          ROGUE.paragraphs(pathProse.text) +
+            '<div class="path-diagram">' +
+            labeledSegment +
+            '<p class="path-diagram__caption">One badge step = one path segment: walk the columns left to right, choose a lane at the split, then face the boss.</p>' +
+            '</div>'
+        );
     }
 
     /* The run — every room type on a generated path. */
@@ -82,7 +143,11 @@
           (roomsNote
             ? '<h3 class="rooms__note">' + ROGUE.esc(roomsNote.heading) + '</h3>' +
               ROGUE.paragraphs(roomsNote.text)
-            : '')
+            : '') +
+          '<div class="path-diagram rooms__den">' +
+          denSegment +
+          '<p class="path-diagram__caption">Fast Path, hidden-route step: every leftover route in the segment becomes a wild den — that whole segment is den-hopping.</p>' +
+          '</div>'
       );
 
     /* The run — the boss ladder. */
@@ -102,7 +167,7 @@
             ROGUE.badge(b) +
             '</div>' +
             '<p class="ladder__desc">' + ROGUE.esc(b.description) + '</p>' +
-            '<p class="card__source">' + ROGUE.esc(b.source) + '</p>' +
+            '<p class="card__source">' + ROGUE.citeHtml(b.source) + '</p>' +
             '</div></li>'
           );
         })

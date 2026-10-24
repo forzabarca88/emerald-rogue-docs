@@ -37,7 +37,7 @@
       "name": "Released from your party",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
-      "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the victory lap after the final boss). Legendaries go to the legendary slots, everything else to the regular slots.",
+      "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the endless trainer mode after the top of the boss ladder). Legendaries go to the legendary slots, everything else to the regular slots.",
       "source": "src/rogue_controller.c @vanilla L6426-6452 (RemoveMonAtSlot, push at L6451) / @origin/expansion L6417-6443 (push at L6442); src/rogue_safari.c @vanilla L94-105 / @origin/expansion L94-105 (RogueSafari_PushMon)"
     },
     {

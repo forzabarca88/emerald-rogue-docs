@@ -146,6 +146,32 @@
   transform: rotate(45deg);
 }
 
+/* a wild den — gold square outline (the den's single trained species)
+   — the hollow sibling of the filled gold boss diamond */
+.run-path__node--den {
+  border-color: var(--color-gold);
+}
+
+/* labelled variant (gameplay page path diagrams): one column wrapper
+   per step — node on top, mono caption below — with a touch tighter
+   links so the labelled Classic 5-column segment still fits at 360px */
+.run-path--labeled .run-path__cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.run-path--labeled .run-path__link {
+  width: 20px;
+}
+
+.run-path--labeled .run-path__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
 .run-path__fork {
   display: flex;
   flex-direction: column;
@@ -239,6 +265,33 @@
 /* note under the room-type grid */
 .page--gameplay .rooms__note {
   margin-top: var(--space-5);
+}
+
+/* path diagrams (DESIGN.md §5.1): a bordered panel around a
+   run-path instance with a visible caption under it — the diagram
+   root is aria-hidden, the caption carries the meaning. The panel
+   owns the spacing, so the run path's own top margin drops. */
+.page--gameplay .path-diagram {
+  margin-top: var(--space-5);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--gameplay .path-diagram .run-path {
+  margin-top: 0;
+}
+
+.page--gameplay .path-diagram__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* the wild-den callout (under the room-type note) wears the den gold */
+.page--gameplay .rooms__den {
+  border-color: var(--color-gold);
 }
 
 /* the boss ladder — a true sequence, so it is numbered (DESIGN.md §10) */

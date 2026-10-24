@@ -1,5 +1,5 @@
 {
-  "_comment": "Game revision this site documents. '2.2.1' is the in-game version (game repo src/data/rogue_strings.h L6), not a GitHub release. scripts/verify/citations.mjs --changed diffs each branch from these SHAs. Bump only after the docs are refreshed and verify:citations passes.",
+  "_comment": "Game revision this site documents. '2.2.1' is the in-game version (game repo src/data/rogue_strings.h L6), not a GitHub release. scripts/verify/citations.mjs --changed diffs each branch from these SHAs. Bump only after the docs are refreshed and verify:citations passes. These SHAs also feed the citation permalinks in data/site.json (citations.ref) — bump both files together.",
   "vanilla":   { "sha": "5ccb74cf1ef2c0349dfa5d70883b030bbc9ff803", "version": "v2.2.1a" },
   "expansion": { "sha": "a6adfcf18d7eaf99c2803e4b0bc04eca7af2f014", "version": "EX v2.2.1" }
 }
