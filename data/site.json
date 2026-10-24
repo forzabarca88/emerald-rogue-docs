@@ -12,6 +12,14 @@
       "source": "Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations."
     }
   },
+  "citations": {
+    "_comment": "Link targets for per-record source citations. ref = the baseline SHAs from scripts/verify/baseline.json — bump both files together when the game baseline moves.",
+    "repo": "https://github.com/Pokabbie/pokeemerald-rogue",
+    "ref": {
+      "vanilla": "5ccb74cf1ef2c0349dfa5d70883b030bbc9ff803",
+      "expansion": "a6adfcf18d7eaf99c2803e4b0bc04eca7af2f014"
+    }
+  },
   "defaultVersion": "ex",
   "versions": {
     "order": [

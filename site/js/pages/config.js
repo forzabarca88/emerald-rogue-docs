@@ -75,7 +75,7 @@
             .join('') +
           '</ul>';
       }
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 
@@ -102,7 +102,7 @@
           : '<span class="set-none">none</span>'
       );
       if (record.note) html += '<p class="set-note">' + ROGUE.esc(record.note) + '</p>';
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 
@@ -128,7 +128,7 @@
         if (rows) html += '<div class="set-values">' + rows + '</div>';
       }
       if (record.note) html += '<p class="set-note">' + ROGUE.esc(record.note) + '</p>';
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 
@@ -177,7 +177,7 @@
       var diff = record.differences && typeof record.differences === 'object' ? record.differences[version] : null;
       if (typeof diff === 'string' && diff.trim()) html += '<p class="set-note">' + ROGUE.esc(diff) + '</p>';
       if (record.note) html += '<p class="set-note">' + ROGUE.esc(record.note) + '</p>';
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 
@@ -218,11 +218,11 @@
           })
           .join('');
         body = '<ul class="eggs">' + rows + '</ul>';
-        if (trigger && trigger.source) body += '<p class="card__source eggs__source">' + ROGUE.esc(trigger.source) + '</p>';
+        if (trigger && trigger.source) body += '<p class="card__source eggs__source">' + ROGUE.citeHtml(trigger.source) + '</p>';
       } else if (trigger && trigger.description) {
         /* fallback: the raw trigger text still carries every phrase */
         body = ROGUE.paragraphs(trigger.description);
-        if (trigger.source) body += '<p class="card__source eggs__source">' + ROGUE.esc(trigger.source) + '</p>';
+        if (trigger.source) body += '<p class="card__source eggs__source">' + ROGUE.citeHtml(trigger.source) + '</p>';
       } else {
         body = '<p class="set-note">No campaign data available.</p>';
       }

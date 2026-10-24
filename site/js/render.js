@@ -6,7 +6,7 @@
  * ROGUE.paragraphs(text), ROGUE.cards(records), ROGUE.table(records, columns),
  * ROGUE.proseSections(prose), ROGUE.section(id, eyebrow, heading, intro, body),
  * ROGUE.chip(text), ROGUE.proseById(data, id), ROGUE.byCategory(records, category),
- * ROGUE.versionLabel(id), ROGUE.diffNote(record[, text]).
+ * ROGUE.versionLabel(id), ROGUE.diffNote(record[, text]), ROGUE.citeHtml(source).
  */
 (function () {
   'use strict';
@@ -89,7 +89,7 @@
           ROGUE.esc(r.name) +
           '</h3>' + badgeHtml(r) + '</div>';
         if (r.description) html += '<p class="card__desc">' + ROGUE.esc(r.description) + '</p>';
-        if (r.source) html += '<p class="card__source">' + ROGUE.esc(r.source) + '</p>';
+        if (r.source) html += '<p class="card__source">' + ROGUE.citeHtml(r.source) + '</p>';
         return html + '</article>';
       })
       .join('');
@@ -177,6 +177,132 @@
   ROGUE.versionLabel = function (id) {
     var labels = ((siteOrEmpty().versions || {}).labels) || {};
     return labels[id] || id;
+  };
+
+  /**
+   * A record's `source` citation string → HTML with every cited file (and
+   * each of its line ranges) linked to a GitHub permalink at the pinned
+   * baseline (data/site.json `citations`: repo URL + per-branch SHAs).
+   *
+   * Parses with the SAME grammar as scripts/verify/citations.mjs (keep in
+   * sync): a citation is a `path @vanilla` / `path @origin/expansion` match;
+   * its line refs are all `L<a>[-<b>]` from that match up to the next one;
+   * `identical`/`lines` are byte-identity claims (never linked); a
+   * bare extension-less token (the `/` of `… / @origin/expansion L…`) is a
+   * continuation of the previous citation's file on the other branch; `<…>`
+   * is a glob (linked to its parent directory). No citation at all (method
+   * cites, `(site data)`) or missing config → the whole string escaped
+   * plain, so a page can never break on a source field.
+   */
+  ROGUE.citeHtml = function (source) {
+    var text = String(source === null || source === undefined ? '' : source);
+    var CITATION_RE = /([A-Za-z0-9_\-./<>]+)\s+@(vanilla|origin\/expansion)/g; // keep in sync with scripts/verify/citations.mjs
+    var LINE_REF_RE = /L(\d+)(?:-(\d+))?/g; // keep in sync with scripts/verify/citations.mjs
+    var CLAIM_TOKENS = ['identical', 'lines']; // keep in sync with scripts/verify/citations.mjs
+    var citations = siteOrEmpty().citations;
+    var repo = citations && typeof citations.repo === 'string' ? citations.repo : '';
+    var refShas = (citations && citations.ref) || {};
+    if (!repo || !refShas.vanilla || !refShas.expansion) return ROGUE.esc(text);
+
+    var shaFor = function (ref) {
+      return ref === 'vanilla' ? refShas.vanilla : refShas.expansion;
+    };
+    // Token classification mirrors classifyToken() in scripts/verify/citations.mjs (order matters: claims first).
+    var classifyToken = function (token) {
+      if (CLAIM_TOKENS.indexOf(token) !== -1) return 'claim';
+      if (token.indexOf('<') !== -1) return 'glob';
+      if (token === 'Makefile' || /\.[A-Za-z0-9]+$/.test(token)) return 'path';
+      return 'continuation';
+    };
+    var anchor = function (href, label) {
+      return '<a href="' + ROGUE.esc(href) + '" target="_blank" rel="noopener">' + label + '</a>';
+    };
+
+    var matches = [];
+    var m;
+    CITATION_RE.lastIndex = 0;
+    while ((m = CITATION_RE.exec(text)) !== null) {
+      matches.push({ text: m[0], token: m[1], ref: m[2], start: m.index, end: m.index + m[0].length });
+    }
+    if (matches.length === 0) return ROGUE.esc(text);
+
+    var html = '';
+    var cursor = 0; // end of the region already emitted into `html`
+    var lastValid = null; // most recent path/glob token — the file continuations inherit
+    for (var i = 0; i < matches.length; i++) {
+      var match = matches[i];
+      html += ROGUE.esc(text.slice(cursor, match.start));
+      // Line refs for this citation: from the end of the match to the next
+      // match (annotation L-refs included) — same segment as the verifier.
+      var segmentEnd = i + 1 < matches.length ? matches[i + 1].start : text.length;
+      var segment = text.slice(match.end, segmentEnd);
+      var lineRefs = [];
+      var lm;
+      LINE_REF_RE.lastIndex = 0;
+      while ((lm = LINE_REF_RE.exec(segment)) !== null) {
+        lineRefs.push({ start: lm.index, end: lm.index + lm[0].length, a: Number(lm[1]), b: lm[2] ? Number(lm[2]) : Number(lm[1]), text: lm[0] });
+      }
+
+      var kind = classifyToken(match.token);
+      if (kind === 'claim') {
+        // Byte-identity claim — plain text, never a link target (the text up
+        // to the next citation stays plain too).
+        html += ROGUE.esc(match.text + text.slice(match.end, segmentEnd));
+        cursor = segmentEnd;
+        continue;
+      }
+
+      var file = kind === 'continuation' ? lastValid : match.token;
+      var sha = shaFor(match.ref);
+      if (!file || !sha) {
+        // Continuation with nothing to inherit, or unconfigured SHA — plain.
+        html += ROGUE.esc(match.text + text.slice(match.end, segmentEnd));
+        cursor = segmentEnd;
+        continue;
+      }
+      var baseHref = repo + '/blob/' + sha + '/' + file;
+
+      if (kind === 'glob') {
+        // Link the parent directory: strip the `<…>` suffix, keep a trailing "/".
+        var dirPrefix = file.slice(0, file.indexOf('<'));
+        if (dirPrefix.indexOf('/') === -1) {
+          // No directory to link to — render plain.
+          html += ROGUE.esc(match.text);
+        } else {
+          if (dirPrefix.charAt(dirPrefix.length - 1) !== '/') dirPrefix += '/';
+          html += anchor(repo + '/blob/' + sha + '/' + dirPrefix, ROGUE.esc(match.text));
+        }
+        // Glob segments carry no line anchors (the verifier skips them too).
+        html += ROGUE.esc(segment);
+        cursor = segmentEnd;
+        lastValid = match.token;
+        continue;
+      }
+
+      if (kind === 'continuation') {
+        // The bare token (e.g. "/ ") stays plain; the "@ref" tail links the
+        // inherited file on the other branch's SHA.
+        var at = match.text.indexOf('@');
+        html += ROGUE.esc(match.text.slice(0, at));
+        html += anchor(baseHref, ROGUE.esc('@' + match.ref));
+      } else {
+        // Concrete file: the whole "path @ref" match is the file link.
+        html += anchor(baseHref, ROGUE.esc(match.text));
+        lastValid = match.token;
+      }
+
+      // Each line ref in the segment gets its own anchor to that file's line(s).
+      var segCursor = 0;
+      for (var j = 0; j < lineRefs.length; j++) {
+        var lr = lineRefs[j];
+        html += ROGUE.esc(segment.slice(segCursor, lr.start));
+        html += anchor(baseHref + '#L' + lr.a + (lr.b !== lr.a ? '-L' + lr.b : ''), ROGUE.esc(lr.text));
+        segCursor = lr.end;
+      }
+      html += ROGUE.esc(segment.slice(segCursor));
+      cursor = segmentEnd;
+    }
+    return html;
   };
 
   /**

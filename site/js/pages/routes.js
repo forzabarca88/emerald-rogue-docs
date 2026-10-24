@@ -85,7 +85,7 @@
         '</div>';
       html += '<div class="chip-row route-card__chips">' + tags.join('') + '</div>';
       html += ROGUE.diffNote(record);
-      if (record.source) html += '<p class="card__source">' + ROGUE.esc(record.source) + '</p>';
+      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
       return html + '</article>';
     }
 

@@ -167,7 +167,7 @@
             ROGUE.badge(b) +
             '</div>' +
             '<p class="ladder__desc">' + ROGUE.esc(b.description) + '</p>' +
-            '<p class="card__source">' + ROGUE.esc(b.source) + '</p>' +
+            '<p class="card__source">' + ROGUE.citeHtml(b.source) + '</p>' +
             '</div></li>'
           );
         })
