@@ -16,50 +16,14 @@
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import http from 'node:http';
 import vm from 'node:vm';
-import { existsSync, readFile, readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createStaticServer } from './helpers/static-server.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const distDir = path.join(root, 'dist');
-
-/** Minimal static file server for dist/ (test-only, closed in after()). */
-function createStaticServer(dir) {
-  return http.createServer((req, res) => {
-    let urlPath;
-    try {
-      urlPath = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
-    } catch {
-      res.writeHead(400);
-      res.end('Bad request');
-      return;
-    }
-    const filePath = path.normalize(path.join(dir, urlPath));
-    if (!filePath.startsWith(dir)) {
-      res.writeHead(403);
-      res.end('Forbidden');
-      return;
-    }
-    readFile(filePath, (err, buf) => {
-      if (err) {
-        res.writeHead(404);
-        res.end('Not found');
-        return;
-      }
-      const type =
-        {
-          '.html': 'text/html; charset=utf-8',
-          '.js': 'text/javascript; charset=utf-8',
-          '.css': 'text/css; charset=utf-8',
-          '.json': 'application/json; charset=utf-8',
-        }[path.extname(filePath)] || 'application/octet-stream';
-      res.writeHead(200, { 'content-type': type });
-      res.end(buf);
-    });
-  });
-}
 
 let server;
 after(async () => {

@@ -1,0 +1,348 @@
+/**
+ * All-page render + console-error + content-count smoke suite (node --test,
+ * zero deps; Playwright resolved by the harness).
+ *
+ * For each of the 10 served pages, at the site's default version
+ * (data/site.json `defaultVersion` — currently "ex"), this asserts:
+ *   1. zero console errors and zero pageerrors (a JS crash surfaces as a
+ *      pageerror here — the existing e2e suite only fetches raw HTML and
+ *      can never see one);
+ *   2. the landmarks: `header .site-brand`, a `nav` (the header's
+ *      site-nav), `main.page--<stem>` (the class is on the <main> element
+ *      itself), exactly one `h1` in main with the page's title, and the
+ *      footer inner that nav.js injects (`footer .site-footer__inner`);
+ *   3. the data-derived DOM counts as LITERAL numbers — each expectation
+ *      was derived from the cited data file AND the page's rendering code
+ *      (site/js/pages/*.js), and every assertion message cites its source.
+ *
+ * The literals are derived for the "ex" default version (e.g. quests shows
+ * all 232 records under ex but only the 138 shared ones under vanilla), so
+ * the first test pins the default — if data/site.json's defaultVersion ever
+ * changes, that test fails with an explanation instead of eight confusing
+ * count failures below.
+ *
+ * File shape follows the harness module header (test/ui/harness.mjs):
+ * startServer in before(), closeAll + server.close in after(), and each
+ * test guards with skipIfNoPlaywright(t) (the suite self-skips on machines
+ * without a Playwright install instead of failing `npm test`).
+ */
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { startServer, openPage, closeAll, skipIfNoPlaywright } from './harness.mjs';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+const VERSION = site.defaultVersion;
+
+let server;
+before(async () => {
+  server = await startServer();
+});
+after(async () => {
+  await closeAll();
+  if (server) await server.close();
+});
+
+/**
+ * One page spec: the served path, the expected <h1> text, and the
+ * data-derived checks. Each check is { sel, expected, why } for a DOM
+ * element count, or { sel, text, why } for a live count line's rendered
+ * text; `why` is the assertion message citing the data file + version the
+ * literal comes from. Pages with no checks in the table are landmark-only
+ * (the 404 page is static and renders no data records).
+ */
+const PAGES = [
+  {
+    stem: 'index',
+    h1: site.hero.title, // home's <h1> is the hero title, not a nav page title
+    counts: {
+      quickLinkCards: {
+        sel: 'main a.card--link',
+        expected: 8,
+        why: `data/site.json nav lists 9 pages; the home page (home.js) renders a quick-link card for every one except itself: 9 − 1 = 8`,
+      },
+      heroStats: {
+        sel: '.hero__stat',
+        expected: 4,
+        why: 'data/site.json hero.stats has 4 entries (36 routes / 14 bosses / 60 safari slots / 9 quest groups)',
+      },
+      runPath: {
+        sel: '.hero .run-path',
+        expected: 1,
+        why: 'the home hero carries exactly one run-path signature diagram (DESIGN.md §5.1, home.js RUN_PATH)',
+      },
+    },
+  },
+  {
+    stem: 'gameplay',
+    h1: site.pages.gameplay.title,
+    counts: {
+      roomCards: {
+        sel: '#gp-rooms .grid > article.card',
+        expected: 17,
+        why: `data/adventure.json has 17 room-type records, all with versions [vanilla, ex] → all 17 render under version ${VERSION} (gameplay.js ROGUE.filter)`,
+      },
+      bossLadderItems: {
+        sel: '.ladder__item',
+        expected: 5,
+        why: `data/adventure.json has 5 boss-ladder records (the 14-boss ladder grouped: Gym Leaders 8, Elite Four 4, Champion, Final Battle, Victory Lap), all version ${VERSION} (gameplay.js)`,
+      },
+    },
+  },
+  {
+    stem: 'versions',
+    h1: site.pages.versions.title,
+    counts: {
+      diffRows: {
+        sel: '#version-diffs .diff',
+        expected: 19,
+        why: 'data/versions.json has 19 records; versions.js renders the whole master list as one .diff row per record, unfiltered by version',
+      },
+    },
+  },
+  {
+    stem: 'quests',
+    h1: site.pages.quests.title,
+    counts: {
+      displayGroups: {
+        sel: '.quest-group',
+        expected: 9,
+        why: 'data/quests.json display_groups has 9 groups; quests.js renders every group as a .quest-group even when empty (the empty one shows its "No quests" note)',
+      },
+      questCards: {
+        sel: '.quest-card',
+        expected: 232,
+        why: `data/quests.json has 232 records and all 232 include version ${VERSION} (138 shared + 94 EX-only) → 232 cards (quests.js ROGUE.filter)`,
+      },
+      groupChips: {
+        sel: '.quest-chips a',
+        expected: 9,
+        why: 'quests.js renders one anchor chip per display group (9 in data/quests.json)',
+      },
+      emptyGroups: {
+        sel: '.quest-group__empty',
+        expected: 1,
+        why: `under version ${VERSION} exactly one display group (starter_challenges) holds no quests, so exactly one group renders its "No quests in this group." note`,
+      },
+      resultLine: {
+        sel: '#quest-result',
+        text: '232 quests',
+        why: 'the quest log\u2019s live count line shows "232 quests" under version ex (one per rendered card, quests.js bindSearch)',
+      },
+    },
+  },
+  {
+    stem: 'config',
+    h1: site.pages.config.title,
+    counts: {
+      modeCards: {
+        sel: '.mode-card',
+        expected: 3,
+        why: 'data/game-modes.json has 3 game-mode records, all in both versions → 3 cards (config.js)',
+      },
+      presetCards: {
+        sel: '#config-difficulty .set-grid > article.card',
+        expected: 5,
+        why: `data/settings.json has 5 preset records, all in both versions → 5 cards under version ${VERSION} (config.js)`,
+      },
+      toggleCards: {
+        sel: '#config-toggles .set-grid > article.card',
+        expected: 19,
+        why: `data/settings.json has 19 toggle records, all 19 available in version ${VERSION} (12 under vanilla) → 19 cards (config.js ROGUE.filter)`,
+      },
+      rangeCards: {
+        sel: '#config-ranges .set-grid > article.card',
+        expected: 9,
+        why: `data/settings.json has 9 range records, all in both versions → 9 cards under version ${VERSION} (config.js)`,
+      },
+      campaignPhrases: {
+        sel: '.eggs li',
+        expected: 7,
+        why: "data/campaigns.json campaign-trigger record lists 7 hidden phrases ('SMALL HOLIDAY'…'PLEASE MISS'), one .eggs row each (config.js parsePhrases)",
+      },
+    },
+  },
+  {
+    stem: 'hub',
+    h1: site.pages.hub.title,
+    counts: {
+      areaCards: {
+        sel: '.area-card',
+        expected: 11,
+        why: 'data/hub.json has 60 records split by category: 11 hub-area records → 11 .area-card (hub.js ROGUE.byCategory), all in both versions',
+      },
+      upgradeCards: {
+        sel: '.hub-upgrade',
+        expected: 48,
+        why: 'data/hub.json: 48 hub-upgrade records → 48 .hub-upgrade cards (hub.js), all in both versions',
+      },
+      decorCards: {
+        sel: '#hub-decor article.card',
+        expected: 1,
+        why: 'data/hub.json: 1 home-decor record → 1 card in the Home Base section (hub.js); 11 + 48 + 1 = 60 records total',
+      },
+    },
+  },
+  {
+    stem: 'safari',
+    h1: site.pages.safari.title,
+    counts: {
+      poolCells: {
+        sel: '.safari-slots__cell',
+        expected: 60,
+        why: 'data/safari.json pool-slot-layout: slots 0–44 regular (45) + 45–59 legendary (15) → 60 one-cell-per-slot diagram cells (safari.js slotDiagram parses the ranges from the record)',
+      },
+      entryCards: {
+        sel: '.safari-entry article.card',
+        expected: 4,
+        why: 'data/safari.json has 4 entry-criterion records → 4 stacked cards (safari.js)',
+      },
+      caveSteps: {
+        sel: '.safari-steps li',
+        expected: 8,
+        why: 'data/safari.json legends-cave record has 8 steps → 8 numbered list items (safari.js stepsList)',
+      },
+      recordCards: {
+        sel: '#safari-pool article.card, #safari-priority article.card, #safari-legends article.card, #safari-sign article.card',
+        expected: 4,
+        why: 'data/safari.json renders one cited card per record — the 4 entry-criterion cards above plus one each for pool-slot-layout, priority-eviction, legends-cave and pool-sign (8 cards total; this check covers the 4 non-entry cards)',
+      },
+    },
+  },
+  {
+    stem: 'routes',
+    h1: site.pages.routes.title,
+    counts: {
+      routeCards: {
+        sel: '.route-card',
+        expected: 36,
+        why: 'data/routes.json has 36 routes (12 Hoenn, 6 Kanto, 6 Johto, 12 Sinnoh), all in both versions → 36 cards under the "all" region filter (routes.js)',
+      },
+      regionBlocks: {
+        sel: '.routes-region',
+        expected: 4,
+        why: 'data/routes.json uses 4 regions (Hoenn, Kanto, Johto, Sinnoh) → 4 grouped blocks (routes.js uniqueValues("region"))',
+      },
+      filterButtons: {
+        sel: '.routes-filter__btn',
+        expected: 5,
+        why: 'routes.js renders the "All" filter button plus one per region: 1 + 4 = 5',
+      },
+      terrainChips: {
+        sel: '#routes-types .chip-row .chip',
+        expected: 7,
+        why: 'data/routes.json records use 7 distinct terrains (Field, Forest, Cave, Mountain, WaterFront, Urban, Island) → one chip each (routes.js uniqueValues("terrain"))',
+      },
+      countLine: {
+        sel: '#routes-count',
+        text: '36 routes across all 4 regions',
+        why: 'the routes count line reads "36 routes across all 4 regions" under the "all" filter (routes.js applyRegion)',
+      },
+    },
+  },
+  {
+    stem: 'mechanics',
+    h1: site.pages.mechanics.title,
+    counts: {
+      charmCards: {
+        sel: '.mech-duo__col:nth-child(1) article.card',
+        expected: 17,
+        why: `data/charms.json has 17 charm records, all in both versions → 17 cards in the Charms column under version ${VERSION} (mechanics.js duoColumn)`,
+      },
+      curseCards: {
+        sel: '.mech-duo__col:nth-child(2) article.card',
+        expected: 26,
+        why: `data/charms.json has 26 curse records, all in both versions → 26 cards in the Curses column under version ${VERSION} (mechanics.js duoColumn)`,
+      },
+      mechCards: {
+        sel: '.mech-card',
+        expected: 97,
+        why: `every record card on the page under version ${VERSION}: 43 charms.json + 12 followmons.json + 10 gameshow.json + 8 timeofday.json (includes the 1 EX-only seasonal-species record) + 14 unique-mons.json + 10 campaigns.json = 97 (mechanics.js grid)`,
+      },
+    },
+  },
+  {
+    stem: '404',
+    h1: 'Page not found', // static shell — not in data/site.json pages
+    counts: {},
+  },
+];
+
+test('the default version is "ex" (every literal count in this suite is derived from it)', () => {
+  assert.equal(
+    site.defaultVersion,
+    'ex',
+    'data/site.json defaultVersion changed — the literal DOM counts in test/ui/smoke.test.mjs are derived for "ex"; re-derive them for the new default before proceeding'
+  );
+});
+
+for (const spec of PAGES) {
+  test(`${spec.stem === '404' ? '404.html' : `${spec.stem}.html`} renders at the default version: no errors, all landmarks, data-derived counts`, async (t) => {
+    if (skipIfNoPlaywright(t)) return;
+    const { page, errors, close } = await openPage({ path: `${spec.stem}.html` });
+    try {
+      // Zero console errors + pageerrors first: a pageerror carries the
+      // actual JS exception, which is the useful signal when the DOM
+      // assertions below would otherwise fail with bare count mismatches.
+      assert.deepEqual(
+        errors,
+        [],
+        `${spec.stem}.html (version ${VERSION}): expected zero console errors and pageerrors, got: ${errors.join(' | ')}`
+      );
+
+      // Landmarks: the header brand + nav and the footer inner are injected
+      // by nav.js into the shells' empty <header id="site-header"> /
+      // <footer id="site-footer">; <main class="page page--<stem>"> and the
+      // page <h1> belong to the shell (page scripts replace main.innerHTML
+      // only, keeping the page--<stem> class on the <main> element itself).
+      const landmarkSels = {
+        brand: 'header .site-brand',
+        nav: 'nav',
+        main: `main.page--${spec.stem}`,
+        h1: `main.page--${spec.stem} h1`,
+        footer: 'footer .site-footer__inner',
+      };
+      const pageSels = { ...landmarkSels };
+      for (const [key, c] of Object.entries(spec.counts)) pageSels[key] = c.sel;
+      const result = await page.evaluate((sels) => {
+        const out = {};
+        for (const [key, sel] of Object.entries(sels)) out[key] = document.querySelectorAll(sel).length;
+        const h1 = document.querySelector(sels.h1);
+        out.h1Text = h1 ? h1.textContent.trim() : null;
+        return out;
+      }, pageSels);
+
+      assert.equal(result.brand, 1, `${spec.stem}.html: expected exactly one header .site-brand (nav.js), found ${result.brand}`);
+      assert.ok(result.nav >= 1, `${spec.stem}.html: expected at least one <nav> (the header site-nav), found ${result.nav}`);
+      assert.equal(result.main, 1, `${spec.stem}.html: expected exactly one main.page--${spec.stem}, found ${result.main}`);
+      assert.equal(result.h1, 1, `${spec.stem}.html: expected exactly one <h1> in main, found ${result.h1}`);
+      assert.equal(
+        result.h1Text,
+        spec.h1,
+        `${spec.stem}.html: h1 text is ${JSON.stringify(result.h1Text)}, expected ${JSON.stringify(spec.h1)} (from data/site.json)`
+      );
+      assert.equal(result.footer, 1, `${spec.stem}.html: expected exactly one footer .site-footer__inner (nav.js), found ${result.footer}`);
+
+      // Data-derived DOM counts — literal expectations, each citing its
+      // data file + version (see PAGES above).
+      for (const [key, c] of Object.entries(spec.counts)) {
+        if (typeof c.text === 'string') {
+          // live count lines: assert on the rendered text, not a DOM count
+          const text = await page.locator(c.sel).first().textContent();
+          assert.equal(
+            (text || '').trim(),
+            c.text,
+            `${spec.stem}.html ${c.sel}: expected ${JSON.stringify(c.text)}; ${c.why}`
+          );
+          continue;
+        }
+        assert.equal(result[key], c.expected, `${spec.stem}.html ${c.sel}: expected ${c.expected}; ${c.why}`);
+      }
+    } finally {
+      await close();
+    }
+  });
+}
