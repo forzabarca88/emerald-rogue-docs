@@ -25,6 +25,23 @@ jobs:
           node-version: 24
       - run: npm test
 
+  ui:
+    # Runs with the same triggers as `test` (no if: gate). The UI suite
+    # (test/ui/*.test.mjs) drives Playwright, which the `test` job
+    # intentionally does NOT install — there the UI tests self-skip,
+    # keeping that job fast and the merge gate cheap. This job provides
+    # the real browser run; both jobs gate merges. The ~2-4 min browser
+    # install is isolated here so PR feedback on the unit job stays fast.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm i -g playwright@1.61.1
+      - run: npx playwright install --with-deps chromium
+      - run: npm test
+
   build:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest

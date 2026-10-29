@@ -8,6 +8,7 @@
     "build": "node scripts/build.mjs",
     "test": "node --test \"test/**/*.test.mjs\"",
     "extract:quests": "node scripts/extract/quests.mjs",
+    "screenshots": "node test/ui/screenshot.mjs",
     "verify:citations": "node scripts/verify/citations.mjs"
   }
 }

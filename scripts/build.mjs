@@ -2,7 +2,9 @@
 /**
  * Zero-dependency build for the Emerald Rogue docs site.
  *
- * 1. Copies `site/` → `dist/`
+ * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>`), then atomically
+ *    swaps it into `dist/` (rm + rename), so concurrent builds never see a
+ *    half-written `dist/`
  * 2. Validates every `data/*.json` against the binding data envelope:
  *    - `meta.id` must equal the filename stem
  *    - `meta.title` must be a non-empty string
@@ -38,6 +40,7 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -48,6 +51,7 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const siteDir = path.join(root, 'site');
 const dataDir = path.join(root, 'data');
 const distDir = path.join(root, 'dist');
+const tmpDir = path.join(root, `dist.tmp-${process.pid}`);
 
 const ALLOWED_VERSIONS = new Set(['vanilla', 'ex']);
 const DIFFERENCE_FIELDS = new Set(['description', 'trigger', 'rewards', 'requirements', 'display_group']);
@@ -322,10 +326,35 @@ function main() {
   }
   if (errors.length) return report();
 
-  rmSync(distDir, { recursive: true, force: true });
-  cpSync(siteDir, distDir, { recursive: true });
-  mkdirSync(path.join(distDir, 'data'), { recursive: true });
-  writeFileSync(path.join(distDir, 'data', 'bundle.js'), `${bundleLines.join('\n')}\n`, 'utf8');
+  // Assemble the complete build in the temp dir, then swap it into dist/
+  // (rename on the same filesystem). Readers of dist/ only ever see a
+  // complete build — never a half-written one (matters when builds run
+  // concurrently, e.g. under npm test).
+  rmSync(tmpDir, { recursive: true, force: true });
+  try {
+    cpSync(siteDir, tmpDir, { recursive: true });
+    mkdirSync(path.join(tmpDir, 'data'), { recursive: true });
+    writeFileSync(path.join(tmpDir, 'data', 'bundle.js'), `${bundleLines.join('\n')}\n`, 'utf8');
+  } catch (err) {
+    rmSync(tmpDir, { recursive: true, force: true });
+    throw err;
+  }
+  // rmSync + renameSync on the same filesystem. A concurrent build may
+  // swap its own temp dir into dist/ mid-rm (our final rmdir then fails
+  // with ENOTEMPTY) or right after it (our rename does); retry the pair
+  // against the fresh state in either case.
+  for (;;) {
+    try {
+      rmSync(distDir, { recursive: true, force: true });
+      renameSync(tmpDir, distDir);
+      break;
+    } catch (err) {
+      if (err.code !== 'ENOTEMPTY') {
+        rmSync(tmpDir, { recursive: true, force: true });
+        throw err;
+      }
+    }
+  }
 
   console.log(`build ok — ${bundleLines.length} data file(s) bundled → dist/data/bundle.js`);
 }
