@@ -259,8 +259,8 @@ const PAGES = [
       },
       mechCards: {
         sel: '.mech-card',
-        expected: 97,
-        why: `every record card on the page under version ${VERSION}: 43 charms.json + 12 followmons.json + 10 gameshow.json + 8 timeofday.json (includes the 1 EX-only seasonal-species record) + 14 unique-mons.json + 10 campaigns.json = 97 (mechanics.js grid)`,
+        expected: 98,
+        why: `every record card on the page under version ${VERSION}: 43 charms.json + 13 followmons.json + 10 gameshow.json + 8 timeofday.json (includes the 1 EX-only seasonal-species record) + 14 unique-mons.json + 10 campaigns.json = 98 (mechanics.js grid)`,
       },
     },
   },
