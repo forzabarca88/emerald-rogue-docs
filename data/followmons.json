@@ -2,7 +2,7 @@
   "meta": {
     "id": "followmons",
     "title": "Overworld Followmons",
-    "description": "How wild Pokémon live in the overworld during a run: the six spawn slots, the spawn timers and placement rules, water and Safari Zone spawning, shiny sparkles, the lead Pokémon follower, encounter chains, and what happens when you catch one. The whole system is identical between Vanilla and EX — only the species available to spawn differs."
+    "description": "How wild Pokémon live in the overworld during a run: the six spawn slots, the spawn timers and placement rules, water and Safari Zone spawning, shiny sparkles, shiny odds, the lead Pokémon follower, encounter chains, and what happens when you catch one. The whole system is identical between Vanilla and EX — only the species available to spawn differs."
   },
   "prose": [
     {
@@ -27,7 +27,7 @@
       "name": "Overworld wild spawns",
       "category": "followmon-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "During a run, each room with wild encounters has visible wandering Pokémon in the overworld instead of (or alongside) random-encounter grass. Each spawn is drawn from the current route's wild table — grass or water species at a random level with the usual shiny odds — and playing the run's legendary roamer cry if the spawned species happens to be it.",
+      "description": "During a run, each room with wild encounters has visible wandering Pokémon in the overworld instead of (or alongside) random-encounter grass. Each spawn is drawn from the current route's wild table — grass or water species at a random level, rolled at the run's shiny odds (see Shiny odds below) — and playing the run's legendary roamer cry if the spawned species happens to be it.",
       "source": "src/rogue_followmon.c @vanilla L905-930 (Rogue_CreateWildMon from the route table, roamer cry) (identical @origin/expansion); src/rogue_controller.c @vanilla L8383-8400 / @origin/expansion L8374-8391 (spawns enabled while a run room has wild encounters)"
     },
     {
@@ -85,6 +85,14 @@
       "versions": ["vanilla", "ex"],
       "description": "Separate from wild followmons, your lead Pokémon — the first usable mon in your party — walks with you in the overworld, as standard in the series. While you're riding, the ride Pokémon takes its place. The follower uses its own sprite slot and its own (possibly unique-mon) palette.",
       "source": "src/rogue_followmon.c @vanilla L472-495 (lead mon / ride mon selection), L509-519 (partner species for the follower object) (identical @origin/expansion)"
+    },
+    {
+      "id": "shiny-odds",
+      "name": "Shiny odds",
+      "category": "followmon-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Every wild Pokémon is rolled for shiny the moment it is created. Normal encounters — the overworld spawns and the three starters — roll at 1/400, while the fixed rooms (the Legendary Encounter, the Wild Den and the Honey Tree) roll at 1/100, pre-rolled when your path is generated. An active Shiny Pokéblock halves every base roll (1/200 and 1/50), and the Snag Curse makes wild shinies impossible while it is active. Chasing a chain pays off: once a streak of same-species defeats has forced the chain species to spawn, its shiny odds ramp up linearly from 1/400 (streaks of four or fewer) to a maximum of 1/16 by the 48th consecutive encounter of the species (by the 24th with the Shiny Pokéblock active). The run's legendary roamer keeps the shiny state of the mon it first rolled, so a shiny roamer stays shiny for every later roamer battle. And the Shiny Pie is a deterministic route: if your Pokédex shows you've caught a shiny of the lead's species, feeding it a pie with a Shiny Pokéblock filling makes it shiny — an already-shiny lead never 'likes' the filling, so feeding it a Shiny Pie un-shinies it instead.",
+      "source": "src/rogue_controller.c @vanilla L260-320 (Rogue_GetShinyOdds: base 400 dynamic / 100 static, halved by the active Shiny Pokéblock, zeroed by the Snag Curse; Rogue_RollShinyState's roll; GetEncounterChainShinyOdds' 400-to-16 linear ramp), L3178 (the three starters roll dynamic shiny), L7336 (the roamer latches the shiny state of its first battle mon), L8267-8359 (Rogue_CreateWildMon: dynamic wild roll, forced chain-species spawns use the chain ramp, the roamer reuses its latched shiny state) / @origin/expansion L260-320, L3165, L7327, L8258-8350; src/rogue_adventurepaths.c @vanilla L1028 (Legendary Encounter pre-rolls static shiny at path generation), L1048 (Wild Den), L1054 (Honey Tree) (identical @origin/expansion); src/rogue_script.c @vanilla L1460-1523 (Shiny Pie: gated on the species' caught-shiny Pokédex flag, a shiny lead never 'likes' the filling, and feeding it deterministically sets the lead's shiny state) (identical @origin/expansion)"
     },
     {
       "id": "encounter-chains",

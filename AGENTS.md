@@ -25,7 +25,7 @@
 - `data/adventure.json` — adventure-path reference data: how each run's path is generated, all 16 room types with their placement rules and weights, the 14-boss ladder (8 gyms, 4 Elite Four, Champion, final) and the victory lap.
 - `data/campaigns.json` — legacy-campaigns reference data: the seven hidden-phrase campaign modes (BST Cup, Classic, Battle Addict, Auto Battler, LaterManner, Limited Capture, One Hit), their unlock phrases, per-mode rules and the low-is-better scoring system.
 - `data/charms.json` — charms-and-curses reference data: all 17 Charms and 26 Curses with per-item effects, stacking/cap formulas and item sources, plus the one Vanilla-vs-EX mechanical divergence (the Grace cap: 90 vs 150) and the Vanilla 'DISCOUND CURSE' typo.
-- `data/followmons.json` — overworld-followmon reference data: the six spawn slots, spawn timers and tile-placement rules, water and Safari Zone spawning, shiny sparkles, the lead-Pokémon follower, encounter chains and the catch flow, all identical between the versions.
+- `data/followmons.json` — overworld-followmon reference data: the six spawn slots, spawn timers and tile-placement rules, water and Safari Zone spawning, shiny sparkles, shiny odds, the lead-Pokémon follower, encounter chains and the catch flow, all identical between the versions.
 - `data/game-modes.json` — game-modes reference data: Classic, Gauntlet and Fast Path rule sets with per-branch source citations (identical in Vanilla/EX).
 - `data/gameshow.json` — game-show reference data: Randoman's skill/luck games (with Team Trivia currently disabled in code), the escalating-option rounds, the all-or-nothing prize shelf, and the cheater's Electrode, with the only vanilla-vs-EX difference being shelf sprite repositioning.
 - `data/hub.json` — hub reference data: the 11 buildable hub areas and all 48 workbench upgrades with costs, requirements and player-facing effects, plus wander mons, time/season behaviour and home decor, noting the three Vanilla-vs-EX upgrade divergences.
@@ -99,7 +99,7 @@ Navigation only — the game repo (`references/pokeemerald-rogue`) and the cited
 - `adventure.json` → `src/rogue_adventurepaths.c`; `include/constants/rogue.h` (room enum, boss-ladder consts); `src/rogue_controller.c`; `src/data/rogue/trainers/rogue.json`; `data/maps/Rogue_AdventurePaths/scripts.pory`
 - `campaigns.json` → `src/rogue_campaign.c`; `data/maps/Rogue_Hub_Interior_ConfigRoom/scripts.pory`
 - `charms.json` → `src/rogue_charms.c` (CalcValueInternal); `src/battle_script_commands.c`; `data/scripts/Rogue/Strings/Rogue_Strings_Items.pory`
-- `followmons.json` → `src/rogue_followmon.c` (+ `rogue_controller.c` calls; `include/constants/rogue.h` spawn-slot consts)
+- `followmons.json` → `src/rogue_followmon.c` (+ `rogue_controller.c` calls, its shiny odds/rolls, `rogue_adventurepaths.c` room pre-rolls, `rogue_script.c` Shiny Pie; `include/constants/rogue.h` spawn-slot consts)
 - `game-modes.json` → `src/rogue_settings.c`; `src/rogue_settings_ui.c`; `src/rogue_controller.c`; `src/rogue_adventurepaths.c` (fast path)
 - `gameshow.json` → `data/maps/Rogue_Encounter_GameShow/{scripts,map}.pory/json`; `src/rogue_gameshow.c`
 - `hub.json` → `src/data/rogue_hub.h` (all 48 upgrades); `Rogue_Strings_Items.pory` (names); `src/rogue_hub.c`
