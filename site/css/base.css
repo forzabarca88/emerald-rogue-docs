@@ -256,6 +256,42 @@ img {
   vertical-align: 1px;
 }
 
+/* --- Search trigger (icon-only; opens the .search-palette overlay) ---------
+   Emitted by js/nav.js between the nav and the version toggle. The overlay
+   (js/search.js) sits BELOW this header (z-index), so the trigger and the
+   toggle stay reachable while it is open. */
+
+.site-search-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: var(--color-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  color: var(--color-muted);
+  transition:
+    color var(--motion-fast) var(--ease-out),
+    background-color var(--motion-fast) var(--ease-out),
+    border-color var(--motion-fast) var(--ease-out);
+}
+
+.site-search-trigger:hover {
+  color: var(--color-ink);
+  border-color: var(--color-emerald);
+}
+
+.site-search-trigger:active {
+  background: var(--color-surface);
+}
+
+.site-search-trigger svg {
+  display: block;
+}
+
 /* --- Version toggle (Vanilla | EX) ---------------------------------------
    A deliberate segmented switch: each edition carries its own accent hue
    when active — Vanilla fills Emerald, EX fills Amber Gold. The active
@@ -403,8 +439,26 @@ img {
   }
 
   .site-brand {
-    font-size: 0.95rem;
+    /* 14px — the display face's contract floor (DESIGN.md §3); the search
+       trigger joining row 1 needs the ~13px this saves at 360px */
+    font-size: 0.875rem;
     gap: 8px;
+  }
+
+  /* row 1 now carries brand + search trigger + toggle: tighten gaps, the
+     trigger and the toggle options so all three fit at 360px (DESIGN.md §9) */
+  .site-header__inner {
+    gap: 8px;
+  }
+
+  .site-search-trigger {
+    width: 28px;
+    height: 28px;
+  }
+
+  .site-search-trigger svg {
+    width: 14px;
+    height: 14px;
   }
 
   .version-toggle {
@@ -412,6 +466,6 @@ img {
   }
 
   .version-toggle__option {
-    padding: 6px 10px;
+    padding: 6px 8px;
   }
 }

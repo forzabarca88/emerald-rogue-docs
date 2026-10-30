@@ -339,6 +339,200 @@ input.search:focus-visible {
   border-color: var(--color-emerald);
 }
 
+/* the native type="search" clear button paints in the browser's default
+   blue — a hue outside tokens.css (DESIGN.md §2/§10). Suppressed on every
+   .search input (site palette + the quests/hub filters): the palette has
+   its own close/clear affordances (Escape, backdrop, trigger toggle). */
+.search input[type="search"]::-webkit-search-cancel-button,
+.search input[type="search"]::-webkit-search-decoration,
+input.search::-webkit-search-cancel-button,
+input.search::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* --- Search palette (site-wide search overlay) ------------------------------------
+   Emitted by js/search.js into <body>: a backdrop + a role="dialog" panel
+   (the box reuses the .search input styling above). Opened by the header's
+   .site-search-trigger (js/nav.js) or the search.shortcut key — all copy
+   (placeholder/hint) from the data/site.json `search` block.
+
+   Layering: the root sits BELOW the sticky header (z-index: --z-header − 1)
+   so the header's version toggle stays reachable while the palette is open
+   (it re-scopes the live results). The panel's top offset (--palette-top)
+   is set by js/search.js to the header's rendered height + gap, so the
+   two-row mobile header never hides it.
+
+   Dimming: the design has no overlay pattern, so the backdrop is the
+   darkest token (Deep Pine, --color-bg) at 60% ELEMENT opacity — a token
+   color, no rgba() literal (DESIGN.md §10). The fixed overlay adds no
+   layout shift when it opens or closes. */
+
+.search-palette {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-header) - 1);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 var(--space-4);
+}
+
+/* the [hidden] rule must beat the author `display: flex` above */
+.search-palette[hidden] {
+  display: none;
+}
+
+.search-palette__backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--color-bg);
+  opacity: 0.6;
+}
+
+.search-palette__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 600px;
+  margin-top: var(--palette-top, 72px);
+  max-height: calc(100vh - var(--palette-top, 72px) - var(--space-4));
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.search-palette__form {
+  display: flex;
+  flex: none;
+  padding: var(--space-3);
+  border-bottom: 2px solid var(--color-line);
+}
+
+/* the .search component provides the input styling; this just flexes it */
+.search-palette__search {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* the live status: js/search.js shows exactly one of the count line /
+   empty state (the empty query shows the config hint) */
+.search-palette__count {
+  flex: none;
+  padding: var(--space-2) var(--space-4) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.search-palette__empty {
+  flex: none;
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-align: center;
+}
+
+.search-palette__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: var(--space-2) 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.search-palette__row {
+  padding: var(--space-2) var(--space-4) var(--space-2) calc(var(--space-4) - 2px);
+  border-left: 2px solid transparent;
+  cursor: pointer;
+  transition: background-color var(--motion-fast) var(--ease-out);
+}
+
+.search-palette__row:hover,
+.search-palette__row[data-active] {
+  background: var(--color-raised);
+}
+
+.search-palette__row[data-active] {
+  border-left-color: var(--color-emerald);
+}
+
+.search-palette__row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.search-palette__row-name {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+/* the active row wears the GBA menu-cursor ▶ (the same motif as the active
+   nav link, DESIGN.md §5.3) */
+.search-palette__row[data-active] .search-palette__row-name::before {
+  content: "▶";
+  font-size: 0.6em;
+  color: var(--color-emerald);
+  margin-right: 7px;
+}
+
+.search-palette__row-snippet {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+.search-palette__row-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  opacity: 0.85;
+}
+
+/* entrance (≤120ms, §7): fade the backdrop in and drop the panel; the
+   base (reduced-motion) state is already the final one, so `reduce` is
+   instant. Close is deliberately instant (no exit animation). */
+@media (prefers-reduced-motion: no-preference) {
+  .search-palette__backdrop {
+    opacity: 0;
+    transition: opacity var(--motion-fast) var(--ease-out);
+  }
+
+  .search-palette__panel {
+    opacity: 0;
+    transform: translateY(-8px);
+    transition:
+      opacity var(--motion-fast) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out);
+  }
+
+  .search-palette--open .search-palette__backdrop {
+    opacity: 0.6;
+  }
+
+  .search-palette--open .search-palette__panel {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* --- Tabs --------------------------------------------------------------------------
    For grouped navigation (e.g. the nine quest display groups). Conventional
    markup (page JS emits it):
