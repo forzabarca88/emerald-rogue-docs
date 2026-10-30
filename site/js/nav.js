@@ -1,8 +1,16 @@
 /*
- * nav.js — injects the site header (brand, nav links, version toggle) and
- * footer into the empty #site-header / #site-footer elements, entirely from
- * data/site.json. Loads after version.js + data.js; uses ROGUE.esc from
- * render.js at run time (all scripts are parsed before ready() fires).
+ * nav.js — injects the site header (brand, nav links, the icon-only search
+ * trigger, version toggle) and footer into the empty #site-header /
+ * #site-footer elements, entirely from data/site.json. Loads after
+ * version.js + data.js; uses ROGUE.esc from render.js at run time (all
+ * scripts are parsed before ready() fires).
+ *
+ * The search trigger (#site-search-trigger, .site-search-trigger) is emitted
+ * between the nav and the version toggle (the toggle stays last/rightmost).
+ * nav.js only emits it — search.js binds the click and owns the overlay.
+ * Its aria-label is a static "Search the site": the data/site.json `search`
+ * block has no label field (its placeholder names content categories, not
+ * the action), so a sensible static label is used here.
  */
 (function () {
   'use strict';
@@ -62,10 +70,22 @@
       .join('');
     var brand = (site.site || {}).name || 'Rogue Docs';
 
+    /* icon-only magnifier (stroke: currentColor) — the overlay itself is
+     * owned by search.js; the trigger sits BETWEEN the nav and the toggle */
+    var searchTrigger =
+      '<button type="button" class="site-search-trigger" id="site-search-trigger" ' +
+      'aria-label="Search the site" aria-haspopup="dialog">' +
+      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
+      'stroke-linecap="round" aria-hidden="true" focusable="false">' +
+      '<circle cx="10.5" cy="10.5" r="6.5"></circle>' +
+      '<line x1="15.4" y1="15.4" x2="21" y2="21"></line>' +
+      '</svg></button>';
+
     header.innerHTML =
       '<div class="container site-header__inner">' +
         '<a class="site-brand" href="./index.html">' + ROGUE.esc(brand) + '</a>' +
         '<nav class="site-nav" aria-label="Primary">' + links + '</nav>' +
+        searchTrigger +
         '<div class="version-toggle" role="group" aria-label="Game version">' +
           versionOptionsHtml(site, ROGUE.version) +
         '</div>' +

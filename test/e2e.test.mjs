@@ -11,7 +11,9 @@
  * (3) The served site: serves dist/ over node:http on an ephemeral port and
  *     asserts every content page — index, gameplay, versions, quests, config,
  *     hub, safari, routes, mechanics and the 404 fallback — returns 200 with
- *     its page-specific static marker strings (titles from data/site.json).
+ *     its page-specific static marker strings (titles from data/site.json),
+ *     and that every one of the 10 pages wires in the search overlay scripts
+ *     (search-index.js before search.js, both after main.js).
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -387,6 +389,51 @@ test('served 404 page returns 200 and contains its static marker', async () => {
     // ASSERT
     assert.equal(res.status, 200, `GET /404.html returned ${res.status}`);
     assert.ok(body.includes('Page not found'), '404.html is missing the "Page not found" marker');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('every served page wires in the search overlay scripts (search-index.js before search.js, both after main.js)', async () => {
+  // ARRANGE — all 10 page shells share the same script-block convention
+  const pages = [
+    'index.html',
+    'gameplay.html',
+    'versions.html',
+    'quests.html',
+    'config.html',
+    'hub.html',
+    'safari.html',
+    'routes.html',
+    'mechanics.html',
+    '404.html',
+  ];
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT — fetch every page
+    const bodies = [];
+    for (const page of pages) {
+      const res = await fetch(`${base}/${page}`);
+      bodies.push([page, res.status, await res.text()]);
+    }
+
+    // ASSERT — 200, both search script tags present, and loaded in order
+    for (const [page, status, body] of bodies) {
+      assert.equal(status, 200, `GET /${page} returned ${status}`);
+      assert.ok(body.includes('./js/search-index.js'), `${page} is missing the search-index.js script tag`);
+      assert.ok(body.includes('./js/search.js'), `${page} is missing the search.js script tag`);
+      const mainIdx = body.indexOf('./js/main.js');
+      const indexIdx = body.indexOf('./js/search-index.js');
+      const searchIdx = body.indexOf('./js/search.js');
+      assert.ok(
+        mainIdx !== -1 && indexIdx > mainIdx && searchIdx > indexIdx,
+        `${page} must load main.js before search-index.js before search.js`
+      );
+    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     server = undefined;

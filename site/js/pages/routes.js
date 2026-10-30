@@ -49,7 +49,9 @@
     /**
      * Active version's wild types. The record's top-level `type` is the
      * EX variant; for Vanilla the FAIRY-swap routes re-read their variant
-     * from differences.vanilla ("Wild types: A, B, C.").
+     * from the differences.vanilla STRING note ("Wild types: A, B, C.").
+     * This string parse is route-specific — generic structured-
+     * difference resolution lives in ROGUE.effective (site/js/render.js).
      */
     function effectiveTypes(record) {
       if (

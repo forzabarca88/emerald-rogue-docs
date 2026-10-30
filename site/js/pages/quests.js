@@ -5,14 +5,16 @@
  * with an in-page anchor-chip nav) as quest cards. Each card shows the
  * name, version badge (ROGUE.badge), description, flags, trigger,
  * requirements (where present) and rewards, with the game's {PKMN}/
- * {POKEBLOCK} placeholders resolved to "Pokémon"/"Pokéblock".
+ * {POKEBLOCK} placeholders resolved to "Pokémon"/"Pokéblock"
+ * (ROGUE.resolvePlaceholders).
  *
  * Version semantics: the record's top-level fields are the EX variant;
  * `differences` is a structured object — { vanilla: {…}, ex: {…} } — where
  * each side holds ONLY the record fields that differ (description/trigger/
  * rewards/requirements/display_group) in the same humanized shape as the
  * top-level fields. For the active version we apply that version's
- * overrides on top of the top-level fields, and the card shows a
+ * overrides on top of the top-level fields (ROGUE.effective, scoped to
+ * these five keys), and the card shows a
  * "differs in <other version>" note (ROGUE.diffNote) listing the other
  * build's differing fields. A quest whose display group differs per
  * version (e.g. The Final Run.) is placed in the active version's group.
@@ -28,44 +30,8 @@
 (function () {
   'use strict';
 
-  var PLACEHOLDERS = { PKMN: 'Pokémon', POKEBLOCK: 'Pokéblock' };
+  /** The record fields a per-version `differences` side may override (the 5-key scope). */
   var DIFF_KEYS = ['description', 'trigger', 'rewards', 'requirements', 'display_group'];
-
-  /** Replace the game's {PKMN}/{POKEBLOCK} text placeholders. */
-  function resolve(text) {
-    return String(text === null || text === undefined ? '' : text).replace(/\{(PKMN|POKEBLOCK)\}/g, function (m, key) {
-      return PLACEHOLDERS[key] || m;
-    });
-  }
-
-  /**
-   * Effective fields for the active version: top-level (the EX variant)
-   * with the active version's structured `differences` overrides applied.
-   */
-  function effective(record) {
-    var f = {
-      name: record.name,
-      description: record.description || '',
-      trigger: record.trigger || '',
-      rewards: Array.isArray(record.rewards) ? record.rewards.slice() : [],
-      requirements: Array.isArray(record.requirements) ? record.requirements.slice() : [],
-      flags: Array.isArray(record.flags) ? record.flags.slice() : [],
-      display_group: record.display_group
-    };
-    var diff = record.differences;
-    var side = diff && typeof diff === 'object' ? diff[window.ROGUE.version] : null;
-    if (side && typeof side === 'object') {
-      DIFF_KEYS.forEach(function (key) {
-        if (side[key] === undefined) return;
-        if (key === 'rewards' || key === 'requirements') {
-          f[key] = Array.isArray(side[key]) ? side[key].slice() : [];
-        } else {
-          f[key] = side[key];
-        }
-      });
-    }
-    return f;
-  }
 
   window.ROGUE.ready(function () {
     var ROGUE = window.ROGUE;
@@ -112,10 +78,10 @@
         .map(function (key) {
           if (key === 'display_group') return labels[key] + ': ' + groupTitle(side[key]);
           if (key === 'requirements' || key === 'rewards') {
-            var values = Array.isArray(side[key]) ? side[key].map(resolve) : [resolve(side[key])];
+            var values = Array.isArray(side[key]) ? side[key].map(ROGUE.resolvePlaceholders) : [ROGUE.resolvePlaceholders(side[key])];
             return labels[key] + ': ' + values.join(', ');
           }
-          return labels[key] + ': ' + resolve(side[key]);
+          return labels[key] + ': ' + ROGUE.resolvePlaceholders(side[key]);
         })
         .join(' · ');
     }
@@ -128,37 +94,41 @@
     }
 
     function questCard(record, eff) {
+      /* list fields pass through ROGUE.effective raw — normalize for render */
+      var flags = Array.isArray(eff.flags) ? eff.flags : [];
+      var requirements = Array.isArray(eff.requirements) ? eff.requirements : [];
+      var rewards = Array.isArray(eff.rewards) ? eff.rewards : [];
       var html =
         '<article class="card quest-card" data-search="' +
-        ROGUE.esc((resolve(eff.name) + ' ' + resolve(eff.description)).toLowerCase()) +
+        ROGUE.esc((ROGUE.resolvePlaceholders(eff.name) + ' ' + ROGUE.resolvePlaceholders(eff.description)).toLowerCase()) +
         '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
-        ROGUE.esc(resolve(eff.name)) +
+        ROGUE.esc(ROGUE.resolvePlaceholders(eff.name)) +
         '</h3>' + ROGUE.badge(record) + '</div>';
-      if (eff.description) html += '<p class="card__desc">' + ROGUE.esc(resolve(eff.description)) + '</p>';
-      if (eff.flags.length) {
-        html += '<div class="chip-row quest-card__flags">' + eff.flags.map(ROGUE.chip).join('') + '</div>';
+      if (eff.description) html += '<p class="card__desc">' + ROGUE.esc(ROGUE.resolvePlaceholders(eff.description)) + '</p>';
+      if (flags.length) {
+        html += '<div class="chip-row quest-card__flags">' + flags.map(ROGUE.chip).join('') + '</div>';
       }
-      if (eff.trigger) html += fieldBlock('Trigger', '<span class="quest-card__text">' + ROGUE.esc(resolve(eff.trigger)) + '</span>');
-      if (eff.requirements.length) {
+      if (eff.trigger) html += fieldBlock('Trigger', '<span class="quest-card__text">' + ROGUE.esc(ROGUE.resolvePlaceholders(eff.trigger)) + '</span>');
+      if (requirements.length) {
         html +=
           fieldBlock(
             'Requirements',
             '<ul class="quest-card__list">' +
-              eff.requirements.map(function (r) {
-                return '<li>' + ROGUE.esc(resolve(r)) + '</li>';
+              requirements.map(function (r) {
+                return '<li>' + ROGUE.esc(ROGUE.resolvePlaceholders(r)) + '</li>';
               }).join('') +
               '</ul>'
           );
       }
-      if (eff.rewards.length) {
+      if (rewards.length) {
         html +=
           fieldBlock(
             'Rewards',
             '<ul class="quest-card__list">' +
-              eff.rewards.map(function (r) {
-                return '<li>' + ROGUE.esc(resolve(r)) + '</li>';
+              rewards.map(function (r) {
+                return '<li>' + ROGUE.esc(ROGUE.resolvePlaceholders(r)) + '</li>';
               }).join('') +
               '</ul>'
           );
@@ -180,7 +150,7 @@
       var kept = ROGUE.filter(records);
       var byGroup = {};
       kept.forEach(function (r) {
-        var eff = effective(r);
+        var eff = ROGUE.effective(r, DIFF_KEYS);
         var g = eff.display_group || 'default_quests';
         (byGroup[g] = byGroup[g] || []).push({ record: r, eff: eff });
       });

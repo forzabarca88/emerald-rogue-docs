@@ -6,12 +6,16 @@
  * ROGUE.paragraphs(text), ROGUE.cards(records), ROGUE.table(records, columns),
  * ROGUE.proseSections(prose), ROGUE.section(id, eyebrow, heading, intro, body),
  * ROGUE.chip(text), ROGUE.proseById(data, id), ROGUE.byCategory(records, category),
- * ROGUE.versionLabel(id), ROGUE.diffNote(record[, text]), ROGUE.citeHtml(source).
+ * ROGUE.versionLabel(id), ROGUE.resolvePlaceholders(text), ROGUE.effective(record[, keys]),
+ * ROGUE.diffNote(record[, text]), ROGUE.citeHtml(source).
  */
 (function () {
   'use strict';
 
   var ROGUE = window.ROGUE = window.ROGUE || {};
+
+  /** The game's quest-text placeholders and their in-game words. */
+  var PLACEHOLDERS = { PKMN: 'Pokémon', POKEBLOCK: 'Pokéblock' };
 
   /** Escape a value for safe insertion into HTML. */
   ROGUE.esc = function (s) {
@@ -315,6 +319,46 @@
       cursor = segmentEnd;
     }
     return html;
+  };
+
+  /**
+   * Replace the game's {PKMN}/{POKEBLOCK} text placeholders with their
+   * in-game words ("Pokémon"/"Pokéblock") — the single source of truth
+   * for quest text (card rendering and search indexing both go through
+   * this). Unknown {…} tokens stay as-is.
+   */
+  ROGUE.resolvePlaceholders = function (text) {
+    return String(text === null || text === undefined ? '' : text).replace(/\{(PKMN|POKEBLOCK)\}/g, function (m, key) {
+      return PLACEHOLDERS[key] || m;
+    });
+  };
+
+  /**
+   * A record's fields for the ACTIVE version: a shallow copy of the
+   * record's top-level fields (the EX variant) with the active version's
+   * structured `differences.<version>` object overrides applied on top.
+   * `keys`, when given, is an allow-list: only those field names may be
+   * overridden (all other top-level fields are copied either way). Records
+   * whose `differences` is a string note (or absent) pass through
+   * untouched.
+   */
+  ROGUE.effective = function (record, keys) {
+    var out = {};
+    if (record && typeof record === 'object') {
+      for (var k in record) {
+        if (Object.prototype.hasOwnProperty.call(record, k)) out[k] = record[k];
+      }
+    }
+    var diff = record ? record.differences : null;
+    var side = diff && typeof diff === 'object' ? diff[ROGUE.version] : null;
+    if (side && typeof side === 'object') {
+      Object.keys(side).forEach(function (key) {
+        if (side[key] === undefined) return;
+        if (Array.isArray(keys) && keys.indexOf(key) === -1) return;
+        out[key] = side[key];
+      });
+    }
+    return out;
   };
 
   /**

@@ -81,6 +81,13 @@
       "description": "Charms and curses, followmons, the Game Show, campaigns, and other systems."
     }
   },
+  "search": {
+    "_comment": "Site-wide search palette (site/js/search-index.js + search.js): input placeholder, the keyboard hint, the open shortcut key, and the result cap read by ROGUE.searchQuery.",
+    "placeholder": "Search quests, routes, settings, mechanics…",
+    "hint": "Press / to search",
+    "shortcut": "/",
+    "maxResults": 30
+  },
   "hero": {
     "eyebrow": "Roguelite romhack · Pokémon Emerald",
     "title": "Pokémon Emerald Rogue",

@@ -71,12 +71,14 @@ offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
   `--gutter` side padding (16px below 560px).
 - Header is **sticky**, 2px bottom border: brand (pixel face + 9px emerald
   square) · `.site-nav` (scrollable row, active link = GBA menu-cursor `▶`
-  + emerald underline) · `.version-toggle` (right). Above 820px the header
-  is **always one row**: when brand + full nav + toggle don't fit, the nav
-  row shrinks and scrolls horizontally (scrollbar hidden) instead of
-  wrapping the toggle to a second row. Below 820px the nav wraps to a
-  full-width scrollable second row; brand + toggle stay on row 1. This must
-  never break at 360px — verify with a screenshot at that width.
+  + emerald underline) · `.site-search-trigger` (icon-only search button,
+  opens the `.search-palette` overlay) · `.version-toggle` (right). Above
+  820px the header is **always one row**: when brand + full nav + toggle
+  don't fit, the nav row shrinks and scrolls horizontally (scrollbar hidden)
+  instead of wrapping the toggle to a second row. Below 820px the nav wraps
+  to a full-width scrollable second row; brand + trigger + toggle stay on
+  row 1. This must never break at 360px — verify with a screenshot at that
+  width.
 - Sections: `.section` owns vertical rhythm (`--space-6` padding-block);
   `.section__head > * + *` provides the 8px stack gap — **do not add your
   own margins between eyebrow/title/intro** (the `> *` margin reset is
@@ -151,9 +153,10 @@ under your own `.page--<stem>`):
 | `.card__diff` | per-version "Differs in …" footnote on a record card (emitted by `ROGUE.diffNote` on hub/safari/routes/mechanics/quests) |
 | `.badge` / `.badge--vanilla` / `.badge--ex` / `.badge--both` | version badge from `ROGUE.badgeClass()`: solid fill, dark text, one hue per edition (§2). Do not restyle per page. |
 | `.search` | filter input: `<input class="search">` or `<div class="search"><input …>` |
+| `.search-palette*` (`__backdrop` `__panel` `__form` `__input` `__count` `__empty` `__list` `__row` `__row-head` `__row-name` `__row-snippet` `__row-meta`) | site-wide search overlay (a `role="dialog"` command palette) emitted by `js/search.js` from the data/site.json `search` config; opened by the header's `.site-search-trigger` or the `search.shortcut` key; sits below the sticky header so the version toggle can re-scope open results; the box reuses `.search` input styling |
 | `.tabs` / `.tabs__tab` | `role="tablist"` / `role="tab"` buttons with `aria-selected`; see markup convention in `components.css` |
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
-| `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not hand-write or restyle |
+| `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not hand-write or restyle (the trigger's overlay is `.search-palette`, above) |
 | `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
 
 ## 7. Motion
@@ -189,7 +192,7 @@ Breakpoints (media queries can't read tokens — values live in
 | --- | --- |
 | ≤ 1024px | `.grid` naturally drops a column (auto-fill) |
 | ≤ 820px | header: brand + toggle on row 1, nav on full-width scrollable row 2; hero stats 2×2 |
-| ≤ 560px | gutter 16px; brand 0.95rem; compact toggle padding; h1 2rem; grid 1 column |
+| ≤ 560px | gutter 16px; brand 0.875rem (the 14px display-floor); compact header row (8px gaps, 28px search trigger, tighter toggle options) so brand + trigger + toggle fit one row at 360px; h1 2rem; grid 1 column |
 
 **Rule: the site must not break at 360px** (nav scrolls, tables scroll via
 `.table`'s overflow, run path fits at ~210px). Screenshot-verify at 360px
