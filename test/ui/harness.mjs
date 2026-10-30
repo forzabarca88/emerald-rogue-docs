@@ -9,9 +9,15 @@
  *   2. global install: createRequire(<npm root -g>/__noop.js)('playwright')
  *   3. null            — a missing Playwright is never an error here; the UI
  *                        tests self-skip instead (keeping `npm test` green on
- *                        machines without it).
+ *                        machines without it) — EXCEPT under CI with
+ *                        PLAYWRIGHT_REQUIRED set (the ci `ui` job sets it):
+ *                        there a skip would silently no-op the browser gate,
+ *                        so the guard throws the install message instead.
  * PLAYWRIGHT_GLOBAL_ROOT (env), when set, overrides the `npm root -g` lookup
- * (tests point it at an empty dir to simulate an absent install).
+ * (tests point it at an empty dir to simulate an absent install — see
+ * test/ui/harness-skip.test.mjs).
+ * PLAYWRIGHT_REQUIRED (env), when set together with CI, turns the skip path
+ * into a hard failure (the ci `ui` job's gate).
  *
  * Skip contract — mirrors the self-skip pattern of test/citations.test.mjs
  * (node 24: t.skip() does not stop execution, so the test must return).
@@ -107,10 +113,13 @@ function playwright() {
  * Self-skip guard for the skip contract above: marks the test skipped with
  * SKIP_MESSAGE and returns true when Playwright is absent (the test must
  * `return` — node 24's t.skip() does not stop execution); returns false when
- * Playwright is present so the test proceeds.
+ * Playwright is present so the test proceeds. Under CI with PLAYWRIGHT_REQUIRED
+ * (the ci `ui` job) an absent Playwright THROWS the install message instead —
+ * a skip there would silently no-op the gate.
  */
 export function skipIfNoPlaywright(t) {
   if (playwright()) return false;
+  if (process.env.CI && process.env.PLAYWRIGHT_REQUIRED) throw new Error(SKIP_MESSAGE);
   t.skip(SKIP_MESSAGE);
   return true;
 }
@@ -155,7 +164,16 @@ const openContexts = new Set();
 async function sharedBrowser() {
   const pw = playwright();
   if (!pw) throw new Error(SKIP_MESSAGE);
-  if (!browserPromise) browserPromise = pw.chromium.launch();
+  if (!browserPromise) {
+    try {
+      browserPromise = Promise.resolve(await pw.chromium.launch());
+    } catch (err) {
+      // an unlaunchable browser (missing binary) is as much an absent
+      // install as a missing module — fail loudly with the install message
+      const detail = err && err.message ? String(err.message).split('\n')[0] : String(err);
+      throw new Error(`${SKIP_MESSAGE} — the browser launch failed: ${detail.slice(0, 300)}`);
+    }
+  }
   return browserPromise;
 }
 

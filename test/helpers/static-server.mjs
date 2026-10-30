@@ -23,7 +23,8 @@ export function createStaticServer(dir) {
       return;
     }
     const filePath = path.normalize(path.join(dir, urlPath));
-    if (!filePath.startsWith(dir)) {
+    // sibling-prefix-safe: `/…/dist2/x` must not pass for `dir = /…/dist`
+    if (filePath !== dir && !filePath.startsWith(dir + path.sep)) {
       res.writeHead(403);
       res.end('Forbidden');
       return;

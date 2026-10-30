@@ -38,16 +38,24 @@
  *      via localStorage, never the URL). When the target IS the current
  *      page it scrolls to the anchor (or the page top) WITHOUT a reload or
  *      URL change; cross-page targets set location.href. Escape closes.
- *      While open, Tab is swallowed: the input is the dialog's only
- *      focusable control, so there is nowhere inside it to move to, and
- *      the background page must stay unfocusable (the header — which is
- *      intentionally reachable while open so the version toggle can
- *      re-scope results — keeps its own tab order);
+ *      While open, Tab is swallowed — the APG dialog focus trap: the input
+ *      is the dialog's only focusable control, so keyboard focus can never
+ *      leave the palette while it is open. The header is therefore
+ *      reachable ONLY by POINTER while the palette is open: it is z-ordered
+ *      above the backdrop, so the version toggle stays CLICKABLE (and can
+ *      re-scope the live results) — that pointer interaction is the
+ *      documented one; the header's DOM tab order exists but is not
+ *      reachable while open. (Review decision: the trap is KEPT rather than
+ *      letting Tab escape — an aria-modal dialog should hold focus, and the
+ *      pointer path already covers the documented version re-scope);
  *   6. closing: Escape, a click on the backdrop, or a successful Enter.
  *      Closing RESETS the query (the next open starts fresh) and restores
- *      focus to the trigger button. There is no exit animation (the
- *      entrance is the palette's only motion), so close is instant and
- *      deterministic.
+ *      focus to the element that was focused when the palette opened (APG
+ *      dialog guidance — saved on open): usually the header trigger (a
+ *      click-open), with the trigger as the fallback when the opener was
+ *      not an element (the "/" shortcut with the body focused). There is no
+ *      exit animation (the entrance is the palette's only motion), so close
+ *      is instant and deterministic.
  *   7. version: a stored ROGUE.onChange subscription re-runs the query
  *      with the new version while the palette is open (results re-scope
  *      live — e.g. EX-only quests drop out under Vanilla).
@@ -60,7 +68,8 @@
  *
  * Layering: the root sits BELOW the sticky header (z-index:
  * calc(var(--z-header) − 1)) so the header's version toggle stays
- * clickable while the palette is open; the panel's top offset
+ * CLICKABLE (by pointer — keyboard focus stays trapped in the palette, see
+ * the keyboard note above) while the palette is open; the panel's top offset
  * (--palette-top) is set at open time to the header's rendered height +
  * 16px (and re-set on resize while open), so the two-row mobile header
  * never hides the panel. The overlay is position:fixed and appended to
@@ -126,6 +135,10 @@
     var activeIndex = -1;
     var currentResults = [];
     var offVersion = null;
+    /* The element focused when the palette opened (restored on close — APG
+     * dialog guidance); null when the opener was not an element (the "/"
+     * shortcut with the body focused) — the trigger is the fallback. */
+    var lastFocus = null;
 
     /* ---- markup (the panel's aria-label is the config placeholder) ------- */
     function buildDom() {
@@ -270,6 +283,8 @@
     function open() {
       if (isOpen) return;
       isOpen = true;
+      var active = document.activeElement;
+      lastFocus = active && active !== document.body ? active : null;
       setPaletteTop();
       root.hidden = false;
       input.value = '';
@@ -289,7 +304,12 @@
       input.setAttribute('aria-expanded', 'false');
       currentResults = [];
       activeIndex = -1;
-      if (trigger) trigger.focus();
+      /* restore the previously focused element (APG dialog guidance),
+       * falling back to the trigger (opener not an element, or it was
+       * removed from the DOM since) */
+      var restore = lastFocus && document.contains(lastFocus) ? lastFocus : trigger;
+      lastFocus = null;
+      if (restore) restore.focus();
     }
 
     /* ---- navigation ----------------------------------------------------------- */

@@ -2,9 +2,10 @@
 /**
  * Zero-dependency build for the Emerald Rogue docs site.
  *
- * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>`), then atomically
- *    swaps it into `dist/` (rm + rename), so concurrent builds never see a
- *    half-written `dist/`
+ * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>` — gitignored, see
+ *    .gitignore), then atomically swaps it into `dist/` (rm + rename,
+ *    retried a bounded number of times against a concurrent build's swap),
+ *    so concurrent builds never see a half-written `dist/`
  * 2. Validates every `data/*.json` against the binding data envelope:
  *    - `meta.id` must equal the filename stem
  *    - `meta.title` must be a non-empty string
@@ -52,6 +53,11 @@ const siteDir = path.join(root, 'site');
 const dataDir = path.join(root, 'data');
 const distDir = path.join(root, 'dist');
 const tmpDir = path.join(root, `dist.tmp-${process.pid}`);
+/** Bounded retries for the dist/ swap against a concurrent build's swap
+ * (the worst case under `npm test` is the 4 UI test files building at once
+ * on a fresh checkout — 10 leaves wide margin; a build that still cannot
+ * win the race cleans its temp dir and throws). */
+const MAX_SWAP_ATTEMPTS = 10;
 
 const ALLOWED_VERSIONS = new Set(['vanilla', 'ex']);
 const DIFFERENCE_FIELDS = new Set(['description', 'trigger', 'rewards', 'requirements', 'display_group']);
@@ -342,11 +348,14 @@ function main() {
   // rmSync + renameSync on the same filesystem. A concurrent build may
   // swap its own temp dir into dist/ mid-rm (our final rmdir then fails
   // with ENOTEMPTY) or right after it (our rename does); retry the pair
-  // against the fresh state in either case.
-  for (;;) {
+  // against the fresh state in either case — bounded (MAX_SWAP_ATTEMPTS),
+  // a build that cannot win the race cleans its temp dir and throws.
+  let swapped = false;
+  for (let attempt = 1; attempt <= MAX_SWAP_ATTEMPTS; attempt += 1) {
     try {
       rmSync(distDir, { recursive: true, force: true });
       renameSync(tmpDir, distDir);
+      swapped = true;
       break;
     } catch (err) {
       if (err.code !== 'ENOTEMPTY') {
@@ -354,6 +363,13 @@ function main() {
         throw err;
       }
     }
+  }
+  if (!swapped) {
+    rmSync(tmpDir, { recursive: true, force: true });
+    throw new Error(
+      `could not swap ${path.relative(root, tmpDir)} into dist/ after ${MAX_SWAP_ATTEMPTS} attempts ` +
+        '(a concurrent build keeps recreating dist/ between the rm and the rename)',
+    );
   }
 
   console.log(`build ok — ${bundleLines.length} data file(s) bundled → dist/data/bundle.js`);

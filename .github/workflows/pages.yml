@@ -7,9 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  pages: write
-  id-token: write
+# no workflow-level permissions: test/ui need none, build needs only the
+# default read, and the deploy job scopes pages: write + id-token: write
+# to itself (job-level permissions: below) — the token surface for the
+# jobs that run on every PR stays at the default minimum.
 
 concurrency:
   group: "pages"
@@ -33,13 +34,21 @@ jobs:
     # the real browser run; both jobs gate merges. The ~2-4 min browser
     # install is isolated here so PR feedback on the unit job stays fast.
     runs-on: ubuntu-latest
+    # the skip path in test/ui/harness.mjs hard-fails (instead of
+    # self-skipping) under CI + PLAYWRIGHT_REQUIRED: a skip would silently
+    # no-op this job's browser gate.
+    env:
+      PLAYWRIGHT_REQUIRED: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
       - run: npm i -g playwright@1.61.1
-      - run: npx playwright install --with-deps chromium
+      # --package pins the CLI (and hence the browser revision) to the same
+      # 1.61.1 as the global install, so PATH lookup of the global CLI can
+      # never silently swap the browser revision
+      - run: npx --package=playwright@1.61.1 playwright install --with-deps chromium
       - run: npm test
 
   build:
@@ -67,6 +76,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     steps:
       - uses: actions/configure-pages@v5
       - uses: actions/download-artifact@v4

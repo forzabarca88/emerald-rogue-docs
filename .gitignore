@@ -1,3 +1,4 @@
 references/
 /dist/
+/dist.tmp-*/
 test/ui/screenshots/
