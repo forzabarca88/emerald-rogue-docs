@@ -47,19 +47,22 @@
  * ABOVE the backdrop by design — the version toggle stays reachable while
  * the palette is open).
  *
- * Before every capture the tool settles the entrance motion (DESIGN.md §7:
- * the ≤480ms header/page fade and the ≤120ms palette drop): the computed
- * opacity of #site-header, .page and .search-palette__panel must be the
- * final 1 (instant under prefers-reduced-motion, where the kill switch
- * makes the wait a no-op).
+ * Before EVERY capture — plain and palette states alike — the tool settles
+ * the entrance motion (DESIGN.md §7: the ≤480ms header/page fade, plus the
+ * ≤120ms palette drop for the palette states): the computed opacity of
+ * #site-header and .page — and .search-palette__panel for the palette
+ * states — must be the final 1 (instant under prefers-reduced-motion, where
+ * the kill switch makes the wait a no-op). The probe polls on rAF with a
+ * ~2s bound, so a plain capture can never go out as a mid-fade image; a
+ * settle that cannot complete fails the run.
  *
  * Exit contract:
  *   - Playwright absent → print the harness SKIP_MESSAGE verbatim and exit 0
  *     (a standalone script cannot t.skip(), so this mirrors the harness
  *     self-skip contract for npm-run invocation).
- *   - Any capture failure (page-load/readiness or screenshot error) or any
- *     collected console/page error (a non-empty `errors` array) → print every
- *     failure and exit 1.
+ *   - Any capture failure (page-load/readiness, entrance-settle timeout or
+ *     screenshot error) or any collected console/page error (a non-empty
+ *     `errors` array) → print every failure and exit 1.
  *   - Otherwise → print a summary line (count + grid + output dir) and exit 0.
  * The process always exits cleanly: every context plus the shared browser
  * (closeAll()) and the static server are awaited closed before exit.
@@ -90,6 +93,8 @@ const SEARCH_QUERY = 'mega evolution';
 const EMPTY_QUERY_PAGES = ['index'];
 /** Bounded settle timeout for every state wait (a bound, not a sleep). */
 const SETTLE_TIMEOUT_MS = 10_000;
+/** Bounded settle timeout for the entrance-motion probe (~4× the 480ms fade). */
+const ENTRANCE_SETTLE_TIMEOUT_MS = 2_000;
 
 /** First line of an error's message, capped — keeps failure output readable. */
 const brief = (err) => String(err && err.message ? err.message : err).split('\n')[0].slice(0, 300);
@@ -131,22 +136,40 @@ function expectedCountText(n, query) {
 }
 
 /**
- * Settle on the palette being open: root unhidden, the input holding
- * focus, and the entrance motion finished (computed opacity of the header,
- * the page and the panel all at the final 1 — instant under
- * prefers-reduced-motion). Throws on timeout; the caller reports the file.
+ * Settle on the entrance motion being finished — for EVERY capture, plain
+ * and palette states alike. The probe is the computed opacity of the
+ * animating elements (base.css: #site-header and .page run the 480ms
+ * --motion-slow fade on load; the palette states additionally probe the
+ * panel's ≤120ms drop, passed via `extra`): all must be the final 1 (instant
+ * under prefers-reduced-motion, where the kill switch makes the probe a
+ * no-op). Polls on rAF, bounded to ~2s; throws on timeout — a capture that
+ * cannot settle is a failure, never a mid-fade image.
+ */
+async function settleEntrance(page, extra = []) {
+  await page.waitForFunction(
+    (selectors) =>
+      selectors.every((sel) => {
+        const el = document.querySelector(sel);
+        return el !== null && getComputedStyle(el).opacity === '1';
+      }),
+    ['#site-header', '.page', ...extra],
+    { timeout: ENTRANCE_SETTLE_TIMEOUT_MS }
+  );
+}
+
+/**
+ * Settle on the palette being open: root unhidden, the input holding focus,
+ * and the entrance motion finished (settleEntrance, plus the panel's
+ * opacity at the final 1). Throws on timeout; the caller reports the file.
  */
 async function waitForPaletteOpen(page) {
+  await settleEntrance(page, ['.search-palette__panel']);
   await page.waitForFunction(
     () => {
       const root = document.getElementById('search-palette');
       if (!root || root.hidden) return false;
       const input = document.querySelector('.search-palette__input');
-      if (document.activeElement !== input) return false;
-      return ['#site-header', '.page', '.search-palette__panel'].every((sel) => {
-        const el = document.querySelector(sel);
-        return el !== null && getComputedStyle(el).opacity === '1';
-      });
+      return document.activeElement === input;
     },
     null,
     { timeout: SETTLE_TIMEOUT_MS }
@@ -254,11 +277,14 @@ try {
           continue; // any open context is reaped by closeAll() below
         }
         try {
+          // the plain capture must not fire mid-fade: settle the 480ms
+          // header/page entrance before the fullPage screenshot
+          await settleEntrance(opened.page);
           await opened.page.screenshot({ path: path.join(outDir, file), fullPage: true });
           captured += 1;
           console.log(`  captured ${file}`);
         } catch (err) {
-          failures.push(`${file}: screenshot failed — ${brief(err)}`);
+          failures.push(`${file}: capture failed — ${brief(err)}`);
         } finally {
           await opened.close();
         }

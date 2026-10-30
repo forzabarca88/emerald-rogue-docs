@@ -23,7 +23,10 @@
  * Enter on a cross-page entry sets location.href to the relative
  * "page.html#anchor", on the SAME page it scrolls to the anchor without a
  * reload or URL change; Escape / backdrop / trigger / a successful Enter close
- * (resetting the query and restoring focus to the trigger); an open palette
+ * (resetting the query and restoring focus to the element focused before the
+ * open — the trigger in every session this suite drives: a trigger click, or
+ * the "/" shortcut with the body focus, which falls back to the trigger);
+ * an open palette
  * re-scopes live on a version toggle (it is z-ordered BELOW the sticky
  * header, so the toggle stays clickable while open).
  *

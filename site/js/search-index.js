@@ -57,6 +57,10 @@
  *     The only version-dependent rendered text outside the union is
  *     auto-generated page chrome (e.g. "19 on/off switches in EX"), which
  *     is not record content and is deliberately not indexed.
+ *   - Snippets: because they are union-derived, a shared record can match
+ *     on the other build's wording and show it in the snippet; the
+ *     destination card (navigated to on Enter) renders the active
+ *     version's fields.
  *
  * Deep-link granularity (deliberate v1 scope): record cards carry NO
  * per-card DOM ids, so record entries anchor at the containing
