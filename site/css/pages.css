@@ -477,6 +477,75 @@
   color: var(--color-muted);
 }
 
+/* At-a-glance category overview (issue #31): one count cell per distinct
+   `category` in data/versions.json (first-appearance order), the count
+   scoped to the active build — versions.js re-renders the strip on
+   toggle. A 0-count category (no differences in this build) recedes as
+   a non-link; live cells anchor to the first row of their category and
+   the caption line carries the meaning. */
+.page--versions .voverview {
+  margin-bottom: var(--space-5);
+}
+
+.page--versions .voverview__cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.page--versions .voverview__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 96px;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.page--versions a.voverview__cell {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.page--versions a.voverview__cell:hover {
+  border-color: var(--color-emerald);
+}
+
+/* the count wears the pixel face (a stat value, DESIGN.md §3) */
+.page--versions .voverview__count {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.1;
+  color: var(--color-ink);
+}
+
+.page--versions .voverview__name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* a category with zero differences in the active build recedes */
+.page--versions .voverview__cell--off {
+  opacity: 0.5;
+}
+
+.page--versions .voverview__caption {
+  margin: var(--space-2) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* anchor rows clear the sticky header (DESIGN.md §9) */
+.page--versions .diff[id] {
+  scroll-margin-top: 112px;
+}
+
 .page--versions .diffs {
   display: grid;
   gap: var(--space-4);

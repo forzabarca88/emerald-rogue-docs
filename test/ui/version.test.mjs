@@ -19,7 +19,11 @@
  *                   diffs--vanilla) that pages.css keys the active-version
  *                   column highlighting off; 19 rows, 6 EX-only
  *                   .diff--scope-ex rows (data/versions.json), unchanged by
- *                   the toggle.
+ *                   the toggle; the at-a-glance category overview
+ *                   (#version-overview): 10 cells (one per distinct
+ *                   category, data/versions.json) whose counts scope to the
+ *                   active build — 19 in EX (no receded cells) vs 13 in
+ *                   Vanilla (mechanics + timeofday recede at 0).
  *   routes.html   — the six FAIRY-swap routes (data/routes.json records with
  *                   per-version `differences`): a Fairy chip in EX, the
  *                   Vanilla wild types (routes.js parses them from
@@ -179,6 +183,13 @@ test('versions.html: header toggle shows both editions with the default (EX) act
         rows: document.querySelectorAll('#version-diffs .diff').length,
         scopeEx: scopeEx.length,
         scopeExBadges: scopeEx.filter((r) => r.querySelector('.badge--ex')).length,
+        overCells: document.querySelectorAll('#version-overview .voverview__cell').length,
+        overOff: document.querySelectorAll('#version-overview .voverview__cell--off').length,
+        overTotal: [...document.querySelectorAll('#version-overview .voverview__count')].reduce(
+          (n, e) => n + Number(e.textContent.trim()),
+          0
+        ),
+        overCaption: (document.querySelector('#version-overview .voverview__caption')?.textContent || '').trim(),
       };
     });
     // pages.css keys the column highlighting off this container class
@@ -187,6 +198,15 @@ test('versions.html: header toggle shows both editions with the default (EX) act
     assert.equal(facts.rows, 19, 'data/versions.json has 19 records; versions.js renders the whole master list, unfiltered by version');
     assert.equal(facts.scopeEx, 6, 'data/versions.json: 6 records are EX-only → 6 .diff--scope-ex rows');
     assert.equal(facts.scopeExBadges, 6, 'every EX-only row wears its .badge--ex badge (ROGUE.badgeClass)');
+    // the at-a-glance overview: one cell per distinct category, counts scoped to EX
+    assert.equal(facts.overCells, 10, 'data/versions.json: the 19 records span 10 distinct categories → 10 .voverview__cell (versions.js overviewHtml)');
+    assert.equal(facts.overOff, 0, 'data/versions.json: every category holds at least one EX difference → no receded (.voverview__cell--off) cells in EX');
+    assert.equal(facts.overTotal, 19, 'the per-category counts sum to all 19 records (every record applies to EX)');
+    assert.equal(
+      facts.overCaption,
+      '19 differences in EX across 10 categories — pick a category to jump to its first row.',
+      'the overview caption counts the active build (versions.js overviewHtml)'
+    );
   } finally {
     await close();
   }
@@ -210,6 +230,14 @@ test('versions.html: clicking Vanilla flips the column highlighting and the togg
       hasVanilla: document.getElementById('version-diffs')?.classList.contains('diffs--vanilla') ?? false,
       rows: document.querySelectorAll('#version-diffs .diff').length,
       scopeEx: document.querySelectorAll('#version-diffs .diff--scope-ex').length,
+      overCells: document.querySelectorAll('#version-overview .voverview__cell').length,
+      overOff: document.querySelectorAll('#version-overview .voverview__cell--off').length,
+      overOffNames: [...document.querySelectorAll('#version-overview .voverview__cell--off .voverview__name')].map((e) => e.textContent.trim()),
+      overTotal: [...document.querySelectorAll('#version-overview .voverview__count')].reduce(
+        (n, e) => n + Number(e.textContent.trim()),
+        0
+      ),
+      overCaption: (document.querySelector('#version-overview .voverview__caption')?.textContent || '').trim(),
     }));
     assert.equal(facts.hasVanilla, true, 'versions.html: after the click #version-diffs should carry diffs--vanilla');
     assert.equal(facts.hasEx, false, 'versions.html: after the click #version-diffs should not carry diffs--ex');
@@ -217,6 +245,17 @@ test('versions.html: clicking Vanilla flips the column highlighting and the togg
     // EX-only rows keep their scope (pages.css dims them as a whole)
     assert.equal(facts.rows, 19, 'versions.html: the 19 difference rows are version-independent');
     assert.equal(facts.scopeEx, 6, 'versions.html: the 6 EX-only rows remain rendered under Vanilla (dimmed by CSS, not removed)');
+    // the overview re-renders for the active build: same 10 categories, but
+    // the counts scope to Vanilla (19 − the 6 EX-only records = 13)
+    assert.equal(facts.overCells, 10, 'the 10 category cells stay (the set is version-independent)');
+    assert.equal(facts.overOff, 2, 'data/versions.json: mechanics (3 EX-only records) and timeofday (1 EX-only record) hold no Vanilla differences → 2 receded cells');
+    assert.deepEqual(facts.overOffNames, ['mechanics', 'timeofday'], 'the receded categories are exactly mechanics and timeofday (first-appearance order in data/versions.json)');
+    assert.equal(facts.overTotal, 13, 'the per-category counts sum to the 13 records that apply to Vanilla');
+    assert.equal(
+      facts.overCaption,
+      '13 differences in Vanilla across 8 categories — pick a category to jump to its first row.',
+      'the overview caption re-counts for the active build (versions.js syncDiffs/onChange)'
+    );
   } finally {
     await close();
   }
