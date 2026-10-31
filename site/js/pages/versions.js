@@ -62,7 +62,7 @@
         '<span class="voverview__count">' + n + '</span>' +
         '<span class="voverview__name">' + ROGUE.esc(cat) + '</span>';
       if (n === 0) {
-        return '<span class="voverview__cell voverview__cell--off" aria-disabled="true">' + inner + '</span>';
+        return '<span class="voverview__cell voverview__cell--off">' + inner + '</span>';
       }
       return '<a class="voverview__cell" href="#vover-' + ROGUE.esc(cat) + '">' + inner + '</a>';
     }
