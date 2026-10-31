@@ -934,9 +934,12 @@
 /* --- safari ----------------------------------------------------------------------
    Intro prose, an in-page anchor-chip strip, the 60-slot pool as a
    two-block slot diagram (regular vs legendary, one cell per slot) above
-   the cited layout card, the four entry criteria as a stacked card list,
-   the priority/eviction card, the Legends Cave numbered step list +
-   card, and the pool-sign card. All rules scoped under .page--safari. */
+   the cited layout card, the four entry criteria as a converging flow
+   diagram (event rows + arrows into a pool block) above a stacked card
+   list, the priority score as a chip equation + the eviction sequence as
+   a numbered step strip above the cited card, the Legends Cave numbered
+   step list + card, and the pool-sign card. All rules scoped under
+   .page--safari. */
 
 .page--safari .page-fallback {
   max-width: 70ch;
@@ -1033,10 +1036,89 @@
   border-color: var(--color-gold);
 }
 
-/* entry criteria — a stacked single-column list */
+/* entry flow — the four entry events (one row per entry-criterion
+   record: name + `short` essence) converging rightward into the pool
+   block; the counts come from the parsed slot ranges */
+.page--safari .safari-entry-flow {
+  margin-bottom: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--safari .safari-entry-flow__grid {
+  display: grid;
+  grid-template-columns: 1fr 28px 200px;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page--safari .safari-entry-flow__event {
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.page--safari .safari-entry-flow__name {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.page--safari .safari-entry-flow__essence {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-xs);
+}
+
+.page--safari .safari-entry-flow__arrow {
+  justify-self: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* the pool the events converge into wears the primary hue (its grid
+   span is placed inline from the data — see safari.js entryFlow) */
+.page--safari .safari-entry-flow__pool {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  background: var(--color-bg);
+  border: 2px solid var(--color-emerald);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.page--safari .safari-entry-flow__pool .safari-entry-flow__name {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 500;
+}
+
+.page--safari .safari-entry-flow__count {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* entry criteria — a stacked single-column list under the flow */
 .page--safari .safari-entry {
   display: grid;
   gap: var(--space-4);
+}
+
+/* priority & eviction — the equation + step strip stacked above the card */
+.page--safari .safari-priority {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 /* Legends Cave steps — a true sequence, so it is numbered (DESIGN.md
@@ -1074,6 +1156,40 @@
 @media (max-width: 820px) {
   .page--safari .safari-slots {
     grid-template-columns: 1fr;
+  }
+}
+
+/* at narrow widths the entry flow stacks: events, a single down arrow,
+   then the pool block */
+@media (max-width: 640px) {
+  /* block flow: events, a single down arrow, then the pool (the inline
+     grid placement is inert under display: block) */
+  .page--safari .safari-entry-flow__grid {
+    display: block;
+  }
+
+  .page--safari .safari-entry-flow__arrow {
+    display: none;
+  }
+
+  .page--safari .safari-entry-flow__event {
+    margin-bottom: var(--space-4);
+  }
+
+  .page--safari .safari-entry-flow__pool {
+    position: relative;
+    margin-top: var(--space-1);
+  }
+
+  .page--safari .safari-entry-flow__pool::before {
+    content: "\2193";
+    position: absolute;
+    top: calc(-1 * var(--space-4) - 4px);
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    color: var(--color-muted);
   }
 }
 

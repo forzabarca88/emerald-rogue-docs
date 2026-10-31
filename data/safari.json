@@ -13,28 +13,29 @@
     {
       "id": "the-pool",
       "heading": "The 60-slot pool",
-      "text": "The pool is 60 slots. Slots 0–44 (45 slots) hold “regular” Pokémon — these are the only ones that ever spawn in the open zone. Slots 45–59 (15 slots) hold legendaries — they never spawn in the open zone and can only be encountered through the Legends Cave. (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.) On top of that, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” is placed on each pushed Pokémon so the same mon can't be added twice."
+      "text": "Beyond the 60 slots, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” is placed on each pushed Pokémon so the same mon can't be added twice. (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.)"
     },
     {
       "id": "entry-criteria",
       "heading": "How Pokémon enter the pool",
-      "text": "Four events push Pokémon into the pool. During a run: a Pokémon you release from your party, and any Pokémon that faints and is removed from your party (right after each battle you win). When the run ends: every Pokémon still in your party plus every Pokémon in the Day Care are added. Separately, a Pokémon you just caught in a battle but chose to discard (not keep) is added at low priority — in practice it only survives in the pool if it is shiny. Legendaries land in the legendary slots; everything else goes into the regular slots."
+      "text": "Four events push Pokémon into the pool — two while a run is active, one when the run ends, and a low-priority discard path."
     },
     {
       "id": "priority-eviction",
       "heading": "Priority and eviction",
-      "text": "Every pool entry has a priority score: (levels gained from when you caught it to when it was added × 2) ÷ 5 — so a mon that has only been caught and immediately released scores 0. Shinies get a flat +30 (exactly half the pool size), and any IV bonus from IV-boosting charms is stripped off before the mon is stored, so charmed mons can't fake their way in. When the relevant range (regular or legendary) is full, the game evicts in batches: every mon sharing the lowest priority is removed at once, every remaining mon's priority is lowered by that batch's count, and one of the freed slots is then taken for the new arrival. Discarded mons enter at priority 0, so they are the first to be evicted — unless they are shiny, in which case the +30 makes them as safe as any long-kept mon."
+      "text": "A mon that has only been caught and immediately released scores 0 — and a discarded mon enters at that same 0, so discards are the first out unless they are shiny, in which case the +30 bonus makes them as safe as any long-kept mon."
     },
     {
       "id": "legends-cave",
       "heading": "The Legends Cave",
-      "text": "Completing the “True Legend” quest (catch a legendary during an adventure) grants the hidden “Legend Cave” upgrade, which puts a cave entrance on the Safari Area. Inside stands an odd statue. If any legendaries are in the pool, you can “Make an Offering”: pick the legendary from a special Pokédex view, choose a Pokéblock whose flavor type matches one of the legendary's two types, and hand over 10 of them. The cave shakes, the legend-appears theme plays, the cry rings out — and it's a wild battle. “Dismiss Pokémon” clears every legendary out of the cave. If the pool has no legendaries, the cave is silent."
+      "text": "Completing the “True Legend” quest (catch a legendary during an adventure) grants the hidden “Legend Cave” upgrade, which puts a cave entrance on the Safari Area. From there, 10 of a liked-flavor Pokéblock can be turned into a wild, catchable battle with a pooled legendary."
     }
   ],
   "records": [
     {
       "id": "entry-released",
       "name": "Released from your party",
+      "short": "Mid-run — releasing a mon pushes it straight in.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the endless trainer mode after the top of the boss ladder). Legendaries go to the legendary slots, everything else to the regular slots.",
@@ -43,6 +44,7 @@
     {
       "id": "entry-fainted",
       "name": "Fainted and removed mid-run",
+      "short": "Mid-run — 0-HP party mons are pushed out after a win.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "After every battle you win in a run, any party Pokémon left at 0 HP is removed from your party and pushed into the pool the same way a release would be.",
@@ -51,6 +53,7 @@
     {
       "id": "entry-run-end",
       "name": "When the run ends",
+      "short": "Run end — the whole party, then the Day Care, is added.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "When an adventure ends (victory or defeat), every Pokémon still in your party is added to the pool, and then every Pokémon in your Day Care is added too — so a run you lose still restocks the Safari Zone.",
@@ -59,6 +62,7 @@
     {
       "id": "entry-discarded",
       "name": "Discarded after capture",
+      "short": "Per catch — a discarded catch enters at priority 0.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
       "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at low priority (0) — it is evicted before any normally-added mon unless it is shiny, where it earns the +30 shiny bonus. (During a catching contest, non-shiny discards are skipped entirely.)",
@@ -78,6 +82,20 @@
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "Each entry's priority is (levels gained since capture × 2) ÷ 5 — a freshly caught-and-released mon scores 0; shinies add a flat +30 (half the pool size); and any IV bonus from IV-boosting charms is stripped before the mon is stored. When a range (regular or legendary) is full, all mons sharing the lowest priority are evicted together as a batch, the survivors' priorities are each decremented by the batch count, and one freed slot takes the new arrival. Regular and legendary ranges never evict each other.",
+      "score": {
+        "terms": [
+          { "label": "(levels gained × 2) ÷ 5" },
+          { "label": "30 if shiny", "op": "+" }
+        ],
+        "result": "priority",
+        "note": "the IV bonus from IV-boosting charms is stripped before the mon is stored"
+      },
+      "eviction": [
+        "A range (regular or legendary) is full",
+        "Every mon sharing the lowest priority is evicted as a batch",
+        "Every survivor's priority drops by the batch count",
+        "One freed slot takes the new arrival"
+      ],
       "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88) and L313-375 (eviction batching in AllocSafariMonSlotFor) / @origin/expansion L37-92, L313-375"
     },
     {
