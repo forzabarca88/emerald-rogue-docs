@@ -97,19 +97,22 @@ captions or surrounding prose):
 
 - **Index hero** — one per site. **The binding markup is in the comment
   block above `.run-path` in `pages.css`** — copy it verbatim.
-- **Gameplay labelled segment** (`.run-path--labeled`) — the Classic
-  5-column segment read left to right: hub → 3 room nodes → split (the
-  fork of two lanes) → boss. Each step sits in a `.run-path__cell`
-  column wrapper with a mono `.run-path__label` caption under it (in
-  `--font-mono` / `--text-xs` / `--color-muted`); links are a touch
-  tighter so the labelled row fits at 360px.
+- **Gameplay labelled segment** (`.run-path--labeled`) — a *typical*
+  Classic 5-column segment read left to right, mixing the room types a
+  player usually encounters: hub → route → rest stop (dashed) → gap
+  (hollow) → split (the fork of two lanes — two or three in the game) →
+  boss. Each step sits in a `.run-path__cell` column wrapper with a
+  mono `.run-path__label` caption under it (in `--font-mono` /
+  `--text-xs` / `--color-muted`); links are a touch tighter so the
+  labelled row fits at 360px.
 - **Gameplay wild-den callout** — a Fast Path hidden-route segment
   (hub → den nodes → boss) drawn with the same labelled structure.
 
 Nodes are `<span>`s, never images. Node classes: base `.run-path__node`,
-`--hub` (filled emerald), `--rest` (dashed outline), `--den` (gold
-square outline — the hollow sibling of the boss diamond), `--boss`
-(gold diamond). Motion: a slow staggered brightness wave, already gated
+`--hub` (filled emerald), `--rest` (dashed outline), `--gap` (hollow
+square, dashed `--color-line` outline — the trail skips ahead), `--den`
+(gold square outline — the hollow sibling of the boss diamond),
+`--boss` (gold diamond). Motion: a slow staggered brightness wave, already gated
 behind `prefers-reduced-motion: no-preference` — do not add per-page
 animations to it.
 
@@ -157,7 +160,7 @@ under your own `.page--<stem>`):
 | `.tabs` / `.tabs__tab` | `role="tablist"` / `role="tab"` buttons with `aria-selected`; see markup convention in `components.css` |
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
 | `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not hand-write or restyle (the trigger's overlay is `.search-palette`, above) |
-| `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
+| `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den`/`--gap` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
 
 ## 7. Motion
 

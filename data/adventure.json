@@ -8,7 +8,7 @@
     {
       "id": "how-the-path-works",
       "heading": "What a run looks like",
-      "text": "A run is a chain of path segments — one per badge step: when you beat the boss at the end of a segment, the next one is rolled fresh for the next step on the ladder. Read a segment left to right, from the Hub entrance to the boss: it is a trail of columns, each column is one step of that trail, and the segment's length is simply its number of columns. Most columns hold routes, with special encounters carved in along the way, and the last column before the boss is the split — a fork of two or three lanes where the trail opens up. Classic segments are 5 columns long (3 room columns, the split and the boss); Fast Path segments are 6 — 4 when routes are hidden and 5 once you reach the Champion stage — and Gauntlet segments start at 7 columns on badge 0 and collapse to 2 (the boss right after the split) once you're past the first badge. Each column is a choice: walk into a room, deal with it, then continue. A segment's layout is seeded from your run seed and the current badge count, so two runs at the same badge can still produce completely different trails."
+      "text": "A run is a chain of path segments, one per badge step, re-rolled after each boss. Read left to right: Hub, rooms, split, boss. Classic: 5 steps (3 rooms, split, boss); Fast Path: 6 — 4 when routes are hidden, 5 at the Champion stage; Gauntlet: 7 on badge 0, then 2 after the first badge (boss right after the split). The layout is seeded from your run seed and badge count, so the same badge can still roll a different trail."
     },
     {
       "id": "boss-ladder",
