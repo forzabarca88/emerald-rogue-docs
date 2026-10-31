@@ -1,7 +1,8 @@
 /*
  * pages/gameplay.js — the core gameplay loop, one section per phase:
- * hub → run (the generated path, every room type, the boss ladder) →
- * post-run (how the run's Pokémon feed the Safari Zone) → back to the hub.
+ * hub → run (the generated path, how rooms are placed, every room
+ * type, the boss ladder) → post-run (how the run's Pokémon feed the
+ * Safari Zone) → back to the hub.
  * Rendered from data/adventure.json, data/hub.json and data/safari.json;
  * the guide links use page titles from data/site.json. Room and boss
  * records are version-scoped with ROGUE.filter and carry version badges.
@@ -88,6 +89,54 @@
       cell('run-path__node--boss', 'Boss') +
       '</div>';
 
+    /* Placement diagram rows (issue #31): one bar per placement value —
+       track + fill + a mono "value · condition" label. Bar width:
+       placement weights on a 0–200 scale (the legendary's weight is the
+       max), path rolls and tier chances on 0–100, "fixed" fills the
+       track, "never" leaves it empty (values from each record's
+       `placement` field, re-encoded from its cited description). */
+    function placementBarLine(bar, kind) {
+      var valueText, width;
+      if (typeof bar.v === 'number') {
+        valueText = kind === 'weight' ? String(bar.v) : bar.v + '%';
+        width = kind === 'weight' ? (bar.v / 200) * 100 : Math.max(0, Math.min(100, bar.v));
+      } else {
+        valueText = bar.t || '';
+        width = kind === 'fixed' ? 100 : 0;
+      }
+      return (
+        '<div class="placement__bar">' +
+        '<span class="placement__track">' +
+        (width > 0 ? '<span class="placement__fill" style="width:' + width + '%"></span>' : '') +
+        '</span>' +
+        '<span class="placement__value">' +
+        ROGUE.esc(valueText) +
+        (bar.l ? ' <span class="placement__cond">' + ROGUE.esc(bar.l) + '</span>' : '') +
+        '</span></div>'
+      );
+    }
+
+    /* One placement row: the room name, its condition note, its bars. */
+    function placementRow(record) {
+      var p = record.placement;
+      var kind = p.kind || 'roll';
+      var bars = (Array.isArray(p.bars) ? p.bars : [])
+        .map(function (bar) {
+          return placementBarLine(bar, kind);
+        })
+        .join('');
+      return (
+        '<div class="placement__row' + (kind === 'never' ? ' placement__row--never' : '') + '">' +
+        '<h3 class="placement__name">' +
+        ROGUE.esc(record.name) +
+        '</h3>' +
+        (p.note ? '<p class="placement__note">' + ROGUE.esc(p.note) + '</p>' : '') +
+        '<div class="placement__bars">' +
+        bars +
+        '</div></div>'
+      );
+    }
+
     var html = '<h1>' + ROGUE.esc((pages.gameplay || {}).title || 'Gameplay') + '</h1>';
 
     /* Phase strip — in-page navigation through the loop. */
@@ -133,7 +182,35 @@
         );
     }
 
-    /* The run — every room type on a generated path. */
+    /* The run — every room type on a generated path (shared by the
+       placement diagram and the room-type cards). */
+    var rooms = records(adventure, 'room-type');
+
+    /* The run — how rooms are placed (issue #31): a bar row per room
+       type, above the room cards. The bar grid is decorative
+       (aria-hidden) — the visible caption and the room cards below
+       carry the meaning. */
+    var placementRecs = rooms.filter(function (r) {
+      return r && r.placement && Array.isArray(r.placement.bars);
+    });
+    if (placementRecs.length) {
+      html +=
+        ROGUE.section(
+          'gp-placement',
+          'The run — placement',
+          'How rooms are placed',
+          "Every path starts as all routes; special rooms then earn their columns — by a path roll, a placement weight, or a tiered chance. Bar length is each room's value on its own scale (weights to 200, percentages to 100%); the mono labels carry the exact figures.",
+          '<div class="placement">' +
+            '<div class="placement__grid" aria-hidden="true">' +
+            placementRecs.map(placementRow).join('') +
+            '</div>' +
+            '<p class="placement__caption">At a glance only — the room cards below carry the full rules and citations.</p>' +
+            '</div>'
+        );
+    }
+
+    /* The run — every room type on a generated path (the full cards,
+       the reading-the-rooms note, the fast-path den callout). */
     var roomsNote = ROGUE.proseById(adventure, 'reading-the-rooms');
     html +=
       ROGUE.section(
@@ -141,7 +218,7 @@
         'The run — room types',
         'Room types',
         adventure.meta && adventure.meta.description,
-        '<div class="grid">' + ROGUE.cards(records(adventure, 'room-type')) + '</div>' +
+        '<div class="grid">' + ROGUE.cards(rooms) + '</div>' +
           (roomsNote
             ? '<h3 class="rooms__note">' + ROGUE.esc(roomsNote.heading) + '</h3>' +
               ROGUE.paragraphs(roomsNote.text)

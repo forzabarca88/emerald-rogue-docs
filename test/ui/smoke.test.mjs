@@ -90,6 +90,16 @@ const PAGES = [
         expected: 5,
         why: `data/adventure.json has 5 boss-ladder records (the 14-boss ladder grouped: Gym Leaders 8, Elite Four 4, Champion, Final Battle, Victory Lap), all version ${VERSION} (gameplay.js)`,
       },
+      placementRows: {
+        sel: '.placement__row',
+        expected: 17,
+        why: `data/adventure.json: all 17 room-type records carry a structured placement field (values re-encoded from each record's cited description), all versions [vanilla, ex] → one .placement__row per record under version ${VERSION} (gameplay.js placementRow)`,
+      },
+      placementBars: {
+        sel: '.placement__bar',
+        expected: 28,
+        why: 'data/adventure.json: the 17 room-type placement fields hold 28 bars in total — rest stop 100/20/5/1 by count on path, honey tree + dark deal + lab 2 bars each (badge parity), wild den 4 + gap 3 bars (by tier), the other 10 rooms 1 bar each (gameplay.js placementBarLine)',
+      },
     },
   },
   {

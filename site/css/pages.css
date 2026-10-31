@@ -302,6 +302,114 @@
   border-color: var(--color-gold);
 }
 
+/* how rooms are placed (issue #31): a bar row per room type, above the
+   room cards — name + condition note, then one bar per placement value
+   (track + fill + mono "value · condition"). The bar grid is decorative
+   (aria-hidden in gameplay.js); the panel caption and the room cards
+   carry the meaning. Bar widths: weights scaled to 200 (the
+   legendary's), percentages to 100 (gameplay.js) — the mono labels
+   carry the exact figures. */
+.page--gameplay .placement {
+  margin-top: var(--space-5);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* 17 room rows: auto-filling ≥340px columns so each row keeps room for
+   its "value · condition" cell — one column at 360px, three at full
+   width */
+.page--gameplay .placement__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  gap: var(--space-2);
+}
+
+.page--gameplay .placement__row {
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.page--gameplay .placement__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.page--gameplay .placement__note {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--gameplay .placement__bars {
+  margin-top: var(--space-2);
+  display: grid;
+  gap: 4px;
+}
+
+/* the track + the mono value cell to its right */
+.page--gameplay .placement__bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page--gameplay .placement__track {
+  position: relative;
+  display: block;
+  height: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  background: var(--color-grid);
+}
+
+.page--gameplay .placement__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  min-width: 3px;
+  border-radius: 1px;
+  background: var(--color-emerald);
+}
+
+/* the mono value (ink) + its condition (muted) on one right-aligned
+   line, e.g. "15 · odd badge"; nowrap — the labels are short by design
+   and the track shrinks first */
+.page--gameplay .placement__value {
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.page--gameplay .placement__cond {
+  color: var(--color-muted);
+}
+
+/* a room the generator never places: an empty, dashed track (the
+   "nothing here" dashed style of the run-path gap node) */
+.page--gameplay .placement__row--never .placement__track {
+  border-style: dashed;
+  background: transparent;
+}
+
+.page--gameplay .placement__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
 /* the boss ladder — a true sequence, so it is numbered (DESIGN.md §10) */
 .page--gameplay .ladder {
   list-style: none;
