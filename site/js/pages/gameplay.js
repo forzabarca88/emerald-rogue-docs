@@ -177,7 +177,7 @@
           ROGUE.paragraphs(pathProse.text) +
             '<div class="path-diagram">' +
             labeledSegment +
-            '<p class="path-diagram__caption">A typical Classic segment: five columns left to right, one step each — the split forks into two or three lanes.</p>' +
+            '<p class="path-diagram__caption">A typical Classic segment: hub plus five steps, left to right — the split forks into two or three lanes.</p>' +
             '</div>'
         );
     }

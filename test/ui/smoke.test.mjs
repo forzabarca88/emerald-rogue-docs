@@ -212,7 +212,7 @@ const PAGES = [
       areaMapLinks: {
         sel: '#hub-areas .hub-map__link',
         expected: 3,
-        why: 'data/hub.json: the 4 initially-present areas form the starting chain (the intro prose lists them in the same order as the records) → 3 connecting arrows between the 4 built blocks (hub.js areaMap)',
+        why: 'data/hub.json: the 4 initially-present areas form the starting chain — Square—Labs—Exit—Safari per rogue_hub.c RogueHub_ClearProgress (cited by the area-labs record source) → 3 connecting arrows between the 4 built blocks (hub.js areaMap)',
       },
       upgradeCards: {
         sel: '.hub-upgrade',

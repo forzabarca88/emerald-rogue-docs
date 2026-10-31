@@ -122,12 +122,14 @@
      * The area overview map (issue #31): the 11 hub-area records in
      * their three access tiers — present from the start, free to build,
      * and Build Parts (cheapest first). Each block shows the record
-     * name + its cost. The built tier is drawn as the starting chain
-     * (the record order matches the order the "what-the-hub-is" intro
-     * lists them, "Labs, the Town Exit, the Safari Area and the Town
-     * Square") — the only adjacency the data states; the buildable
-     * areas stand alone. The tiers are decorative (aria-hidden); the
-     * visible caption and the area cards below carry the meaning.
+     * name + its cost. The built tier is drawn as the starting chain in
+     * the game's verified initial adjacency (src/rogue_hub.c
+     * RogueHub_ClearProgress, cited by the area-labs record: Labs is
+     * built first, then the Town Exit from Labs, the Safari Area from
+     * the Town Exit, and the Town Square from Labs — drawn left to
+     * right as Square — Labs — Exit — Safari); the buildable areas
+     * stand alone. The tiers are decorative (aria-hidden); the visible
+     * caption and the area cards below carry the meaning.
      */
     function areaMap(areas) {
       if (!areas.length) return '';
@@ -136,6 +138,19 @@
       var paid = areas
         .filter(function (a) { return !a.initiallyPresent && a.buildCost; })
         .sort(function (a, b) { return a.buildCost - b.buildCost; });
+
+      /* The chain order is the game's verified initial adjacency
+       * (rogue_hub.c RogueHub_ClearProgress, per the area-labs
+       * record's source): Square — Labs — Exit — Safari. Areas missing
+       * from the list (never, with current data) keep record order at
+       * the end of the chain. */
+      var chainOrder = ['Town Square', 'Labs', 'Town Exit', 'Safari Area'];
+      built.sort(function (a, b) { return chainPos(a.name) - chainPos(b.name); });
+      function chainPos(name) {
+        for (var i = 0; i < chainOrder.length; i++)
+          if (name.indexOf(chainOrder[i]) === 0) return i;
+        return chainOrder.length;
+      }
 
       function block(r, extra) {
         var tag = r.initiallyPresent
@@ -312,8 +327,12 @@
         );
       }
       html += '</div>';
+      /* The phase names live only in the aria-hidden rows, so the
+       * caption must carry them (data-sourced from the `cycles`
+       * field, same as the rows). */
+      var arrow = ' \u2192 ';
       var caption =
-        'The day cycles through ' + day.length + ' codes and the year through ' + seasons.length + ' seasons';
+        'The day cycles ' + day.join(arrow) + ' and the year through ' + seasons.join(arrow);
       if (season.days) caption += ', each lasting ' + season.days + ' in-game days';
       caption += '.';
       html += '<p class="hub-cycles__caption">' + caption + '</p></div>';

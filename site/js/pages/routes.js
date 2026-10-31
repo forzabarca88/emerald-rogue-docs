@@ -262,7 +262,8 @@
      * One row per region (data order), a cell per canonical terrain (the
      * route count) and a row-total column — the totals add up to all 36
      * routes. The grid is decorative (aria-hidden); the figcaption
-     * carries the same meaning for screen readers, including the Sinnoh
+     * carries the same meaning for screen readers, including the
+     * per-terrain column totals (the diagram's point), the Sinnoh
      * routes that carry no terrain class and the seventh "Island"
      * terrain beyond the six matrix columns. */
     function routeMatrix(terrains) {
@@ -345,6 +346,18 @@
           records.length +
           ' in all.'
       ];
+      /* the per-terrain column totals (data-sourced from the records,
+       * the same cells the grid draws) — the diagram's point must reach
+       * screen readers via the figcaption too */
+      captionParts.push(
+        'By terrain: ' +
+          terrains
+            .map(function (t) {
+              return records.filter(function (r) { return r.terrain === t; }).length + ' ' + t;
+            })
+            .join(', ') +
+          '.'
+      );
       var noTerrain = records.filter(function (r) {
         return !r.terrain;
       });
