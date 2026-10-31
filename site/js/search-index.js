@@ -538,6 +538,21 @@
   }
 
   /**
+   * A prose block's haystack parts: heading + text, plus the optional
+   * `list` items and `trailing` paragraph some blocks carry (charms
+   * where-they-come-from) so list-form content stays as searchable as
+   * the prose it replaced.
+   */
+  function proseParts(block) {
+    var parts = [str(block && block.heading), str(block && block.text)];
+    if (block && Array.isArray(block.list)) {
+      for (var i = 0; i < block.list.length; i++) parts.push(str(block.list[i]));
+    }
+    if (block && block.trailing) parts.push(str(block.trailing));
+    return parts;
+  }
+
+  /**
    * Build the full site search index (version-independent — see the
    * header doc). Every nav page, every prose block and every record of
    * the 14 content data files gets one entry (three prose blocks also
@@ -574,12 +589,12 @@
         var block = prose[p];
         if (!block || typeof block !== 'object') continue;
         var key = block.id || 'p' + p;
-        entries.push(makeEntry('prose-' + fileId + '-' + key, str(block.heading), [str(block.heading), str(block.text)], target.page || '', proseAnchor(fileId, block), BOTH_VERSIONS));
+        entries.push(makeEntry('prose-' + fileId + '-' + key, str(block.heading), proseParts(block), target.page || '', proseAnchor(fileId, block), BOTH_VERSIONS));
         var cross = PROSE_CROSS_PAGES[fileId];
         if (cross) {
           for (var c = 0; c < cross.length; c++) {
             if (cross[c].id === (block.id || '')) {
-              entries.push(makeEntry('prose-' + fileId + '-' + key + '-' + cross[c].page.replace(/^\.\//, '').replace(/\.html$/, ''), str(block.heading), [str(block.heading), str(block.text)], cross[c].page, cross[c].anchor, BOTH_VERSIONS));
+              entries.push(makeEntry('prose-' + fileId + '-' + key + '-' + cross[c].page.replace(/^\.\//, '').replace(/\.html$/, ''), str(block.heading), proseParts(block), cross[c].page, cross[c].anchor, BOTH_VERSIONS));
             }
           }
         }

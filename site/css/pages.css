@@ -1732,7 +1732,10 @@
    Time of Day & Seasons, Unique mons, Campaigns): an in-page anchor-chip
    strip, each system's prose blocks under subheadings, and its records
    as version-badged cards — the charms section splits into two card
-   columns (charms | curses). All rules scoped under .page--mechanics. */
+   columns (charms | curses), with the netting example (.netting + the
+   shared .equation) under the netting prose and the stacking/cap chart
+   (.stacks) under the scaling prose (issue #31). All rules scoped
+   under .page--mechanics. */
 
 .page--mechanics .page-fallback {
   max-width: 70ch;
@@ -1786,6 +1789,213 @@
 /* record grids after the prose blocks */
 .page--mechanics .mech-grid {
   margin-top: var(--space-4);
+}
+
+/* netting example (issue #31): two bars (one of each Catching item)
+   above the shared .equation netting math — values from the two
+   records' `stack.per` (their sources cite the EFFECT_CATCH_RATE
+   line). The bar block is decorative (aria-hidden); the equation +
+   its note carry the meaning. */
+.page--mechanics .netting {
+  margin-top: var(--space-4);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page--mechanics .netting__bars {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page--mechanics .netting__bar {
+  display: grid;
+  grid-template-columns: minmax(0, 112px) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page--mechanics .netting__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+/* track + fill, the placement-bar pattern (pages.css .page--gameplay) */
+.page--mechanics .netting__track {
+  position: relative;
+  display: block;
+  height: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  background: var(--color-grid);
+}
+
+.page--mechanics .netting__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  min-width: 3px;
+  border-radius: 1px;
+  background: var(--color-emerald);
+}
+
+/* the curse bar wears the muted fern (the debuff side) */
+.page--mechanics .netting__fill--curse {
+  background: var(--color-muted);
+}
+
+.page--mechanics .netting__value {
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+/* stacking/cap chart (issue #31): a row per capped chance effect —
+   a column of bars, one per item held, rising to the cap line; a mono
+   value row under the axis line labels each column. Chance rows scale
+   to their 90% cap; the Grace rows scale to a fixed 150 track and
+   carry BOTH version cap lines (emerald 90 / gold 150) — the active
+   version's line is solid + labelled in its hue, the other's dashed +
+   muted. The grid is decorative (aria-hidden); the caption and the
+   cited cards below carry the meaning. Row width floor 230px keeps
+   the widest row (9 columns) legible at 360px. */
+.page--mechanics .stacks {
+  margin-top: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--mechanics .stacks__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr));
+  gap: var(--space-3);
+}
+
+.page--mechanics .stacks__row {
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+}
+
+.page--mechanics .stacks__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.page--mechanics .stacks__note {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* the plot: a 56px bar area (its border-bottom is the 0 line) + the
+   value row; the top margin leaves room for the top cap line's label */
+.page--mechanics .stacks__plot {
+  margin-top: 18px;
+}
+
+.page--mechanics .stacks__bars {
+  position: relative;
+  height: 56px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 0 2px;
+  border-bottom: 2px solid var(--color-line);
+}
+
+.page--mechanics .stacks__bar {
+  flex: 1 1 0;
+  min-width: 5px;
+  border-radius: 1px 1px 0 0;
+  background: var(--color-emerald);
+}
+
+/* the curse rows' bars wear the muted fern (the debuff side) */
+.page--mechanics .stacks__bar--curse {
+  background: var(--color-muted);
+}
+
+/* the cap line (a 0-height rule across the bar area) + its label just
+   above the line — for the top line that is the plot's top margin */
+.page--mechanics .stacks__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  border-top: 2px solid var(--color-line);
+  pointer-events: none;
+}
+
+.page--mechanics .stacks__cap--vanilla {
+  border-top-color: var(--color-emerald);
+}
+
+.page--mechanics .stacks__cap--ex {
+  border-top-color: var(--color-gold);
+}
+
+/* the inactive version's cap line: dashed + muted label */
+.page--mechanics .stacks__cap--dim {
+  border-top-style: dashed;
+}
+
+.page--mechanics .stacks__caplabel {
+  position: absolute;
+  bottom: 3px;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+.page--mechanics .stacks__cap--vanilla:not(.stacks__cap--dim) .stacks__caplabel {
+  color: var(--color-emerald);
+}
+
+.page--mechanics .stacks__cap--ex:not(.stacks__cap--dim) .stacks__caplabel {
+  color: var(--color-gold);
+}
+
+/* the mono value under each column (aligned with the bars) */
+.page--mechanics .stacks__vals {
+  display: flex;
+  gap: 4px;
+  padding: 3px 2px 0;
+}
+
+.page--mechanics .stacks__vals span {
+  flex: 1 1 0;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--mechanics .stacks__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* the where-they-come-from source list (prose block `list` field) */
+.page--mechanics .mech-list {
+  margin: var(--space-2) 0 0;
+  display: grid;
+  gap: var(--space-2);
 }
 
 /* charms | curses — two card columns */

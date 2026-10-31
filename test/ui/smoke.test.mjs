@@ -317,6 +317,16 @@ const PAGES = [
         expected: 98,
         why: `every record card on the page under version ${VERSION}: 43 charms.json + 13 followmons.json + 10 gameshow.json + 8 timeofday.json (includes the 1 EX-only seasonal-species record) + 14 unique-mons.json + 10 campaigns.json = 98 (mechanics.js grid)`,
       },
+      stackRows: {
+        sel: '.stacks__row',
+        expected: 10,
+        why: `data/charms.json has 10 records with a capped stack field (5 charms + 5 curses: flinch, shed-skin, grace, priority, endure) → 10 stacking/cap chart rows under version ${VERSION} (mechanics.js stacksHtml)`,
+      },
+      nettingBars: {
+        sel: '.netting__bar',
+        expected: 2,
+        why: `the netting example plots one bar each for the Catching Charm and the Catching Curse records (data/charms.json stack.per 200 / 40) → 2 bars under version ${VERSION} (mechanics.js nettingHtml)`,
+      },
     },
   },
   {
