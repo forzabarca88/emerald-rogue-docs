@@ -152,6 +152,14 @@
   border-color: var(--color-gold);
 }
 
+/* a gap — the trail skips ahead: a hollow, dashed-outlined square in
+   the line hue (the --rest dashed style, dimmed to "nothing here") */
+.run-path__node--gap {
+  border-color: var(--color-line);
+  border-style: dashed;
+  background: transparent;
+}
+
 /* labelled variant (gameplay page path diagrams): one column wrapper
    per step — node on top, mono caption below — with a touch tighter
    links so the labelled Classic 5-column segment still fits at 360px */

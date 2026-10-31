@@ -53,17 +53,19 @@
       );
     }
 
-    /* The Classic 5-column segment: hub → 3 room columns → split
-       (fork of two lanes) → boss. */
+    /* A typical Classic 5-column segment, mixing the room types a
+       player usually encounters: hub → route → rest stop (dashed) →
+       gap (hollow) → split (fork of two lanes — two or three in the
+       game) → boss. */
     var labeledSegment =
       '<div class="run-path run-path--labeled" aria-hidden="true">' +
       cell('run-path__node--hub', 'Hub') +
       LINK +
-      cell('', 'Room') +
+      cell('', 'Route') +
       LINK +
-      cell('', 'Room') +
+      cell('run-path__node--rest', 'Rest') +
       LINK +
-      cell('', 'Room') +
+      cell('run-path__node--gap', 'Gap') +
       LINK +
       '<span class="run-path__cell"><span class="run-path__fork">' +
       '<span class="run-path__lane"><span class="run-path__link"></span></span>' +
@@ -126,7 +128,7 @@
           ROGUE.paragraphs(pathProse.text) +
             '<div class="path-diagram">' +
             labeledSegment +
-            '<p class="path-diagram__caption">One badge step = one path segment: walk the columns left to right, choose a lane at the split, then face the boss.</p>' +
+            '<p class="path-diagram__caption">A typical Classic segment: five columns left to right, one step each — the split forks into two or three lanes.</p>' +
             '</div>'
         );
     }
