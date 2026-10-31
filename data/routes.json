@@ -8,17 +8,30 @@
     {
       "id": "naming-scheme",
       "heading": "The route naming scheme",
-      "text": "Every route is its own dedicated map with the name ROGUE_ROUTE_<Region>_<Type><N>. Hoenn routes carry no region prefix (ROGUE_ROUTE_FIELD0, ROGUE_ROUTE_CAVE0, ROGUE_ROUTE_MOUNTAIN1…), while Kanto, Johto and Sinnoh routes are prefixed (ROGUE_ROUTE_KANTO_FIELD0, ROGUE_ROUTE_JOHTO_CAVE0, ROGUE_ROUTE_SINNOH_201). Sinnoh routes use the region's real route numbers — 201, 205, 207, 209, 210, 212, 214, 215, 217 — plus three named locations: EternaForest, MtCoronet and IronIsland. The complete table holds 36 routes: 12 Hoenn, 6 Kanto, 6 Johto, 12 Sinnoh. The table is identical between the Vanilla and EX versions — all 36 routes, including Sinnoh's, exist in both; the only branch difference in the file is the wild type table of six routes (EX swaps one type to Fairy) and the legendary encounter table that lives in the same header."
+      "text": "Every route is its own dedicated map with the name ROGUE_ROUTE_<Region>_<Type><N>. Hoenn routes carry no region prefix (ROGUE_ROUTE_FIELD0, ROGUE_ROUTE_CAVE0, ROGUE_ROUTE_MOUNTAIN1…), while Kanto, Johto and Sinnoh routes are prefixed (ROGUE_ROUTE_KANTO_FIELD0, ROGUE_ROUTE_JOHTO_CAVE0, ROGUE_ROUTE_SINNOH_201). Sinnoh routes use the region's real route numbers — 201, 205, 207, 209, 210, 212, 214, 215, 217 — plus three named locations: EternaForest, MtCoronet and IronIsland. The table is identical between the Vanilla and EX versions — all 36 routes, including Sinnoh's, exist in both; the only branch difference in the file is the wild type table of six routes (EX swaps one type to Fairy) and the legendary encounter table that lives in the same header."
     },
     {
       "id": "type-taxonomy",
       "heading": "Route types and wild Pokémon",
-      "text": "Routes come in six terrain types — Field, Forest, Cave, Mountain, WaterFront and Urban — and each route carries a wild type table of exactly three types (for example, Hoenn Forest 0: Bug, Ghost, Poison). While you are on a route, wild Pokémon are not filtered by those three types as a set: instead, each route room picks a single hint type (cycling through the route's three), and only the very first wild encounter must match it — if no valid species has that type, the game falls back to any species — while the rest of the encounters roll unfiltered. Each route can also define an item drop rarity bonus, which is added to every item drop it makes: of the three forest routes, two (Hoenn Forest 0 and Kanto Forest 0) have rarity 1 — Sinnoh's Eterna Forest has no bonus — and all three cave routes (Hoenn, Kanto and Johto Cave 0) have rarity 2, as do Sinnoh's two named maps Mt. Coronet and Iron Island. Forests and caves are therefore the best routes for item hunting."
+      "text": "Each route carries a wild type table of exactly three types (for example, Hoenn Forest 0: Bug, Ghost, Poison), but the wild Pokémon on a route are not filtered by those three as a set: each route room picks a single hint type (cycling through the route's three), and only the very first wild encounter must match it — if no valid species has that type, the game falls back to any species — while the rest of the encounters roll unfiltered. Each route can also define an item drop rarity bonus, which is added to every item drop it makes — forests and caves are therefore the best routes for item hunting.",
+      "terrains": ["Field", "Forest", "Cave", "Mountain", "WaterFront", "Urban"]
     },
     {
       "id": "calm-average-tough",
       "heading": "Calm, Average and Tough routes",
-      "text": "Every Route room on a generated path rolls a difficulty sub-type: calm, average or tough. From boss difficulty 0 up to and including 8 — the first Elite Four path — the roll is calm 3 / average 4 / tough 1; from difficulty 9 (the second Elite Four path) onwards it switches to calm 0 / average 1 / tough 8, so tough routes dominate the late game. The sub-type tunes what the route offers: calm routes spawn 5 wild grass encounters, average 3 and tough 2 (water encounters are 2/1/1); trainer spawns are 20 points less likely on calm routes; item drops land 65% / 80% / 95% of the time with item rarity adjusted −1 / 0 / +1; and the chance the route has themed weather — matched to one of its three wild types — is 5% / 25% / 45%."
+      "text": "Every Route room on a generated path rolls a difficulty sub-type — calm, average or tough — and the sub-type tunes what the route offers, from encounter counts and trainer spawns to item drops and themed weather (matched to one of the route's three wild types). The roll itself shifts late in the run: from difficulty 9, the second Elite Four path, tough routes dominate.",
+      "roll": [
+        { "phase": "Difficulty 0–8", "calm": 3, "average": 4, "tough": 1 },
+        { "phase": "Difficulty 9+ (from the second Elite Four path)", "calm": 0, "average": 1, "tough": 8 }
+      ],
+      "values": [
+        { "label": "Wild grass encounters", "calm": "5", "average": "3", "tough": "2" },
+        { "label": "Wild water encounters", "calm": "2", "average": "1", "tough": "1" },
+        { "label": "Trainer spawn chance", "calm": "−20", "average": "—", "tough": "—" },
+        { "label": "Item drop chance", "calm": "65%", "average": "80%", "tough": "95%" },
+        { "label": "Item rarity", "calm": "−1", "average": "0", "tough": "+1" },
+        { "label": "Themed weather chance", "calm": "5%", "average": "25%", "tough": "45%" }
+      ]
     },
     {
       "id": "on-the-path",
