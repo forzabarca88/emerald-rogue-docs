@@ -200,6 +200,21 @@ const PAGES = [
         expected: 4,
         why: 'data/safari.json has 4 entry-criterion records → 4 stacked cards (safari.js)',
       },
+      entryFlowEvents: {
+        sel: '.safari-entry-flow__event',
+        expected: 4,
+        why: 'data/safari.json has 4 entry-criterion records → 4 event rows in the entry-flow diagram (safari.js entryFlow, one row per filtered record: name + `short`)',
+      },
+      scoreTerms: {
+        sel: '.equation__term',
+        expected: 2,
+        why: 'data/safari.json priority-eviction record carries a 2-chip `score.terms` array (level-gain formula, shiny +30) → 2 .equation__term chips (safari.js scoreEquation)',
+      },
+      evictionSteps: {
+        sel: '.step-strip__step',
+        expected: 4,
+        why: 'data/safari.json priority-eviction record carries a 4-step `eviction` array → 4 numbered step-strip cells (safari.js stepStrip)',
+      },
       caveSteps: {
         sel: '.safari-steps li',
         expected: 8,
