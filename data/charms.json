@@ -8,17 +8,24 @@
     {
       "id": "what-they-are",
       "heading": "Passive items with a twist",
-      "text": "Charms and Curses are passive items that sit in your bag and modify your run — you never 'equip' them. Charms help you: better catch rates, higher critical stages, flinch and priority chances, insurance items. Curses are the mirror image — the same effects pointed at you instead of your opponents, plus a set of curses that only ever punish (party-size caps, battle embargoes, one-hit trainer battles). Because both sides of the same effect exist, the two net against each other — the game subtracts the smaller total from the larger and applies the result to a 100% base. Equal per-item values (a Strength Charm against a Strength Curse) cancel item-for-item, but most pairs don't: one Catching Charm and one Catching Curse still nets to +160% catch rate in your favour."
+      "text": "Charms and Curses are passive items that sit in your bag and modify your run — you never 'equip' them. Charms point the effect at you; Curses are its mirror image, pointed at your opponents. When you hold both sides of the same effect, they net against each other — the diagram below works the Catching pair through the math."
     },
     {
       "id": "scaling",
       "heading": "How strong is a stack?",
-      "text": "Most percentage effects scale linearly with the number of matching items you hold — a Flinch Charm gives 20%, two give 40%, three 60% — but the chances cap at 90%, so hoarding past a certain point buys nothing. STAB and the Strength Charm scale differently (per-item bonuses with their own caps). Status-based items like Torment, Pressure and Unaware don't scale at all: one is all you need. The game keeps a live count of each effect and recalculates whenever your bag changes."
+      "text": "Most chance effects stack linearly per item and cap at 90%, so holding more past the cap buys nothing — the chart plots each capped effect. STAB, Strength, Catching, Wild and Crit scale per item with their own caps (or none); status items like Torment, Pressure and Unaware don't scale at all — one is all you need. The game keeps a live count of each effect and recalculates whenever your bag changes."
     },
     {
       "id": "where-they-come-from",
       "heading": "Where you get them",
-      "text": "There is no shop for Charms and Curses during a run. The Dark Deal at the graveyard is the main source: three random Charms on offer, take one, and the salesman 'afflicts' you with a random Curse as the price. The Mysterious Shrine trades the one-time Sacred Ash for a Capacity Curse. Miniboss-style encounters hand out normal random items and never a Charm or a Curse (the random item pool excludes them), while in the Lab one of Birch's rescued Pokémon may be holding a random Curse — the chance climbs as the run progresses (a quarter early on, 40% by the mid-Gyms, 60% in the Elite Four phase, certain at Champion difficulty). Vanilla builds show all of these item names in ALL CAPS (e.g. GRACE CHARM); EX shows them in title case."
+      "text": "There is no shop for Charms and Curses during a run — every source is in-run luck or a trade.",
+      "list": [
+        "Dark Deal (graveyard), the main source: three random Charms on offer, take one, and the salesman 'afflicts' you with a random Curse as the price.",
+        "Mysterious Shrine: trades the one-time Sacred Ash for a Capacity Curse.",
+        "Miniboss encounters: normal random items only — the random pool never holds a Charm or a Curse.",
+        "The Lab: one of Birch's rescued Pokémon may be holding a random Curse — a quarter early on, 40% by the mid-Gyms, 60% in the Elite Four phase, certain at Champion difficulty."
+      ],
+      "trailing": "Vanilla builds show all of these item names in ALL CAPS (e.g. GRACE CHARM); EX shows them in title case."
     }
   ],
   "records": [
@@ -36,6 +43,11 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon's moves have up to a 20% chance per item to make the opponent flinch, capped at 90%.",
+      "stack": {
+        "per": 20,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE: min(count × 20, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L186-188 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -52,6 +64,11 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon have a 33% chance per item to cure their status condition at the end of their turn, capped at 90%.",
+      "stack": {
+        "per": 33,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L193-194 / @origin/expansion L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE: min(count × 33, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L204-206 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -68,6 +85,11 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Ball effectiveness is increased by 200% per item held — the single biggest catch-rate booster — netted against any Catching Curses.",
+      "stack": {
+        "per": 200,
+        "unit": "%",
+        "uncapped": true
+      },
       "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE: count × 200); src/rogue_controller.c @vanilla L1140-1165 / @origin/expansion L1140-1165 (net charm/curse percentage applied to catch rate); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L222-224 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -79,6 +101,13 @@
       "differences": {
         "vanilla": "Stacked grace is capped at 90 (min(count × 75, 90)): 1.75× with one charm, 1.9× with two or more — only a third and later charm adds nothing.",
         "ex": "Stacked grace is capped at 150 (min(count × 75, 150)): 1.75× with one charm, 2.5× with two or more."
+      },
+      "stack": {
+        "per": 75,
+        "caps": {
+          "vanilla": 90,
+          "ex": 150
+        }
       },
       "source": "src/rogue_charms.c @vanilla L202-203 (CalcValueInternal EFFECT_SERENE_GRACE_CHANCE: min(count × 75, 90)) / @origin/expansion L202-203 (min(count × 75, 150) — the file's only divergence); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L231-233 (player-facing description) (identical @origin/expansion)"
     },
@@ -96,6 +125,11 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your moves have a 20% chance per item to gain priority (behaves like a Quick Claw), capped at 90%.",
+      "stack": {
+        "per": 20,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L208-209 / @origin/expansion L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE: min(count × 20, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L249-251 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -104,6 +138,11 @@
       "category": "charm",
       "versions": ["vanilla", "ex"],
       "description": "Your Pokémon can shrug off a would-be knockout blow, but only at full health: if a full-HP Pokémon takes a hit that would KO it, there's a 60% chance per item (capped at 90%) it survives with 1 HP.",
+      "stack": {
+        "per": 60,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L214-215 / @origin/expansion L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE: min(count × 60, 90)); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO), L1796-1801 (damage clamped to 1 HP); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L258-260 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -180,6 +219,11 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent moves have a 10% chance per item to flinch your Pokémon, capped at 90%.",
+      "stack": {
+        "per": 10,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE curse side: min(count × 10, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L190-192 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -196,6 +240,11 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon have a 15% chance per item to cure their own status, capped at 90% — their poison and burns wear off faster.",
+      "stack": {
+        "per": 15,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L193-194 / @origin/expansion L193-194 (CalcValueInternal EFFECT_SHED_SKIN_CHANCE curse side: min(count × 15, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L208-210 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -212,6 +261,11 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Ball effectiveness is decreased by 40% per item held — catches take noticeably more tries.",
+      "stack": {
+        "per": 40,
+        "unit": "%",
+        "uncapped": true
+      },
       "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE curse side: count × 40); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L226-228 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -223,6 +277,13 @@
       "differences": {
         "vanilla": "Stacked grace curse is capped at 90 (min(count × 50, 90)).",
         "ex": "Stacked grace curse is capped at 150 (min(count × 50, 150))."
+      },
+      "stack": {
+        "per": 50,
+        "caps": {
+          "vanilla": 90,
+          "ex": 150
+        }
       },
       "source": "src/rogue_charms.c @vanilla L202-203 (CalcValueInternal EFFECT_SERENE_GRACE_CHANCE curse side: min(count × 50, 90)) / @origin/expansion L202-203 (cap 150); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L235-237 (player-facing description) (identical @origin/expansion)"
     },
@@ -240,6 +301,11 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent moves have a 10% chance per item to gain priority (Quick Claw), capped at 90% — their faster moves land before yours.",
+      "stack": {
+        "per": 10,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L208-209 / @origin/expansion L208-209 (CalcValueInternal EFFECT_MOVE_PRIORITY_CHANCE curse side: min(count × 10, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L253-255 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -248,6 +314,11 @@
       "category": "curse",
       "versions": ["vanilla", "ex"],
       "description": "Opponent Pokémon can shrug off a would-be knockout blow the same way — but only at full health: a 20% chance per item (capped at 90%) that a full-HP opponent survives with 1 HP.",
+      "stack": {
+        "per": 20,
+        "cap": 90,
+        "unit": "%"
+      },
       "source": "src/rogue_charms.c @vanilla L214-215 / @origin/expansion L214-215 (CalcValueInternal EFFECT_ENDURE_CHANCE curse side: min(count × 20, 90)); src/battle_script_commands.c @vanilla L1744-1763 (survive check applies only when HP is full and the hit would KO); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L262-264 (player-facing description) (identical @origin/expansion)"
     },
     {
