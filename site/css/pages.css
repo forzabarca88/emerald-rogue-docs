@@ -1727,6 +1727,296 @@
   margin-top: var(--space-3);
 }
 
+/* The calm/average/tough visual (issue #31): a two-phase stacked
+   probability bar (one bar per boss-difficulty phase, segments in the
+   roll weights' proportions, mono weight labels) above a 3-column
+   comparison strip (calm | average | tough, one row per tuned value).
+   Both render from the calm-average-tough block's structured `roll` /
+   `values` fields (routes.js). Sub-type hues — existing tokens only:
+   calm = emerald, average = the both-mix, tough = gold; the mono bar
+   labels wear dark bg text on the light fills (the badge contrast rule).
+   The stacked bars are decorative (aria-hidden in routes.js) — the
+   phase labels, legend and captions carry the meaning. */
+
+/* the shared sub-type swatch (legend, bar segment keys, strip heads) */
+.page--routes .cat-roll__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: var(--space-1);
+  vertical-align: -1px;
+}
+
+.page--routes .cat-roll__swatch--calm {
+  background: var(--color-emerald);
+}
+
+.page--routes .cat-roll__swatch--average {
+  background: var(--color-both);
+}
+
+.page--routes .cat-roll__swatch--tough {
+  background: var(--color-gold);
+}
+
+/* the two visuals stack under the sub-types section */
+.page--routes .routes-subtypes-visuals .cat-roll,
+.page--routes .routes-subtypes-visuals .cat-strip {
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--routes .routes-subtypes-visuals .cat-strip {
+  margin-top: var(--space-4);
+}
+
+/* the roll: swatch legend, then one stacked bar per phase (the phase
+   label sits above its bar — full width at every viewport) */
+.page--routes .cat-roll__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+}
+
+.page--routes .cat-roll__row + .cat-roll__row {
+  margin-top: var(--space-3);
+}
+
+.page--routes .cat-roll__phase {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--routes .cat-roll__bar {
+  display: flex;
+  height: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--color-grid);
+}
+
+/* one segment per non-zero weight, proportional width */
+.page--routes .cat-roll__seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.page--routes .cat-roll__seg--calm {
+  background: var(--color-emerald);
+}
+
+.page--routes .cat-roll__seg--average {
+  background: var(--color-both);
+}
+
+.page--routes .cat-roll__seg--tough {
+  background: var(--color-gold);
+}
+
+.page--routes .cat-roll__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-bg);
+}
+
+.page--routes .cat-roll__caption,
+.page--routes .cat-strip__caption,
+.page--routes .route-matrix__caption {
+  margin: var(--space-3) 0 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* the comparison strip: a head row (the column hues) + one row per
+   tuned value — label on the left, the three mono values on the right
+   (short by design: "5" "65%" "−20" "—") */
+.page--routes .cat-strip__head,
+.page--routes .cat-strip__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, minmax(52px, auto));
+  align-items: center;
+  gap: 0 var(--space-3);
+}
+
+.page--routes .cat-strip__head + .cat-strip__row {
+  margin-top: var(--space-2);
+}
+
+.page--routes .cat-strip__row + .cat-strip__row {
+  border-top: 1px solid var(--color-line);
+}
+
+.page--routes .cat-strip__row {
+  padding-top: var(--space-1);
+  padding-bottom: var(--space-1);
+}
+
+.page--routes .cat-strip__cell {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.page--routes .cat-strip__cell--calm {
+  color: var(--color-emerald);
+}
+
+.page--routes .cat-strip__cell--average {
+  color: var(--color-both);
+}
+
+.page--routes .cat-strip__cell--tough {
+  color: var(--color-gold);
+}
+
+.page--routes .cat-strip__label {
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.page--routes .cat-strip__val {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+/* at narrow widths the values drop under the label instead of squeezing */
+@media (max-width: 560px) {
+  .page--routes .cat-strip__head {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .page--routes .cat-strip__head > :first-child {
+    display: none;
+  }
+
+  .page--routes .cat-strip__row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: var(--space-1);
+  }
+
+  .page--routes .cat-strip__label {
+    grid-column: 1 / -1;
+    text-align: left;
+  }
+}
+
+/* The region × terrain matrix (issue #31): one row per region, a cell
+   per terrain (route count) and a row-total column — the totals add up
+   to all 36 routes. The grid is decorative (aria-hidden in routes.js);
+   the figcaption carries the meaning (including the Sinnoh routes with
+   no terrain class and the seventh "Island" terrain). At ≤820px the
+   rows stack: region label, then one chip per terrain count (the
+   terrain name comes from the cell's data-terrain), then the total. */
+.page--routes .route-matrix {
+  margin: 0 0 var(--space-5);
+}
+
+/* the per-row grid template is set inline by routes.js (one column per
+   terrain — 6 from the type-taxonomy block's structured terrains field,
+   7 under the fallback) */
+.page--routes .route-matrix__row {
+  display: grid;
+  align-items: center;
+  gap: 0 var(--space-2);
+}
+
+.page--routes .route-matrix__row + .route-matrix__row {
+  border-top: 1px solid var(--color-line);
+}
+
+.page--routes .route-matrix__cell {
+  padding: var(--space-2) var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: center;
+}
+
+.page--routes .route-matrix__cell--head {
+  color: var(--color-muted);
+}
+
+.page--routes .route-matrix__cell--label {
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* the total column: a hairline left border + a heavier value */
+.page--routes .route-matrix__cell--total {
+  border-left: 1px solid var(--color-line);
+  font-weight: 600;
+}
+
+@media (max-width: 820px) {
+  .page--routes .route-matrix__grid {
+    display: block;
+  }
+
+  .page--routes .route-matrix__row--head {
+    display: none;
+  }
+
+  .page--routes .route-matrix__row--region + .route-matrix__row--region {
+    border-top: none;
+    margin-top: var(--space-4);
+  }
+
+  .page--routes .route-matrix__row--region {
+    display: block;
+  }
+
+  .page--routes .route-matrix__row--region .route-matrix__cell--label {
+    display: block;
+    padding: 0 0 var(--space-2);
+  }
+
+  /* one chip per terrain count — the terrain name from data-terrain */
+  .page--routes .route-matrix__row--region .route-matrix__cell:not(.route-matrix__cell--label):not(.route-matrix__cell--total) {
+    display: inline-block;
+    margin: 0 var(--space-2) var(--space-2) 0;
+    padding: var(--space-1) var(--space-2);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg);
+  }
+
+  .page--routes .route-matrix__row--region .route-matrix__cell:not(.route-matrix__cell--label):not(.route-matrix__cell--total)::before {
+    content: attr(data-terrain) " ";
+    color: var(--color-muted);
+  }
+
+  .page--routes .route-matrix__row--region .route-matrix__cell--total {
+    display: block;
+    border: none;
+    border-top: 1px solid var(--color-line);
+    padding: var(--space-2) var(--space-1) 0;
+  }
+
+  .page--routes .route-matrix__row--region .route-matrix__cell--total::after {
+    content: " routes";
+    color: var(--color-muted);
+  }
+}
+
 /* --- mechanics -----------------------------------------------------------------------
    One .section per system (Charms & Curses, Followmons, Game Show,
    Time of Day & Seasons, Unique mons, Campaigns): an in-page anchor-chip
