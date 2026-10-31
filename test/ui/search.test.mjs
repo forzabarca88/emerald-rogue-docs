@@ -34,17 +34,17 @@
  * index (the same ROGUE.buildSearchIndex/ROGUE.searchQuery the browser runs,
  * verified against data/*.json at test-authoring time — see the "Derived
  * literals" block):
- *   "mega evolution"  — under EX: 5 rows, row 0 the EX-only quest
+ *   "mega evolution"  — under EX: 4 rows, row 0 the EX-only quest
  *                       "Mega Evolution" (data/quests.json versions ["ex"])
  *                       → ./quests.html#quest-default_challenges; under
- *                       Vanilla: 3 rows, none of them that quest row.
- *                       Under "mega": 13 rows in EX.
+ *                       Vanilla: 2 rows, none of them that quest row.
+ *                       Under "mega": 12 rows in EX.
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
- *                       in the whole 568-entry index containing "gen3" →
+ *                       in the whole 569-entry index containing "gen3" →
  *                       exactly 1 row under BOTH versions.
- *   "/" (a second press while open) — 34 index entries contain a "/" → the
+ *   "/" (a second press while open) — 37 index entries contain a "/" → the
  *                       search.maxResults cap (data/site.json: 30) applies.
  *   "zzqxwvnotthere"  — 0 rows under both versions.
  *
@@ -269,14 +269,14 @@ test('hub.html: "/" opens the palette, a second "/" types into it, Escape closes
 
     // second "/": the palette is already open → the key simply types into the
     // focused input (search.js: the shortcut does nothing special while open).
-    // 34 index entries contain a "/", so the result is the maxResults cap.
+    // 37 index entries contain a "/", so the result is the maxResults cap.
     await page.keyboard.press('/');
     await page.waitForFunction(() => document.querySelector('.search-palette__input').value === '/', null, { timeout: SETTLE_TIMEOUT_MS });
     await waitForCount(page, COUNT(MAX_RESULTS, '/'), 'hub.html (second "/" — the capped result)');
     f = await page.evaluate(paletteFacts);
     assert.equal(f.open, true, 'a second "/" must not close the palette (it is not a toggle)');
     assert.equal(f.inputValue, '/', 'the second "/" is typed into the palette input');
-    assert.equal(f.rows.length, MAX_RESULTS, `the capped result shows exactly ${MAX_RESULTS} rows (data/site.json search.maxResults; 34 index entries contain a "/")`);
+    assert.equal(f.rows.length, MAX_RESULTS, `the capped result shows exactly ${MAX_RESULTS} rows (data/site.json search.maxResults; 37 index entries contain a "/")`);
 
     // Escape closes; reopening starts fresh (the query is reset)
     await page.keyboard.press('Escape');
@@ -300,16 +300,16 @@ test('index.html: typing filters live — the count line and rows track the quer
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'index.html (trigger open)');
     await typeQuery(page, 'mega');
-    await waitForCount(page, COUNT(13, 'mega'), 'index.html (EX, "mega")');
+    await waitForCount(page, COUNT(12, 'mega'), 'index.html (EX, "mega")');
     let f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 13, 'data-derived: 13 index entries match "mega" under EX (title starts/includes or body)');
+    assert.equal(f.rows.length, 12, 'data-derived: 12 index entries match "mega" under EX (title starts/includes or body)');
     assert.equal(f.emptyVisible, false, 'the hint disappears once a query has results');
     assert.equal(f.listVisible, true, 'the listbox is visible with results');
 
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'index.html (EX, "mega evolution")');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (EX, "mega evolution")');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 5, 'data-derived: exactly 5 index entries match "mega evolution" under EX (searchQuery over the 568-entry index)');
+    assert.equal(f.rows.length, 4, 'data-derived: exactly 4 index entries match "mega evolution" under EX (searchQuery over the 569-entry index)');
     const row0 = f.rows[0];
     assert.equal(row0.id, 'search-result-0', 'row ids are #search-result-<i>');
     assert.equal(row0.name, EX_ONLY_QUEST, 'the tier-0 title match ranks first: the EX-only quest "Mega Evolution" (data/quests.json)');
@@ -338,9 +338,9 @@ test('quests.html (?version=vanilla): the EX-only quest is absent, the Vanilla-s
     assert.equal(f.open, true, 'the trigger opens the palette on the quests page too');
 
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(3, 'mega evolution'), 'quests.html (Vanilla, "mega evolution")');
+    await waitForCount(page, COUNT(2, 'mega evolution'), 'quests.html (Vanilla, "mega evolution")');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 3, 'data-derived: only the 3 shared-version entries match "mega evolution" under Vanilla');
+    assert.equal(f.rows.length, 2, 'data-derived: only the 2 shared-version entries match "mega evolution" under Vanilla');
     assert.equal(
       f.rows.some((r) => r.name === EX_ONLY_QUEST),
       false,
@@ -369,7 +369,7 @@ test('quests.html: the OPEN palette re-scopes live on a version toggle (the head
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'quests.html (trigger open)');
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'quests.html (EX open, "mega evolution")');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'quests.html (EX open, "mega evolution")');
     let f = await page.evaluate(paletteFacts);
     assert.equal(f.rows[0].name, EX_ONLY_QUEST, 'under EX the first row is the EX-only quest');
 
@@ -377,18 +377,18 @@ test('quests.html: the OPEN palette re-scopes live on a version toggle (the head
     // lands while the palette is open, and results re-scope live (search.js
     // ROGUE.onChange subscription)
     await page.click('.version-toggle__option[data-version="vanilla"]');
-    await waitForCount(page, COUNT(3, 'mega evolution'), 'quests.html (live toggle to Vanilla)');
+    await waitForCount(page, COUNT(2, 'mega evolution'), 'quests.html (live toggle to Vanilla)');
     f = await page.evaluate(paletteFacts);
     assert.equal(f.open, true, 'the palette stays open across the version toggle');
     assert.equal(f.inputValue, 'mega evolution', 'the query survives the re-scope');
-    assert.equal(f.rows.length, 3, 'the re-scoped result drops the 2 EX-only matches (5 → 3)');
+    assert.equal(f.rows.length, 2, 'the re-scoped result drops the 2 EX-only matches (4 → 2)');
     assert.equal(f.rows.some((r) => r.name === EX_ONLY_QUEST), false, 'the EX-only quest row drops out under Vanilla');
 
     // and back to EX
     await page.click('.version-toggle__option[data-version="ex"]');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'quests.html (live toggle back to EX)');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'quests.html (live toggle back to EX)');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 5, 'toggling back restores the EX-scoped result (3 → 5)');
+    assert.equal(f.rows.length, 4, 'toggling back restores the EX-scoped result (2 → 4)');
     assert.equal(f.rows[0].name, EX_ONLY_QUEST, 'the EX-only quest is first again');
     assert.deepEqual(errors, [], `unexpected page errors across the toggle re-scope: ${errors.join('; ')}`);
   } finally {
@@ -490,7 +490,7 @@ test('index.html: ArrowDown/ArrowUp move the active row with wrap-around; Escape
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'index.html (trigger open)');
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'index.html (keyboard nav)');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (keyboard nav)');
 
     const active = async () => {
       const f = await page.evaluate(paletteFacts);
@@ -503,10 +503,9 @@ test('index.html: ArrowDown/ArrowUp move the active row with wrap-around; Escape
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
     await page.keyboard.press('ArrowDown');
-    await page.keyboard.press('ArrowDown');
-    assert.deepEqual(await active(), { ad: 'search-result-0', active: ['search-result-0'] }, 'ArrowDown from the last row WRAPS to row 0 (4 wraps over 5 rows)');
+    assert.deepEqual(await active(), { ad: 'search-result-0', active: ['search-result-0'] }, 'ArrowDown from the last row WRAPS to row 0 (4 presses over 4 rows)');
     await page.keyboard.press('ArrowUp');
-    assert.deepEqual(await active(), { ad: 'search-result-4', active: ['search-result-4'] }, 'ArrowUp from row 0 WRAPS to the last row (row 4)');
+    assert.deepEqual(await active(), { ad: 'search-result-3', active: ['search-result-3'] }, 'ArrowUp from row 0 WRAPS to the last row (row 3)');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
 
     await page.keyboard.press('Escape');
@@ -525,7 +524,7 @@ test('index.html: Enter on a CROSS-page entry navigates to the relative page.htm
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'index.html (trigger open)');
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'index.html (cross-page Enter)');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (cross-page Enter)');
 
     await page.keyboard.press('Enter');
 
@@ -556,7 +555,7 @@ test('quests.html: Enter on a SAME-page entry scrolls to the anchor WITHOUT a re
     await page.keyboard.press('/');
     await waitForOpen(page, 'quests.html ("/" open)');
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), 'quests.html (same-page Enter)');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'quests.html (same-page Enter)');
     const f0 = await page.evaluate(paletteFacts);
     assert.equal(f0.rows[0].meta, site.pages.quests.title, 'row 0 targets the quests page — the CURRENT page');
 
@@ -733,10 +732,10 @@ test('360×640: the open/type/navigate/close cycle with no horizontal overflow a
 
     // type
     await typeQuery(page, 'mega evolution');
-    await waitForCount(page, COUNT(5, 'mega evolution'), '360×640 (typing)');
+    await waitForCount(page, COUNT(4, 'mega evolution'), '360×640 (typing)');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 5, 'the result is viewport-independent (the index depends on the version, not the viewport size)');
-    await assertNoOverflow(page, '360×640 (palette open, 5 rows)');
+    assert.equal(f.rows.length, 4, 'the result is viewport-independent (the index depends on the version, not the viewport size)');
+    await assertNoOverflow(page, '360×640 (palette open, 4 rows)');
 
     // navigate (cross-page Enter)
     await page.keyboard.press('Enter');

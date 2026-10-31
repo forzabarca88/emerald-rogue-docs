@@ -111,6 +111,16 @@ const PAGES = [
         expected: 19,
         why: 'data/versions.json has 19 records; versions.js renders the whole master list as one .diff row per record, unfiltered by version',
       },
+      overviewCells: {
+        sel: '#version-overview .voverview__cell',
+        expected: 10,
+        why: 'data/versions.json: the 19 records span 10 distinct categories → versions.js renders one .voverview__cell per category (the cell set is version-independent; only the counts inside scope to the active build)',
+      },
+      overviewAnchors: {
+        sel: '#version-diffs .diff[id]',
+        expected: 10,
+        why: 'data/versions.json: 10 distinct categories → versions.js gives the first row of each category its #vover-<category> anchor id',
+      },
     },
   },
   {
