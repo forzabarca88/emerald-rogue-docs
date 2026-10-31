@@ -194,10 +194,30 @@ const PAGES = [
         expected: 11,
         why: 'data/hub.json has 60 records split by category: 11 hub-area records → 11 .area-card (hub.js ROGUE.byCategory), all in both versions',
       },
+      areaMapBlocks: {
+        sel: '#hub-areas .hub-map__block',
+        expected: 11,
+        why: 'data/hub.json: 11 hub-area records → 11 blocks in the area overview map, one per record across the three access tiers (hub.js areaMap), all in both versions',
+      },
+      areaMapLinks: {
+        sel: '#hub-areas .hub-map__link',
+        expected: 3,
+        why: 'data/hub.json: the 4 initially-present areas form the starting chain (the intro prose lists them in the same order as the records) → 3 connecting arrows between the 4 built blocks (hub.js areaMap)',
+      },
       upgradeCards: {
         sel: '.hub-upgrade',
         expected: 48,
         why: 'data/hub.json: 48 hub-upgrade records → 48 .hub-upgrade cards (hub.js), all in both versions',
+      },
+      upgradeBarRows: {
+        sel: '#hub-upgrades .hub-bars__row',
+        expected: 11,
+        why: 'data/hub.json: 11 hub-area records → 11 per-area upgrade-count bars (hub.js upgradeBars, counts from the 48 upgrades\' `area` field, including the 2 areas with no upgrades in the shop list)',
+      },
+      cycleCells: {
+        sel: '.hub-cycles__cell',
+        expected: 8,
+        why: 'data/hub.json time-weather-season `cycles` field: 4 time-of-day codes + 4 seasons → 8 cycle cells (hub.js cycleStrip)',
       },
       decorCards: {
         sel: '#hub-decor article.card',
