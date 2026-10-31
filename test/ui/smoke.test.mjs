@@ -291,6 +291,31 @@ const PAGES = [
         expected: 7,
         why: 'data/routes.json records use 7 distinct terrains (Field, Forest, Cave, Mountain, WaterFront, Urban, Island) → one chip each (routes.js uniqueValues("terrain"))',
       },
+      matrixCells: {
+        sel: '#routes-table .route-matrix__row--region [data-terrain]',
+        expected: 24,
+        why: 'data/routes.json: 4 regions × the 6 terrain columns from the type-taxonomy block’s structured terrains field ("Field, Forest, Cave, Mountain, WaterFront, Urban") → 24 count cells; the row totals (12/6/6/12) add up to all 36 routes (routes.js routeMatrix)',
+      },
+      matrixRows: {
+        sel: '#routes-table .route-matrix__row',
+        expected: 5,
+        why: 'the region × terrain matrix renders one head row plus one row per region: 1 + 4 = 5 (routes.js routeMatrix)',
+      },
+      subTypeRollRows: {
+        sel: '.cat-roll__row',
+        expected: 2,
+        why: 'data/routes.json calm-average-tough block has 2 roll phases (difficulty 0–8: 3/4/1, 9+: 0/1/8) → one stacked bar row each (routes.js catRollVisual)',
+      },
+      subTypeRollSegments: {
+        sel: '.cat-roll__seg',
+        expected: 5,
+        why: 'the two roll phases render a segment per NON-ZERO weight: 3 (3/4/1) + 2 (0/1/8 — calm 0 renders no segment) = 5 (routes.js catRollVisual)',
+      },
+      subTypeStripRows: {
+        sel: '.cat-strip__row',
+        expected: 6,
+        why: 'data/routes.json calm-average-tough block has 6 values rows (grass, water, trainer spawn, item drop, item rarity, themed weather) → 6 comparison-strip rows (routes.js catStripVisual)',
+      },
       countLine: {
         sel: '#routes-count',
         text: '36 routes across all 4 regions',
