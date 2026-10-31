@@ -2,10 +2,14 @@
  * pages/config.js — the run-configuration reference.
  *
  * Sections, all rendered strictly from data:
- *   1. intro prose (data/settings.json)
+ *   1. intro prose (data/settings.json) — the difficulty-scale block
+ *      renders the 0–13 ladder visual (one numbered cell per stage,
+ *      tier-colored, weather-onset caption) from its structured `ladder`
+ *      field around the trimmed prose.
  *   2. Game modes — the three rule sets as cards with their full rule
  *      tables (data/game-modes.json), plus the cross-cutting rule
- *      assembly prose.
+ *      assembly as a `.step-strip` numbered flow (from the prose
+ *      block's `steps` field) over the trimmed prose.
  *   3. Difficulty — the 0–4 level range and the five preset records
  *      with their forced-toggle / forced-slider chips (data/settings.json).
  *   4. Toggles — the on/off switches grouped by their settings submenu
@@ -51,6 +55,103 @@
 
     function fieldBlock(label, inner) {
       return '<p class="set-field"><span class="field-label">' + label + '</span>' + inner + '</p>';
+    }
+
+    /* --- Difficulty ladder (data/settings.json `difficulty-scale`) ------ */
+
+    /**
+     * The 0–13 difficulty ladder: one numbered cell per stage, colored by
+     * tier (emerald gyms → gold Elite Four outline → solid gold champion),
+     * a tier key row above and the weather-onset fact as the visible
+     * caption. The cell board is decorative (aria-hidden) — the key row
+     * (tier names + ranges) and the caption carry the same meaning for
+     * screen readers. Every value comes from the prose block's structured
+     * `ladder` field.
+     */
+    function difficultyLadder(l) {
+      if (!l || !Array.isArray(l.tiers) || !l.tiers.length) return '';
+      var first = l.stages && typeof l.stages.first === 'number' ? l.stages.first : l.tiers[0].first;
+      var last = l.stages && typeof l.stages.last === 'number' ? l.stages.last : l.tiers[l.tiers.length - 1].last;
+      if (!(last >= first)) return '';
+      var kindFor = {};
+      l.tiers.forEach(function (t) {
+        for (var n = t.first; n <= t.last; n++) kindFor[n] = t.kind;
+      });
+      var cells = '';
+      for (var n = first; n <= last; n++) {
+        cells +=
+          '<li class="diff-ladder__cell diff-ladder__cell--' +
+          ROGUE.esc(kindFor[n] || 'gym') +
+          '">' +
+          n +
+          '</li>';
+      }
+      var keys = l.tiers
+        .map(function (t) {
+          return (
+            '<span class="diff-ladder__key diff-ladder__key--' +
+            ROGUE.esc(t.kind) +
+            '">' +
+            ROGUE.esc(t.label) +
+            ' ' +
+            t.first +
+            '\u2013' +
+            t.last +
+            '</span>'
+          );
+        })
+        .join('');
+      return (
+        '<figure class="diff-ladder">' +
+        '<div class="diff-ladder__keys">' +
+        keys +
+        '</div>' +
+        '<ol class="diff-ladder__board" style="grid-template-columns:repeat(' +
+        (last - first + 1) +
+        ',minmax(0,1fr))" aria-hidden="true">' +
+        cells +
+        '</ol>' +
+        (l.weather
+          ? '<figcaption class="diff-ladder__caption">' + ROGUE.esc(l.weather) + '</figcaption>'
+          : '') +
+        '</figure>'
+      );
+    }
+
+    /** The difficulty-scale prose block as a section with the ladder visual. */
+    function difficultyScaleSection(p) {
+      return ROGUE.section(
+        'difficulty-scale',
+        '',
+        p.heading,
+        '',
+        ROGUE.paragraphs(p.text) + difficultyLadder(p.ladder)
+      );
+    }
+
+    /** A short true sequence (3–5 steps) as a wrapping numbered strip. */
+    function stepStrip(steps, label) {
+      if (!Array.isArray(steps) || !steps.length) return '';
+      return (
+        '<ol class="step-strip"' +
+        (label ? ' aria-label="' + ROGUE.esc(label) + '"' : '') +
+        '>' +
+        steps
+          .map(function (s, i) {
+            return (
+              '<li class="step-strip__step">' +
+              '<span class="step-strip__index">' +
+              (i + 1) +
+              '</span>' +
+              '<span class="step-strip__label">' +
+              ROGUE.esc(s) +
+              '</span>' +
+              '</li>'
+            );
+          })
+          .join('') +
+        '</ol>'
+      );
     }
 
     /* --- Game modes ------------------------------------------------------ */
@@ -243,7 +344,14 @@
       if (!main) return;
 
       var html = '<h1>' + ROGUE.esc((pages.config || {}).title || 'Configuration') + '</h1>';
-      html += ROGUE.proseSections(settings.prose);
+      /* Intro prose; the difficulty-scale block grows the 0–13 ladder
+         visual around its trimmed text (all other blocks render plain). */
+      html += (Array.isArray(settings.prose) ? settings.prose : [])
+        .map(function (p) {
+          if (p && p.id === 'difficulty-scale' && p.ladder) return difficultyScaleSection(p);
+          return ROGUE.proseSections([p]);
+        })
+        .join('');
 
       /* In-page section strip (anchor chips). */
       var nav = [
@@ -273,7 +381,9 @@
           overview ? overview.text : (modes.meta && modes.meta.description) || '',
           '<div class="grid">' + modeCards + '</div>' +
           (ruleApplication
-            ? '<h3 class="config-subhead">' + ROGUE.esc(ruleApplication.heading) + '</h3>' + ROGUE.paragraphs(ruleApplication.text)
+            ? '<h3 class="config-subhead">' + ROGUE.esc(ruleApplication.heading) + '</h3>' +
+              stepStrip(ruleApplication.steps, ruleApplication.heading) +
+              ROGUE.paragraphs(ruleApplication.text)
             : '')
         );
 

@@ -163,6 +163,16 @@ const PAGES = [
         expected: 7,
         why: "data/campaigns.json campaign-trigger record lists 7 hidden phrases ('SMALL HOLIDAY'…'PLEASE MISS'), one .eggs row each (config.js parsePhrases)",
       },
+      diffLadderCells: {
+        sel: '#difficulty-scale .diff-ladder__cell',
+        expected: 14,
+        why: 'data/settings.json difficulty-scale prose: ladder.stages spans 0–13 → 14 numbered stage cells (config.js difficultyLadder)',
+      },
+      ruleAssemblySteps: {
+        sel: '#config-modes .step-strip__step',
+        expected: 4,
+        why: 'data/game-modes.json rule-application prose: 4 steps → 4 step-strip steps under the mode cards (config.js stepStrip)',
+      },
     },
   },
   {

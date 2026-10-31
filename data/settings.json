@@ -13,7 +13,16 @@
     {
       "id": "difficulty-scale",
       "heading": "The 0–13 difficulty scale",
-      "text": "Each run climbs a fixed ladder of 14 boss stages, one per difficulty point from 0 to 13: eight gym bosses (0–7), four Elite Four members (8–11) and two champion slots (12–13). Trainer level caps rise with each stage, and key trainers apply their preferred weather as the stage number climbs (from stage 4 with the Trainers slider on Average, from stage 2 on Hard, and always on Brutal — never on Easy). Difficulty 13 — the final champion difficulty — is the highest tier in the game: it is the tier that rules like Gauntlet's forced endgame trainers and endgame route items reference."
+      "text": "Each run climbs a fixed ladder of 14 boss stages, and trainer level caps rise with each stage. Difficulty 13 — the final champion stage — is the highest tier in the game: it is the tier that rules like Gauntlet's forced endgame trainers and endgame route items reference.",
+      "ladder": {
+        "stages": { "first": 0, "last": 13 },
+        "tiers": [
+          { "label": "Gym bosses", "kind": "gym", "first": 0, "last": 7 },
+          { "label": "Elite Four", "kind": "elite", "first": 8, "last": 11 },
+          { "label": "Champion", "kind": "champion", "first": 12, "last": 13 }
+        ],
+        "weather": "Key trainers apply their preferred weather as the stage number climbs — from stage 4 with the Trainers slider on Average, from stage 2 on Hard, and always on Brutal — never on Easy."
+      }
     },
     {
       "id": "custom-and-rewards",

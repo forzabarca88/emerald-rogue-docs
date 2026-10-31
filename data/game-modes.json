@@ -13,7 +13,13 @@
     {
       "id": "rule-application",
       "heading": "How a run's rules are assembled",
-      "text": "When a run's rules are generated, the game copies the selected mode's rule table, then layers two cross-cutting rules on top of it. First, if the Trainer Order setting is Official, challenge quests are disabled for the whole run regardless of mode. Second, if any charm is active when the rules are generated, both main quests and challenge quests are disabled. Gauntlet's own rule set additionally disables challenge quests, so in Gauntlet runs challenge quests never appear even without those settings."
+      "text": "Two cross-cutting rules are layered on top of the selected mode's rule table when a run's rules are generated, in the order above. They hold for the whole run regardless of mode.",
+      "steps": [
+        "The selected mode's rule table is copied",
+        "Trainer Order: Official → challenge quests off for the run",
+        "Any charm active → main + challenge quests off",
+        "Gauntlet's rule set → challenge quests off anyway"
+      ]
     }
   ],
   "records": [
