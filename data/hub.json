@@ -13,7 +13,7 @@
     {
       "id": "building-areas-and-upgrades",
       "heading": "Building areas and upgrades",
-      "text": "Every area contains a workbench that opens the hub build shop with two menus — Areas and Upgrades — both paid for with Build Parts, an item you earn from quest rewards. New areas must be built on a free connection of an area you already own, and the Challenge Area additionally requires you to have met Pokabbie (the postgame NPC who unlocks the Pokédex). Upgrades have a cost, live in one target area, and can require that area plus up to two prerequisite upgrades (for example “Unique Slots+” needs “Unique Slots”, which needs the “Unique Lab” — and the Unique Lab itself is a hidden upgrade you can only receive as a quest reward, not buy). A few upgrades are reserved placeholders that are deliberately unbuildable (they require themselves)."
+      "text": "Every area contains a workbench that opens the hub build shop — the Areas and Upgrades menus — both paid for with Build Parts, an item you earn from quest rewards. New areas must be built on a free connection of an area you already own, and the Challenge Area additionally requires you to have met Pokabbie. Upgrades live in one target area and can require that area plus up to two prerequisite upgrades — the cards list each requirement, and a few reserved placeholders require themselves, so they can never be built."
     },
     {
       "id": "wander-mons",
@@ -23,7 +23,14 @@
     {
       "id": "time-weather-season",
       "heading": "Time, seasons and weather",
-      "text": "The hub runs on a simulated clock that only moves when you warp between maps — each warp during an active run adds 60 in-game minutes, and each warp while you're in the hub adds 15; there is no real-time clock. Time of day is split into four codes (Dawn, Day, Dusk and Night) and the year cycles through four seasons (Spring, Summer, Autumn, Winter), each lasting two in-game days. Whenever a new day or noon rolls over — and you are not in the middle of an adventure — the hub's weather re-rolls. The bed in your Home Base lets you sleep until a chosen wake time (Dawn, Day, Dusk or Night) and pick which season to wake up in, which is how you set the hub's clock."
+      "text": "The hub runs on a simulated clock that only moves when you warp between maps — each warp during an active run adds 60 in-game minutes, and each warp while you're in the hub adds 15; there is no real-time clock. Whenever a new day or noon rolls over — and you are not in the middle of an adventure — the hub's weather re-rolls. The bed in your Home Base lets you sleep until a chosen wake time (Dawn, Day, Dusk or Night) and pick which season to wake up in, which is how you set the hub's clock.",
+      "cycles": {
+        "day": ["Dawn", "Day", "Dusk", "Night"],
+        "season": {
+          "phases": ["Spring", "Summer", "Autumn", "Winter"],
+          "days": 2
+        }
+      }
     },
     {
       "id": "hub-in-the-loop",

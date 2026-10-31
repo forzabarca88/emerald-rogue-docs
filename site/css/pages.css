@@ -1032,11 +1032,14 @@
 }
 
 /* --- hub -----------------------------------------------------------------------
-   Intro prose, an in-page anchor-chip strip, the hub areas as a card
-   grid, the workbench upgrades as a searchable card grid (area / cost /
+   Intro prose, an in-page anchor-chip strip, the area overview map
+   (the 11 areas in their three access tiers, the built ones drawn as
+   the starting chain) above the area card grid, the per-area
+   upgrade-count bars above the searchable upgrade grid (area / cost /
    requirements meta, per-version "differs in" notes via .card__diff),
-   the wander-mon and time/season prose, the home-decor card and the
-   run-loop note. All rules scoped under .page--hub. */
+   the day/season cycle strip above the clock prose, the wander-mon
+   prose, the home-decor card and the run-loop note. All rules scoped
+   under .page--hub. */
 
 .page--hub .page-fallback {
   max-width: 70ch;
@@ -1125,6 +1128,232 @@
 
 .page--hub .hub-upgrade__field {
   margin-top: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+/* area overview map (issue #31): the 11 hub-area records in their three
+   access tiers — the built ones drawn as the starting chain (arrow
+   links), then the free build, then Build Parts (cheapest first). One
+   block per record: name + cost. The tier grid is decorative
+   (aria-hidden in hub.js); the caption + the area cards below carry the
+   meaning. Block rows wrap, so the map never overflows 360px. */
+.page--hub .hub-map {
+  margin-bottom: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--hub .hub-map__tiers {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page--hub .hub-map__tier {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page--hub .hub-map__tier-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.page--hub .hub-map__blocks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.page--hub .hub-map__block {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+/* the built tier is the starting foundation — it wears the primary hue
+   (the same treatment the safari pool block gets) */
+.page--hub .hub-map__block--built {
+  border-color: var(--color-emerald);
+}
+
+.page--hub .hub-map__name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.page--hub .hub-map__cost {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* the starting-chain link between built blocks */
+.page--hub .hub-map__link {
+  align-self: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.page--hub .hub-map__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* per-area upgrade counts (issue #31): one row per hub-area record —
+   name, track + fill, mono count. The grid is decorative (aria-hidden
+   in hub.js); the counts + caption carry the meaning. Bar width: the
+   count scaled to the busiest area; the mono label carries the exact
+   figure. An area with no upgrades gets an empty dashed track (the
+   "nothing here" style of the run-path gap node). */
+.page--hub .hub-bars {
+  margin-bottom: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+/* 11 rows: one column at 360px, two in wider viewports */
+.page--hub .hub-bars__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  gap: var(--space-2);
+}
+
+.page--hub .hub-bars__row {
+  min-width: 0;
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.page--hub .hub-bars__name {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+/* the track + the mono count to its right (the track shrinks first) */
+.page--hub .hub-bars__bar {
+  margin-top: var(--space-2);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page--hub .hub-bars__track {
+  position: relative;
+  display: block;
+  height: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 2px;
+  background: var(--color-grid);
+}
+
+.page--hub .hub-bars__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  min-width: 3px;
+  border-radius: 1px;
+  background: var(--color-emerald);
+}
+
+.page--hub .hub-bars__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.page--hub .hub-bars__row--empty .hub-bars__track {
+  border-style: dashed;
+  background: transparent;
+}
+
+.page--hub .hub-bars__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* day/season cycle strip (issue #31): two rows of phase cells (from the
+   time-weather-season prose's `cycles` field) with arrow links and a
+   loop-back glyph — a true cycle, not a numbered sequence. The rows are
+   decorative (aria-hidden in hub.js); the caption + the clock prose
+   below carry the meaning. */
+.page--hub .hub-cycles {
+  margin-bottom: var(--space-4);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.page--hub .hub-cycles__rows {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page--hub .hub-cycles__row {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page--hub .hub-cycles__row-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.page--hub .hub-cycles__cells {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.page--hub .hub-cycles__cell {
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  padding: 4px var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-ink);
+}
+
+.page--hub .hub-cycles__arrow,
+.page--hub .hub-cycles__loop {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.page--hub .hub-cycles__caption {
+  margin-top: var(--space-3);
+  color: var(--color-muted);
   font-size: var(--text-sm);
 }
 
