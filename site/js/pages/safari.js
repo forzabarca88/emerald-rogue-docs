@@ -48,21 +48,6 @@
       })[0] || null;
     }
 
-    /** Plain record card: name, badge, description, diff note, source. */
-    function simpleCard(record) {
-      var html = '<article class="card">';
-      html +=
-        '<div class="card__head"><h3 class="card__title">' +
-        ROGUE.esc(record.name) +
-        '</h3>' +
-        ROGUE.badge(record) +
-        '</div>';
-      if (record.description) html += '<p class="card__desc">' + ROGUE.esc(record.description) + '</p>';
-      html += ROGUE.diffNote(record);
-      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
-      return html + '</article>';
-    }
-
     /**
      * Parse "N–M are regular" / "N–M are legendary" out of the
      * slot-layout record's description so the diagrams' ranges and
@@ -204,31 +189,6 @@
       return html + '</div>';
     }
 
-    /** A short true sequence (3–5 steps) as a wrapping numbered strip. */
-    function stepStrip(steps, label) {
-      if (!Array.isArray(steps) || !steps.length) return '';
-      return (
-        '<ol class="step-strip"' +
-        (label ? ' aria-label="' + ROGUE.esc(label) + '"' : '') +
-        '>' +
-        steps
-          .map(function (s, i) {
-            return (
-              '<li class="step-strip__step">' +
-              '<span class="step-strip__index">' +
-              (i + 1) +
-              '</span>' +
-              '<span class="step-strip__label">' +
-              ROGUE.esc(s) +
-              '</span>' +
-              '</li>'
-            );
-          })
-          .join('') +
-        '</ol>'
-      );
-    }
-
     function render() {
       var main = document.querySelector('main');
       if (!main) return;
@@ -265,7 +225,7 @@
           'The pool',
           poolProse ? poolProse.heading : 'The 60-slot pool',
           poolProse ? poolProse.text : null,
-          slotDiagram() + (layout ? simpleCard(layout) : '')
+          slotDiagram() + (layout ? ROGUE.simpleCard(layout) : '')
         );
 
       /* Entry: the four events as a converging flow, then the cards. */
@@ -279,7 +239,7 @@
           entryProse ? entryProse.text : null,
           entryFlow(entries) +
             '<div class="safari-entry">' +
-            entries.map(simpleCard).join('') +
+            entries.map(ROGUE.simpleCard).join('') +
             '</div>'
         );
 
@@ -287,7 +247,7 @@
       var priProse = ROGUE.proseById(data, 'priority-eviction');
       var priRec = recordById('priority-eviction');
       var priEquation = priRec ? scoreEquation(priRec) : '';
-      var priStrip = priRec ? stepStrip(priRec.eviction, 'Eviction, step by step') : '';
+      var priStrip = priRec ? ROGUE.stepStrip(priRec.eviction, 'Eviction, step by step') : '';
       html +=
         ROGUE.section(
           'safari-priority',
@@ -296,7 +256,7 @@
           priProse ? priProse.text : null,
           (priEquation || priStrip
             ? '<div class="safari-priority">' + priEquation + priStrip + '</div>'
-            : '') + (priRec ? simpleCard(priRec) : '')
+            : '') + (priRec ? ROGUE.simpleCard(priRec) : '')
         );
 
       /* Legends Cave: numbered steps + cited card (with roster diff note). */
@@ -308,12 +268,12 @@
           'Legends Cave',
           caveProse ? caveProse.heading : 'The Legends Cave',
           caveProse ? caveProse.text : null,
-          cave ? stepsList(cave) + simpleCard(cave) : ''
+          cave ? stepsList(cave) + ROGUE.simpleCard(cave) : ''
         );
 
       /* View & dismiss the pool. */
       var sign = recordById('pool-sign');
-      if (sign) html += ROGUE.section('safari-sign', 'Pool sign', sign.name, null, simpleCard(sign));
+      if (sign) html += ROGUE.section('safari-sign', 'Pool sign', sign.name, null, ROGUE.simpleCard(sign));
 
       main.innerHTML = html;
     }

@@ -8,7 +8,7 @@
     {
       "id": "what-the-hub-is",
       "heading": "What the hub is",
-      "text": "The hub (named “Pokémon Hub” on your save) is the persistent town you live in between runs — it never resets. It is laid out as a grid of connected areas that you grow yourself: when you start, four areas are already built in a random chain (Labs, the Town Exit, the Safari Area and the Town Square), and everything else is constructed by the player. A run always starts at the Town Exit; when the run ends, your remaining party and Day Care Pokémon are added to the Safari Zone, and the run's rewards (money, Build Parts, items and decorations) come home with you to fund the next round of construction."
+      "text": "The hub (named “Pokémon Hub” on your save) is the persistent town you live in between runs — it never resets. It is laid out as a grid of connected areas that you grow yourself: when you start, four areas are already built in a fixed chain (Town Square — Labs — Town Exit — Safari Area), with only their grid positions randomized, and everything else is constructed by the player. A run always starts at the Town Exit; when the run ends, your remaining party and Day Care Pokémon are added to the Safari Zone, and the run's rewards (money, Build Parts, items and decorations) come home with you to fund the next round of construction."
     },
     {
       "id": "building-areas-and-upgrades",

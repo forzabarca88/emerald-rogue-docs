@@ -99,7 +99,9 @@ test('adventure.json makes no wrong per-run placement or goal claims (records, m
   // record-name or citation exemptions).
   const bannedInProse = [...bannedPhrases, ...bannedInDescriptions, ...bannedAnywhere];
 
-  // ACT — scan every record's description and source, case-insensitively
+  // ACT — scan every record's description, source and rendered `placement`
+  // strings (the note + bar labels/conds the gameplay placement bars
+  // display), case-insensitively
   const hits = [];
   for (const record of adventure.records) {
     for (const field of ['description', 'source']) {
@@ -107,6 +109,22 @@ test('adventure.json makes no wrong per-run placement or goal claims (records, m
       for (const phrase of bannedPhrases) {
         if (text.includes(phrase.toLowerCase())) {
           hits.push(`${record.id}.${field} contains "${phrase}"`);
+        }
+      }
+    }
+    // The placement strings are rendered free text (not names or
+    // citations), so every phrase list applies to them.
+    if (record.placement && typeof record.placement === 'object') {
+      const placementTexts = [record.placement.note].concat(
+        (Array.isArray(record.placement.bars) ? record.placement.bars : []).map((bar) => [bar && bar.t, bar && bar.l]).flat()
+      );
+      for (const raw of placementTexts) {
+        const text = String(raw ?? '').toLowerCase();
+        if (!text) continue;
+        for (const phrase of bannedInProse) {
+          if (text.includes(phrase.toLowerCase())) {
+            hits.push(`${record.id}.placement contains "${phrase}"`);
+          }
         }
       }
     }

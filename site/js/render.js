@@ -3,10 +3,12 @@
  * nav.js; page scripts build on these.
  *
  * Exposes: ROGUE.esc(s), ROGUE.badgeClass(record), ROGUE.badge(record),
- * ROGUE.paragraphs(text), ROGUE.cards(records), ROGUE.table(records, columns),
- * ROGUE.proseSections(prose), ROGUE.section(id, eyebrow, heading, intro, body),
- * ROGUE.chip(text), ROGUE.proseById(data, id), ROGUE.byCategory(records, category),
- * ROGUE.versionLabel(id), ROGUE.resolvePlaceholders(text), ROGUE.effective(record[, keys]),
+ * ROGUE.paragraphs(text), ROGUE.cards(records), ROGUE.simpleCard(record),
+ * ROGUE.table(records, columns), ROGUE.proseSections(prose),
+ * ROGUE.section(id, eyebrow, heading, intro, body), ROGUE.chip(text),
+ * ROGUE.stepStrip(steps[, label]), ROGUE.proseById(data, id),
+ * ROGUE.byCategory(records, category), ROGUE.versionLabel(id),
+ * ROGUE.resolvePlaceholders(text), ROGUE.effective(record[, keys]),
  * ROGUE.diffNote(record[, text]), ROGUE.citeHtml(source).
  */
 (function () {
@@ -159,6 +161,46 @@
   /** A single .chip tag of escaped text. */
   ROGUE.chip = function (text) {
     return '<span class="chip">' + ROGUE.esc(text) + '</span>';
+  };
+
+  /** A short true sequence (3–5 steps) as a wrapping numbered step strip. */
+  ROGUE.stepStrip = function (steps, label) {
+    if (!Array.isArray(steps) || !steps.length) return '';
+    return (
+      '<ol class="step-strip"' +
+      (label ? ' aria-label="' + ROGUE.esc(label) + '"' : '') +
+      '>' +
+      steps
+        .map(function (s, i) {
+          return (
+            '<li class="step-strip__step">' +
+            '<span class="step-strip__index">' +
+            (i + 1) +
+            '</span>' +
+            '<span class="step-strip__label">' +
+            ROGUE.esc(s) +
+            '</span>' +
+            '</li>'
+          );
+        })
+        .join('') +
+      '</ol>'
+    );
+  };
+
+  /** Plain record card: name, badge, description, diff note, source. */
+  ROGUE.simpleCard = function (record) {
+    var html = '<article class="card">';
+    html +=
+      '<div class="card__head"><h3 class="card__title">' +
+      ROGUE.esc(record.name) +
+      '</h3>' +
+      ROGUE.badge(record) +
+      '</div>';
+    if (record.description) html += '<p class="card__desc">' + ROGUE.esc(record.description) + '</p>';
+    html += ROGUE.diffNote(record);
+    if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
+    return html + '</article>';
   };
 
   /** One entry of a data file's `prose` array by id (null when absent). */
