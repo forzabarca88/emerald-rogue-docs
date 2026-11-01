@@ -98,7 +98,7 @@ const PAGES = [
       placementBars: {
         sel: '.placement__bar',
         expected: 28,
-        why: 'data/adventure.json: the 17 room-type placement fields hold 28 bars in total — rest stop 100/20/5/1 by count on path, honey tree + dark deal + lab 2 bars each (badge parity), wild den 4 + gap 3 bars (by tier), the other 10 rooms 1 bar each (gameplay.js placementBarLine)',
+        why: 'data/adventure.json: the 17 room-type placement fields hold 28 bars in total — rest stop 100/20/5/1 by count on path, honey tree + dark deal + lab 2 bars each (badge parity), wild den 4 + gap 3 bars (by tier), the other 11 rooms 1 bar each (28 − 17 = 11) (gameplay.js placementBarLine)',
       },
     },
   },

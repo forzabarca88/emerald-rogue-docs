@@ -45,21 +45,6 @@
     /* the active search query — survives a version re-render */
     var state = { query: '' };
 
-    /** Plain record card: name, badge, description, diff note, source. */
-    function simpleCard(record) {
-      var html = '<article class="card">';
-      html +=
-        '<div class="card__head"><h3 class="card__title">' +
-        ROGUE.esc(record.name) +
-        '</h3>' +
-        ROGUE.badge(record) +
-        '</div>';
-      if (record.description) html += '<p class="card__desc">' + ROGUE.esc(record.description) + '</p>';
-      html += ROGUE.diffNote(record);
-      if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
-      return html + '</article>';
-    }
-
     function areaCard(record) {
       var costChip = record.initiallyPresent
         ? ROGUE.chip('Present from the start')
@@ -420,7 +405,7 @@
             'Home Base',
             'Home styles & decor',
             null,
-            '<div class="grid">' + decor.map(simpleCard).join('') + '</div>'
+            '<div class="grid">' + decor.map(ROGUE.simpleCard).join('') + '</div>'
           );
       }
 

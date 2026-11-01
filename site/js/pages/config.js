@@ -129,31 +129,6 @@
       );
     }
 
-    /** A short true sequence (3–5 steps) as a wrapping numbered strip. */
-    function stepStrip(steps, label) {
-      if (!Array.isArray(steps) || !steps.length) return '';
-      return (
-        '<ol class="step-strip"' +
-        (label ? ' aria-label="' + ROGUE.esc(label) + '"' : '') +
-        '>' +
-        steps
-          .map(function (s, i) {
-            return (
-              '<li class="step-strip__step">' +
-              '<span class="step-strip__index">' +
-              (i + 1) +
-              '</span>' +
-              '<span class="step-strip__label">' +
-              ROGUE.esc(s) +
-              '</span>' +
-              '</li>'
-            );
-          })
-          .join('') +
-        '</ol>'
-      );
-    }
-
     /* --- Game modes ------------------------------------------------------ */
 
     function modeCard(record) {
@@ -382,7 +357,7 @@
           '<div class="grid">' + modeCards + '</div>' +
           (ruleApplication
             ? '<h3 class="config-subhead">' + ROGUE.esc(ruleApplication.heading) + '</h3>' +
-              stepStrip(ruleApplication.steps, ruleApplication.heading) +
+              ROGUE.stepStrip(ruleApplication.steps, ruleApplication.heading) +
               ROGUE.paragraphs(ruleApplication.text)
             : '')
         );

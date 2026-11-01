@@ -227,9 +227,9 @@ test('the FAIRY-swap routes index BOTH the EX and the Vanilla wild types', () =>
 
 test('the #31 structured diagram fields are searchable (trimmed-but-rendered text)', () => {
   // ARRANGE — queries that are user-visible strings the #31 batch moved
-  // out of the prose into structured fields. Each is absent from the
-  // owning block/record's prose text (verified against data/*.json), so a
-  // hit proves the structured field made it into the haystack:
+  // into structured fields. The first four are absent from the owning
+  // block/record's prose text (verified against data/*.json), so a hit
+  // proves the structured field made it into the haystack:
   //   "gym bosses"           data/settings.json difficulty-scale
   //                          ladder.tiers[0].label (the ladder visual)
   //   "30 if shiny"          data/safari.json priority-eviction
@@ -238,8 +238,12 @@ test('the #31 structured diagram fields are searchable (trimmed-but-rendered tex
   //                          (the entry-flow diagram essence)
   //   "spring"               data/hub.json time-weather-season
   //                          cycles.season.phases (the cycle strip)
-  //   "odd badge"            data/adventure.json room placement bars'
-  //                          conditions (the placement diagram)
+  // "odd badge" is the exception: data/adventure.json
+  // room-honey-tree's description already says "15 on odd badges", so
+  // that hit is prose-sourced, while room-dark-deal and room-lab match
+  // ONLY via the structured placement.bars[].l labels — the query still
+  // proves the placement bars' conditions made it into the haystack
+  // (2 of the 3 hits).
   const structured = [
     { q: 'gym bosses', id: 'prose-settings-difficulty-scale', page: './config.html', total: 1 },
     { q: '30 if shiny', id: 'rec-safari-priority-eviction', page: './safari.html', total: 1 },
