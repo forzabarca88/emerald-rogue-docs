@@ -24,7 +24,7 @@
  * SEARCH_QUERY is fixed so the grid is deterministic and comparable across
  * runs; it matches both titles and body text, and the result set is
  * site-wide, so it is the same healthy list on every page — only the
- * version scopes it (5 rows under EX, 3 under Vanilla with the current
+ * version scopes it (4 rows under EX, 2 under Vanilla with the current
  * data, so the pair of captures also shows the version scoping). The
  * per-version expected count is DERIVED at startup by running the real
  * site index (site/js/data.js + render.js + search-index.js over the real

@@ -23,9 +23,10 @@
  *
  * Entry sources — one entry each: every data/site.json nav page (title +
  * description, anchor ''), every `prose` block of the 14 content data
- * files (heading + text), and every record of the 14 content files (name
- * + description + the per-version variant fields + the data-specific
- * chip text the rendering page emits + both string-form `differences`
+ * files (heading + text + the structured diagram fields), and every
+ * record of the 14 content files (name + description + the per-version
+ * variant fields + the data-specific chip text the rendering page emits
+ * + the structured diagram fields + both string-form `differences`
  * notes). Array order: nav pages in site.json nav order, then per content
  * file (in CONTENT_FILES order) its prose blocks in data order followed
  * by its records in data order. Prose blocks are anchored at the block's
@@ -54,9 +55,13 @@
  *   - Tradeoff: nothing per-version exists that the union can't express —
  *     every per-build difference lives in an explicit field (structured
  *     `differences`, `optionsByVersion`, the routes "Wild types:" note).
- *     The only version-dependent rendered text outside the union is
- *     auto-generated page chrome (e.g. "19 on/off switches in EX"), which
- *     is not record content and is deliberately not indexed.
+ *     The structured diagram fields (see structuredText below) render
+ *     identically in both builds — the one per-version structured value
+ *     (the Grace `stack.caps` 90/150) is numeric and skipped by the
+ *     strings-only rule. The only version-dependent rendered text outside
+ *     the union is auto-generated page chrome (e.g. "19 on/off switches
+ *     in EX"), which is not record content and is deliberately not
+ *     indexed.
  *   - Snippets: because they are union-derived, a shared record can match
  *     on the other build's wording and show it in the snippet; the
  *     destination card (navigated to on Enter) renders the active
@@ -203,6 +208,130 @@
       }
     }
     return [];
+  }
+
+  /* ------------------------------------------------------------------ *
+   * Structured diagram fields (issue #31) — the CLOSED allow-list of
+   * structured fields whose strings the pages render as visible
+   * captions/diagram text (the #31 batch trimmed the prose they
+   * replaced), so the palette indexes them like that prose. Everything
+   * else on a record is deliberately NOT walked: ids, versions, source
+   * citations and bare numbers/booleans (weights, odds, stage indexes)
+   * are data, not user text — where a number IS the visible label it
+   * arrives inside a string (the placement bar's "odd badge" condition,
+   * the routes "−20"/"65%" cells). Version-neutral: each field renders
+   * identically in both builds (the Grace per-version `stack.caps` are
+   * numbers — skipped).
+   *
+   * Prose-block fields (PROSE_STRUCTURED):
+   *   ladder    settings difficulty-scale — tier labels + weather caption
+   *   steps     game-modes rule-application — the numbered rule steps
+   *   cycles    hub time-weather-season — the day/season phase names
+   *   roll      routes calm-average-tough — the phase labels
+   *   values    routes calm-average-tough — row labels + the per-sub-type
+   *             cells (string cells: "5", "−20", "65%", "—"…)
+   *   terrains  routes type-taxonomy — the terrain names
+   * Record fields (RECORD_STRUCTURED — the safari `legends-cave` record's
+   * `steps` is already indexed by the safari extractor, so `steps` is
+   * prose-only here):
+   *   short     safari entry-criterion — the one-line flow essence
+   *   score     safari priority-eviction — term labels, result, note
+   *   eviction  safari priority-eviction — the numbered steps
+   *   placement adventure room-type — condition note + bar labels/conds
+   *   stack     charms — the unit (per/cap/caps are numbers)
+   * ------------------------------------------------------------------ */
+
+  /** Prose-block allow-list, in the order the parts are folded in. */
+  var PROSE_STRUCTURED = ['ladder', 'steps', 'cycles', 'roll', 'values', 'terrains'];
+
+  /** Record allow-list, in the order the parts are folded in. */
+  var RECORD_STRUCTURED = ['short', 'score', 'eviction', 'placement', 'stack'];
+
+  /**
+   * The user-visible string parts of ONE allow-listed structured field
+   * (shape per the comment above). Strings only — bare numbers/booleans
+   * are data values and stay out of the haystack.
+   */
+  function structuredFieldParts(field, value) {
+    if (value === null || value === undefined) return [];
+    if (field === 'ladder') {
+      if (typeof value !== 'object' || Array.isArray(value)) return [];
+      var parts = [];
+      if (Array.isArray(value.tiers)) {
+        for (var t = 0; t < value.tiers.length; t++) {
+          var tier = value.tiers[t];
+          if (tier && typeof tier === 'object') parts = parts.concat(toParts(tier.label));
+        }
+      }
+      return parts.concat(toParts(value.weather));
+    }
+    if (field === 'cycles') {
+      if (typeof value !== 'object' || Array.isArray(value)) return [];
+      var parts2 = toParts(value.day);
+      if (value.season && typeof value.season === 'object') parts2 = parts2.concat(toParts(value.season.phases));
+      return parts2;
+    }
+    if (field === 'roll') {
+      if (!Array.isArray(value)) return [];
+      var parts3 = [];
+      for (var r = 0; r < value.length; r++) {
+        var phase = value[r];
+        if (phase && typeof phase === 'object') parts3 = parts3.concat(toParts(phase.phase));
+      }
+      return parts3;
+    }
+    if (field === 'values') {
+      if (!Array.isArray(value)) return [];
+      var parts4 = [];
+      for (var v = 0; v < value.length; v++) {
+        var row = value[v];
+        if (row && typeof row === 'object') {
+          parts4 = parts4.concat(toParts(row.label), toParts(row.calm), toParts(row.average), toParts(row.tough));
+        }
+      }
+      return parts4;
+    }
+    if (field === 'score') {
+      if (typeof value !== 'object' || Array.isArray(value)) return [];
+      var parts5 = [];
+      if (Array.isArray(value.terms)) {
+        for (var s = 0; s < value.terms.length; s++) {
+          var term = value.terms[s];
+          if (term && typeof term === 'object') parts5 = parts5.concat(toParts(term.label));
+        }
+      }
+      return parts5.concat(toParts(value.result), toParts(value.note));
+    }
+    if (field === 'placement') {
+      if (typeof value !== 'object' || Array.isArray(value)) return [];
+      var parts6 = [];
+      var bars = Array.isArray(value.bars) ? value.bars : [];
+      for (var b = 0; b < bars.length; b++) {
+        var bar = bars[b];
+        if (bar && typeof bar === 'object') parts6 = parts6.concat(toParts(bar.t), toParts(bar.l));
+      }
+      return parts6.concat(toParts(value.note));
+    }
+    if (field === 'stack') {
+      return typeof value === 'object' && !Array.isArray(value) ? toParts(value.unit) : [];
+    }
+    // 'steps', 'terrains', 'short', 'eviction' — plain string (array) fields
+    return toParts(value);
+  }
+
+  /**
+   * Every allow-listed structured field of one prose block / record, in
+   * the list's order (absent fields skipped) — the user-visible diagram
+   * text folded into the haystack (see the allow-list comment above).
+   */
+  function structuredText(holder, fields) {
+    if (!holder || typeof holder !== 'object' || Array.isArray(holder)) return [];
+    var parts = [];
+    for (var i = 0; i < fields.length; i++) {
+      var field = fields[i];
+      if (holder[field] !== undefined) parts = parts.concat(structuredFieldParts(field, holder[field]));
+    }
+    return parts;
   }
 
   /** "mon_masteries" → "Mon Masteries" (the group-title rule quests.js uses). */
@@ -494,11 +623,12 @@
     }
   };
 
-  /** name + file-specific parts + both string-form difference notes. */
+  /** name + file-specific parts + structured diagram fields + both string-form difference notes. */
   function recordParts(fileId, record) {
     var parts = [str(record.name)];
     var extract = RECORD_EXTRACTORS[fileId];
     if (extract) parts = parts.concat(extract(record));
+    parts = parts.concat(structuredText(record, RECORD_STRUCTURED));
     return parts.concat(stringDiffNotes(record));
   }
 
@@ -541,7 +671,8 @@
    * A prose block's haystack parts: heading + text, plus the optional
    * `list` items and `trailing` paragraph some blocks carry (charms
    * where-they-come-from) so list-form content stays as searchable as
-   * the prose it replaced.
+   * the prose it replaced, plus the structured diagram fields the #31
+   * batch moved out of the prose (structuredText).
    */
   function proseParts(block) {
     var parts = [str(block && block.heading), str(block && block.text)];
@@ -549,6 +680,7 @@
       for (var i = 0; i < block.list.length; i++) parts.push(str(block.list[i]));
     }
     if (block && block.trailing) parts.push(str(block.trailing));
+    parts = parts.concat(structuredText(block, PROSE_STRUCTURED));
     return parts;
   }
 

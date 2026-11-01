@@ -9,9 +9,10 @@
  * sandbox whose fake `window` carries the REAL data/*.json files (read
  * from disk), and asserts end results — entry completeness and shape,
  * placeholder resolution, the FAIRY-swap union, query-time version
- * scoping, ranking/cap and matchIndex, and the effective/placeholder
- * helper semantics. ROGUE.version is assigned directly on the sandbox's
- * ROGUE (version.js is NOT loaded — it needs localStorage/document).
+ * scoping, ranking/cap and matchIndex, the #31 structured diagram fields'
+ * searchability, and the effective/placeholder helper semantics.
+ * ROGUE.version is assigned directly on the sandbox's ROGUE (version.js is
+ * NOT loaded — it needs localStorage/document).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -222,6 +223,65 @@ test('the FAIRY-swap routes index BOTH the EX and the Vanilla wild types', () =>
       assert.ok(text.includes(fold(t)), `${r.id}: haystack must contain the type "${t}"`);
     }
   }
+});
+
+test('the #31 structured diagram fields are searchable (trimmed-but-rendered text)', () => {
+  // ARRANGE — queries that are user-visible strings the #31 batch moved
+  // out of the prose into structured fields. Each is absent from the
+  // owning block/record's prose text (verified against data/*.json), so a
+  // hit proves the structured field made it into the haystack:
+  //   "gym bosses"           data/settings.json difficulty-scale
+  //                          ladder.tiers[0].label (the ladder visual)
+  //   "30 if shiny"          data/safari.json priority-eviction
+  //                          score.terms[1].label (the chip equation)
+  //   "mid-run — releasing"  data/safari.json entry-released `short`
+  //                          (the entry-flow diagram essence)
+  //   "spring"               data/hub.json time-weather-season
+  //                          cycles.season.phases (the cycle strip)
+  //   "odd badge"            data/adventure.json room placement bars'
+  //                          conditions (the placement diagram)
+  const structured = [
+    { q: 'gym bosses', id: 'prose-settings-difficulty-scale', page: './config.html', total: 1 },
+    { q: '30 if shiny', id: 'rec-safari-priority-eviction', page: './safari.html', total: 1 },
+    { q: 'mid-run \u2014 releasing', id: 'rec-safari-entry-released', page: './safari.html', total: 1 },
+    { q: 'spring', id: 'prose-hub-time-weather-season', page: './hub.html', total: 5 },
+    { q: 'odd badge', id: 'rec-adventure-room-honey-tree', page: './gameplay.html', total: 3 }
+  ];
+
+  // ACT — one query per structured string (EX scope)
+  // ASSERT — each surfaces its structured entry at the page that renders
+  // the diagram, with the exact result count from the real index
+  for (const s of structured) {
+    const hits = rogue.searchQuery(entries, s.q, 'ex');
+    assert.equal(hits.length, s.total, `"${s.q}" under EX: ${s.total} result(s), derived from the real index`);
+    const hit = hits.find((e) => e.id === s.id);
+    assert.ok(hit, `"${s.q}" must surface ${s.id} (structured field text, absent from the prose)`);
+    assert.equal(hit.page, s.page, `${s.id} deep-links to the page that renders the diagram`);
+    // the fields are version-neutral — the same hit survives Vanilla scope
+    assert.ok(
+      rogue.searchQuery(entries, s.q, 'vanilla').some((e) => e.id === s.id),
+      `"${s.q}" also surfaces ${s.id} under Vanilla (the structured field renders identically in both builds)`
+    );
+  }
+
+  // ASSERT — "odd badge" end result: exactly the three parity-weighted
+  // rooms, in index order (the bar conditions each render on the
+  // gameplay placement diagram). [...] reconstructs the vm-realm array in
+  // the host realm (the same deep-equality rule the other tests use).
+  assert.deepEqual([...rogue.searchQuery(entries, 'odd badge', 'ex').map((e) => e.id)], [
+    'rec-adventure-room-honey-tree',
+    'rec-adventure-room-dark-deal',
+    'rec-adventure-room-lab'
+  ]);
+
+  // ASSERT — "shiny" on the safari priority entry: its score term
+  // "30 if shiny" is the new text (the prose says "shinies", which does
+  // not contain "shiny"). The query hits 57 entries under EX — past the
+  // 30 cap — so the entry's haystack is checked directly.
+  assert.ok(
+    byId.get('rec-safari-priority-eviction').text.includes('shiny'),
+    'the safari priority record\'s haystack carries "shiny" (from the structured score term)'
+  );
 });
 
 test('version scoping happens at query time', () => {
