@@ -5,9 +5,14 @@
  * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>` — gitignored, see
  *    .gitignore), then atomically swaps it into `dist/` (rm + rename,
  *    retried a bounded number of times against a concurrent build's swap),
- *    so concurrent builds never see a half-written `dist/`
+ *    so concurrent builds never see a half-written `dist/` — excluding
+ *    `site/css/DESIGN.md`, the internal design contract, which stays in the
+ *    repo (referenced by AGENTS.md and the CSS sheets) but is never shipped
  * 2. Validates every `data/*.json` against the binding data envelope:
- *    - `meta.id` must equal the filename stem
+ *    - `meta.id` must equal the filename stem and match `/^[a-z][a-z0-9-]*$/`
+ *      (starts with a lowercase letter; lowercase letters, digits, hyphens —
+ *      the strict shape that keeps the derived `ROGUE_DATA_*` bundle global
+ *      name from injecting into the generated JavaScript)
  *    - `meta.title` must be a non-empty string
  *    - at least one of `prose` / `records` must be present with content
  *    - every record needs `name` and `source`
@@ -29,7 +34,8 @@
  *      "'PHRASE' (Name)" hidden phrases in the format config.js parses
  * 3. Emits `dist/data/bundle.js` with one line per data file:
  *    `;window.ROGUE_DATA_<ID> = <json>;`  (ID = meta.id uppercased;
- *     bracket notation `window["..."]` when the id is not a valid identifier)
+ *     bracket notation `window["..."]` for hyphenated ids — the only
+ *     non-identifier characters that pass the meta.id validation)
  *
  * Aborts with a non-zero exit and a clear message on any violation.
  * This script only ever reads `site/` and `data/` — never `references/`
@@ -58,6 +64,20 @@ const tmpDir = path.join(root, `dist.tmp-${process.pid}`);
  * on a fresh checkout — 10 leaves wide margin; a build that still cannot
  * win the race cleans its temp dir and throws). */
 const MAX_SWAP_ATTEMPTS = 10;
+
+/**
+ * Strict shape for meta.id (and therefore for the derived bundle global
+ * `window["ROGUE_DATA_<ID>"]`): starts with a lowercase letter, then
+ * lowercase letters, digits and hyphens. The id is interpolated into the
+ * generated bundle, so anything else (quotes, brackets, semicolons, …)
+ * would be an injection into dist/data/bundle.js — the build fails instead.
+ * Hyphens are the only allowed non-identifier character (ids like
+ * "game-modes"), so the bracket-notation fallback in the bundle emitter
+ * below only ever fires for hyphenated ids.
+ */
+const BUNDLE_ID = /^[a-z][a-z0-9-]*$/;
+/** Files under site/ that are never published to dist/ (repo-internal docs). */
+const DIST_EXCLUDE = new Set(['css/DESIGN.md']);
 
 const ALLOWED_VERSIONS = new Set(['vanilla', 'ex']);
 const DIFFERENCE_FIELDS = new Set(['description', 'trigger', 'rewards', 'requirements', 'display_group']);
@@ -238,6 +258,8 @@ function validateEnvelope(file, stem, data) {
     fail(`${ctx} "meta.id" must be a non-empty string`);
   } else if (meta.id !== stem) {
     fail(`${ctx} "meta.id" (${JSON.stringify(meta.id)}) must equal the filename stem (${JSON.stringify(stem)})`);
+  } else if (!BUNDLE_ID.test(meta.id)) {
+    fail(`${ctx} "meta.id" (${JSON.stringify(meta.id)}) must match ${BUNDLE_ID} (starts with a lowercase letter; lowercase letters, digits and hyphens only)`);
   }
   if (!isNonEmptyString(meta.title)) {
     fail(`${ctx} "meta.title" must be a non-empty string`);
@@ -321,9 +343,10 @@ function main() {
     if (id) {
       validateUiContracts(file, stem, data);
       const globalName = `ROGUE_DATA_${id.toUpperCase()}`;
-      // Hyphenated ids (e.g. "game-modes") are not valid identifiers, so emit
-      // bracket notation for them: `window.ROGUE_DATA_GAME-MODES = ...` would
-      // be parsed as a subtraction and fail with a SyntaxError.
+      // ids are validated against BUNDLE_ID, so the only non-identifier
+      // character a global name can contain is a hyphen (e.g. "game-modes")
+      // — emit bracket notation for those: `window.ROGUE_DATA_GAME-MODES = …`
+      // would be parsed as a subtraction and fail with a SyntaxError.
       const lhs = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(globalName)
         ? `window.${globalName}`
         : `window["${globalName}"]`;
@@ -338,7 +361,11 @@ function main() {
   // concurrently, e.g. under npm test).
   rmSync(tmpDir, { recursive: true, force: true });
   try {
-    cpSync(siteDir, tmpDir, { recursive: true });
+    cpSync(siteDir, tmpDir, {
+      recursive: true,
+      // keep the repo-internal docs out of the published build
+      filter: (src) => !DIST_EXCLUDE.has(path.relative(siteDir, src).split(path.sep).join('/')),
+    });
     mkdirSync(path.join(tmpDir, 'data'), { recursive: true });
     writeFileSync(path.join(tmpDir, 'data', 'bundle.js'), `${bundleLines.join('\n')}\n`, 'utf8');
   } catch (err) {
