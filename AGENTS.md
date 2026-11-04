@@ -18,6 +18,7 @@
 ### Project Structure
 
 - `AGENTS.md` — agent guidelines for this repo: the core principles plus a one-line description of every project file.
+- `README.md` — repo front page for first-visit GitHub users: one-line project description, live-site link, quick-start commands, and a short how-it-works overview deferring to `AGENTS.md` and `data/` for depth.
 - `package.json` — zero-dependency manifest defining the `build`, `test`, `extract:quests`, `screenshots`, and `verify:citations` npm scripts.
 - `.gitignore` — ignores the vendored `references/` game source, the generated `dist/` build output, and the captured `test/ui/screenshots/` PNGs.
 - `.github/workflows/pages.yml` — GitHub Actions workflow that runs the test suite on pushes to `main`, pull requests targeting `main` and manual dispatch (plus a separate `ui` job that installs Playwright and re-runs the suite for real browser coverage, since the `test` job's UI tests self-skip), and (for non-PR events) builds and deploys `dist/` to GitHub Pages (major-tag action pins, with a note that SHA-pinning is the stronger option for deploy workflows).
