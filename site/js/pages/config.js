@@ -54,7 +54,7 @@
     }
 
     function fieldBlock(label, inner) {
-      return '<p class="set-field"><span class="field-label">' + label + '</span>' + inner + '</p>';
+      return '<p class="set-field"><span class="field-label">' + ROGUE.esc(label) + '</span>' + inner + '</p>';
     }
 
     /* --- Difficulty ladder (data/settings.json `difficulty-scale`) ------ */
