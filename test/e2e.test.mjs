@@ -7,19 +7,26 @@
  * (2) The bundle: executes dist/data/bundle.js in a vm sandbox with a fake
  *     `window` and asserts every ROGUE_DATA_<ID> global is actually defined
  *     (catches bundle output that is not valid JavaScript, e.g. hyphenated
- *     meta.ids emitted as bare property assignments).
+ *     meta.ids emitted as bare property assignments) — and that exactly the
+ *     15 data files (14 content + site.json) define their one global each.
  * (3) The served site: serves dist/ over node:http on an ephemeral port and
  *     asserts every content page — index, gameplay, versions, quests, config,
  *     hub, safari, routes, mechanics and the 404 fallback — returns 200 with
  *     its page-specific static marker strings (titles from data/site.json),
- *     and that every one of the 10 pages wires in the search overlay scripts
- *     (search-index.js before search.js, both after main.js).
+ *     that every one of the 10 pages wires in the search overlay scripts
+ *     (search-index.js before search.js, both after main.js), and that the
+ *     internal design contract site/css/DESIGN.md is NOT published (404).
+ * (4) The poisoned build: a temp copy of the repo's build inputs with one
+ *     data file whose meta.id breaks out of the window["..."] global-name
+ *     interpolation must fail the build (naming the offending file) instead
+ *     of emitting injectable JavaScript into bundle.js.
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import vm from 'node:vm';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createStaticServer } from './helpers/static-server.mjs';
@@ -74,6 +81,15 @@ test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () =>
     assert.ok(sandbox.window[key], `bundle.js did not define window["${key}"]`);
     assert.equal(sandbox.window[key].meta.id, data.meta.id, `window["${key}"] has the wrong meta.id`);
   }
+
+  // ASSERT — all 15 data files (14 content + site.json) define their global,
+  // and the bundle emits no other window keys (shape unchanged)
+  assert.equal(dataFiles.length, 15, `expected 15 data files (14 content + site.json), found ${dataFiles.length}`);
+  assert.equal(
+    Object.keys(sandbox.window).length,
+    dataFiles.length,
+    'bundle.js must define exactly one window key per data file',
+  );
 });
 
 test('adventure.json makes no wrong per-run placement or goal claims (records, meta description and prose)', () => {
@@ -390,6 +406,64 @@ test('served mechanics page returns 200 and contains its static markers', async 
   } finally {
     await new Promise((resolve) => server.close(resolve));
     server = undefined;
+  }
+});
+
+test('built dist does not publish the internal design contract site/css/DESIGN.md', async () => {
+  // ARRANGE — the build test above produced dist/; DESIGN.md stays in the
+  // repo (referenced by AGENTS.md and the CSS sheets) but must not be copied
+  assert.ok(existsSync(path.join(root, 'site', 'css', 'DESIGN.md')), 'site/css/DESIGN.md must remain in the repo');
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT
+    const res = await fetch(`${base}/css/DESIGN.md`);
+
+    // ASSERT — the built dist must not serve it
+    assert.equal(res.status, 404, `GET /css/DESIGN.md returned ${res.status} (the internal design contract must not be published)`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('a data file with a bad meta.id fails the build (no injection into bundle.js)', () => {
+  // ARRANGE — a temp copy of the repo's build inputs (site/, scripts/, data/)
+  // with one poisoned data file: its filename stem (and matching meta.id)
+  // breaks out of the bundle's window["ROGUE_DATA_<ID>"] global-name line
+  const tmpRoot = mkdtempSync(path.join(os.tmpdir(), 'build-poison-'));
+  try {
+    cpSync(path.join(root, 'site'), path.join(tmpRoot, 'site'), { recursive: true });
+    cpSync(path.join(root, 'scripts'), path.join(tmpRoot, 'scripts'), { recursive: true });
+    cpSync(path.join(root, 'data'), path.join(tmpRoot, 'data'), { recursive: true });
+    const poison = 'site"];window.pwned=1;';
+    const site = JSON.parse(readFileSync(path.join(tmpRoot, 'data', 'site.json'), 'utf8'));
+    site.meta.id = poison;
+    writeFileSync(path.join(tmpRoot, 'data', `${poison}.json`), JSON.stringify(site));
+    rmSync(path.join(tmpRoot, 'data', 'site.json'));
+
+    // ACT — run the real build against the poisoned data dir
+    const result = spawnSync(process.execPath, ['scripts/build.mjs'], {
+      cwd: tmpRoot,
+      encoding: 'utf8',
+    });
+
+    // ASSERT — the build fails, naming the offending file and the pattern
+    // violation, and never publishes a dist/
+    assert.equal(result.status, 1, `poisoned build unexpectedly succeeded:\n${result.stdout}`);
+    assert.ok(
+      result.stderr.includes(`data/${poison}.json`),
+      `error must name the offending file:\n${result.stderr}`,
+    );
+    assert.ok(
+      /"meta\.id".*must match/.test(result.stderr),
+      `error must explain the meta.id pattern violation:\n${result.stderr}`,
+    );
+    assert.ok(!existsSync(path.join(tmpRoot, 'dist')), 'a failing build must not publish a dist/');
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
   }
 });
 
