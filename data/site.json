@@ -2,11 +2,12 @@
   "meta": {
     "id": "site",
     "title": "Site configuration",
-    "description": "Central configuration for the docs site: navigation order, page titles and descriptions, version labels, hero, and footer."
+    "description": "Central configuration for the docs site: navigation order, page titles and descriptions, live-site base URL (site.url), version labels, hero, and footer."
   },
   "site": {
     "name": "Emerald Rogue Docs",
     "tagline": "A field guide to the Pokémon Emerald Rogue romhack",
+    "url": "https://forzabarca88.github.io/emerald-rogue-docs",
     "footer": {
       "text": "Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent AI generated guide based on its Github source code, and is not affiliated with the romhack's authors.",
       "source": "Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations."
