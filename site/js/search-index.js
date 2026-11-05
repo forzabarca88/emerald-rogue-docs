@@ -7,7 +7,12 @@
  *
  * Exposes:
  *   ROGUE.buildSearchIndex() → Array<Entry>
- *   ROGUE.searchQuery(entries, query, activeVersion) → Array<Result>
+ *   ROGUE.searchQuery(entries, query, activeVersion) →
+ *     { results: Array<Result>, total: number }
+ *       results  the ranked list capped at search.maxResults
+ *       total    the TOTAL number of matches found, before the cap —
+ *                results.length when the cap does not bind; the overlay
+ *                uses it to signpost truncation ("30 of 135" vs "30 of 30")
  *
  * Entry shape:
  *   { id, title, titleLower, text, page, anchor, versions }
@@ -82,9 +87,10 @@
  * per-code-unit with an index map, so `matchIndex` always points into
  * the un-folded `text` (identity for the current precomposed data).
  *
- * Config: data/site.json `search` block — searchQuery caps results at
- * `search.maxResults`; placeholder/hint/shortcut are read by the overlay
- * UI (B4), not this module. The FALLBACK_MAX_RESULTS constant below is
+ * Config: data/site.json `search` block — searchQuery caps the returned
+ * list at `search.maxResults` (and reports the pre-cap `total`);
+ * placeholder/hint/shortcut/moreResults are read by the overlay UI (B4),
+ * not this module. The FALLBACK_MAX_RESULTS constant below is
  * only consulted when the block is missing/invalid (defensive — the
  * config is the source of truth, like version.js's 'ex' fallback).
  */
@@ -823,10 +829,14 @@
    * @param {string} activeVersion 'vanilla' | 'ex' — entries whose
    *                             `versions` omit it are excluded (scoping
    *                             happens HERE, at query time)
-   * @returns {Array<Result>} ranked: tier 0 (title starts with the query)
-   *   before tier 1 (title includes it) before tier 2 (body match);
-   *   stable index order within a tier; capped at search.maxResults.
-   *   Result = the entry's fields plus:
+   * @returns {{results: Array<Result>, total: number}} `results` is
+   *   ranked: tier 0 (title starts with the query) before tier 1 (title
+   *   includes it) before tier 2 (body match); stable index order within
+   *   a tier; capped at search.maxResults. `total` is the TOTAL number
+   *   of matches found before the cap, so the UI can distinguish "30 of
+   *   135" from "30 of 30" (it appends the search.moreResults overflow
+   *   copy when total > results.length). Result = the entry's fields
+   *   plus:
    *     tier         0 | 1 | 2
    *     matchIndex   first index of the query in `text` (for the snippet;
    *                  -1 when the body doesn't contain it)
@@ -834,7 +844,7 @@
   ROGUE.searchQuery = function (entries, query, activeVersion) {
     // fold the QUERY the same way the haystacks are folded at match time
     var q = foldAccents(str(query).trim().toLowerCase()).text;
-    if (!q || !Array.isArray(entries)) return [];
+    if (!q || !Array.isArray(entries)) return { results: [], total: 0 };
 
     var buckets = [[], [], []];
     for (var i = 0; i < entries.length; i++) {
@@ -865,6 +875,11 @@
     }
 
     var out = buckets[0].concat(buckets[1], buckets[2]);
-    return out.slice(0, searchMaxResults());
+    // total = the full pre-cap match count, so the overlay can signpost
+    // truncation even though the returned list is capped
+    return {
+      results: out.slice(0, searchMaxResults()),
+      total: out.length
+    };
   };
 })();

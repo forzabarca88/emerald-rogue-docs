@@ -62,9 +62,13 @@
  *
  * Copy: an empty query shows the config `hint`; a non-empty query shows
  * "N result(s) match "q"" or "No results match "q"." in the count line —
- * the quests.js result-line style (curly quotes, no verb agreement).
- * Nothing is hardcoded beyond defensive fallbacks for a missing `search`
- * block (the same pattern as version.js's "ex" fallback).
+ * the quests.js result-line style (curly quotes, no verb agreement). When
+ * the query's pre-cap total (searchQuery's `total`) exceeds the rows
+ * shown, the count line appends the config `moreResults` template (its
+ * `{n}` filled by the hidden count) after an em dash; at or below the cap
+ * the line is unchanged. Nothing is hardcoded beyond defensive fallbacks
+ * for a missing `search` block (the same pattern as version.js's "ex"
+ * fallback).
  *
  * Layering: the root sits BELOW the sticky header (z-index:
  * calc(var(--z-header) − 1)) so the header's version toggle stays
@@ -108,7 +112,8 @@
     return {
       placeholder: typeof s.placeholder === 'string' && s.placeholder !== '' ? s.placeholder : 'Search the site\u2026',
       hint: typeof s.hint === 'string' && s.hint !== '' ? s.hint : 'Press / to search',
-      shortcut: typeof s.shortcut === 'string' && s.shortcut !== '' ? s.shortcut : '/'
+      shortcut: typeof s.shortcut === 'string' && s.shortcut !== '' ? s.shortcut : '/',
+      moreResults: typeof s.moreResults === 'string' && s.moreResults !== '' ? s.moreResults : '{n} more'
     };
   }
 
@@ -220,8 +225,10 @@
 
     function renderQuery(raw) {
       var q = String(raw === null || raw === undefined ? '' : raw).trim();
-      currentResults = q ? ROGUE.searchQuery(entries, q, ROGUE.version) : [];
+      var found = q ? ROGUE.searchQuery(entries, q, ROGUE.version) : { results: [], total: 0 };
+      currentResults = found.results;
       var n = currentResults.length;
+      var total = found.total;
 
       /* exactly one of the count line / empty state is visible: the empty
        * query shows the config hint; a non-empty query shows the match
@@ -237,7 +244,12 @@
       } else {
         emptyEl.hidden = true;
         countLine.hidden = false;
-        countLine.textContent = n + ' result' + (n === 1 ? '' : 's') + ' match \u201C' + q + '\u201D';
+        var text = n + ' result' + (n === 1 ? '' : 's') + ' match \u201C' + q + '\u201D';
+        if (total > n) {
+          // truncation signpost: the pre-cap total exceeds the rows shown
+          text += ' \u2014 ' + config.moreResults.split('{n}').join(String(total - n));
+        }
+        countLine.textContent = text;
       }
 
       if (n) {

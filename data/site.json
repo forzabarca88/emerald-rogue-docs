@@ -83,11 +83,12 @@
     }
   },
   "search": {
-    "_comment": "Site-wide search palette (site/js/search-index.js + search.js): input placeholder, the keyboard hint, the open shortcut key, and the result cap read by ROGUE.searchQuery.",
+    "_comment": "Site-wide search palette (site/js/search-index.js + search.js): input placeholder, the keyboard hint, the open shortcut key, the result cap read by ROGUE.searchQuery, and the overflow suffix the count line appends when the query's pre-cap total exceeds the rows shown ({n} = the hidden count).",
     "placeholder": "Search quests, routes, settings, mechanics…",
     "hint": "Press / to search",
     "shortcut": "/",
-    "maxResults": 30
+    "maxResults": 30,
+    "moreResults": "{n} more results — refine your search"
   },
   "hero": {
     "eyebrow": "Roguelite romhack · Pokémon Emerald",
