@@ -92,90 +92,146 @@ test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () =>
   );
 });
 
-test('adventure.json makes no wrong per-run placement or goal claims (records, meta description and prose)', () => {
-  // ARRANGE — the room-type/boss records in data/adventure.json
-  const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
-  const bannedPhrases = [
-    'one per run',
-    'exactly one is placed per run',
-    'the more you land, the better the reward',
-    'useful for grinding experience',
-    "try to pocket an item you haven't earned",
-    'dropping to 1 after four',
-    'the whole run is den-hopping',
-  ];
-  // "Victory Lap" / "Final Battle (Badge 13)" are allowed as ladder labels in
-  // record names, and "source" fields are citations — so "victory lap" is
-  // banned in descriptions only.
-  const bannedInDescriptions = ['victory lap'];
-  // Banned in every record field (name, description, source).
-  const bannedAnywhere = ['Pokabbie'];
-  // meta.description and the prose blocks (both touched by the same passes as
-  // the records) are free prose — every phrase above applies there (no
-  // record-name or citation exemptions).
-  const bannedInProse = [...bannedPhrases, ...bannedInDescriptions, ...bannedAnywhere];
+// Banned-phrase hygiene lists shared by the adventure guard and the
+// all-files scan. The phrases are wrong per-run placement/goal claims that
+// leaked into user-facing prose before; "victory lap" is a post-Champion
+// spoiler; "Pokabbie" is the developer name that must not appear in prose.
+const bannedPhrases = [
+  'one per run',
+  'exactly one is placed per run',
+  'the more you land, the better the reward',
+  'useful for grinding experience',
+  "try to pocket an item you haven't earned",
+  'dropping to 1 after four',
+  'the whole run is den-hopping',
+];
+// "Victory Lap" / "Final Battle (Badge 13)" are allowed as ladder labels in
+// record names, and "source" fields are citations — so "victory lap" is
+// banned in descriptions only.
+const bannedInDescriptions = ['victory lap'];
+// Banned in every user-facing record field (name, description) and in all
+// free prose. "source" fields are exempt: they are citations quoting game
+// code (file paths, constants) that legitimately contains the name.
+const bannedAnywhere = ['Pokabbie'];
+// meta.description and the prose blocks (both touched by the same passes as
+// the records) are free prose — every phrase above applies there (no
+// record-name or citation exemptions).
+const bannedInProse = [...bannedPhrases, ...bannedInDescriptions, ...bannedAnywhere];
 
-  // ACT — scan every record's description, source and rendered `placement`
-  // strings (the note + bar labels/conds the gameplay placement bars
-  // display), case-insensitively
+/**
+ * Scan one data file's records, meta.description and prose blocks for the
+ * banned phrases, case-insensitively. Exemptions, applied by field name
+ * wherever the field exists: record `name` (ladder labels) skips
+ * bannedPhrases and bannedInDescriptions; record `source` (citations)
+ * skips bannedInDescriptions and bannedAnywhere, but still carries
+ * bannedPhrases (its parentheticals are site-authored). Returns
+ * { hits, proseHits }, each entry naming file, record id, field and phrase.
+ */
+function scanDataFile(file, data) {
   const hits = [];
-  for (const record of adventure.records) {
-    for (const field of ['description', 'source']) {
-      const text = String(record[field] ?? '').toLowerCase();
-      for (const phrase of bannedPhrases) {
-        if (text.includes(phrase.toLowerCase())) {
-          hits.push(`${record.id}.${field} contains "${phrase}"`);
+  const lower = (value) => String(value ?? '').toLowerCase();
+  if (Array.isArray(data.records)) {
+    for (const record of data.records) {
+      for (const field of ['description', 'source']) {
+        const text = lower(record[field]);
+        for (const phrase of bannedPhrases) {
+          if (text.includes(phrase.toLowerCase())) {
+            hits.push(`data/${file} record ${record.id} field ${field} contains "${phrase}"`);
+          }
         }
       }
-    }
-    // The placement strings are rendered free text (not names or
-    // citations), so every phrase list applies to them.
-    if (record.placement && typeof record.placement === 'object') {
-      const placementTexts = [record.placement.note].concat(
-        (Array.isArray(record.placement.bars) ? record.placement.bars : []).map((bar) => [bar && bar.t, bar && bar.l]).flat()
-      );
-      for (const raw of placementTexts) {
-        const text = String(raw ?? '').toLowerCase();
-        if (!text) continue;
-        for (const phrase of bannedInProse) {
+      // The placement strings are rendered free text (not names or
+      // citations), so every phrase list applies to them.
+      if (record.placement && typeof record.placement === 'object') {
+        const placementTexts = [record.placement.note].concat(
+          (Array.isArray(record.placement.bars) ? record.placement.bars : []).map((bar) => [bar && bar.t, bar && bar.l]).flat()
+        );
+        for (const raw of placementTexts) {
+          const text = lower(raw);
+          if (!text) continue;
+          for (const phrase of bannedInProse) {
+            if (text.includes(phrase.toLowerCase())) {
+              hits.push(`data/${file} record ${record.id} field placement contains "${phrase}"`);
+            }
+          }
+        }
+      }
+      const description = lower(record.description);
+      for (const phrase of bannedInDescriptions) {
+        if (description.includes(phrase)) {
+          hits.push(`data/${file} record ${record.id} field description contains "${phrase}"`);
+        }
+      }
+      for (const field of ['name', 'description']) {
+        const text = lower(record[field]);
+        for (const phrase of bannedAnywhere) {
           if (text.includes(phrase.toLowerCase())) {
-            hits.push(`${record.id}.placement contains "${phrase}"`);
+            hits.push(`data/${file} record ${record.id} field ${field} contains "${phrase}"`);
           }
         }
       }
     }
-    const description = String(record.description ?? '').toLowerCase();
-    for (const phrase of bannedInDescriptions) {
-      if (description.includes(phrase)) {
-        hits.push(`${record.id}.description contains "${phrase}"`);
-      }
-    }
-    for (const field of ['name', 'description', 'source']) {
-      const text = String(record[field] ?? '').toLowerCase();
-      for (const phrase of bannedAnywhere) {
-        if (text.includes(phrase.toLowerCase())) {
-          hits.push(`${record.id}.${field} contains "${phrase}"`);
-        }
-      }
-    }
   }
-
-  // ACT (cont.) — scan meta.description and every prose block the same way
+  // ACT (cont.) — meta.description and every prose block are free prose
   const proseHits = [];
-  const proseTargets = [['meta.description', adventure.meta && adventure.meta.description]];
-  for (const block of Array.isArray(adventure.prose) ? adventure.prose : []) {
+  const proseTargets = [['meta.description', data.meta && data.meta.description]];
+  for (const block of Array.isArray(data.prose) ? data.prose : []) {
     proseTargets.push([`prose:${block.id}`, block.text]);
   }
   for (const [where, raw] of proseTargets) {
-    const text = String(raw ?? '').toLowerCase();
+    const text = lower(raw);
     for (const phrase of bannedInProse) {
-      if (text.includes(phrase.toLowerCase())) proseHits.push(`${where} contains "${phrase}"`);
+      if (text.includes(phrase.toLowerCase())) proseHits.push(`data/${file} ${where} contains "${phrase}"`);
     }
   }
+  return { hits, proseHits };
+}
+
+test('adventure.json makes no wrong per-run placement or goal claims (records, meta description and prose)', () => {
+  // ARRANGE — the room-type/boss records in data/adventure.json
+  const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
+
+  // ACT — scan every record's description, source and rendered `placement`
+  // strings (the note + bar labels/conds the gameplay placement bars
+  // display), meta.description and every prose block, case-insensitively
+  const { hits, proseHits } = scanDataFile('adventure.json', adventure);
 
   // ASSERT — the flagged wrong-claim phrases must all be gone (records and prose)
   assert.deepEqual(hits, [], `wrong-claim phrases still present:\n  ${hits.join('\n  ')}`);
   assert.deepEqual(proseHits, [], `wrong-claim phrases in meta description or prose:\n  ${proseHits.join('\n  ')}`);
+});
+
+test('every content data file makes no wrong placement/goal claims or name leaks (records, meta description and prose)', () => {
+  // ARRANGE — all 14 content data files (site.json is the site config,
+  // not content, and carries no records)
+  const files = readdirSync(path.join(root, 'data'))
+    .filter((f) => f.endsWith('.json') && f !== 'site.json')
+    .sort();
+  assert.equal(files.length, 14, `expected 14 content data files, found ${files.length}`);
+
+  // ACT + ASSERT — the shared hygiene scan finds no hit in any file, and
+  // each failure names the file, record id, field and offending phrase
+  for (const file of files) {
+    const data = JSON.parse(readFileSync(path.join(root, 'data', file), 'utf8'));
+    const { hits, proseHits } = scanDataFile(file, data);
+    assert.deepEqual(hits, [], `banned phrases still present in data/${file}:\n  ${hits.join('\n  ')}`);
+    assert.deepEqual(proseHits, [], `banned phrases in meta description or prose of data/${file}:\n  ${proseHits.join('\n  ')}`);
+  }
+});
+
+test('a banned phrase in a data file is flagged with file, record id, field and phrase', () => {
+  // ARRANGE — a minimal poisoned record shaped like a routes.json record
+  const poisoned = {
+    meta: { id: 'routes', description: '' },
+    prose: [],
+    records: [{ id: 'hoenn-field-0', name: 'Route 1', description: 'Meet Pokabbie on the route.', source: 'src/rogue_routes.h @vanilla L1-2' }],
+  };
+
+  // ACT
+  const { hits } = scanDataFile('routes.json', poisoned);
+
+  // ASSERT — the hit names the file, record, field and the offending phrase
+  assert.deepEqual(hits, ['data/routes.json record hoenn-field-0 field description contains "Pokabbie"']);
 });
 
 test('served index page returns 200 and contains the hero marker from site.json', async () => {
