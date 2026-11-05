@@ -36,6 +36,15 @@
  *    `;window.ROGUE_DATA_<ID> = <json>;`  (ID = meta.id uppercased;
  *     bracket notation `window["..."]` for hyphenated ids — the only
  *     non-identifier characters that pass the meta.id validation)
+ * 4. Emits `dist/sitemap.xml` (one absolute URL per nav page, each with a
+ *    build-time `<lastmod>`; 404.html is a fallback, not a page, so it is
+ *    omitted) and `dist/robots.txt` (allow all + a `Sitemap:` reference),
+ *    generated from `data/site.json`'s `nav` order, per-page `pages` titles
+ *    and descriptions, and the single base URL `site.url`. Both files are
+ *    written into the temp dir BEFORE the rename, so they are part of the
+ *    atomic publish. The build also fails (naming site.json) when `site.url`
+ *    is missing or not an absolute http(s) URL, or when a nav entry has no
+ *    `pages` entry with a non-empty title + description.
  *
  * Aborts with a non-zero exit and a clear message on any violation.
  * This script only ever reads `site/` and `data/` — never `references/`
@@ -233,6 +242,90 @@ function validateUiContracts(file, stem, data) {
   }
 }
 
+// ---------------------------------------------------------------------------
+// SEO output — sitemap.xml + robots.txt from data/site.json (the `nav` order,
+// the per-page `pages` titles/descriptions, and the single base URL
+// `site.url`). The same strings back the shells' static `og:*` meta tags;
+// this build keeps them honest by failing when the config is incomplete.
+// ---------------------------------------------------------------------------
+
+/** XML-escape a value for a sitemap text node (URLs here are plain, but
+ * titles/descriptions are escaped the same way for safety). */
+function xmlEscape(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Validate the site.json config the SEO output needs and return
+ * `{ base, pages }` where `pages` is the nav order mapped to
+ * `{ id, title, description, url }` with each page's absolute URL
+ * (`<base>/<id>.html`). Adds a named error instead of returning when the
+ * config is missing or incomplete.
+ */
+function seoConfigFrom(siteData) {
+  const ctx = 'data/site.json:';
+  if (!siteData) {
+    fail(`${ctx} not found — required to emit sitemap.xml + robots.txt`);
+    return null;
+  }
+  const site = siteData.site;
+  if (typeof site !== 'object' || site === null || Array.isArray(site)) {
+    fail(`${ctx} missing the "site" object`);
+    return null;
+  }
+  const url = site.url;
+  if (!isNonEmptyString(url)) {
+    fail(`${ctx} "site.url" must be a non-empty string (the live site's base URL)`);
+    return null;
+  }
+  if (!/^https?:\/\//.test(url)) {
+    fail(`${ctx} "site.url" (${JSON.stringify(url)}) must be an absolute http(s) URL`);
+    return null;
+  }
+  const base = url.replace(/\/+$/, '');
+  const nav = siteData.nav;
+  const pages = siteData.pages;
+  if (!Array.isArray(nav) || nav.length === 0) {
+    fail(`${ctx} "nav" must be a non-empty array of page ids`);
+    return null;
+  }
+  if (typeof pages !== 'object' || pages === null || Array.isArray(pages)) {
+    fail(`${ctx} "pages" must be an object of page id → { title, description }`);
+    return null;
+  }
+  const out = [];
+  for (const id of nav) {
+    const page = pages[id];
+    if (typeof page !== 'object' || page === null || Array.isArray(page)) {
+      fail(`${ctx} nav entry ${JSON.stringify(id)} has no matching "pages.${id}" object`);
+      continue;
+    }
+    if (!isNonEmptyString(page.title)) fail(`${ctx} pages.${id}.title must be a non-empty string`);
+    if (!isNonEmptyString(page.description)) fail(`${ctx} pages.${id}.description must be a non-empty string`);
+    out.push({ id, title: page.title, description: page.description, url: `${base}/${id}.html` });
+  }
+  if (errors.length) return null;
+  return { base, pages: out };
+}
+
+/** sitemap.xml: one `<url>` per nav page (404.html is a fallback, not a page —
+ * never listed), each with the build time as `<lastmod>`. */
+function sitemapXml(pages, lastmod) {
+  const urls = pages
+    .map((p) => `  <url>\n    <loc>${xmlEscape(p.url)}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`)
+    .join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`;
+}
+
+/** robots.txt: allow every crawler and point at the sitemap. */
+function robotsTxt(base) {
+  return `User-agent: *\nAllow: /\nSitemap: ${base}/sitemap.xml\n`;
+}
+
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0;
 }
@@ -330,6 +423,7 @@ function main() {
   }
 
   const bundleLines = [];
+  let siteData = null;
   for (const file of dataFiles) {
     const stem = file.replace(/\.json$/, '');
     let data;
@@ -339,6 +433,7 @@ function main() {
       fail(`data/${file}: invalid JSON — ${err.message}`);
       continue;
     }
+    if (file === 'site.json') siteData = data;
     const id = validateEnvelope(file, stem, data);
     if (id) {
       validateUiContracts(file, stem, data);
@@ -355,6 +450,12 @@ function main() {
   }
   if (errors.length) return report();
 
+  // sitemap.xml + robots.txt are generated from site.json (nav order, pages
+  // titles/descriptions, and the single base URL site.url) and must be
+  // complete before the atomic publish can happen.
+  const seo = seoConfigFrom(siteData);
+  if (!seo) return report();
+
   // Assemble the complete build in the temp dir, then swap it into dist/
   // (rename on the same filesystem). Readers of dist/ only ever see a
   // complete build — never a half-written one (matters when builds run
@@ -368,6 +469,11 @@ function main() {
     });
     mkdirSync(path.join(tmpDir, 'data'), { recursive: true });
     writeFileSync(path.join(tmpDir, 'data', 'bundle.js'), `${bundleLines.join('\n')}\n`, 'utf8');
+    // SEO files are written into the temp dir BEFORE the rename below, so
+    // they are part of the atomic publish — readers of dist/ never see a
+    // build missing its sitemap.xml / robots.txt.
+    writeFileSync(path.join(tmpDir, 'sitemap.xml'), sitemapXml(seo.pages, new Date().toISOString()), 'utf8');
+    writeFileSync(path.join(tmpDir, 'robots.txt'), robotsTxt(seo.base), 'utf8');
   } catch (err) {
     rmSync(tmpDir, { recursive: true, force: true });
     throw err;
@@ -399,7 +505,7 @@ function main() {
     );
   }
 
-  console.log(`build ok — ${bundleLines.length} data file(s) bundled → dist/data/bundle.js`);
+  console.log(`build ok — ${bundleLines.length} data file(s) bundled, sitemap.xml (${seo.pages.length} URLs) + robots.txt → dist/`);
 }
 
 function report() {

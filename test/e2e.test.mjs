@@ -14,8 +14,13 @@
  *     hub, safari, routes, mechanics and the 404 fallback — returns 200 with
  *     its page-specific static marker strings (titles from data/site.json),
  *     that every one of the 10 pages wires in the search overlay scripts
- *     (search-index.js before search.js, both after main.js), and that the
- *     internal design contract site/css/DESIGN.md is NOT published (404).
+ *     (search-index.js before search.js, both after main.js), that the served
+ *     sitemap.xml is well-formed XML listing exactly the nine nav pages with
+ *     the site.json site.url base (no 404.html), that robots.txt allows all
+ *     and references the sitemap, that every nav page's static og:title /
+ *     og:description / og:url match its site.json `pages` entry (404.html
+ *     carries none — it is not indexable), and that the internal design
+ *     contract site/css/DESIGN.md is NOT published (404).
  * (4) The poisoned build: a temp copy of the repo's build inputs with one
  *     data file whose meta.id breaks out of the window["..."] global-name
  *     interpolation must fail the build (naming the offending file) instead
@@ -459,6 +464,127 @@ test('served mechanics page returns 200 and contains its static markers', async 
     );
     assert.ok(body.includes('Charm'), 'mechanics.html is missing the "Charm" marker');
     assert.ok(body.includes('Curse'), 'mechanics.html is missing the "Curse" marker');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('served sitemap.xml is well-formed and lists every nav page with the site.json base URL', async () => {
+  // ARRANGE
+  const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+  const base = site.site.url.replace(/\/+$/, '');
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT
+    const res = await fetch(`${origin}/sitemap.xml`);
+    const body = await res.text();
+
+    // ASSERT — 200, well-formed (declaration, single urlset, exactly one
+    // <url> block per nav page, closed), correct base URLs, no 404.html
+    assert.equal(res.status, 200, `GET /sitemap.xml returned ${res.status}`);
+    assert.ok(
+      body.startsWith('<?xml version="1.0" encoding="UTF-8"?>'),
+      'sitemap.xml is missing its XML declaration'
+    );
+    assert.ok(
+      body.includes('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'),
+      'sitemap.xml is missing its urlset element'
+    );
+    assert.equal(
+      body.split('<url>').length - 1,
+      site.nav.length,
+      `sitemap.xml must open exactly one <url> per nav page (found ${body.split('<url>').length - 1}, expected ${site.nav.length})`
+    );
+    assert.equal(
+      body.split('</url>').length - 1,
+      site.nav.length,
+      `sitemap.xml must close exactly one </url> per nav page (found ${body.split('</url>').length - 1}, expected ${site.nav.length})`
+    );
+    for (const id of site.nav) {
+      assert.ok(
+        body.includes(`<loc>${base}/${id}.html</loc>`),
+        `sitemap.xml is missing <loc>${base}/${id}.html</loc>`
+      );
+    }
+    assert.ok(!body.includes('404.html'), 'sitemap.xml must not list the 404 fallback');
+    assert.ok(body.trimEnd().endsWith('</urlset>'), 'sitemap.xml must end with </urlset>');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('served robots.txt allows all crawlers and references the sitemap', async () => {
+  // ARRANGE
+  const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+  const base = site.site.url.replace(/\/+$/, '');
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT
+    const res = await fetch(`${origin}/robots.txt`);
+    const body = await res.text();
+
+    // ASSERT — 200, allow-all, and an absolute Sitemap: line at the site base
+    assert.equal(res.status, 200, `GET /robots.txt returned ${res.status}`);
+    assert.ok(body.includes('User-agent: *'), 'robots.txt is missing the User-agent: * line');
+    assert.ok(body.includes('Allow: /'), 'robots.txt is missing the Allow: / line');
+    assert.ok(
+      body.includes(`Sitemap: ${base}/sitemap.xml`),
+      `robots.txt must reference the absolute sitemap URL (${base}/sitemap.xml)`
+    );
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('every served nav page exposes og:title/og:description/og:url matching its site.json pages entry', async () => {
+  // ARRANGE — the same strings main.js uses for the JS-on document title
+  const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+  const base = site.site.url.replace(/\/+$/, '');
+  const name = site.site.name;
+  const esc = (value) =>
+    String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT — fetch every nav page (static <head> is what crawlers without JS see)
+    for (const id of site.nav) {
+      const page = site.pages[id];
+      const res = await fetch(`${origin}/${id}.html`);
+      const body = await res.text();
+
+      // ASSERT — 200 and all three og: tags match the site.json pages entry
+      // (og:title = the JS-on title main.js sets: page title + site name)
+      assert.equal(res.status, 200, `GET /${id}.html returned ${res.status}`);
+      assert.ok(
+        body.includes(`<meta property="og:title" content="${esc(`${page.title} · ${name}`)}">`),
+        `${id}.html og:title must match its site.json pages entry (${JSON.stringify(page.title)})`
+      );
+      assert.ok(
+        body.includes(`<meta property="og:description" content="${esc(page.description)}">`),
+        `${id}.html og:description must match its site.json pages entry`
+      );
+      assert.ok(
+        body.includes(`<meta property="og:url" content="${base}/${id}.html">`),
+        `${id}.html og:url must be the absolute URL under the site.json base`
+      );
+    }
+
+    // ASSERT — the 404 fallback is not indexable: no og: tags at all
+    const res = await fetch(`${origin}/404.html`);
+    const body = await res.text();
+    assert.equal(res.status, 200, `GET /404.html returned ${res.status}`);
+    assert.ok(!body.includes('og:'), '404.html must not carry og: meta tags');
   } finally {
     await new Promise((resolve) => server.close(resolve));
     server = undefined;
