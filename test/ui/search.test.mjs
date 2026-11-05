@@ -16,7 +16,11 @@
  *   .search-palette__row    rows #search-result-<i> (role="option";
  *                           .search-palette__row-name / -snippet / -meta;
  *                           [data-active] on the active row; a .badge--ex /
- *                           .badge--vanilla when the entry is single-version)
+ *                           .badge--vanilla when the entry is single-version).
+ *                           The -snippet carries a .search-palette__highlight
+ *                           mark around the matched substring — the original
+ *                           casing from the entry's textCase parallel,
+ *                           never the lowercased haystack
  * Interaction: open via trigger or the search.shortcut key ("/" — suppressed
  * while a text entry holds focus, and while open it simply types "/" into the
  * already-focused input); ArrowUp/Down move the active row with wrap-around;
@@ -36,14 +40,17 @@
  * literals" block):
  *   "mega evolution"  — under EX: 4 rows, row 0 the EX-only quest
  *                       "Mega Evolution" (data/quests.json versions ["ex"])
- *                       → ./quests.html#quest-default_challenges; under
- *                       Vanilla: 2 rows, none of them that quest row.
- *                       Under "mega": 12 rows in EX.
+ *                       → ./quests.html#quest-default_challenges, its snippet
+ *                       highlighting the title match "Mega Evolution" in
+ *                       its original casing; under Vanilla: 2 rows, none of
+ *                       them that quest row. Under "mega": 12 rows in EX.
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
  *                       in the whole 569-entry index containing "gen3" →
- *                       exactly 1 row under BOTH versions.
+ *                       exactly 1 row under BOTH versions; its snippet
+ *                       highlights the BODY match "National Gen3" in its
+ *                       original casing.
  *   "/" (a second press while open) — 37 index entries contain a "/" → the
  *                       search.maxResults cap (data/site.json: 30) applies
  *                       (30 rows + the moreResults overflow suffix, 7 more).
@@ -328,6 +335,18 @@ test('index.html: typing filters live — the count line and rows track the quer
     assert.equal(row0.meta, site.pages.quests.title, 'the row meta is the page nav title from data/site.json ("Quests"), never the raw filename');
     assert.equal(row0.exBadge, true, 'the single-version entry (versions ["ex"]) wears the .badge--ex badge (search.js rowHtml)');
     assert.ok(row0.snippet.length > 0, 'every row carries a snippet around the match');
+    // the snippet (issue #48): sliced from the entry's ORIGINAL-CASE
+    // haystack (textCase) with the matched substring highlighted
+    const row0snippet = await page.evaluate((rid) => {
+      const row = document.getElementById(rid);
+      const hl = row.querySelector('.search-palette__highlight');
+      return {
+        text: (row.querySelector('.search-palette__row-snippet')?.textContent || '').trim(),
+        hl: hl ? hl.textContent.trim() : null,
+      };
+    }, row0.id);
+    assert.equal(row0snippet.hl, 'Mega Evolution', 'the matched substring is wrapped in the .search-palette__highlight mark (markup, not copy), original casing preserved');
+    assert.ok(row0snippet.text.startsWith('Mega Evolution'), "the snippet shows the record's original casing, not the lowercased haystack");
     assert.equal(f.activedescendant, 'search-result-0', 'the first row is active on render (setActive(0))');
     assert.equal(f.rows.filter((r) => r.active).length, 1, 'exactly one row carries [data-active]');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
@@ -394,6 +413,18 @@ test('quests.html (?version=vanilla): the EX-only quest is absent, the Vanilla-s
     f = await page.evaluate(paletteFacts);
     assert.equal(f.rows.length, 1, 'exactly one index entry contains "gen3" anywhere: "The Final Run."');
     assert.equal(f.rows[0].name, VANILLA_PHRASE_QUEST, 'the Vanilla-side phrase matches its quest under Vanilla');
+    // the match is in the BODY (the Vanilla-side description), and the
+    // snippet highlights it in the Vanilla-side original casing
+    const finalRunHl = await page.evaluate(() => {
+      const row = document.querySelector('.search-palette__row');
+      const hl = row.querySelector('.search-palette__highlight');
+      return {
+        hl: hl ? hl.textContent.trim() : null,
+        text: (row.querySelector('.search-palette__row-snippet')?.textContent || '').trim(),
+      };
+    });
+    assert.equal(finalRunHl.hl, 'National Gen3', 'the body match is highlighted with the Vanilla-side original casing (data/quests.json differences.vanilla)');
+    assert.ok(finalRunHl.text.includes('National Gen3'), 'the snippet preserves the original casing around the body match');
   } finally {
     await close();
   }

@@ -15,12 +15,17 @@
  *                uses it to signpost truncation ("30 of 135" vs "30 of 30")
  *
  * Entry shape:
- *   { id, title, titleLower, text, page, anchor, versions }
+ *   { id, title, titleLower, text, textCase, page, anchor, versions }
  *     id          stable unique key ('page-…' / 'prose-…' / 'rec-…')
  *     title       display title (quest {PKMN}/{POKEBLOCK} placeholders resolved)
  *     titleLower  lowercased title
  *     text        the lowercased search haystack; ALWAYS starts with
  *                 titleLower, so a title match is also a body match
+ *     textCase    the SAME haystack with its original casing — a 1:1
+ *                 per-code-unit parallel of `text` (sanityCheck asserts
+ *                 textCase.toLowerCase() === text), so matchIndex/matchEnd
+ *                 (computed against the folded lowercased text) slice it
+ *                 identically; the palette slices snippets from it
  *     page        relative page path ('./quests.html' — all links relative)
  *     anchor      '#<section-id>' or '' (page top)
  *     versions    entry's version availability, e.g. ['vanilla','ex'] —
@@ -70,7 +75,9 @@
  *   - Snippets: because they are union-derived, a shared record can match
  *     on the other build's wording and show it in the snippet; the
  *     destination card (navigated to on Enter) renders the active
- *     version's fields.
+ *     version's fields. They are sliced from `textCase` (original
+ *     casing) at the matchIndex/matchEnd computed against the folded
+ *     lowercased `text` — the two strings are 1:1 aligned per code unit.
  *
  * Deep-link granularity (deliberate v1 scope): record cards carry NO
  * per-card DOM ids, so record entries anchor at the containing
@@ -83,9 +90,11 @@
  * Matching (searchQuery) is accent-INSENSITIVE: query and haystack are
  * NFD-folded (combining marks stripped) before the substring test, so a
  * query for "pokemon" finds "Pokémon". Entry `text` stays plain
- * lowercased (snippets keep the page's original accents), and folding is
- * per-code-unit with an index map, so `matchIndex` always points into
- * the un-folded `text` (identity for the current precomposed data).
+ * lowercased (the display casing lives in the 1:1 `textCase` parallel),
+ * and folding is per-code-unit with an index map, so `matchIndex`/
+ * `matchEnd` always bound a span of the un-folded `text`/`textCase`
+ * (identity for the current precomposed data) — the palette slices
+ * `textCase` at that span for the original-cased snippet + highlight.
  *
  * Config: data/site.json `search` block — searchQuery caps the returned
  * list at `search.maxResults` (and reports the pre-cap `total`);
@@ -650,14 +659,21 @@
     }
   }
 
-  /** Build one Entry; `textParts` are joined, placeholder-resolved and lowercased. */
+  /**
+   * Build one Entry; `textParts` are joined and placeholder-resolved
+   * ONCE — `text` keeps the result lowercased (matching), `textCase`
+   * keeps the original casing (the 1:1 parallel the palette slices
+   * its snippets from).
+   */
   function makeEntry(id, title, textParts, page, anchor, versions) {
     var resolvedTitle = ROGUE.resolvePlaceholders(title);
+    var haystack = ROGUE.resolvePlaceholders(textParts.join(' '));
     return {
       id: id,
       title: resolvedTitle,
       titleLower: resolvedTitle.toLowerCase(),
-      text: ROGUE.resolvePlaceholders(textParts.join(' ')).toLowerCase(),
+      text: haystack.toLowerCase(),
+      textCase: haystack,
       page: page,
       anchor: anchor,
       versions: versions
@@ -768,6 +784,11 @@
         continue;
       }
       if (e.text !== String(e.text).toLowerCase()) problems.push('text not lowercased: ' + e.id);
+      // the 1:1 original-case parallel: if a data character ever lowercases
+      // to a different LENGTH (e.g. İ → i + combining dot), textCase and
+      // text would misalign and matchIndex/matchEnd would slice it wrongly
+      if (typeof e.textCase !== 'string' || e.textCase.toLowerCase() !== e.text)
+        problems.push('textCase not the 1:1 original-case parallel of text: ' + e.id);
       if (typeof e.page !== 'string' || e.page.slice(0, 2) !== './' || e.page.slice(-5) !== '.html') problems.push('page not a relative .html link: ' + e.id + ' → ' + e.page);
       if (e.anchor !== '' && e.anchor.charAt(0) !== '#') problems.push('anchor must be "" or "#<id>": ' + e.id + ' → ' + e.anchor);
       var badVersions = !Array.isArray(e.versions) || e.versions.length === 0;
@@ -836,10 +857,15 @@
    *   of matches found before the cap, so the UI can distinguish "30 of
    *   135" from "30 of 30" (it appends the search.moreResults overflow
    *   copy when total > results.length). Result = the entry's fields
-   *   plus:
+   *   (including the original-case `textCase` parallel) plus:
    *     tier         0 | 1 | 2
    *     matchIndex   first index of the query in `text` (for the snippet;
    *                  -1 when the body doesn't contain it)
+   *     matchEnd     EXCLUSIVE end of that match in `text`/`textCase`
+   *                  (the folded occurrence mapped back through
+   *                  foldAccents' index map; -1 with matchIndex) — the
+   *                  snippet's highlight span, so the palette slices the
+   *                  original-case `textCase` at exactly the match
    */
   ROGUE.searchQuery = function (entries, query, activeVersion) {
     // fold the QUERY the same way the haystacks are folded at match time
@@ -865,12 +891,16 @@
         title: e.title,
         titleLower: e.titleLower,
         text: e.text,
+        textCase: e.textCase,
         page: e.page,
         anchor: e.anchor,
         versions: e.versions,
         tier: tier,
-        // index into the un-folded `text` (foldAccents' map) — snippet-ready
-        matchIndex: fi === -1 ? -1 : fText.map[fi]
+        // span of the match in the un-folded `text`/`textCase`
+        // (foldAccents' map) — snippet-ready: slice `textCase` at
+        // [matchIndex, matchEnd) for the original-cased highlight
+        matchIndex: fi === -1 ? -1 : fText.map[fi],
+        matchEnd: fi === -1 ? -1 : fText.map[fi + q.length - 1] + 1
       });
     }
 

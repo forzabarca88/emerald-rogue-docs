@@ -7,9 +7,11 @@
  * node --test, zero deps, no DOM, no mocks: loads site/js/data.js,
  * site/js/render.js then site/js/search-index.js into one shared vm
  * sandbox whose fake `window` carries the REAL data/*.json files (read
- * from disk), and asserts end results — entry completeness and shape,
+ * from disk), and asserts end results — entry completeness and shape
+ * (incl. the original-case textCase parallel of the lowercased text),
  * placeholder resolution, the FAIRY-swap union, query-time version
- * scoping, ranking/cap, the pre-cap total and matchIndex, the #31
+ * scoping, ranking/cap, the pre-cap total and matchIndex (+ matchEnd
+ * alignment for accented queries), the #31
  * structured diagram fields' searchability, and the effective/placeholder
  * helper semantics.
  * ROGUE.version is assigned directly on the sandbox's ROGUE (version.js is
@@ -151,9 +153,15 @@ test('the index has exactly one entry per record, per prose block and per nav pa
       assert.ok(navPages.includes(e.page), `${f}/${r.id} page "${e.page}" must be a nav page`);
       assert.equal(e.text.slice(0, e.titleLower.length), e.titleLower, `${f}/${r.id} text must start with its title`);
       assert.equal(e.text, e.text.toLowerCase(), `${f}/${r.id} text must be lowercased`);
+      // issue #48: the original-case parallel — lowercasing textCase must
+      // reproduce text exactly (1:1 per code unit, so matchIndex/matchEnd
+      // slice both identically)
+      assert.equal(e.textCase.toLowerCase(), e.text, `${f}/${r.id} textCase must be the 1:1 original-case parallel of text`);
     }
   }
   assert.equal(entries.filter((e) => e.id.startsWith('rec-')).length, expectedRecs);
+  // at least some entries actually carry original casing in their haystack
+  assert.ok(entries.some((e) => e.textCase !== e.text), 'fixture: mixed-case haystacks are expected');
 
   // ASSERT — prose: every prose block of every file is indexed with a real page and a section anchor
   let expectedProse = 0;
@@ -410,6 +418,35 @@ test('results are capped at search.maxResults (total carries the pre-cap count) 
       fold(r.text.slice(r.matchIndex, r.matchIndex + q.length)).startsWith(q),
       `${r.id}: text.slice(matchIndex, +${q.length}) must start with the folded query`
     );
+    // the original-case parallel slices at the same span: the highlight
+    // span [matchIndex, matchEnd) folds to exactly the query
+    assert.ok(r.matchEnd > r.matchIndex && r.matchEnd <= r.textCase.length, `${r.id}: matchEnd out of range`);
+    assert.equal(fold(r.textCase.slice(r.matchIndex, r.matchEnd)), q, `${r.id}: textCase.slice(matchIndex, matchEnd) must fold to the query`);
+  }
+});
+
+test('accented queries keep matchIndex/matchEnd aligned with the original-case textCase', () => {
+  // ARRANGE — "Pokémon" (data/quests.json {PKMN} resolution + hub upgrade
+  // names): a folded query ("pokemon") that matches the accented
+  // original-case text. Fixture: at least one capped result per version
+  // highlights the accented word itself
+  const q = fold('Pokémon');
+  const accentedAtMatch = (version) =>
+    rogue.searchQuery(entries, 'Pokémon', version).results.some(
+      (r) => r.textCase.slice(r.matchIndex, r.matchIndex + q.length) === 'Pokémon'
+    );
+  assert.ok(accentedAtMatch('ex'), 'fixture: at least one capped EX result highlights the accented "Pokémon"');
+  assert.ok(accentedAtMatch('vanilla'), 'fixture: at least one capped Vanilla result highlights the accented "Pokémon"');
+
+  // ACT + ASSERT — for every capped result under both versions, the
+  // original-case slice at [matchIndex, matchEnd) folds to the exact
+  // folded query (no off-by-one, accents intact)
+  for (const version of VERSIONS) {
+    for (const r of rogue.searchQuery(entries, 'Pokémon', version).results) {
+      assert.ok(r.matchEnd > r.matchIndex && r.matchEnd <= r.textCase.length, `${version}/${r.id}: matchEnd out of range`);
+      assert.equal(fold(r.textCase.slice(r.matchIndex, r.matchEnd)), q, `${version}/${r.id}: the highlighted original-case span must fold to the query`);
+      assert.equal(fold(r.text.slice(r.matchIndex, r.matchEnd)), q, `${version}/${r.id}: the same span in the lowercased text must fold to the query`);
+    }
   }
 });
 
