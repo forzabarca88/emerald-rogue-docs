@@ -162,7 +162,8 @@ img {
   padding: var(--space-6) var(--gutter) var(--space-8);
 }
 
-/* --- Header (injected into #site-header by js/nav.js) --------------------- */
+/* --- Header (static no-JS markup in the shells; js/nav.js replaces it
+   with the full header — search trigger + version toggle — when JS runs) */
 
 #site-header {
   position: sticky;
@@ -343,7 +344,8 @@ img {
   background: var(--color-gold);
 }
 
-/* --- Footer (injected into #site-footer by js/nav.js) --------------------- */
+/* --- Footer (static no-JS markup in the shells; js/nav.js replaces it
+   with the same content from data/site.json when JS runs) --------------- */
 
 #site-footer {
   background: var(--color-surface);

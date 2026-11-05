@@ -1,7 +1,12 @@
 /*
- * nav.js — injects the site header (brand, nav links, the icon-only search
- * trigger, version toggle) and footer into the empty #site-header /
- * #site-footer elements, entirely from data/site.json. Loads after
+ * nav.js — replaces the shells' static no-JS header/footer markup (brand
+ * + nav links + footer only — the search trigger and version toggle are
+ * JS-only, so they are omitted from the static shells) with the full
+ * header (brand, nav links, the icon-only search trigger, version toggle)
+ * and footer, entirely from data/site.json. It is the single source of
+ * the header/footer when JS runs: buildHeader/buildFooter assign
+ * .innerHTML on the existing #site-header / #site-footer elements, which
+ * overwrites the static content, so nothing is duplicated. Loads after
  * version.js + data.js; uses ROGUE.esc from render.js at run time (all
  * scripts are parsed before ready() fires).
  *

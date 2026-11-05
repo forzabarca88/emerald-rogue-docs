@@ -16,7 +16,29 @@
   <meta name="theme-color" content="#10241b">
 </head>
 <body data-page="config">
-  <header id="site-header"></header>
+  <header id="site-header">
+    <!-- Static no-JS header: brand + primary nav as plain links, mirroring
+         what js/nav.js builds from data/site.json (the same nine-page nav
+         set). The icon-only search trigger and the Vanilla/EX version
+         toggle are JS-only controls (they open the search overlay /
+         switch the build), so they are deliberately omitted here rather
+         than rendered inert. With JS on, js/nav.js replaces this markup
+         wholesale — it stays the single source of the header. -->
+    <div class="container site-header__inner">
+      <a class="site-brand" href="./index.html">Emerald Rogue Docs</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a class="site-nav__link" href="./index.html">Home</a>
+        <a class="site-nav__link" href="./gameplay.html">Gameplay</a>
+        <a class="site-nav__link" href="./versions.html">Versions</a>
+        <a class="site-nav__link" href="./quests.html">Quests</a>
+        <a class="site-nav__link site-nav__link--active" href="./config.html" aria-current="page">Configuration</a>
+        <a class="site-nav__link" href="./hub.html">Hub</a>
+        <a class="site-nav__link" href="./safari.html">Safari Zone</a>
+        <a class="site-nav__link" href="./routes.html">Routes</a>
+        <a class="site-nav__link" href="./mechanics.html">Mechanics</a>
+      </nav>
+    </div>
+  </header>
   <main class="page page--config">
     <h1>Configuration</h1>
     <p class="page-fallback">
@@ -26,7 +48,14 @@
       JavaScript.
     </p>
   </main>
-  <footer id="site-footer"></footer>
+  <footer id="site-footer">
+    <!-- Static no-JS footer, mirroring what js/nav.js injects from
+         data/site.json site.footer (replaced by nav.js when JS is on). -->
+    <div class="container site-footer__inner">
+      <p>Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent AI generated guide based on its Github source code, and is not affiliated with the romhack's authors.</p>
+      <p class="site-footer__source">Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations.</p>
+    </div>
+  </footer>
   <script src="./data/bundle.js"></script>
   <script src="./js/version.js"></script>
   <script src="./js/data.js"></script>

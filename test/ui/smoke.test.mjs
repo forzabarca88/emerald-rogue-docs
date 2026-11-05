@@ -393,11 +393,13 @@ for (const spec of PAGES) {
         `${spec.stem}.html (version ${VERSION}): expected zero console errors and pageerrors, got: ${errors.join(' | ')}`
       );
 
-      // Landmarks: the header brand + nav and the footer inner are injected
-      // by nav.js into the shells' empty <header id="site-header"> /
-      // <footer id="site-footer">; <main class="page page--<stem>"> and the
-      // page <h1> belong to the shell (page scripts replace main.innerHTML
-      // only, keeping the page--<stem> class on the <main> element itself).
+      // Landmarks: the header brand + nav and the footer inner are the
+      // shells' static no-JS markup, replaced in place by nav.js when JS
+      // runs (its .innerHTML assignment overwrites the static content, so
+      // the single-landmark counts below hold for the JS-on DOM);
+      // <main class="page page--<stem>"> and the page <h1> belong to the
+      // shell (page scripts replace main.innerHTML only, keeping the
+      // page--<stem> class on the <main> element itself).
       const landmarkSels = {
         brand: 'header .site-brand',
         nav: 'nav',

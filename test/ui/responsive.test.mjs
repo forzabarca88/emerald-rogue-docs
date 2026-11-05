@@ -28,10 +28,14 @@
  *   3. 404.html renders its static marker (the "Error 404" eyebrow and
  *      the "Page not found" h1 from site/404.html) at both viewports.
  *   4. No-JS fallback (harness `js: false`): the shells' static content —
- *      the static <h1> and the `<p class="page-fallback">` where present
- *      — is visible; the empty #site-header / #site-footer shells remain
- *      (their content is JS-injected by js/nav.js, so it is legitimately
- *      absent without JS); and the layout does not overflow at 360px.
+ *      the static <h1> and the `<p class="page-fallback">` on all nine
+ *      content pages (index included) — is visible, and the static no-JS
+ *      header/footer renders: brand linking home, exactly the nine nav
+ *      links (href + label) from data/site.json, the page's own link
+ *      marked current, both footer paragraphs, and NO JS-only controls
+ *      (the search trigger / version toggle are omitted from the static
+ *      shells rather than rendered inert); the layout does not overflow
+ *      at 360px.
  *
  * Waiting is on readiness, never on sleeps: JS-on pages use the harness's
  * ROGUE + landmark waits, then the promise-based `document.fonts.ready`
@@ -65,12 +69,12 @@ const VIEWPORTS = [
  * All 10 served pages. `h1` is the STATIC <h1> baked into the HTML shell
  * (the no-JS fallback; with JS on, the page scripts replace
  * main.innerHTML — the smoke suite pins the same titles from
- * data/site.json). `fallback` marks the eight content pages that also
- * carry a static `<p class="page-fallback">` line (index's fallback is
- * the <h1> itself; 404 is fully static with its own marker).
+ * data/site.json). `fallback` marks the nine content pages that also
+ * carry a static `<p class="page-fallback">` line (index included);
+ * 404 is fully static with its own marker.
  */
 const PAGES = [
-  { stem: 'index', file: 'index.html', h1: site.hero.title, fallback: false },
+  { stem: 'index', file: 'index.html', h1: site.hero.title, fallback: true },
   { stem: 'gameplay', file: 'gameplay.html', h1: site.pages.gameplay.title, fallback: true },
   { stem: 'versions', file: 'versions.html', h1: site.pages.versions.title, fallback: true },
   { stem: 'quests', file: 'quests.html', h1: site.pages.quests.title, fallback: true },
@@ -373,13 +377,18 @@ test('404.html renders its static marker at both 1280×800 and 360×640', async 
 });
 
 for (const spec of PAGES) {
-  test(`${spec.file} (no-JS): the static fallback is visible and the layout holds at 360×640`, async (t) => {
+  test(`${spec.file} (no-JS): the static nav, footer and fallback are visible and the layout holds at 360×640`, async (t) => {
     if (skipIfNoPlaywright(t)) return;
     // js: false — the harness skips the ROGUE/landmark waits (JS-injected
     // content legitimately never appears) and settles at DOMContentLoaded
     const { page, errors, close } = await openPage({ path: spec.file, width: 360, height: 640, js: false });
     try {
       assert.deepEqual(errors, [], `${spec.file} (no-JS): unexpected page errors: ${errors.join('; ')}`);
+      // the static nav must carry exactly the nine sections from
+      // data/site.json (href + label); 404 is not a nav page, so no link
+      // is marked current on it
+      const expectedLinks = site.nav.map((id) => [`./${id}.html`, site.pages[id].title]);
+      const selfHref = spec.stem === '404' ? null : `./${spec.stem}.html`;
       const f = await page.evaluate((hasFallback) => {
         const visible = (el) => {
           if (!el) return false;
@@ -387,16 +396,25 @@ for (const spec of PAGES) {
           return r.width > 0 && r.height > 0 && getComputedStyle(el).visibility !== 'hidden';
         };
         const h1 = document.querySelector('main h1');
+        const brand = document.querySelector('#site-header .site-brand');
+        const links = [...document.querySelectorAll('#site-header .site-nav a.site-nav__link')];
+        const current = [...document.querySelectorAll('#site-header .site-nav a.site-nav__link[aria-current="page"]')];
+        const footerInner = document.querySelector('#site-footer .site-footer__inner');
         return {
           h1Text: h1 ? h1.textContent.trim() : null,
           h1Visible: visible(h1),
-          // the eight content pages carry a static <p class="page-fallback">
-          // line in the shell (index's fallback is the <h1>; 404 is static)
+          // all nine content pages carry a static <p class="page-fallback">
+          // line in the shell (404 is static with its own marker)
           fallbackVisible: hasFallback ? visible(document.querySelector('main .page-fallback')) : null,
-          headerShell: !!document.getElementById('site-header'),
-          footerShell: !!document.getElementById('site-footer'),
-          headerInjected: !!document.querySelector('#site-header .site-brand'),
-          footerInjected: !!document.querySelector('#site-footer .site-footer__inner'),
+          brandVisible: visible(brand),
+          brandHref: brand ? brand.getAttribute('href') : null,
+          navLinks: links.map((a) => [a.getAttribute('href'), a.textContent.trim()]),
+          currentHrefs: current.map((a) => a.getAttribute('href')),
+          footerParas: footerInner ? footerInner.querySelectorAll('p').length : 0,
+          footerSourceVisible: visible(document.querySelector('#site-footer .site-footer__source')),
+          // the search trigger and version toggle are JS-only controls —
+          // they must not appear (inert) in the no-JS header
+          jsOnlyControls: document.querySelectorAll('#site-header .site-search-trigger, #site-header .version-toggle').length,
         };
       }, spec.fallback);
       assert.equal(
@@ -408,13 +426,39 @@ for (const spec of PAGES) {
       if (spec.fallback) {
         assert.ok(f.fallbackVisible, `${spec.file} (no-JS): the static <p class="page-fallback"> line must be visible (it is the no-JS content notice)`);
       }
-      // the shells' header/footer are EMPTY elements in the HTML — nav.js
-      // injects the brand/nav/toggle/footer inner with JS — so without JS
-      // the shells exist but carry no injected content (and nothing
-      // half-rendered either)
-      assert.ok(f.headerShell && f.footerShell, `${spec.file} (no-JS): the #site-header / #site-footer shells from the HTML must remain`);
-      assert.equal(f.headerInjected, false, `${spec.file} (no-JS): no .site-brand may appear without JS (header content is injected by js/nav.js)`);
-      assert.equal(f.footerInjected, false, `${spec.file} (no-JS): no .site-footer__inner may appear without JS (footer content is injected by js/nav.js)`);
+      // the static no-JS header/footer live in the shells (nav.js
+      // replaces them in place when JS runs): the brand links home, the
+      // nav carries exactly the nine sections, and the page's own link is
+      // the single one marked current
+      assert.ok(f.brandVisible, `${spec.file} (no-JS): the static header brand must be visible`);
+      assert.equal(
+        f.brandHref,
+        './index.html',
+        `${spec.file} (no-JS): the static brand must link to ./index.html, got ${JSON.stringify(f.brandHref)}`
+      );
+      assert.deepEqual(
+        f.navLinks,
+        expectedLinks,
+        `${spec.file} (no-JS): the static nav must carry exactly the nine sections from data/site.json (href + label), got ${JSON.stringify(f.navLinks)}`
+      );
+      assert.deepEqual(
+        f.currentHrefs,
+        selfHref ? [selfHref] : [],
+        `${spec.file} (no-JS): exactly one nav link (the page's own) must be marked current via aria-current="page", got ${JSON.stringify(f.currentHrefs)}`
+      );
+      assert.equal(
+        f.jsOnlyControls,
+        0,
+        `${spec.file} (no-JS): the JS-only search trigger / version toggle must not appear in the static header (they are omitted, not rendered inert)`
+      );
+      // the static footer mirrors nav.js output from data/site.json
+      // site.footer: both paragraphs (site text + source line)
+      assert.equal(
+        f.footerParas,
+        2,
+        `${spec.file} (no-JS): the static footer must carry both paragraphs (site text + source line), got ${f.footerParas}`
+      );
+      assert.ok(f.footerSourceVisible, `${spec.file} (no-JS): the static footer source line must be visible`);
       await assertNoOverflow(page, `${spec.file} (no-JS) at 360×640`);
     } finally {
       await close();
