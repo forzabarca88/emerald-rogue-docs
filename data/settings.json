@@ -340,7 +340,7 @@
       "name": "Pokédex Variant",
       "code": "CONFIG_RANGE_POKEDEX_VARIANT",
       "category": "range",
-      "menu": "Pokédex (unlocked after meeting Pokabbie at the hub's Adventure Entrance)",
+      "menu": "Pokédex (unlocked after meeting the game's developer at the hub's Adventure Entrance)",
       "versions": ["vanilla", "ex"],
       "description": "Which Pokédex list your in-game Pokédex follows, grouped by region (regional dexes, national dexes per generation, and special extras).",
       "optionsByVersion": {
