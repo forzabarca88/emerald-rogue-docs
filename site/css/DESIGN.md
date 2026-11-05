@@ -72,10 +72,13 @@ offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
 - Header is **sticky**, 2px bottom border: brand (pixel face + 9px emerald
   square) · `.site-nav` (scrollable row, active link = GBA menu-cursor `▶`
   + emerald underline) · `.site-search-trigger` (icon-only search button,
-  opens the `.search-palette` overlay) · `.version-toggle` (right). Above
-  820px the header is **always one row**: when brand + full nav + toggle
-  don't fit, the nav row shrinks and scrolls horizontally (scrollbar hidden)
-  instead of wrapping the toggle to a second row. Below 820px the nav wraps
+  opens the `.search-palette` overlay) · `.version-toggle` (right). The
+  static no-JS header baked into the shells carries only brand + nav (the
+  search trigger and version toggle are JS-only — omitted, never rendered
+  inert); `js/nav.js` replaces it wholesale when JS runs. Above 820px the
+  header is **always one row**: when brand + full nav + toggle don't fit,
+  the nav row shrinks and scrolls horizontally (scrollbar hidden) instead
+  of wrapping the toggle to a second row. Below 820px the nav wraps
   to a full-width scrollable second row; brand + trigger + toggle stay on
   row 1. This must never break at 360px — verify with a screenshot at that
   width.
@@ -161,7 +164,7 @@ under your own `.page--<stem>`):
 | `.equation` / `.equation__term(-op)` / `.equation__result` / `.equation__note` | chip equation — mono chips joined by operator glyphs (from the data record's `op` fields), ending in an emerald result chip, with an optional muted note line inside the same panel; for compact score/formula breakdowns (safari priority score) |
 | `.step-strip` / `.step-strip__step` / `.step-strip__index` / `.step-strip__label` | compact wrapping numbered strip (mono index square + short label per step) for short TRUE sequences of 3–5 steps (safari eviction batch); longer true sequences keep a page-scoped numbered `<ol>` (boss ladder, Legends Cave steps) |
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
-| `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not hand-write or restyle (the trigger's overlay is `.search-palette`, above) |
+| `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not restyle (the trigger's overlay is `.search-palette`, above). The shells hand-write only the static no-JS subset (brand + nav links + footer inner) so the page navigates without JS; `js/nav.js` replaces it wholesale when JS runs |
 | `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den`/`--gap` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
 
 ## 7. Motion
@@ -181,7 +184,8 @@ it only inside the `no-preference` block.
   offset) from `base.css`. Never `outline: none` without a replacement.
 - **Contrast:** WCAG AA minimum for all text (values in §2); dark
   `--color-bg` text on any badge fill.
-- **Semantics:** header/nav/footer are landmarks (injected by `nav.js`);
+- **Semantics:** header/nav/footer are single landmarks (static in the shells
+  for no-JS, replaced in place by `nav.js` when JS runs);
   keep `<main class="page page--<stem">` as the only main landmark; tables
   keep `<th scope="col">` (from `ROGUE.table()`); the run path and any
   decorative motif is `aria-hidden="true"`; tabs use `role`/`aria-selected`
