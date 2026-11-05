@@ -495,6 +495,17 @@ input.search::-webkit-search-decoration {
   overflow-wrap: anywhere;
 }
 
+/* The matched substring inside a snippet (js/search.js snippet()): a
+   token-only inline chip — emerald fill with dark Deep-Pine text (the
+   badge pattern, DESIGN.md §2), so it reads on both the panel surface
+   and the active row's raised fill. */
+.search-palette__highlight {
+  background: var(--color-emerald);
+  color: var(--color-bg);
+  border-radius: var(--radius-sm);
+  padding: 0 2px;
+}
+
 .search-palette__row-meta {
   display: flex;
   align-items: center;

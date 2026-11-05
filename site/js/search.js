@@ -27,10 +27,13 @@
  *   4. queries on every input event: ROGUE.searchQuery(entries, value,
  *      ROGUE.version). Each result row shows the title (plus a version
  *      badge via ROGUE.badge when the entry is single-version), a snippet
- *      around the match — text[matchIndex−40 … matchIndex+80], "…" where
- *      clipped (text is the lowercased haystack, per the search-index
- *      module) — and the page's NAV title from data/site.json (never the
- *      raw filename);
+ *      around the match — the entry's ORIGINAL-CASE haystack (textCase,
+ *      the 1:1 parallel of the lowercased text, per the search-index
+ *      module) sliced [matchIndex−40 … matchIndex+80], "…" where clipped,
+ *      with the matched substring [matchIndex … matchEnd) wrapped in the
+ *      token-colored .search-palette__highlight mark (markup, not copy) —
+ *      and the page's NAV title from data/site.json (never the raw
+ *      filename);
  *   5. keyboard: ArrowDown/ArrowUp move the active row (WRAP-AROUND, via
  *      aria-activedescendant + [data-active]); Enter navigates to
  *      entry.page + entry.anchor as a RELATIVE url (./quests.html#quest-…
@@ -188,16 +191,33 @@
       return page && page.title ? page.title : stem || '\u2026';
     }
 
-    /** A snippet around the match: 40 chars before, 80 after, "…" where clipped. */
-    function snippet(text, matchIndex) {
-      var t = typeof text === 'string' ? text : '';
-      if (typeof matchIndex !== 'number' || matchIndex < 0) matchIndex = 0;
+    /**
+     * A snippet around the match: 40 chars before, 80 after, "…" where
+     * clipped — sliced from the entry's ORIGINAL-CASE haystack (textCase,
+     * the 1:1 parallel of the lowercased text; the search-index module
+     * guarantees the alignment) with the matched substring
+     * [matchIndex … matchEnd) wrapped in .search-palette__highlight
+     * (markup, not copy). Returns ready-to-insert escaped HTML.
+     */
+    function snippet(result) {
+      var t = typeof result.textCase === 'string' ? result.textCase : '';
+      if (!t) t = typeof result.text === 'string' ? result.text : '';
+      var matchIndex = typeof result.matchIndex === 'number' && result.matchIndex >= 0 ? result.matchIndex : 0;
+      var matchEnd =
+        typeof result.matchEnd === 'number' && result.matchEnd > matchIndex
+          ? Math.min(result.matchEnd, t.length)
+          : matchIndex; // no valid span → plain snippet, nothing highlighted
       var start = Math.max(0, matchIndex - SNIPPET_BEFORE);
       var end = Math.min(t.length, matchIndex + SNIPPET_AFTER);
-      var s = t.slice(start, end);
-      if (start > 0) s = '\u2026' + s;
-      if (end < t.length) s = s + '\u2026';
-      return s;
+      var hlStart = Math.max(start, matchIndex);
+      var hlEnd = Math.min(end, matchEnd);
+      var html = (start > 0 ? '\u2026' : '') + ROGUE.esc(t.slice(start, hlStart));
+      if (hlEnd > hlStart) {
+        html += '<mark class="search-palette__highlight">' + ROGUE.esc(t.slice(hlStart, hlEnd)) + '</mark>';
+      }
+      html += ROGUE.esc(t.slice(hlEnd, end));
+      if (end < t.length) html += '\u2026';
+      return html;
     }
 
     function rowHtml(result, i) {
@@ -214,7 +234,7 @@
       if (singleVersion) html += ROGUE.badge({ versions: result.versions });
       html +=
         '</div><p class="search-palette__row-snippet">' +
-        ROGUE.esc(snippet(result.text, result.matchIndex)) +
+        snippet(result) +
         '</p><p class="search-palette__row-meta">' +
         ROGUE.esc(pageLabel(result)) +
         '</p></li>';
