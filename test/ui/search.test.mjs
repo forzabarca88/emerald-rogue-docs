@@ -45,7 +45,12 @@
  *                       in the whole 569-entry index containing "gen3" →
  *                       exactly 1 row under BOTH versions.
  *   "/" (a second press while open) — 37 index entries contain a "/" → the
- *                       search.maxResults cap (data/site.json: 30) applies.
+ *                       search.maxResults cap (data/site.json: 30) applies
+ *                       (30 rows + the moreResults overflow suffix, 7 more).
+ *   "masteries"       — 135 index entries match under EX → the cap (30
+ *                       rows + the moreResults overflow suffix, 105 more);
+ *                       a narrow query ("mega evolution", 4 rows) keeps the
+ *                       unchanged count line (total ≤ cap).
  *   "zzqxwvnotthere"  — 0 rows under both versions.
  *
  * In-page literals (the active version's rendered card text):
@@ -92,6 +97,11 @@ const Q_OPEN = '\u201C'; // the count line's curly quotes (search.js renderQuery
 const Q_CLOSE = '\u201D';
 const COUNT = (n, query) => (n === 1 ? `1 result match ${Q_OPEN}${query}${Q_CLOSE}` : `${n} results match ${Q_OPEN}${query}${Q_CLOSE}`);
 const NO_RESULTS = (query) => `No results match ${Q_OPEN}${query}${Q_CLOSE}.`;
+/** The overflow suffix search.js appends after an em dash when the pre-cap
+ * total exceeds the rows shown (data/site.json search.moreResults template,
+ * {n} filled by the hidden count). */
+const MORE = (n) => site.search.moreResults.split('{n}').join(String(n));
+const COUNT_OVERFLOW = (n, more, query) => `${COUNT(n, query)} \u2014 ${MORE(more)}`;
 
 /** The EX-only quest used for the version-scoping assertions (data/quests.json: versions ["ex"]). */
 const EX_ONLY_QUEST = 'Mega Evolution';
@@ -269,14 +279,16 @@ test('hub.html: "/" opens the palette, a second "/" types into it, Escape closes
 
     // second "/": the palette is already open → the key simply types into the
     // focused input (search.js: the shortcut does nothing special while open).
-    // 37 index entries contain a "/", so the result is the maxResults cap.
+    // 37 index entries contain a "/" → the maxResults cap, and the pre-cap
+    // total (37) exceeds the rows shown → the moreResults overflow suffix.
     await page.keyboard.press('/');
     await page.waitForFunction(() => document.querySelector('.search-palette__input').value === '/', null, { timeout: SETTLE_TIMEOUT_MS });
-    await waitForCount(page, COUNT(MAX_RESULTS, '/'), 'hub.html (second "/" — the capped result)');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 7, '/'), 'hub.html (second "/" — the capped result)');
     f = await page.evaluate(paletteFacts);
     assert.equal(f.open, true, 'a second "/" must not close the palette (it is not a toggle)');
     assert.equal(f.inputValue, '/', 'the second "/" is typed into the palette input');
     assert.equal(f.rows.length, MAX_RESULTS, `the capped result shows exactly ${MAX_RESULTS} rows (data/site.json search.maxResults; 37 index entries contain a "/")`);
+    assert.ok(f.count.endsWith(MORE(7)), `the count line appends the site.json search.moreResults overflow copy (37 − ${MAX_RESULTS} = 7 more)`);
 
     // Escape closes; reopening starts fresh (the query is reset)
     await page.keyboard.press('Escape');
@@ -318,6 +330,33 @@ test('index.html: typing filters live — the count line and rows track the quer
     assert.ok(row0.snippet.length > 0, 'every row carries a snippet around the match');
     assert.equal(f.activedescendant, 'search-result-0', 'the first row is active on render (setActive(0))');
     assert.equal(f.rows.filter((r) => r.active).length, 1, 'exactly one row carries [data-active]');
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('index.html: a broad query beyond the cap appends the overflow copy; a narrow query keeps the unchanged count line', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'index.html' });
+  try {
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'index.html (trigger open)');
+
+    // broad: 135 index entries match "masteries" under EX (data-derived, the
+    // real index) → the list caps at 30 and the count line signposts 105 more
+    await typeQuery(page, 'masteries');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 105, 'masteries'), 'index.html (EX, "masteries" — overflow)');
+    let f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, MAX_RESULTS, 'the broad query shows exactly the search.maxResults rows');
+
+    // narrow: "mega evolution" (4 rows under EX) stays within the cap — the
+    // count line is byte-identical to the pre-overflow copy (no spurious
+    // "more" text)
+    await typeQuery(page, 'mega evolution');
+    await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (EX, "mega evolution" — unchanged)');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 4, 'the narrow query shows all 4 of its matches');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();

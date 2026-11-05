@@ -124,7 +124,7 @@ function deriveSearchCounts() {
   }
   const entries = sandbox.window.ROGUE.buildSearchIndex();
   const counts = {};
-  for (const version of VERSIONS) counts[version] = sandbox.window.ROGUE.searchQuery(entries, SEARCH_QUERY, version).length;
+  for (const version of VERSIONS) counts[version] = sandbox.window.ROGUE.searchQuery(entries, SEARCH_QUERY, version).results.length;
   return counts;
 }
 

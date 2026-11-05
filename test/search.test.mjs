@@ -9,8 +9,9 @@
  * sandbox whose fake `window` carries the REAL data/*.json files (read
  * from disk), and asserts end results — entry completeness and shape,
  * placeholder resolution, the FAIRY-swap union, query-time version
- * scoping, ranking/cap and matchIndex, the #31 structured diagram fields'
- * searchability, and the effective/placeholder helper semantics.
+ * scoping, ranking/cap, the pre-cap total and matchIndex, the #31
+ * structured diagram fields' searchability, and the effective/placeholder
+ * helper semantics.
  * ROGUE.version is assigned directly on the sandbox's ROGUE (version.js is
  * NOT loaded — it needs localStorage/document).
  */
@@ -256,14 +257,14 @@ test('the #31 structured diagram fields are searchable (trimmed-but-rendered tex
   // ASSERT — each surfaces its structured entry at the page that renders
   // the diagram, with the exact result count from the real index
   for (const s of structured) {
-    const hits = rogue.searchQuery(entries, s.q, 'ex');
+    const hits = rogue.searchQuery(entries, s.q, 'ex').results;
     assert.equal(hits.length, s.total, `"${s.q}" under EX: ${s.total} result(s), derived from the real index`);
     const hit = hits.find((e) => e.id === s.id);
     assert.ok(hit, `"${s.q}" must surface ${s.id} (structured field text, absent from the prose)`);
     assert.equal(hit.page, s.page, `${s.id} deep-links to the page that renders the diagram`);
     // the fields are version-neutral — the same hit survives Vanilla scope
     assert.ok(
-      rogue.searchQuery(entries, s.q, 'vanilla').some((e) => e.id === s.id),
+      rogue.searchQuery(entries, s.q, 'vanilla').results.some((e) => e.id === s.id),
       `"${s.q}" also surfaces ${s.id} under Vanilla (the structured field renders identically in both builds)`
     );
   }
@@ -272,7 +273,7 @@ test('the #31 structured diagram fields are searchable (trimmed-but-rendered tex
   // rooms, in index order (the bar conditions each render on the
   // gameplay placement diagram). [...] reconstructs the vm-realm array in
   // the host realm (the same deep-equality rule the other tests use).
-  assert.deepEqual([...rogue.searchQuery(entries, 'odd badge', 'ex').map((e) => e.id)], [
+  assert.deepEqual([...rogue.searchQuery(entries, 'odd badge', 'ex').results.map((e) => e.id)], [
     'rec-adventure-room-honey-tree',
     'rec-adventure-room-dark-deal',
     'rec-adventure-room-lab'
@@ -306,10 +307,10 @@ test('version scoping happens at query time', () => {
   const underEx = rogue.searchQuery(entries, best.word, 'ex');
 
   // ASSERT — an entry never surfaces outside its versions
-  for (const e of underVanilla) assert.ok(e.versions.includes('vanilla'), `${e.id} leaked into vanilla results`);
-  for (const e of underEx) assert.ok(e.versions.includes('ex'), `${e.id} leaked into ex results`);
-  assert.ok(!underVanilla.some((e) => e.id === entryId), `the EX-only quest ${entryId} must not surface under vanilla`);
-  assert.ok(underEx.some((e) => e.id === entryId), `the EX-only quest ${entryId} must surface under ex`);
+  for (const e of underVanilla.results) assert.ok(e.versions.includes('vanilla'), `${e.id} leaked into vanilla results`);
+  for (const e of underEx.results) assert.ok(e.versions.includes('ex'), `${e.id} leaked into ex results`);
+  assert.ok(!underVanilla.results.some((e) => e.id === entryId), `the EX-only quest ${entryId} must not surface under vanilla`);
+  assert.ok(underEx.results.some((e) => e.id === entryId), `the EX-only quest ${entryId} must surface under ex`);
 
   // ASSERT — the same query under both versions is deterministic
   assert.deepEqual(rogue.searchQuery(entries, best.word, 'vanilla'), underVanilla);
@@ -352,7 +353,7 @@ test('vanilla-side quest wording (structured differences) is searchable', () => 
   // ACT + ASSERT — the vanilla-side wording matches the quest under BOTH versions (the union)
   for (const v of VERSIONS) {
     const hits = rogue.searchQuery(entries, gram, v);
-    assert.ok(hits.some((e) => e.id === 'rec-quests-' + quest.id), `${quest.id} must match its vanilla-side wording under ${v}`);
+    assert.ok(hits.results.some((e) => e.id === 'rec-quests-' + quest.id), `${quest.id} must match its vanilla-side wording under ${v}`);
   }
 });
 
@@ -374,7 +375,7 @@ test('results rank title-starts before title-includes before body, stable within
   assert.ok(query, 'fixture: a query hitting all three tiers within the cap');
 
   // ACT
-  const res = rogue.searchQuery(entries, query, 'ex');
+  const res = rogue.searchQuery(entries, query, 'ex').results;
 
   // ASSERT — complete for this query (no cap), tiers in 0 < 1 < 2 order,
   // and each tier keeps the index order
@@ -388,7 +389,7 @@ test('results rank title-starts before title-includes before body, stable within
   }
 });
 
-test('results are capped at search.maxResults and matchIndex points at a real occurrence', () => {
+test('results are capped at search.maxResults (total carries the pre-cap count) and matchIndex points at a real occurrence', () => {
   // ARRANGE — a query with far more matches than the cap
   const maxResults = data.site.search.maxResults;
   const query = 'the';
@@ -397,10 +398,12 @@ test('results are capped at search.maxResults and matchIndex points at a real oc
   assert.ok(totalMatches > maxResults, `fixture: "${query}" must overflow the cap of ${maxResults}`);
 
   // ACT
-  const res = rogue.searchQuery(entries, query, 'ex');
+  const found = rogue.searchQuery(entries, query, 'ex');
+  const res = found.results;
 
-  // ASSERT — exactly the cap; every matchIndex a real occurrence of the folded query
+  // ASSERT — exactly the cap, and the pre-cap total is the full match count
   assert.equal(res.length, maxResults);
+  assert.equal(found.total, totalMatches, `"${query}": total must be the pre-cap match count`);
   for (const r of res) {
     assert.ok(r.matchIndex >= 0 && r.matchIndex + q.length <= r.text.length, `${r.id}: matchIndex out of range`);
     assert.ok(
@@ -408,6 +411,28 @@ test('results are capped at search.maxResults and matchIndex points at a real oc
       `${r.id}: text.slice(matchIndex, +${q.length}) must start with the folded query`
     );
   }
+});
+
+test('searchQuery reports the pre-cap total alongside the capped results', () => {
+  // ARRANGE — a broad query with far more matches than the cap and a
+  // narrow one that stays within it (both against the real index)
+  const maxResults = data.site.search.maxResults;
+  const totalMatches = (query, version) =>
+    entries.filter((e) => e.versions.includes(version) && fold(e.text).includes(fold(query))).length;
+  assert.ok(totalMatches('masteries', 'ex') > maxResults, 'fixture: "masteries" must overflow the cap under EX');
+  assert.ok(totalMatches('mega evolution', 'ex') <= maxResults, 'fixture: "mega evolution" must stay within the cap');
+
+  // ACT + ASSERT — the broad query: the list stays capped, and total is the
+  // full pre-cap match count (the UI can distinguish "30 of 135" from "30 of 30")
+  const broad = rogue.searchQuery(entries, 'masteries', 'ex');
+  assert.equal(broad.results.length, maxResults, '"masteries": the list stays capped at search.maxResults');
+  assert.equal(broad.total, totalMatches('masteries', 'ex'), '"masteries": total is the pre-cap match count');
+  assert.ok(broad.total > broad.results.length, '"masteries": total must exceed the rows shown');
+
+  // ACT + ASSERT — the narrow query: no overflow — total === rows shown
+  const narrow = rogue.searchQuery(entries, 'mega evolution', 'ex');
+  assert.equal(narrow.total, totalMatches('mega evolution', 'ex'), '"mega evolution": total matches the real index');
+  assert.equal(narrow.results.length, narrow.total, '"mega evolution": uncapped — every match is shown');
 });
 
 test('ROGUE.effective applies the active version side over the quest keys for every quest', () => {
