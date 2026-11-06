@@ -15,7 +15,8 @@
  *                uses it to signpost truncation ("30 of 135" vs "30 of 30")
  *
  * Entry shape:
- *   { id, title, titleLower, text, textCase, page, anchor, versions }
+ *   { id, title, titleLower, text, textCase, page, anchor, versions,
+ *     foldedText, foldMap, titleFolded, tokens, tokenPos }
  *     id          stable unique key ('page-…' / 'prose-…' / 'rec-…')
  *     title       display title (quest {PKMN}/{POKEBLOCK} placeholders resolved)
  *     titleLower  lowercased title
@@ -37,6 +38,17 @@
  *                 entries and for the one cardless record
  *     versions    entry's version availability, e.g. ['vanilla','ex'] —
  *                 used to scope results at QUERY time, not index time
+ *     foldedText  `text` NFD-folded (combining marks stripped) — precomputed
+ *                 ONCE at build for the query (the fuzzy tier's unit, issue
+ *                 #46); matching stays accent-insensitive
+ *     foldMap     foldAccents' index map for foldedText — maps a folded
+ *                 offset back to the un-folded text (identity for the
+ *                 current precomposed data)
+ *     titleFolded titleLower NFD-folded (the tier 0/1 exact tests)
+ *     tokens      the whole tokens of foldedText (runs of [a-z0-9]),
+ *                 first-occurrence order
+ *     tokenPos    parallel first-occurrence position of each token in
+ *                 foldedText (the fuzzy tier's matchIndex source)
  *
  * Entry sources — one entry each: every data/site.json nav page (title +
  * description, anchor ''), data/site.json's own home-page content — the
@@ -117,6 +129,62 @@
  * `matchEnd` always bound a span of the un-folded `text`/`textCase`
  * (identity for the current precomposed data) — the palette slices
  * `textCase` at that span for the original-cased snippet + highlight.
+ *
+ * Ranking is 4-tier, and every tier keeps the stable index order:
+ *   tier 0  the folded title STARTS with the folded query (exact substring)
+ *   tier 1  the folded title INCLUDES it (exact substring)
+ *   tier 2  the folded body INCLUDES it (exact substring)
+ *   tier 3  FUZZY-ONLY (issue #46, typo tolerance): the entry matches the
+ *           full query NOWHERE exactly, but one of the query's folded
+ *           tokens equals a whole folded text token at Levenshtein
+ *           distance 1. Exact tiers are unchanged and ALWAYS rank before
+ *           fuzzy-only matches (tier 0 < 1 < 2 < 3); a result carries
+ *           `fuzzy: true` on tier 3 and `fuzzy: false` on tiers 0–2.
+ *
+ * Fuzzy-layer rules (issue #46) — all deterministic, pure JS:
+ *   - FOLD FIRST, then distance: both sides are NFD-folded + lowercased
+ *     before Levenshtein, so the layer is accent-insensitive ("Pokémonn"
+ *     folds to "pokemonn", one deletion from "pokemon").
+ *   - TOKEN level: a query token (a run of [a-z0-9] in the folded query)
+ *     matches a WHOLE text token at distance exactly 1 — one deletion,
+ *     insertion, substitution or transposition. The whole-query substring
+ *     always wins: an entry the full query matches exactly never falls
+ *     into tier 3, so a typo query surfaces the entries carrying the real
+ *     word, ranked after the exact matches of the clean word.
+ *   - UNKNOWN-WORD GUARD: a query token only contributes tier-3 matches
+ *     when it appears NOWHERE as a whole token in the index. A word the
+ *     site actually contains ("mega", "spring", "badge", …) is an exact
+ *     word — counting its distance-1 neighbours would flood the results
+ *     ("mega" would pull in the "meta" entries, "spring" the "string"
+ *     ones, "mega evolution" would match 17 entries instead of the 4
+ *     that contain the phrase). Fuzzy is a rescue for misspelled words,
+ *     not an augmentation of known ones. The guard is version-independent
+ *     (the index is built once, like everything else here); query-time
+ *     version scoping still applies to the tier-3 results it produces.
+ *   - MULTI-TOKEN QUERIES: a query matches if AT LEAST ONE of its tokens
+ *     matches — exact substring on the full query (tiers 0–2) or an
+ *     unknown token at distance 1 (tier 3); all tokens are NOT required.
+ *     In practice tier 3 fires only when the query carries at least one
+ *     unknown token, so a clean multi-token phrase ("mega evolution")
+ *     stays exact-only.
+ *   - SNIPPET/HIGHLIGHT: a fuzzy match has no contiguous matched
+ *     substring. The result's matchIndex/matchEnd point at the FOLDED
+ *     best-aligned token occurrence in the text — the candidate token
+ *     with the EARLIEST first occurrence in the folded text (all
+ *     candidates are at distance exactly 1, so earliest wins) — so the
+ *     palette's snippet still centres on it. The `fuzzy` flag tells the
+ *     palette NOT to wrap that span in a <mark>: only exact-substring
+ *     rows are highlighted (search.js snippet()).
+ *   - `total` counts tier-3 matches too; the cap applies to the combined
+ *     tier-ordered list.
+ *
+ * Performance: every entry's foldedText/foldMap/titleFolded/tokens/
+ * tokenPos are precomputed ONCE at index build time (makeEntry) — never
+ * per query. Per query the work is: fold the query once, one linear pass
+ * over all entries' token lists to build the presence set (≈ the index's
+ * total token count), ≤ ~1100 candidate-variant lookups per unknown query
+ * token, then one candidate scan per entry's token list — linear in the
+ * index size, no entries×tokens×tokens blowup for the 571-entry index.
  *
  * Config: data/site.json `search` block — searchQuery caps the returned
  * list at `search.maxResults` (and reports the pre-cap `total`);
@@ -686,6 +754,30 @@
   }
 
   /**
+   * The whole tokens of a folded lowercased string — runs of [a-z0-9] —
+   * in first-occurrence order, each with its first-occurrence index in
+   * the string. The fuzzy tier's unit (issue #46); used both at build
+   * time (the entry's tokens/tokenPos) and defensively per query for
+   * hand-built entry lists that lack the precomputed fields.
+   * @returns {{tokens: string[], pos: number[]}}
+   */
+  function foldedTokens(s) {
+    var tokens = [];
+    var pos = [];
+    var seen = {};
+    var m;
+    var re = /[a-z0-9]+/g;
+    while ((m = re.exec(s)) !== null) {
+      if (!Object.prototype.hasOwnProperty.call(seen, m[0])) {
+        seen[m[0]] = true;
+        tokens.push(m[0]);
+        pos.push(m.index);
+      }
+    }
+    return { tokens: tokens, pos: pos };
+  }
+
+  /**
    * Build one Entry; `textParts` are joined and placeholder-resolved
    * ONCE — `text` keeps the result lowercased (matching), `textCase`
    * keeps the original casing (the 1:1 parallel the palette slices
@@ -693,22 +785,33 @@
    * pass ROGUE.questSearchText so the on-page filter shares the exact
    * same lowercased haystack — issue #50). `section` (record entries
    * only) is the containing section's anchor — the same-page scroll
-   * fallback when the card element is absent (issue #45).
+   * fallback when the card element is absent (issue #45). The
+   * fuzzy-tier fields (foldedText, foldMap, titleFolded, tokens,
+   * tokenPos) are precomputed HERE, once — the query never re-folds a
+   * built entry (issue #46, see the header contract).
    */
   function makeEntry(id, title, textParts, page, anchor, versions, text, section) {
     var resolvedTitle = ROGUE.resolvePlaceholders(title);
     var haystack = ROGUE.resolvePlaceholders(textParts.join(' '));
     if (text === undefined) text = haystack.toLowerCase();
+    var titleLower = resolvedTitle.toLowerCase();
+    var folded = foldAccents(text);
+    var toks = foldedTokens(folded.text);
     return {
       id: id,
       title: resolvedTitle,
-      titleLower: resolvedTitle.toLowerCase(),
+      titleLower: titleLower,
       text: text,
       textCase: haystack,
       page: page,
       anchor: anchor,
       versions: versions,
-      section: section
+      section: section,
+      foldedText: folded.text,
+      foldMap: folded.map,
+      titleFolded: foldAccents(titleLower).text,
+      tokens: toks.tokens,
+      tokenPos: toks.pos
     };
   }
 
@@ -915,70 +1018,168 @@
   }
 
   /**
+   * An entry's folded haystack + fold map + whole tokens (first-
+   * occurrence order) with their first-occurrence positions — the
+   * precomputed build-time fields when present, derived on the fly
+   * otherwise (defensive for hand-built entry lists, e.g. in tests —
+   * the same per-query fold the pre-fold era did).
+   * @returns {{text: string, map: number[], tokens: string[], pos: number[]}}
+   */
+  function entryFolded(e) {
+    var text = typeof e.text === 'string' ? e.text : '';
+    if (typeof e.foldedText === 'string' && Array.isArray(e.foldMap) && Array.isArray(e.tokens) && Array.isArray(e.tokenPos)) {
+      return { text: e.foldedText, map: e.foldMap, tokens: e.tokens, pos: e.tokenPos };
+    }
+    var folded = foldAccents(text);
+    var toks = foldedTokens(folded.text);
+    return { text: folded.text, map: folded.map, tokens: toks.tokens, pos: toks.pos };
+  }
+
+  /** Record `v` in the candidate set when the presence set holds it. */
+  function addIfPresent(out, present, v) {
+    if (v && present[v]) out[v] = 1;
+  }
+
+  /**
+   * Every string at Levenshtein distance EXACTLY 1 from the folded
+   * token `t` — one deletion, one adjacent transposition, one
+   * substitution or one insertion (a-z only: folded tokens contain
+   * nothing else) — recording in `out` the ones the presence set holds.
+   * Pure string ops, no libraries: the whole of the edit-distance
+   * machinery (issue #46). ≤ ~1100 variants for a 20-char token.
+   */
+  function addLev1Variants(t, present, out) {
+    var n = t.length;
+    var i, c, ch;
+    for (i = 0; i < n; i++) addIfPresent(out, present, t.slice(0, i) + t.slice(i + 1)); // deletion
+    for (i = 0; i + 1 < n; i++) addIfPresent(out, present, t.slice(0, i) + t.charAt(i + 1) + t.charAt(i) + t.slice(i + 2)); // transposition
+    for (i = 0; i < n; i++) {
+      for (c = 97; c <= 122; c++) {
+        ch = String.fromCharCode(c);
+        if (ch !== t.charAt(i)) addIfPresent(out, present, t.slice(0, i) + ch + t.slice(i + 1)); // substitution
+      }
+    }
+    for (i = 0; i <= n; i++) {
+      for (c = 97; c <= 122; c++) {
+        ch = String.fromCharCode(c);
+        addIfPresent(out, present, t.slice(0, i) + ch + t.slice(i)); // insertion
+      }
+    }
+  }
+
+  /**
    * Search a built index. PURE: no DOM, no globals beyond the site
    * config (for the result cap).
    *
    * @param {Array} entries     from ROGUE.buildSearchIndex()
-   * @param {string} query      lowercased + trimmed; substring match
+   * @param {string} query      trimmed; matched accent-insensitively
    * @param {string} activeVersion 'vanilla' | 'ex' — entries whose
    *                             `versions` omit it are excluded (scoping
    *                             happens HERE, at query time)
    * @returns {{results: Array<Result>, total: number}} `results` is
    *   ranked: tier 0 (title starts with the query) before tier 1 (title
-   *   includes it) before tier 2 (body match); stable index order within
-   *   a tier; capped at search.maxResults. `total` is the TOTAL number
-   *   of matches found before the cap, so the UI can distinguish "30 of
-   *   135" from "30 of 30" (it appends the search.moreResults overflow
-   *   copy when total > results.length). Result = the entry's fields
-   *   (including the original-case `textCase` parallel) plus:
-   *     tier         0 | 1 | 2
-   *     matchIndex   first index of the query in `text` (for the snippet;
-   *                  -1 when the body doesn't contain it)
-   *     matchEnd     EXCLUSIVE end of that match in `text`/`textCase`
-   *                  (the folded occurrence mapped back through
-   *                  foldAccents' index map; -1 with matchIndex) — the
-   *                  snippet's highlight span, so the palette slices the
-   *                  original-case `textCase` at exactly the match
+   *   includes it) before tier 2 (body match) before tier 3 (fuzzy-only,
+   *   issue #46 — see the header contract for the layer's rules);
+   *   stable index order within a tier; capped at search.maxResults.
+   *   `total` is the TOTAL number of matches found before the cap
+   *   (tier 3 included), so the UI can distinguish "30 of 135" from
+   *   "30 of 30" (it appends the search.moreResults overflow copy when
+   *   total > results.length). Result = the entry's fields (including
+   *   the original-case `textCase` parallel) plus:
+   *     tier         0 | 1 | 2 | 3 (3 = fuzzy-only)
+   *     fuzzy        true on tier 3, false on tiers 0–2 — the palette
+   *                  highlights ONLY exact-substring rows (fuzzy spans
+   *                  centre the snippet but are never <mark>-wrapped)
+   *     matchIndex   tiers 0–2: first index of the (folded) query in
+   *                  `text` (for the snippet); tier 3: the EARLIEST
+   *                  distance-1 token occurrence in the folded text
+   *                  (mapped back through the fold map — the snippet
+   *                  centres on it); -1 when the body doesn't contain it
+   *     matchEnd     EXCLUSIVE end of that span in `text`/`textCase`
+   *                  (-1 with matchIndex) — the snippet's highlight span
+   *                  for exact rows; the fuzzy rows' snippet anchor
    */
   ROGUE.searchQuery = function (entries, query, activeVersion) {
     // fold the QUERY the same way the haystacks are folded at match time
     var q = foldAccents(str(query).trim().toLowerCase()).text;
     if (!q || !Array.isArray(entries)) return { results: [], total: 0 };
 
-    var buckets = [[], [], []];
+    /* The fuzzy tier's candidate set (issue #46): a query token is a
+     * candidate ONLY when it appears nowhere as a whole token in the
+     * index (the unknown-word guard — see the header contract); its
+     * distance-1 neighbours that DO exist are the tier-3 targets. Every
+     * candidate is at distance exactly 1 (the guard rules out 0 — the
+     * token itself is absent). null = no unknown tokens → no tier 3. */
+    var qTokens = [];
+    var qm;
+    var qre = /[a-z0-9]+/g;
+    while ((qm = qre.exec(q)) !== null) qTokens.push(qm[0]);
+    var candidates = null;
+    if (qTokens.length) {
+      var present = {};
+      for (var p = 0; p < entries.length; p++) {
+        var pt = entries[p] ? entryFolded(entries[p]).tokens : [];
+        for (var k = 0; k < pt.length; k++) present[pt[k]] = true;
+      }
+      candidates = {};
+      for (var qt = 0; qt < qTokens.length; qt++) {
+        if (present[qTokens[qt]]) continue; // known word: exact matching only
+        addLev1Variants(qTokens[qt], present, candidates);
+      }
+    }
+
+    var buckets = [[], [], [], []];
     for (var i = 0; i < entries.length; i++) {
       var e = entries[i];
       if (!e || !Array.isArray(e.versions) || e.versions.indexOf(activeVersion) === -1) continue;
+      var f = entryFolded(e);
       var titleLower = typeof e.titleLower === 'string' ? e.titleLower : str(e.title).toLowerCase();
-      var text = typeof e.text === 'string' ? e.text : '';
-      var fTitle = foldAccents(titleLower).text;
-      var fText = foldAccents(text);
+      var titleFolded = typeof e.titleFolded === 'string' ? e.titleFolded : foldAccents(titleLower).text;
       var tier = -1;
-      if (fTitle.indexOf(q) === 0) tier = 0;
-      else if (fTitle.indexOf(q) !== -1) tier = 1;
-      else if (fText.text.indexOf(q) !== -1) tier = 2;
-      if (tier === -1) continue;
-      var fi = fText.text.indexOf(q);
-      buckets[tier].push({
+      if (titleFolded.indexOf(q) === 0) tier = 0;
+      else if (titleFolded.indexOf(q) !== -1) tier = 1;
+      else if (f.text.indexOf(q) !== -1) tier = 2;
+      var result = {
         id: e.id,
         title: e.title,
-        titleLower: e.titleLower,
+        titleLower: titleLower,
         text: e.text,
         textCase: e.textCase,
         page: e.page,
         anchor: e.anchor,
         versions: e.versions,
-        section: e.section,
-        tier: tier,
-        // span of the match in the un-folded `text`/`textCase`
-        // (foldAccents' map) — snippet-ready: slice `textCase` at
-        // [matchIndex, matchEnd) for the original-cased highlight
-        matchIndex: fi === -1 ? -1 : fText.map[fi],
-        matchEnd: fi === -1 ? -1 : fText.map[fi + q.length - 1] + 1
-      });
+        section: e.section
+      };
+      if (tier !== -1) {
+        // exact substring: the first occurrence of the folded query in
+        // the folded haystack, mapped back to the un-folded text via the
+        // fold map — snippet + highlight ready
+        var fi = f.text.indexOf(q);
+        result.tier = tier;
+        result.fuzzy = false;
+        result.matchIndex = fi === -1 ? -1 : f.map[fi];
+        result.matchEnd = fi === -1 ? -1 : f.map[fi + q.length - 1] + 1;
+      } else if (candidates) {
+        // fuzzy tier 3: the candidate token with the EARLIEST first
+        // occurrence in the folded text (all candidates are at distance
+        // exactly 1) — the snippet centres on it; the `fuzzy` flag keeps
+        // the palette from highlighting it (no contiguous match)
+        var best = null;
+        for (var t = 0; t < f.tokens.length; t++) {
+          if (!candidates[f.tokens[t]]) continue;
+          if (!best || f.pos[t] < best.pos) best = { pos: f.pos[t], len: f.tokens[t].length };
+        }
+        if (best) {
+          result.tier = 3;
+          result.fuzzy = true;
+          result.matchIndex = f.map[best.pos];
+          result.matchEnd = f.map[best.pos + best.len - 1] + 1;
+        }
+      }
+      if (result.tier !== undefined) buckets[result.tier].push(result);
     }
 
-    var out = buckets[0].concat(buckets[1], buckets[2]);
+    var out = buckets[0].concat(buckets[1], buckets[2], buckets[3]);
     // total = the full pre-cap match count, so the overlay can signpost
     // truncation even though the returned list is capped
     return {

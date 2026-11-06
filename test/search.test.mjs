@@ -11,10 +11,13 @@
  * (incl. the original-case textCase parallel of the lowercased text),
  * the per-record deep-link anchors (issue #45: record entries anchor at
  * the per-card id, prose entries keep their section anchors), placeholder
- * resolution, the FAIRY-swap union, query-time version scoping,
- * ranking/cap, the pre-cap total and matchIndex (+ matchEnd alignment for
- * accented queries), the #31 structured diagram fields' searchability, and
- * the effective/placeholder helper semantics.
+ * resolution, the FAIRY-swap union, query-time version scoping (incl.
+ * the fuzzy tier), ranking/cap, the pre-cap total and matchIndex (+
+ * matchEnd alignment for accented queries), the fuzzy tier's typo
+ * matching (issue #46: Levenshtein ≤ 1 on folded tokens, exact matches
+ * rank first, the unknown-word guard, accent-insensitivity), the #31
+ * structured diagram fields' searchability, and the
+ * effective/placeholder helper semantics.
  * ROGUE.version is assigned directly on the sandbox's ROGUE (version.js is
  * NOT loaded — it needs localStorage/document).
  */
@@ -49,6 +52,29 @@ const VERSIONS = ['vanilla', 'ex'];
 
 /** The five quest keys quests.js scopes ROGUE.effective to (its DIFF_KEYS). */
 const QUEST_KEYS = ['description', 'trigger', 'rewards', 'requirements', 'display_group'];
+
+/** Whole tokens of a string (runs of a-z0-9 after lowercasing). */
+function tokensOf(s) {
+  return String(s === null || s === undefined ? '' : s).toLowerCase().match(/[a-z0-9]+/g) || [];
+}
+
+/** Levenshtein distance, capped at 2 (the fuzzy tier only needs ≤ 1). */
+function lev(a, b) {
+  const m = a.length;
+  const n = b.length;
+  if (Math.abs(m - n) > 1) return 2;
+  const row = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let prev = row[0];
+    row[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const tmp = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, prev + (a[i - 1] === b[j - 1] ? 0 : 1));
+      prev = tmp;
+    }
+  }
+  return row[n];
+}
 
 /**
  * The NFD accent fold the module documents (per code unit, combining
@@ -545,8 +571,9 @@ test('vanilla-side quest wording (structured differences) is searchable', () => 
   }
 });
 
-test('results rank title-starts before title-includes before body, stable within a tier', () => {
-  // ARRANGE — a query (derived) hitting all three tiers without exceeding the cap
+test('results rank title-starts before title-includes before body (before the fuzzy tier), stable within a tier', () => {
+  // ARRANGE — a query (derived) hitting all three exact tiers without
+  // exceeding the cap
   const maxResults = data.site.search.maxResults;
   const tierOf = (e, q) => {
     const ft = fold(e.titleLower);
@@ -562,19 +589,211 @@ test('results rank title-starts before title-includes before body, stable within
   });
   assert.ok(query, 'fixture: a query hitting all three tiers within the cap');
 
+  // ARRANGE — the fuzzy tier (issue #46) re-derived independently: the
+  // query's folded tokens must be KNOWN words (present as whole tokens in
+  // the index) so the unknown-word guard keeps tier 3 empty for this
+  // query — the fuzzy tier itself is exercised by the dedicated tests
+  const qTokens = tokensOf(query);
+  const present = new Set();
+  for (const e of entries) for (const t of tokensOf(fold(e.text))) present.add(t);
+  assert.ok(qTokens.every((t) => present.has(t)), 'fixture: every query token is a known index word (no tier 3)');
+
   // ACT
   const res = rogue.searchQuery(entries, query, 'ex').results;
 
-  // ASSERT — complete for this query (no cap), tiers in 0 < 1 < 2 order,
-  // and each tier keeps the index order
+  // ASSERT — complete for this query (no cap), tiers in 0 < 1 < 2 < 3
+  // order (tier 3 empty here), and each tier keeps the index order
   assert.equal(res.length, scoped.filter((e) => tierOf(e, query) >= 0).length);
   for (let i = 1; i < res.length; i++) assert.ok(res[i - 1].tier <= res[i].tier, `tier out of order at position ${i}`);
-  for (const t of [0, 1, 2]) {
+  for (const t of [0, 1, 2, 3]) {
     // [...] on both sides: results and entries live in the vm realm
     const expected = [...scoped.filter((e) => tierOf(e, query) === t).map((e) => e.id)];
     const got = [...res.filter((r) => r.tier === t).map((r) => r.id)];
     assert.deepEqual(got, expected, `tier ${t} must keep index order`);
   }
+  // the fuzzy flag tracks the tier: no fuzzy rows for a known-word query
+  for (const r of res) assert.equal(r.fuzzy, false, `${r.id}: a known-word query yields no fuzzy rows`);
+});
+
+test('typo queries (Levenshtein ≤ 1, folded) surface the relevant entries in the fuzzy tier 3 (issue #46)', () => {
+  // ARRANGE — the expected set derived from the index itself: every
+  // entry (scoped per version) whose folded text carries the whole token
+  // "pokemon" — the word the typos are one edit away from. (One more
+  // entry contains "pokemon" only inside a longer token —
+  // rec-quests-Z_A_ROYALE's "uniquepokemon", more than 1 edit from every
+  // typo — and stays out of the fuzzy tier.)
+  const expected = (version) =>
+    entries.filter((e) => e.versions.includes(version) && tokensOf(fold(e.text)).includes('pokemon'));
+
+  // ACT + ASSERT — each typo: exactly the expected set (the pre-cap
+  // total; the capped rows are its first maxResults in stable index
+  // order), every result tier 3 + fuzzy-flagged, and the span folds to
+  // a token exactly one edit from the query token
+  const maxResults = data.site.search.maxResults;
+  for (const typo of ['pokeman', 'pokmon', 'Pok\u00e9monn']) {
+    const qTok = fold(typo);
+    for (const version of VERSIONS) {
+      const found = rogue.searchQuery(entries, typo, version);
+      const exp = expected(version);
+      assert.equal(found.total, exp.length, `${typo}/${version}: total is the pre-cap match count`);
+      // [...] on both sides: the expected list lives in the vm realm
+      assert.deepEqual(
+        [...found.results.map((r) => r.id)],
+        [...exp.slice(0, maxResults).map((e) => e.id)],
+        `${typo}/${version}: the capped rows are the expected set's first ${maxResults} in index order`
+      );
+      for (const r of found.results) {
+        assert.equal(r.tier, 3, `${typo}/${version}/${r.id}: fuzzy-only results rank in tier 3`);
+        assert.equal(r.fuzzy, true, `${typo}/${version}/${r.id}: tier-3 results are fuzzy-flagged`);
+        assert.ok(r.matchEnd > r.matchIndex && r.matchEnd <= r.text.length, `${typo}/${version}/${r.id}: fuzzy span in range`);
+        const span = fold(r.textCase.slice(r.matchIndex, r.matchEnd));
+        assert.equal(lev(qTok, span), 1, `${typo}/${version}/${r.id}: the span folds to a token one edit from the query token`);
+      }
+    }
+  }
+
+  // ASSERT — the two ASCII typos agree exactly (same candidate token,
+  // same stable order) — the "same relevant results" the clean word finds
+  assert.deepEqual(
+    [...rogue.searchQuery(entries, 'pokeman', 'ex').results.map((r) => r.id)],
+    [...rogue.searchQuery(entries, 'pokmon', 'ex').results.map((r) => r.id)],
+    'pokeman and pokmon surface the identical relevant set, in order'
+  );
+
+  // ASSERT — nonsense beyond distance 1 matches nothing (no tier 3)
+  for (const noise of ['zzqxwvnotthere', 'zzzzqqqq']) {
+    for (const version of VERSIONS) {
+      const found = rogue.searchQuery(entries, noise, version);
+      assert.equal(found.total, 0, `${noise}/${version}: no tier-3 match beyond distance 1`);
+    }
+  }
+});
+
+test('exact matches for the same root word rank strictly before fuzzy-only ones (tiers 0<1<2<3, issue #46)', () => {
+  // ARRANGE — the clean word "pokemon" (exact tiers) vs the typo
+  // "pokeman" (fuzzy tier): same root, same relevant entries — the
+  // exact query fills tiers 0–2, the typo's matches all sit in tier 3,
+  // after every exact match of the clean word.
+  const exact = rogue.searchQuery(entries, 'pokemon', 'ex');
+  const fuzzy = rogue.searchQuery(entries, 'pokeman', 'ex');
+
+  // ASSERT — the exact query: tiers 0/1/2 only (the unknown-word guard
+  // keeps a known word out of tier 3), fuzzy flag off, monotone order
+  assert.ok(exact.total > exact.results.length, 'fixture: the exact query overflows the cap');
+  assert.ok(exact.results.some((r) => r.tier === 0) && exact.results.some((r) => r.tier === 1) && exact.results.some((r) => r.tier === 2),
+    'fixture: the exact query fills all three exact tiers');
+  for (const r of exact.results) {
+    assert.ok(r.tier <= 2, `${r.id}: a known word never gains tier-3 rows (unknown-word guard)`);
+    assert.equal(r.fuzzy, false, r.id);
+  }
+  for (let i = 1; i < exact.results.length; i++) assert.ok(exact.results[i - 1].tier <= exact.results[i].tier, 'exact tiers stay in 0 < 1 < 2 order');
+
+  // ASSERT — the typo query: every result tier 3 (after every exact
+  // tier), and the typo returns the same relevant set minus the one
+  // entry where the word is embedded in a longer token (> 1 edit away)
+  for (const r of fuzzy.results) assert.equal(r.tier, 3, `${r.id}: the typo's matches rank in tier 3, after every exact match`);
+  assert.equal(fuzzy.total, exact.total - 1, 'the typo returns every relevant entry except the one with the word embedded in a longer token');
+});
+
+test('exact and fuzzy rows for one root word: the exact row ranks first in one result list (tier order 0<1<2<3, issue #46)', () => {
+  // ARRANGE — a minimal synthetic index of PLAIN entries (no precomputed
+  // fuzzy fields — searchQuery derives them, so the fixture pins the
+  // query contract, not the build): one entry matches the query as an
+  // exact SUBSTRING inside a longer word ("pokemans" carries "pokeman"
+  // without making it a whole token, so the unknown-word guard stays
+  // active), one matches only at Levenshtein 1 ("pokemon" vs "pokeman")
+  const mk = (id, text) => ({
+    id,
+    title: id,
+    titleLower: id.toLowerCase(),
+    text: text.toLowerCase(),
+    textCase: text,
+    page: './index.html',
+    anchor: '',
+    versions: ['vanilla', 'ex']
+  });
+  const exactEntry = mk('exact-hit', 'the pokemans gather');
+  const fuzzyEntry = mk('fuzzy-hit', 'many pokemon around');
+
+  // ACT
+  const mixed = rogue.searchQuery([exactEntry, fuzzyEntry], 'pokeman', 'ex');
+
+  // ASSERT — the exact-substring entry (tier 2) ranks BEFORE the
+  // fuzzy-only one (tier 3) in the same result list
+  assert.deepEqual([...mixed.results.map((r) => r.id)], ['exact-hit', 'fuzzy-hit'], 'exact tier 2 before fuzzy tier 3');
+  assert.deepEqual([...mixed.results.map((r) => r.tier)], [2, 3]);
+  assert.deepEqual([...mixed.results.map((r) => r.fuzzy)], [false, true]);
+  const f = mixed.results[1];
+  assert.equal(f.textCase.slice(f.matchIndex, f.matchEnd), 'pokemon', 'fuzzy matchIndex/matchEnd point at the aligned token occurrence');
+  // and a nonsense token (no distance-1 neighbour in this index) matches nothing
+  assert.equal(rogue.searchQuery([exactEntry, fuzzyEntry], 'zzzqq', 'ex').total, 0, 'no tier-3 match for a token with no neighbour');
+});
+
+test('fuzzy matching is accent-insensitive: fold first, then distance (issue #46)', () => {
+  // ARRANGE — "Pokémon" (exact after folding) vs "Pokémonn" (one edit
+  // after folding) vs "Pokémann" (two edits — beyond distance 1)
+  const exact = rogue.searchQuery(entries, 'Pok\u00e9mon', 'ex');
+  const typo1 = rogue.searchQuery(entries, 'Pok\u00e9monn', 'ex');
+  const typo2 = rogue.searchQuery(entries, 'Pok\u00e9mann', 'ex');
+
+  // ASSERT — the clean accented word stays exact (no tier 3 for a known
+  // word), the one-edit accented typo is fully fuzzy and identical to
+  // its unaccented twin, the two-edit one matches nothing
+  for (const r of exact.results) assert.equal(r.fuzzy, false, `${r.id}: the clean accented word is exact-only`);
+  assert.equal(typo2.total, 0, '"Pokémann" is two edits from "pokemon" — beyond distance 1');
+  assert.deepEqual(
+    [...typo1.results.map((r) => r.id)],
+    [...rogue.searchQuery(entries, 'pokmon', 'ex').results.map((r) => r.id)],
+    'the accented typo folds to the same candidate as the unaccented one'
+  );
+  for (const r of typo1.results) assert.equal(r.tier, 3, `${r.id}: the accented typo ranks in tier 3`);
+
+  // ASSERT — the fuzzy span centres on the ACCENTED word in the
+  // original casing (the snippet stays original-cased around it)
+  assert.ok(
+    typo1.results.some((r) => r.textCase.slice(r.matchIndex, r.matchEnd) === 'Pok\u00e9mon'),
+    'a capped fuzzy result centres its span on the accented "Pokémon"'
+  );
+});
+
+test('version scoping applies to the fuzzy tier (issue #46)', () => {
+  // ARRANGE — the typo query under both versions; the EX-only entries
+  // carrying the "pokemon" token (derived from the index)
+  const underEx = rogue.searchQuery(entries, 'pokmon', 'ex');
+  const underVanilla = rogue.searchQuery(entries, 'pokmon', 'vanilla');
+  const exOnlyCount = entries.filter((e) => e.versions.length === 1 && e.versions[0] === 'ex' && tokensOf(fold(e.text)).includes('pokemon')).length;
+  assert.ok(exOnlyCount > 0, 'fixture: some EX-only entries carry the "pokemon" token');
+
+  // ASSERT — no entry leaks outside its versions; exactly the EX-only
+  // "pokemon" entries drop the Vanilla-scoped total; deterministic
+  for (const r of underVanilla.results) assert.ok(r.versions.includes('vanilla'), `${r.id} leaked into vanilla fuzzy results`);
+  assert.equal(underVanilla.total, underEx.total - exOnlyCount, 'exactly the EX-only "pokemon" entries drop out under Vanilla');
+  assert.deepEqual(rogue.searchQuery(entries, 'pokmon', 'vanilla'), underVanilla, 'the fuzzy query is deterministic');
+});
+
+test('known words never gain fuzzy matches (the unknown-word guard, issue #46)', () => {
+  // ARRANGE — words the index actually contains: their distance-1
+  // neighbours ("mega"→"meta", "spring"→"string") must NOT count, or
+  // every broad query would flood tier 3 and break the pinned counts
+  const pinned = [
+    ['mega evolution', 4], // the screenshot literal (EX)
+    ['the final run', 2],
+    ['spring', 5]
+  ];
+
+  // ACT + ASSERT — each stays at its pinned exact count, fuzzy-free
+  for (const [query, expected] of pinned) {
+    const found = rogue.searchQuery(entries, query, 'ex');
+    assert.equal(found.total, expected, `"${query}" under EX stays at its pinned exact count`);
+    for (const r of found.results) assert.equal(r.fuzzy, false, `"${query}"/${r.id}: a known-word query yields no fuzzy rows`);
+  }
+
+  // ASSERT — "meta" is one edit from "mega", but the "meta" entries
+  // (prose-hub-hub-in-the-loop) never surface for it
+  assert.ok(
+    !rogue.searchQuery(entries, 'mega', 'ex').results.some((r) => r.id === 'prose-hub-hub-in-the-loop'),
+    '"mega" must not pull in the "meta" entries'
+  );
 });
 
 test('results are capped at search.maxResults (total carries the pre-cap count) and matchIndex points at a real occurrence', () => {

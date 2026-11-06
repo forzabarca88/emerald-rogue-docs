@@ -31,9 +31,11 @@
  *      the 1:1 parallel of the lowercased text, per the search-index
  *      module) sliced [matchIndex−40 … matchIndex+80], "…" where clipped,
  *      with the matched substring [matchIndex … matchEnd) wrapped in the
- *      token-colored .search-palette__highlight mark (markup, not copy) —
- *      and the page's NAV title from data/site.json (never the raw
- *      filename);
+ *      token-colored .search-palette__highlight mark on EXACT rows
+ *      (markup, not copy) — FUZZY tier-3 rows (issue #46, result.fuzzy)
+ *      have no contiguous matched substring, so their span only CENTRES
+ *      the snippet and is never <mark>-wrapped — and the page's NAV title
+ *      from data/site.json (never the raw filename);
  *   5. keyboard: ArrowDown/ArrowUp move the active row (WRAP-AROUND, via
  *      aria-activedescendant + [data-active]); Enter navigates to
  *      entry.page + entry.anchor as a RELATIVE url (./quests.html#rec-…
@@ -201,9 +203,12 @@
      * A snippet around the match: 40 chars before, 80 after, "…" where
      * clipped — sliced from the entry's ORIGINAL-CASE haystack (textCase,
      * the 1:1 parallel of the lowercased text; the search-index module
-     * guarantees the alignment) with the matched substring
-     * [matchIndex … matchEnd) wrapped in .search-palette__highlight
-     * (markup, not copy). Returns ready-to-insert escaped HTML.
+     * guarantees the alignment). EXACT rows (result.fuzzy === false)
+     * wrap the matched substring [matchIndex … matchEnd) in
+     * .search-palette__highlight (markup, not copy); FUZZY tier-3 rows
+     * (issue #46) have no contiguous matched substring — their span
+     * centres the snippet on the best-aligned token and is never
+     * highlighted. Returns ready-to-insert escaped HTML.
      */
     function snippet(result) {
       var t = typeof result.textCase === 'string' ? result.textCase : '';
@@ -216,7 +221,9 @@
       var start = Math.max(0, matchIndex - SNIPPET_BEFORE);
       var end = Math.min(t.length, matchIndex + SNIPPET_AFTER);
       var hlStart = Math.max(start, matchIndex);
-      var hlEnd = Math.min(end, matchEnd);
+      // exact rows only: the fuzzy flag means "no contiguous match" — the
+      // span is a snippet anchor, not a highlight (issue #46)
+      var hlEnd = result.fuzzy ? hlStart : Math.min(end, matchEnd);
       var html = (start > 0 ? '\u2026' : '') + ROGUE.esc(t.slice(start, hlStart));
       if (hlEnd > hlStart) {
         html += '<mark class="search-palette__highlight">' + ROGUE.esc(t.slice(hlStart, hlEnd)) + '</mark>';
