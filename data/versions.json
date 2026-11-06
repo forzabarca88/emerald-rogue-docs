@@ -28,7 +28,7 @@
       "category": "version-mechanic",
       "versions": ["vanilla", "ex"],
       "description": "EX is produced by building the same tree with EXPANSION=1 in the Makefile: the C compiler gets -D ROGUE_EXPANSION=1 and the pory script compiler gets ROGUE_VERSION=ROGUE_VERSION_EXPANSION. Every difference on this page is an #ifdef ROGUE_EXPANSION (or build-time #if) in that shared tree, so the two builds always agree on anything not gated by the flag.",
-      "source": "Makefile @vanilla L4 (EXPANSION := 0 by default), L50-51 (pory version flag), L133-134 (assembly defsym), L177-178 (-D ROGUE_EXPANSION=1) / @origin/expansion L4 (default flipped to EXPANSION := 1), L149-150, L206-9999"
+      "source": "Makefile @vanilla L4 (EXPANSION := 0 by default), L50-51 (pory version flag), L133-134 (assembly defsym), L177-178 (-D ROGUE_EXPANSION=1) / @origin/expansion L4 (default flipped to EXPANSION := 1), L149-150, L206-207"
     },
     {
       "id": "roster-and-pokedex",
