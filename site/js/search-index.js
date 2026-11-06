@@ -439,16 +439,6 @@
     return parts;
   }
 
-  /** "mon_masteries" → "Mon Masteries" (the group-title rule quests.js uses). */
-  function groupTitle(id) {
-    return String(id)
-      .split('_')
-      .map(function (w) {
-        return w ? w.charAt(0).toUpperCase() + w.slice(1) : w;
-      })
-      .join(' ');
-  }
-
   /* ------------------------------------------------------------------ *
    * Prose + record → page/anchor mapping (derived from site/js/pages/*)
    * ------------------------------------------------------------------ */
@@ -650,7 +640,7 @@
         }
       }
       for (var g in groups) {
-        if (Object.prototype.hasOwnProperty.call(groups, g)) parts.push(groupTitle(g));
+        if (Object.prototype.hasOwnProperty.call(groups, g)) parts.push(ROGUE.groupTitle(g));
       }
       return parts;
     },

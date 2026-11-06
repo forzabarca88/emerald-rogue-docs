@@ -13,9 +13,8 @@
  * The search trigger (#site-search-trigger, .site-search-trigger) is emitted
  * between the nav and the version toggle (the toggle stays last/rightmost).
  * nav.js only emits it — search.js binds the click and owns the overlay.
- * Its aria-label is a static "Search the site": the data/site.json `search`
- * block has no label field (its placeholder names content categories, not
- * the action), so a sensible static label is used here.
+ * Its aria-label comes from the data/site.json `search` block's `label`
+ * field (defensive fallback to "Search the site" when it is absent).
  */
 (function () {
   'use strict';
@@ -75,11 +74,16 @@
       .join('');
     var brand = (site.site || {}).name || 'Rogue Docs';
 
+    /* the trigger's accessible label (data/site.json search.label, with the
+     * same defensive-fallback pattern search.js uses for its config strings) */
+    var searchBlock = site.search && typeof site.search === 'object' ? site.search : {};
+    var searchLabel = typeof searchBlock.label === 'string' && searchBlock.label !== '' ? searchBlock.label : 'Search the site';
+
     /* icon-only magnifier (stroke: currentColor) — the overlay itself is
      * owned by search.js; the trigger sits BETWEEN the nav and the toggle */
     var searchTrigger =
       '<button type="button" class="site-search-trigger" id="site-search-trigger" ' +
-      'aria-label="Search the site" aria-haspopup="dialog">' +
+      'aria-label="' + ROGUE.esc(searchLabel) + '" aria-haspopup="dialog">' +
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" ' +
       'stroke-linecap="round" aria-hidden="true" focusable="false">' +
       '<circle cx="10.5" cy="10.5" r="6.5"></circle>' +

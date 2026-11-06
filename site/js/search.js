@@ -9,8 +9,9 @@
  *      version-independent (see search-index.js);
  *   2. appends the hidden `.search-palette` root to <body>: a backdrop +
  *      a panel (role="dialog" aria-modal="true", aria-label from the
- *      data/site.json `search` block's placeholder — the block has no
- *      dedicated label field) holding the search input (placeholder +
+ *      data/site.json `search` block's placeholder — the block's `label`
+ *      field is the header trigger's, emitted by nav.js) holding the
+ *      search input (placeholder +
  *      aria-label from the same config), a live result-count line
  *      (role="status"), an empty-state element and the results list
  *      (role="listbox");
