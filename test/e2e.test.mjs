@@ -20,7 +20,9 @@
  *     and references the sitemap, that every nav page's static og:title /
  *     og:description / og:url match its site.json `pages` entry (404.html
  *     carries none — it is not indexable), and that the internal design
- *     contract site/css/DESIGN.md is NOT published (404).
+ *     contract site/css/DESIGN.md is NOT published (404), and that the
+ *     self-hosted font assets (site/fonts/ — issue #49) ship in dist and
+ *     serve 200 while no page references the Google Fonts CDN.
  * (4) The poisoned build: a temp copy of the repo's build inputs with one
  *     data file whose meta.id breaks out of the window["..."] global-name
  *     interpolation must fail the build (naming the offending file) instead
@@ -605,6 +607,59 @@ test('built dist does not publish the internal design contract site/css/DESIGN.m
 
     // ASSERT — the built dist must not serve it
     assert.equal(res.status, 404, `GET /css/DESIGN.md returned ${res.status} (the internal design contract must not be published)`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('self-hosted font assets ship in dist and no page references the Google Fonts CDN', async () => {
+  // ARRANGE — the 8 vendored woff2 files (IBM Plex Sans + Pixelify Sans,
+  // 400/500/600/700 each, issue #49) plus the two OFL license files; the
+  // @font-face rules that point at them live in the first sheet
+  const woff2Files = [
+    'ibm-plex-sans-400.woff2',
+    'ibm-plex-sans-500.woff2',
+    'ibm-plex-sans-600.woff2',
+    'ibm-plex-sans-700.woff2',
+    'pixelify-sans-400.woff2',
+    'pixelify-sans-500.woff2',
+    'pixelify-sans-600.woff2',
+    'pixelify-sans-700.woff2',
+  ];
+  const pages = [
+    'index.html',
+    'gameplay.html',
+    'versions.html',
+    'quests.html',
+    'config.html',
+    'hub.html',
+    'safari.html',
+    'routes.html',
+    'mechanics.html',
+    '404.html',
+  ];
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT — fetch every font asset, the tokens sheet, and every page
+    for (const file of [...woff2Files, 'OFL-ibm-plex-sans.txt', 'OFL-pixelify-sans.txt']) {
+      const res = await fetch(`${base}/fonts/${file}`);
+      assert.equal(res.status, 200, `GET /fonts/${file} returned ${res.status} (self-hosted font assets must ship in dist)`);
+    }
+    const tokens = await (await fetch(`${base}/css/tokens.css`)).text();
+    for (const file of woff2Files) {
+      assert.ok(tokens.includes(`../fonts/${file}`), `css/tokens.css must declare an @font-face pointing at ../fonts/${file}`);
+    }
+    for (const page of pages) {
+      const body = await (await fetch(`${base}/${page}`)).text();
+      assert.ok(
+        !body.includes('fonts.googleapis.com') && !body.includes('fonts.gstatic.com'),
+        `${page} still references the Google Fonts CDN`
+      );
+    }
   } finally {
     await new Promise((resolve) => server.close(resolve));
     server = undefined;
