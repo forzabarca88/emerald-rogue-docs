@@ -47,7 +47,7 @@
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
- *                       in the whole 569-entry index containing "gen3" →
+ *                       in the whole 571-entry index containing "gen3" →
  *                       exactly 1 row under BOTH versions; its snippet
  *                       highlights the BODY match "National Gen3" in its
  *                       original casing.
@@ -61,8 +61,12 @@
  *   "zzqxwvnotthere"  — 0 rows under both versions.
  *
  * In-page literals (the active version's rendered card text):
- *   quests.html EX  "mega evolution" → 1 card (the "Mega Evolution" quest),
- *   group default_challenges the only visible group (8 of 9 hidden);
+ *   quests.html EX  "mega evolution" → 2 cards ("Post Game?" — its EX reward
+ *   unlocks the quest — and the "Mega Evolution" quest itself; the same two
+ *   quest rows the site-wide palette surfaces), groups starter_quests +
+ *   default_challenges the only visible ones (7 of 9 hidden);
+ *   "wobbuffet" (issue #50 parity) → 1 card ("The Final Run." — the word is
+ *   in its REWARD, absent from every quest's name + description);
  *   hub.html "unique" → 8 of 48 upgrades; routes.html Hoenn → 12 of 36.
  *
  * Waiting is always on a DOM state (the count line, aria-activedescendant,
@@ -328,7 +332,7 @@ test('index.html: typing filters live — the count line and rows track the quer
     await typeQuery(page, 'mega evolution');
     await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (EX, "mega evolution")');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 4, 'data-derived: exactly 4 index entries match "mega evolution" under EX (searchQuery over the 569-entry index)');
+    assert.equal(f.rows.length, 4, 'data-derived: exactly 4 index entries match "mega evolution" under EX (searchQuery over the 571-entry index)');
     const row0 = f.rows[0];
     assert.equal(row0.id, 'search-result-0', 'row ids are #search-result-<i>');
     assert.equal(row0.name, EX_ONLY_QUEST, 'the tier-0 title match ranks first: the EX-only quest "Mega Evolution" (data/quests.json)');
@@ -681,7 +685,10 @@ test('quests.html (in-page regression): the quest search filters cards, updates 
         [...document.querySelectorAll('.quest-group')].filter((g) => !g.hidden).map((g) => g.getAttribute('data-group'))
       );
 
-    // EX: "mega evolution" matches exactly one card (the quest itself)
+    // EX: "mega evolution" matches exactly two cards — the quest itself
+    // (its name) and "Post Game?" (its EX reward unlocks the "Mega
+    // Evolution" quest, data/quests.json) — the same two quest rows the
+    // site-wide palette surfaces (issue #50 parity)
     await page.fill('#quest-search', 'mega evolution');
     await page.waitForFunction(() => (document.getElementById('quest-result')?.textContent || '').includes('match'), null, { timeout: SETTLE_TIMEOUT_MS });
     const q1 = await page.evaluate(() => ({
@@ -689,10 +696,26 @@ test('quests.html (in-page regression): the quest search filters cards, updates 
       visible: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).length,
       visibleNames: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).map((c) => c.querySelector('h3.card__title').textContent.trim()),
     }));
-    assert.equal(q1.line, `1 quest match ${Q_OPEN}mega evolution${Q_CLOSE}`, 'the live count line reads "1 quest match …" (quests.js applyFilter, no verb agreement)');
-    assert.equal(q1.visible, 1, 'exactly one card matches under EX (data/quests.json: only the "Mega Evolution" card carries that text in its EX variant)');
-    assert.deepEqual(q1.visibleNames, [EX_ONLY_QUEST], 'the matching card is the "Mega Evolution" quest');
-    assert.deepEqual(await visibleGroups(), ['default_challenges'], 'groups with no matches are hidden — only default_challenges stays (8 of 9 groups hidden)');
+    assert.equal(q1.line, `2 quests match ${Q_OPEN}mega evolution${Q_CLOSE}`, 'the live count line reads "2 quests match …" (quests.js applyFilter, plural form)');
+    assert.equal(q1.visible, 2, 'exactly two cards match under EX (data/quests.json: the "Mega Evolution" name + the "Post Game?" EX reward)');
+    assert.deepEqual(q1.visibleNames, ['Post Game?', EX_ONLY_QUEST], 'the matching cards, in group order (starter_quests before default_challenges)');
+    assert.deepEqual(await visibleGroups(), ['starter_quests', 'default_challenges'], 'groups with no matches are hidden — only starter_quests + default_challenges stay (7 of 9 groups hidden)');
+
+    // issue #50 parity: a REWARD word absent from every quest's name +
+    // description ("wobbuffet" — The Final Run.'s reward, data/quests.json)
+    // matches exactly one card in the on-page filter, the same coverage the
+    // site-wide palette indexes (name/description/trigger/requirements/
+    // rewards across both variants, flags, display groups)
+    await page.fill('#quest-search', 'wobbuffet');
+    await page.waitForFunction(() => (document.getElementById('quest-result')?.textContent || '').includes('match'), null, { timeout: SETTLE_TIMEOUT_MS });
+    const q1b = await page.evaluate(() => ({
+      line: (document.getElementById('quest-result')?.textContent || '').trim(),
+      visible: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).length,
+      visibleNames: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).map((c) => c.querySelector('h3.card__title').textContent.trim()),
+    }));
+    assert.equal(q1b.line, `1 quest match ${Q_OPEN}wobbuffet${Q_CLOSE}`, 'the reward word "wobbuffet" matches exactly one card (parity with the palette field union)');
+    assert.equal(q1b.visible, 1, 'exactly one card matches under EX (data/quests.json: only "The Final Run." names a Wobbuffet — in its reward)');
+    assert.deepEqual(q1b.visibleNames, ['The Final Run.'], 'the matching card is "The Final Run." (the word is absent from every name + description)');
 
     // nonsense: empty state + every group hidden
     await page.fill('#quest-search', NOISE);

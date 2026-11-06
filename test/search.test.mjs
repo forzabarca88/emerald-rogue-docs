@@ -132,6 +132,30 @@ test('the index has exactly one entry per record, per prose block and per nav pa
     assert.deepEqual([...e.versions], ['vanilla', 'ex']);
   }
 
+  // ASSERT — site.json's own home content (issue #50): the hero block and
+  // every site prose block get one entry each, linking the index page
+  // (the hero sits at the page top, the prose at its own DOM id)
+  assert.equal(entries.filter((e) => e.id.startsWith('prose-site-')).length, 1 + (data.site.prose || []).length);
+  const heroE = byId.get('prose-site-hero');
+  assert.ok(heroE, 'missing the site.json hero entry');
+  assert.equal(heroE.page, './index.html', 'the hero entry links the index page');
+  assert.equal(heroE.anchor, '', 'the hero is at the top of the index page');
+  assert.equal(heroE.title, data.site.hero.title);
+  assert.deepEqual([...heroE.versions], ['vanilla', 'ex']);
+  assert.ok(heroE.text.includes(data.site.hero.subtitle.toLowerCase()), 'the hero subtitle must be in the haystack');
+  for (const stat of data.site.hero.stats || []) {
+    assert.ok(heroE.text.includes(stat.label.toLowerCase()), `the hero stat label "${stat.label}" must be in the haystack`);
+  }
+  for (const p of data.site.prose || []) {
+    const e = byId.get('prose-site-' + p.id);
+    assert.ok(e, `missing site.json prose entry for "${p.id}"`);
+    assert.equal(e.page, './index.html', `site.json "${p.id}" links the index page`);
+    assert.equal(e.anchor, '#' + p.id, `site.json "${p.id}" anchors at its own DOM id`);
+    assert.equal(e.title, p.heading);
+    assert.deepEqual([...e.versions], ['vanilla', 'ex']);
+    assert.ok(e.text.includes(p.text.toLowerCase()), `site.json "${p.id}" text must be in the haystack`);
+  }
+
   // ASSERT — records: exactly one rec- entry per record of each of the 14 files,
   // carrying the record's own versions array and the page that renders it
   let expectedRecs = 0;
@@ -204,6 +228,71 @@ test('quest {PKMN}/{POKEBLOCK} placeholders are resolved in the index', () => {
       }
     }
   }
+});
+
+test('the on-page quest filter haystack equals the palette quest haystack (issue #50 parity)', () => {
+  // ARRANGE — every quest record. The Quests page writes
+  // ROGUE.questSearchText(record) into each card's data-search, and the
+  // palette indexes that same text for the quest entries, so the two
+  // surfaces must agree exactly.
+  const flat = (x) => (x === null || x === undefined ? '' : Array.isArray(x) ? x.join(' ') : String(x));
+  const groupTitle = (id) =>
+    String(id)
+      .split('_')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : w))
+      .join(' ');
+  const resolved = (s) => rogue.resolvePlaceholders(s).toLowerCase();
+
+  // ASSERT — the palette entry text IS the on-page data-search string
+  for (const r of data.quests.records) {
+    const e = byId.get('rec-quests-' + r.id);
+    assert.ok(e, `missing rec entry for ${r.id}`);
+    assert.equal(e.text, rogue.questSearchText(r), r.id + ': palette text must equal the on-page data-search');
+    // field by field: name, description/trigger/requirements/rewards, flags
+    // and the display group(s) as rendered titles are all present
+    for (const k of ['name', 'description', 'flags', 'trigger', 'requirements', 'rewards']) {
+      const v = flat(r[k]);
+      if (v) assert.ok(e.text.includes(resolved(v)), r.id + '/' + k + ' must be in the shared haystack');
+    }
+    if (r.display_group) assert.ok(e.text.includes(resolved(groupTitle(r.display_group))), r.id + '/display_group');
+    // …and BOTH per-version variants (the structured differences sides)
+    const diff = r.differences;
+    if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
+      for (const v of VERSIONS) {
+        const side = diff[v];
+        if (!side || typeof side !== 'object' || Array.isArray(side)) continue;
+        for (const k of ['description', 'trigger', 'requirements', 'rewards']) {
+          const sv = flat(side[k]);
+          if (sv) assert.ok(e.text.includes(resolved(sv)), r.id + '/' + v + '/' + k + ' (variant side) must be in the shared haystack');
+        }
+        if (side.display_group) assert.ok(e.text.includes(resolved(groupTitle(side.display_group))), r.id + '/' + v + '/display_group');
+      }
+    }
+  }
+});
+
+test('a {PKMN}-templated quest is found by its concrete species name in BOTH surfaces (issue #50)', () => {
+  // ARRANGE — Z-A Royale: the {PKMN}-templated quest whose reward list
+  // names a concrete species ("a special Trapinch") that its name and
+  // description do NOT mention
+  const r = data.quests.records.find((x) => x.id === 'Z_A_ROYALE');
+  assert.ok(r, 'fixture: the Z-A Royale quest is expected');
+  assert.ok(/\{PKMN\}/.test(JSON.stringify([r.name, r.description, r.trigger, r.requirements, r.rewards])), 'fixture: the quest carries a {PKMN} token');
+  const word = 'trapinch';
+  assert.ok(!r.name.toLowerCase().includes(word) && !(r.description || '').toLowerCase().includes(word), 'fixture: the species name is absent from name/description');
+
+  // ASSERT — the PALETTE finds it by the species name under EX, and the
+  // EX-only quest stays absent under Vanilla
+  assert.ok(rogue.searchQuery(entries, word, 'ex').results.some((e) => e.id === 'rec-quests-Z_A_ROYALE'), 'the palette must find the quest by "trapinch" under EX');
+  assert.ok(
+    !rogue.searchQuery(entries, word, 'vanilla').results.some((e) => e.id === 'rec-quests-Z_A_ROYALE'),
+    'the EX-only quest must not surface under Vanilla'
+  );
+
+  // ASSERT — the ON-PAGE haystack (what quests.js writes into the card's
+  // data-search) carries the same word, placeholder-resolved
+  assert.ok(rogue.questSearchText(r).includes(word), 'the on-page data-search must carry "trapinch" (from the rewards)');
+  assert.ok(rogue.questSearchText(r).includes('pok\u00e9mon'), 'the on-page data-search carries the resolved {PKMN} word');
 });
 
 test('the FAIRY-swap routes index BOTH the EX and the Vanilla wild types', () => {
