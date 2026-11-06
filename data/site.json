@@ -83,7 +83,8 @@
     }
   },
   "search": {
-    "_comment": "Site-wide search palette (site/js/search-index.js + search.js): input placeholder, the keyboard hint, the open shortcut key, the result cap read by ROGUE.searchQuery, and the overflow suffix the count line appends when the query's pre-cap total exceeds the rows shown ({n} = the hidden count).",
+    "_comment": "Site-wide search palette (site/js/search-index.js + search.js, and the nav.js header trigger): the trigger's accessible label, the input placeholder, the keyboard hint, the open shortcut key, the result cap read by ROGUE.searchQuery, and the overflow suffix the count line appends when the query's pre-cap total exceeds the rows shown ({n} = the hidden count).",
+    "label": "Search the site",
     "placeholder": "Search quests, routes, settings, mechanics…",
     "hint": "Press / to search",
     "shortcut": "/",

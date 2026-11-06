@@ -57,16 +57,6 @@
     /* the active search query — survives a version re-render */
     var state = { query: '' };
 
-    /** "final_quests" → "Final Quests" (titles derived from the group ids). */
-    function groupTitle(id) {
-      return String(id)
-        .split('_')
-        .map(function (w) {
-          return w ? w.charAt(0).toUpperCase() + w.slice(1) : w;
-        })
-        .join(' ');
-    }
-
     /** The other build's differing fields as one "Label: value · …" note line. */
     function diffText(side) {
       var labels = {
@@ -81,7 +71,7 @@
           return side[key] !== undefined;
         })
         .map(function (key) {
-          if (key === 'display_group') return labels[key] + ': ' + groupTitle(side[key]);
+          if (key === 'display_group') return labels[key] + ': ' + ROGUE.groupTitle(side[key]);
           if (key === 'requirements' || key === 'rewards') {
             var values = Array.isArray(side[key]) ? side[key].map(ROGUE.resolvePlaceholders) : [ROGUE.resolvePlaceholders(side[key])];
             return labels[key] + ': ' + values.join(', ');
@@ -173,7 +163,7 @@
             return String(a.eff.name).localeCompare(String(b.eff.name));
           });
         }
-        return { id: g.id, title: groupTitle(g.id), items: items };
+        return { id: g.id, title: ROGUE.groupTitle(g.id), items: items };
       });
     }
 

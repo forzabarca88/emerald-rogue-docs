@@ -9,7 +9,8 @@
  * ROGUE.section(id, eyebrow, heading, intro, body), ROGUE.chip(text),
  * ROGUE.stepStrip(steps[, label]), ROGUE.proseById(data, id),
  * ROGUE.byCategory(records, category), ROGUE.versionLabel(id),
- * ROGUE.resolvePlaceholders(text), ROGUE.effective(record[, keys]),
+ * ROGUE.resolvePlaceholders(text), ROGUE.groupTitle(id),
+ * ROGUE.effective(record[, keys]),
  * ROGUE.diffNote(record[, text]), ROGUE.citeHtml(source).
  */
 (function () {
@@ -391,6 +392,21 @@
     return String(text === null || text === undefined ? '' : text).replace(/\{(PKMN|POKEBLOCK)\}/g, function (m, key) {
       return PLACEHOLDERS[key] || m;
     });
+  };
+
+  /**
+   * A quest display-group id → its display title: "final_quests" →
+   * "Final Quests" (underscore-split, each word first-letter capitalized).
+   * The single source of the rule — the quests page (pages/quests.js) and
+   * the search index (search-index.js) both use it.
+   */
+  ROGUE.groupTitle = function (id) {
+    return String(id)
+      .split('_')
+      .map(function (w) {
+        return w ? w.charAt(0).toUpperCase() + w.slice(1) : w;
+      })
+      .join(' ');
   };
 
   /**

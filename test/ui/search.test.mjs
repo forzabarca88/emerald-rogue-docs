@@ -124,6 +124,7 @@ after(async () => {
 
 /* --- derived literals ------------------------------------------------------ */
 
+const LABEL = site.search.label; // the header trigger's aria-label (nav.js)
 const PLACEHOLDER = site.search.placeholder; // input placeholder + aria-label
 const HINT = site.search.hint; // the empty-query hint in .search-palette__empty
 const MAX_RESULTS = site.search.maxResults; // the searchQuery result cap
@@ -272,7 +273,7 @@ test('index.html: the header trigger opens the palette (input focused, hint show
       hidden: document.getElementById('search-palette')?.hidden === true,
     }));
     assert.equal(before.trigger, true, 'nav.js should have emitted the #site-search-trigger button in the header');
-    assert.equal(before.triggerLabel, 'Search the site', 'the trigger aria-label (nav.js — the site.json search block has no label field)');
+    assert.equal(before.triggerLabel, LABEL, `the trigger aria-label comes from data/site.json search.label (nav.js: ${JSON.stringify(LABEL)})`);
     assert.equal(before.hidden, true, 'the palette root should start hidden');
 
     await page.click('#site-search-trigger');
