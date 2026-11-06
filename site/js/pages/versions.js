@@ -12,9 +12,9 @@
  * how many differences in that category apply to the ACTIVE build. The
  * strip re-renders with the toggle (the rows themselves stay put — they
  * only dim); a 0-count category recedes as a non-link, and each live
- * cell anchor-scrolls to the first row of its category (only that row
- * carries the #vover-<category> id). The visible caption carries the
- * strip's meaning.
+ * cell anchor-scrolls to the first row of its category (that row's
+ * #rec-versions-<id> deep-link id — issue #45). The visible caption
+ * carries the strip's meaning.
  */
 (function () {
   'use strict';
@@ -45,6 +45,13 @@
       if (r && r.category && categories.indexOf(r.category) === -1) categories.push(r.category);
     });
 
+    /** The first record of each category (data order) — the overview
+     * cell's anchor target (its per-record deep-link id). */
+    var firstRecordOf = {};
+    records.forEach(function (r) {
+      if (r && r.category && !firstRecordOf[r.category]) firstRecordOf[r.category] = r;
+    });
+
     /** How many records of `cat` apply to the given build. */
     function categoryCount(cat, version) {
       var n = 0;
@@ -64,7 +71,13 @@
       if (n === 0) {
         return '<span class="voverview__cell voverview__cell--off">' + inner + '</span>';
       }
-      return '<a class="voverview__cell" href="#vover-' + ROGUE.esc(cat) + '">' + inner + '</a>';
+      return (
+        '<a class="voverview__cell" href="#' +
+        ROGUE.esc(ROGUE.recId('versions', firstRecordOf[cat].id)) +
+        '">' +
+        inner +
+        '</a>'
+      );
     }
 
     /** The strip plus its caption line (the caption carries the meaning). */
@@ -124,8 +137,8 @@
       );
     }
 
-    /** `anchor` (optional) is the #vover-<category> id of the first row in a category. */
-    function row(record, anchor) {
+    /** One difference row, carrying its per-record deep-link id (issue #45). */
+    function row(record) {
       var vs = Array.isArray(record.versions) ? record.versions : [];
       var both = vs.indexOf('vanilla') !== -1 && vs.indexOf('ex') !== -1;
       var diff = record.differences && typeof record.differences === 'object' ? record.differences : null;
@@ -137,7 +150,11 @@
       }
       var scope = both ? 'both' : vs[0] || 'ex';
       return (
-        '<div class="diff diff--scope-' + scope + '"' + (anchor ? ' id="' + ROGUE.esc(anchor) + '"' : '') + '">' +
+        '<div class="diff diff--scope-' +
+        scope +
+        '" id="' +
+        ROGUE.esc(ROGUE.recId('versions', record.id)) +
+        '">' +
         '<div class="diff__feature">' +
         '<h3 class="diff__name">' + ROGUE.esc(record.name) + '</h3>' +
         '<p class="diff__meta">' +
@@ -154,18 +171,7 @@
     /* Intro prose (data/versions.json). */
     html += ROGUE.proseSections(data.prose);
 
-    /* The first row of each category carries its anchor id. */
-    var firstSeen = {};
-    var rows = records
-      .map(function (r) {
-        var anchor = null;
-        if (r && r.category && !firstSeen[r.category]) {
-          firstSeen[r.category] = true;
-          anchor = 'vover-' + r.category;
-        }
-        return row(r, anchor);
-      })
-      .join('');
+    var rows = records.map(row).join('');
 
     /* The master list of differences (overview strip above the rows). */
     html +=

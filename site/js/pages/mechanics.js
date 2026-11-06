@@ -45,9 +45,11 @@
       return Array.isArray(d && d.records) ? d.records : [];
     }
 
-    /** Plain record card: name, badge, description, diff note, source. */
-    function card(record) {
-      var html = '<article class="card mech-card">';
+    /** Plain record card: name, badge, description, diff note, source.
+     *  `stem` is the data file's id — the card's deep-link id prefix
+     *  (issue #45). */
+    function card(record, stem) {
+      var html = '<article class="card mech-card" id="' + ROGUE.esc(ROGUE.recId(stem, record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
         ROGUE.esc(record.name) +
@@ -258,13 +260,22 @@
       );
     }
 
-    /** Version-scoped card grid. */
-    function grid(records) {
-      return '<div class="grid mech-grid">' + ROGUE.filter(records).map(card).join('') + '</div>';
+    /** Version-scoped card grid. `stem` is the data file's id (the cards'
+     *  deep-link id prefix — issue #45). */
+    function grid(records, stem) {
+      return (
+        '<div class="grid mech-grid">' +
+        ROGUE.filter(records)
+          .map(function (r) {
+            return card(r, stem);
+          })
+          .join('') +
+        '</div>'
+      );
     }
 
     /** One labelled column of stacked cards (the charms | curses duo). */
-    function duoColumn(label, records) {
+    function duoColumn(label, records, stem) {
       var kept = ROGUE.filter(records);
       return (
         '<div class="mech-duo__col">' +
@@ -274,7 +285,11 @@
         kept.length +
         ')</h3>' +
         '<div class="mech-duo__cards">' +
-        kept.map(card).join('') +
+        kept
+          .map(function (r) {
+            return card(r, stem);
+          })
+          .join('') +
         '</div></div>'
       );
     }
@@ -324,21 +339,24 @@
             charmProse(charms, 'scaling', stacksHtml()) +
             charmProse(charms, 'where-they-come-from') +
             '<div class="mech-duo">' +
-            duoColumn('Charms', charmRecords) +
-            duoColumn('Curses', curseRecords) +
+            duoColumn('Charms', charmRecords, 'charms') +
+            duoColumn('Curses', curseRecords, 'charms') +
             '</div>'
         );
 
-      /* One section per remaining system: prose blocks + record grid. */
+      /* One section per remaining system: prose blocks + record grid.
+         The 4th column is the data file's id (the cards' deep-link id
+         prefix — issue #45); it differs from the section id for the
+         unique-mons file ('unique-mons' vs 'mech-uniquemons'). */
       [
-        ['mech-followmons', 'Followmons', files.followmons],
-        ['mech-gameshow', 'Game Show', files.gameshow],
-        ['mech-timeofday', 'Time of Day & Seasons', files.timeofday],
-        ['mech-uniquemons', 'Unique mons', files.uniquemons],
-        ['mech-campaigns', 'Campaigns', files.campaigns]
+        ['mech-followmons', 'Followmons', files.followmons, 'followmons'],
+        ['mech-gameshow', 'Game Show', files.gameshow, 'gameshow'],
+        ['mech-timeofday', 'Time of Day & Seasons', files.timeofday, 'timeofday'],
+        ['mech-uniquemons', 'Unique mons', files.uniquemons, 'unique-mons'],
+        ['mech-campaigns', 'Campaigns', files.campaigns, 'campaigns']
       ].forEach(function (entry) {
         var d = entry[2];
-        html += ROGUE.section(entry[0], entry[1], (d.meta && d.meta.title) || entry[1], d.meta && d.meta.description, proseBlocks(d) + grid(recordsOf(d)));
+        html += ROGUE.section(entry[0], entry[1], (d.meta && d.meta.title) || entry[1], d.meta && d.meta.description, proseBlocks(d) + grid(recordsOf(d), entry[3]));
       });
 
       main.innerHTML = html;

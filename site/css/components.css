@@ -155,6 +155,13 @@
   }
 }
 
+/* record-card deep-link targets (issue #45): the search palette's per-card
+   anchors (the #rec-… ids) clear the sticky header, the same way the
+   .section[id] rules in pages.css do */
+[id^="rec-"] {
+  scroll-margin-top: 112px;
+}
+
 /* --- Tables -----------------------------------------------------------------
    Emitted by ROGUE.table(). display:block + overflow-x:auto makes wide
    tables scroll horizontally on small screens instead of breaking layout;

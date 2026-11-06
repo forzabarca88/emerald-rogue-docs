@@ -118,8 +118,8 @@ const PAGES = [
       },
       overviewAnchors: {
         sel: '#version-diffs .diff[id]',
-        expected: 10,
-        why: 'data/versions.json: 10 distinct categories → versions.js gives the first row of each category its #vover-<category> anchor id',
+        expected: 19,
+        why: 'every difference row carries its per-record deep-link id #rec-versions-<id> (issue #45 — the search palette anchors its record entries at the row; 19 rows from data/versions.json)',
       },
     },
   },

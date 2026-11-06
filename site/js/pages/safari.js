@@ -225,7 +225,7 @@
           'The pool',
           poolProse ? poolProse.heading : 'The 60-slot pool',
           poolProse ? poolProse.text : null,
-          slotDiagram() + (layout ? ROGUE.simpleCard(layout) : '')
+          slotDiagram() + (layout ? ROGUE.simpleCard(layout, ROGUE.recId('safari', layout.id)) : '')
         );
 
       /* Entry: the four events as a converging flow, then the cards. */
@@ -239,7 +239,11 @@
           entryProse ? entryProse.text : null,
           entryFlow(entries) +
             '<div class="safari-entry">' +
-            entries.map(ROGUE.simpleCard).join('') +
+            entries
+              .map(function (r) {
+                return ROGUE.simpleCard(r, ROGUE.recId('safari', r.id));
+              })
+              .join('') +
             '</div>'
         );
 
@@ -256,7 +260,7 @@
           priProse ? priProse.text : null,
           (priEquation || priStrip
             ? '<div class="safari-priority">' + priEquation + priStrip + '</div>'
-            : '') + (priRec ? ROGUE.simpleCard(priRec) : '')
+            : '') + (priRec ? ROGUE.simpleCard(priRec, ROGUE.recId('safari', priRec.id)) : '')
         );
 
       /* Legends Cave: numbered steps + cited card (with roster diff note). */
@@ -268,12 +272,12 @@
           'Legends Cave',
           caveProse ? caveProse.heading : 'The Legends Cave',
           caveProse ? caveProse.text : null,
-          cave ? stepsList(cave) + ROGUE.simpleCard(cave) : ''
+          cave ? stepsList(cave) + ROGUE.simpleCard(cave, ROGUE.recId('safari', cave.id)) : ''
         );
 
       /* View & dismiss the pool. */
       var sign = recordById('pool-sign');
-      if (sign) html += ROGUE.section('safari-sign', 'Pool sign', sign.name, null, ROGUE.simpleCard(sign));
+      if (sign) html += ROGUE.section('safari-sign', 'Pool sign', sign.name, null, ROGUE.simpleCard(sign, ROGUE.recId('safari', sign.id)));
 
       main.innerHTML = html;
     }

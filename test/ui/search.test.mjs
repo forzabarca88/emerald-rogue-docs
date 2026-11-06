@@ -25,8 +25,10 @@
  * while a text entry holds focus, and while open it simply types "/" into the
  * already-focused input); ArrowUp/Down move the active row with wrap-around;
  * Enter on a cross-page entry sets location.href to the relative
- * "page.html#anchor", on the SAME page it scrolls to the anchor without a
- * reload or URL change; Escape / backdrop / trigger / a successful Enter close
+ * "page.html#rec-…" (the per-card deep link, issue #45), on the SAME page
+ * it scrolls to the CARD (the element with the anchor id) without a reload
+ * or URL change — falling back to the entry's section anchor only when the
+ * card element is absent; Escape / backdrop / trigger / a successful Enter close
  * (resetting the query and restoring focus to the element focused before the
  * open — the trigger in every session this suite drives: a trigger click, or
  * the "/" shortcut with the body focus, which falls back to the trigger);
@@ -40,10 +42,19 @@
  * literals" block):
  *   "mega evolution"  — under EX: 4 rows, row 0 the EX-only quest
  *                       "Mega Evolution" (data/quests.json versions ["ex"])
- *                       → ./quests.html#quest-default_challenges, its snippet
+ *                       → ./quests.html#rec-quests-MEGA_EVOLUTION (the
+ *                       per-card deep link, issue #45), its snippet
  *                       highlighting the title match "Mega Evolution" in
  *                       its original casing; under Vanilla: 2 rows, none of
- *                       them that quest row. Under "mega": 12 rows in EX.
+ *                       them that quest row, and row 0 is the BST Cup
+ *                       campaign record (data/campaigns.json) →
+ *                       ./mechanics.html#rec-campaigns-campaign-bst-cup.
+ *                       Under "mega": 12 rows in EX.
+ *   "the final run"   — 2 rows under BOTH versions, row 0 the shared quest
+ *                       "The Final Run." (data/quests.json — its display
+ *                       group differs per build, but its card id
+ *                       #rec-quests-THE_FINAL_RUN is the same in both,
+ *                       so the deep link lands on the card under either)
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
@@ -116,8 +127,9 @@ const COUNT_OVERFLOW = (n, more, query) => `${COUNT(n, query)} \u2014 ${MORE(mor
 
 /** The EX-only quest used for the version-scoping assertions (data/quests.json: versions ["ex"]). */
 const EX_ONLY_QUEST = 'Mega Evolution';
-/** Its deep link: the group section (same display_group in both builds → #quest-<group>). */
-const EX_ONLY_QUEST_ANCHOR = '#quest-default_challenges';
+/** Its deep link: the per-card id (issue #45 — record-identity-derived,
+ * stable across the Vanilla/EX re-renders). */
+const EX_ONLY_QUEST_ANCHOR = '#rec-quests-MEGA_EVOLUTION';
 /** The Vanilla-side-phrase quest (data/quests.json differences.vanilla description). */
 const VANILLA_PHRASE = 'national gen3';
 const VANILLA_PHRASE_QUEST = 'The Final Run.';
@@ -602,8 +614,8 @@ test('index.html: Enter on a CROSS-page entry navigates to the relative page.htm
 
     await page.keyboard.press('Enter');
 
-    // row 0 = the EX-only quest → relative './quests.html' + '#quest-default_challenges'
-    await page.waitForFunction(() => /quests\.html#quest-default_challenges$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    // row 0 = the EX-only quest → relative './quests.html' + '#rec-quests-MEGA_EVOLUTION'
+    await page.waitForFunction(() => /quests\.html#rec-quests-MEGA_EVOLUTION$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
     assert.ok(
       page.url().endsWith(`quests.html${EX_ONLY_QUEST_ANCHOR}`),
       `location.href should end with the relative "quests.html${EX_ONLY_QUEST_ANCHOR}", got ${page.url()}`
@@ -611,8 +623,9 @@ test('index.html: Enter on a CROSS-page entry navigates to the relative page.htm
     // the target page rendered cleanly
     await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
     assert.equal(await page.evaluate(() => document.querySelectorAll('.quest-card').length), 232, 'the quests page rendered its full log (data/quests.json: 232 under EX)');
-    // the browser scrolled to the anchor (accounting for the sticky header via the section scroll-margin)
-    await waitForAnchorInViewport(page, 'quest-default_challenges', 'cross-page Enter');
+    // the browser scrolled to the CARD (the per-card id clears the sticky
+    // header via the [id^="rec-"] scroll-margin)
+    await waitForAnchorInViewport(page, 'rec-quests-MEGA_EVOLUTION', 'cross-page Enter');
     assert.equal((await page.evaluate(paletteFacts)).open, false, 'a successful Enter closes the palette');
     assert.deepEqual(errors, [], `unexpected console errors after navigation, got: ${errors.join('; ')}`);
   } finally {
@@ -620,7 +633,7 @@ test('index.html: Enter on a CROSS-page entry navigates to the relative page.htm
   }
 });
 
-test('quests.html: Enter on a SAME-page entry scrolls to the anchor WITHOUT a reload or URL change', async (t) => {
+test('quests.html: Enter on a SAME-page entry scrolls to the CARD WITHOUT a reload or URL change', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'quests.html' });
   try {
@@ -643,13 +656,104 @@ test('quests.html: Enter on a SAME-page entry scrolls to the anchor WITHOUT a re
 
     await page.keyboard.press('Enter');
 
-    // the (possibly smooth) scroll settles into the wait below
-    await waitForAnchorInViewport(page, 'quest-default_challenges', 'same-page Enter');
+    // the (possibly smooth) scroll settles into the wait below — the card
+    // itself, not the group-section top
+    await waitForAnchorInViewport(page, 'rec-quests-MEGA_EVOLUTION', 'same-page Enter');
     assert.equal(navigations, 0, 'same-page activation must not navigate (no framenavigated event)');
     assert.equal(page.url(), urlBefore, 'same-page activation must not change the URL (no hash added)');
     assert.equal((await page.evaluate(paletteFacts)).open, false, 'the palette closes on Enter');
     assert.equal((await page.evaluate(paletteFacts)).activeElementId, 'site-search-trigger', 'focus returns to the trigger');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('quests.html: after a Vanilla re-render, a same-page deep link still lands on the CARD', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'quests.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+
+    // toggle to Vanilla — the log re-renders (138 shared quests; "The
+    // Final Run." moves into the final_quests group — data/quests.json
+    // differences.vanilla) but every card keeps its record-derived id
+    await page.click('.version-toggle__option[data-version="vanilla"]');
+    await page.waitForFunction(
+      () => (document.getElementById('quest-result')?.textContent || '').trim() === '138 quests',
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.quest-card').length), 138, 'the Vanilla re-render shows the 138 shared quests');
+    assert.ok(
+      await page.evaluate(() => !!document.getElementById('rec-quests-THE_FINAL_RUN')),
+      'the re-rendered card keeps its record-derived id under Vanilla (the id is version-independent)'
+    );
+
+    // deep-link to it through the palette (same page): Enter scrolls to
+    // the CARD without a reload or URL change
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const urlBefore = page.url();
+    let navigations = 0;
+    page.on('framenavigated', () => {
+      navigations += 1;
+    });
+
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'quests.html (post-toggle open)');
+    await typeQuery(page, 'the final run');
+    await waitForCount(page, COUNT(2, 'the final run'), 'quests.html (Vanilla, "the final run")');
+    const f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows[0].name, VANILLA_PHRASE_QUEST, 'the tier-0 title match ranks first: "The Final Run." (shared by both builds)');
+
+    await page.keyboard.press('Enter');
+    await waitForAnchorInViewport(page, 'rec-quests-THE_FINAL_RUN', 'post-toggle same-page deep link');
+    assert.equal(navigations, 0, 'same-page activation must not navigate (no framenavigated event)');
+    assert.equal(page.url(), urlBefore, 'same-page activation must not change the URL (no hash added)');
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('hub.html: after a Vanilla re-render, a CROSS-page deep link still lands on the CARD', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'hub.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+
+    // toggle to Vanilla — the hub re-renders (every hub record exists in
+    // both builds, so every card id is present afterwards)
+    await page.click('.version-toggle__option[data-version="vanilla"]');
+    await page.waitForFunction(
+      () => new URLSearchParams(window.location.search).get('version') === 'vanilla',
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    await page.waitForFunction(() => document.querySelectorAll('.hub-upgrade').length === 48, null, { timeout: SETTLE_TIMEOUT_MS });
+
+    // "mega evolution" under Vanilla: row 0 is the BST Cup campaign record
+    // (data/campaigns.json — the EX-only quest drops out) — a CROSS-page
+    // entry (mechanics.html)
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'hub.html (post-toggle open)');
+    await typeQuery(page, 'mega evolution');
+    await waitForCount(page, COUNT(2, 'mega evolution'), 'hub.html (Vanilla, "mega evolution")');
+    const f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows[0].name, 'BST Cup (Low BST)', 'row 0 under Vanilla is the BST Cup campaign record (data/campaigns.json)');
+    assert.equal(f.rows[0].meta, site.pages.mechanics.title, 'its page label is the Mechanics nav title — a cross-page target');
+
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(() => /mechanics\.html#rec-campaigns-campaign-bst-cup$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    assert.ok(
+      page.url().endsWith('mechanics.html#rec-campaigns-campaign-bst-cup'),
+      `location.href should end with the relative cross-page deep link, got ${page.url()}`
+    );
+    // the target page rendered cleanly and the CARD is in view
+    await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
+    await waitForAnchorInViewport(page, 'rec-campaigns-campaign-bst-cup', 'post-toggle cross-page deep link');
+    assert.equal((await page.evaluate(paletteFacts)).open, false, 'a successful Enter closes the palette');
+    assert.deepEqual(errors, [], `unexpected console errors after navigation, got: ${errors.join('; ')}`);
   } finally {
     await close();
   }
@@ -832,9 +936,9 @@ test('360×640: the open/type/navigate/close cycle with no horizontal overflow a
 
     // navigate (cross-page Enter)
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => /quests\.html#quest-default_challenges$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    await page.waitForFunction(() => /quests\.html#rec-quests-MEGA_EVOLUTION$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
     await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
-    await waitForAnchorInViewport(page, 'quest-default_challenges', '360×640 (cross-page Enter)');
+    await waitForAnchorInViewport(page, 'rec-quests-MEGA_EVOLUTION', '360×640 (cross-page Enter)');
     await assertNoOverflow(page, '360×640 (target page loaded)');
 
     // close: reopen with "/" and Escape

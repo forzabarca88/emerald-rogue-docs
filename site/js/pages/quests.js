@@ -105,9 +105,15 @@
       var rewards = Array.isArray(eff.rewards) ? eff.rewards : [];
       /* the data-search haystack is the palette's quest field union
        * (ROGUE.questSearchText — version-independent, both variants),
-       * so the on-page filter agrees with the site-wide palette */
+       * so the on-page filter agrees with the site-wide palette; the
+       * id is the per-card deep link (issue #45) — stable across the
+       * Vanilla/EX re-renders (record-identity-derived) */
       var html =
-        '<article class="card quest-card" data-search="' + ROGUE.esc(ROGUE.questSearchText(record)) + '">';
+        '<article class="card quest-card" id="' +
+        ROGUE.esc(ROGUE.recId('quests', record.id)) +
+        '" data-search="' +
+        ROGUE.esc(ROGUE.questSearchText(record)) +
+        '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
         ROGUE.esc(ROGUE.resolvePlaceholders(eff.name)) +

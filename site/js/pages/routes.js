@@ -84,7 +84,7 @@
       });
       if (typeof record.dropRarity === 'number') tags.push(ROGUE.chip('Drop +' + record.dropRarity));
 
-      var html = '<article class="card route-card">';
+      var html = '<article class="card route-card" id="' + ROGUE.esc(ROGUE.recId('routes', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
         ROGUE.esc(record.name) +
