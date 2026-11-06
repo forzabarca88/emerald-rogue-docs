@@ -55,6 +55,19 @@
  *                       group differs per build, but its card id
  *                       #rec-quests-THE_FINAL_RUN is the same in both,
  *                       so the deep link lands on the card under either)
+ *   "pokmon"          — the fuzzy tier (issue #46): one edit from
+ *                       "pokemon". 337 index entries carry the whole token
+ *                       "pokemon" under EX → the list caps at the 30-row
+ *                       maxResults with the overflow suffix (307 more);
+ *                       every row is FUZZY (no exact substring) so NO row
+ *                       carries a .search-palette__highlight mark, and row
+ *                       0 is the first such entry in index order (the home
+ *                       page, "Home"). The clean word "pokemon" (338
+ *                       entries) is exact-only: capped too (308 more), and
+ *                       its tier-0 row 0 (the site hero, title "Pokémon
+ *                       Emerald Rogue") highlights "Pokémon" in its
+ *                       original casing. "zzzzqqqq" (beyond distance 1) →
+ *                       0 rows under both versions.
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
@@ -477,6 +490,57 @@ test('quests.html: the OPEN palette re-scopes live on a version toggle (the head
     assert.equal(f.rows.length, 4, 'toggling back restores the EX-scoped result (2 → 4)');
     assert.equal(f.rows[0].name, EX_ONLY_QUEST, 'the EX-only quest is first again');
     assert.deepEqual(errors, [], `unexpected page errors across the toggle re-scope: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('index.html: a typo query ("pokmon") shows the fuzzy tier 3 — capped, unhighlighted; the exact word still highlights (issue #46)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'index.html' });
+  try {
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'index.html (trigger open)');
+
+    // "pokmon" (one edit from "pokemon"): 337 index entries carry the
+    // whole token "pokemon" under EX (data-derived over the real index) →
+    // the list caps at 30 rows and the count line signposts the 307
+    // hidden matches
+    await typeQuery(page, 'pokmon');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 307, 'pokmon'), 'index.html (EX, "pokmon" — fuzzy, capped)');
+    let f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, MAX_RESULTS, 'the fuzzy result caps at exactly search.maxResults rows (337 pre-cap, data-derived)');
+    assert.equal(f.rows[0].name, 'Home', 'tier 3 keeps the stable index order: the first "pokemon" entry (the home page) is row 0');
+    assert.ok(f.rows.every((r) => r.snippet.length > 0), 'every fuzzy row carries a snippet centred on the aligned token');
+    // the fuzzy rows are UNHIGHLIGHTED: the span centres the snippet but
+    // is never wrapped in a <mark (search.js snippet, issue #46)
+    const fuzzyMarks = await page.evaluate(() =>
+      [...document.querySelectorAll('.search-palette__row')].map((r) => r.querySelectorAll('.search-palette__highlight').length)
+    );
+    assert.deepEqual(fuzzyMarks, new Array(MAX_RESULTS).fill(0), 'no fuzzy row carries a .search-palette__highlight mark');
+
+    // and the exact rows of the same root word still highlight: "pokemon"
+    // (338 entries, data-derived) is exact-only — capped at 30 rows with
+    // the 308-more overflow, tier-0 row 0 (the site hero) highlighting
+    // "Pokémon" in its original casing
+    await typeQuery(page, 'pokemon');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 308, 'pokemon'), 'index.html (EX, "pokemon" — exact, capped)');
+    f = await page.evaluate(paletteFacts);
+    const exactHl = await page.evaluate(() => {
+      const row = document.querySelector('.search-palette__row');
+      const hl = row.querySelector('.search-palette__highlight');
+      return { row0: row.querySelector('.search-palette__row-name')?.textContent.trim() ?? '', hl: hl ? hl.textContent.trim() : null, marks: document.querySelectorAll('.search-palette__highlight').length };
+    });
+    assert.equal(exactHl.row0, 'Pok\u00e9mon Emerald Rogue', 'the tier-0 title match (the site hero) ranks first for the exact word');
+    assert.equal(exactHl.hl, 'Pok\u00e9mon', 'the exact tier-0 row highlights the word in its original casing (fuzzy rows never do)');
+    assert.ok(exactHl.marks > 1, 'the exact query highlights its matched spans across the rows');
+
+    // and a nonsense query beyond distance 1 still shows no rows
+    await typeQuery(page, 'zzzzqqqq');
+    await waitForCount(page, NO_RESULTS('zzzzqqqq'), 'index.html (nonsense beyond distance 1)');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 0, 'no rows for a nonsense query beyond Levenshtein distance 1');
+    assert.deepEqual(errors, [], `unexpected page errors across the fuzzy/exact/nonsense cycle: ${errors.join('; ')}`);
   } finally {
     await close();
   }
