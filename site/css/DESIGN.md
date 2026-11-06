@@ -50,8 +50,9 @@ ink on bg 14.9:1 · muted on bg 7.0:1 · emerald on bg 7.4:1 · gold on bg
 
 ## 3. Typography
 
-Exactly **two web font families**, loaded via the CDN `<link>` block already
-in every shell's `<head>` (do not add families or weights):
+Exactly **two web font families**, self-hosted from `site/fonts/` (the
+`@font-face` rules at the top of `tokens.css`; SIL OFL licenses beside the
+woff2 files) — do not add families or weights, and no external font links:
 
 | Role | Stack (see `--font-*`) | Where |
 | --- | --- | --- |
@@ -218,7 +219,8 @@ in the task that touches the header, a table, or the hero.
 - Keep headings in the pixel face and body in the sans.
 
 **Don't**
-- Don't add font families, weights, or CDN links (two families, fixed).
+- Don't add font families, weights, or external font links (two families,
+  fixed; the woff2 files live in `site/fonts/` with their OFL licenses).
 - Don't introduce colors outside `tokens.css` — including hex in shadows,
   gradients, or `rgba()` literals. **No gradients anywhere**; fills are
   solid.

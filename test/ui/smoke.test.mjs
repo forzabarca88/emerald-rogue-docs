@@ -21,6 +21,10 @@
  * changes, that test fails with an explanation instead of eight confusing
  * count failures below.
  *
+ * Plus one cross-page guard (issue #49): a reloaded page makes ZERO
+ * external requests — no fonts.googleapis.com / fonts.gstatic.com traffic
+ * — and the two web font families load from the local /fonts/ assets.
+ *
  * File shape follows the harness module header (test/ui/harness.mjs):
  * startServer in before(), closeAll + server.close in after(), and each
  * test guards with skipIfNoPlaywright(t) (the suite self-skips on machines
@@ -448,3 +452,41 @@ for (const spec of PAGES) {
     }
   });
 }
+
+test('a served page makes zero external requests — the fonts load from local /fonts/ (issue #49)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+
+  // ARRANGE — open the home page, then capture every request during a full
+  // reload so the listener sees the complete document + stylesheet + font
+  // request graph (the initial goto in openPage() happened before the hook)
+  const { page, context, errors, close } = await openPage({ path: 'index.html' });
+  try {
+    const external = [];
+    const localFonts = [];
+    context.on('request', (request) => {
+      const host = new URL(request.url()).hostname;
+      if (host !== '127.0.0.1') external.push(request.url());
+      else if (request.url().includes('/fonts/')) localFonts.push(request.url());
+    });
+
+    // ACT — a full reload; `load` + document.fonts.ready cover the font fetches
+    await page.reload({ waitUntil: 'load' });
+    await page.evaluate(() => document.fonts.ready);
+
+    // ASSERT — nothing leaves the local origin (no fonts.googleapis.com /
+    // fonts.gstatic.com), both families actually loaded from /fonts/, and
+    // the reload stayed console-error clean
+    assert.deepEqual(external, [], `external requests made: ${external.join(' | ')}`);
+    assert.ok(
+      localFonts.some((u) => u.includes('ibm-plex-sans')),
+      `IBM Plex Sans did not load from /fonts/ (saw: ${localFonts.join(', ') || 'nothing'})`
+    );
+    assert.ok(
+      localFonts.some((u) => u.includes('pixelify-sans')),
+      `Pixelify Sans did not load from /fonts/ (saw: ${localFonts.join(', ') || 'nothing'})`
+    );
+    assert.deepEqual(errors, [], `console errors on reload: ${errors.join(' | ')}`);
+  } finally {
+    await close();
+  }
+});
