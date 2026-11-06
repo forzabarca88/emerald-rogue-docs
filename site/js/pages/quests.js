@@ -21,9 +21,14 @@
  * The search index is built from the placeholder-RESOLVED text, so a
  * query for "Pokémon" matches cards that display it.
  *
- * A global .search filter narrows cards across all groups by
- * name/description (client-side, over a precomputed lowercase index);
- * groups with no matches are hidden, and the group counts update live.
+ * A global .search filter narrows cards across all groups (client-side,
+ * over each card's precomputed lowercase data-search) — the SAME field
+ * union the site-wide palette indexes: ROGUE.questSearchText (shared with
+ * search-index.js) covers name, description, trigger, requirements and
+ * rewards across BOTH per-version variants, flags, and the display
+ * group(s), placeholder-resolved, so a query findable in the palette is
+ * findable in the on-page filter (issue #50). Groups with no matches are
+ * hidden, and the group counts update live.
  * Version changes re-render the whole log (filtered records + variants);
  * the current query is reapplied.
  */
@@ -98,10 +103,11 @@
       var flags = Array.isArray(eff.flags) ? eff.flags : [];
       var requirements = Array.isArray(eff.requirements) ? eff.requirements : [];
       var rewards = Array.isArray(eff.rewards) ? eff.rewards : [];
+      /* the data-search haystack is the palette's quest field union
+       * (ROGUE.questSearchText — version-independent, both variants),
+       * so the on-page filter agrees with the site-wide palette */
       var html =
-        '<article class="card quest-card" data-search="' +
-        ROGUE.esc((ROGUE.resolvePlaceholders(eff.name) + ' ' + ROGUE.resolvePlaceholders(eff.description)).toLowerCase()) +
-        '">';
+        '<article class="card quest-card" data-search="' + ROGUE.esc(ROGUE.questSearchText(record)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
         ROGUE.esc(ROGUE.resolvePlaceholders(eff.name)) +
@@ -211,7 +217,7 @@
         '</nav>';
 
       html +=
-        '<div class="search quest-search"><input type="search" id="quest-search" placeholder="Search quests by name or description" aria-label="Search quests by name or description"></div>' +
+        '<div class="search quest-search"><input type="search" id="quest-search" placeholder="Search quests" aria-label="Search quests"></div>' +
         '<p class="quest-result" id="quest-result" role="status">' + total + ' quests</p>';
 
       groupedNow.forEach(function (g) {

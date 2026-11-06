@@ -32,14 +32,17 @@
  *                 used to scope results at QUERY time, not index time
  *
  * Entry sources — one entry each: every data/site.json nav page (title +
- * description, anchor ''), every `prose` block of the 14 content data
- * files (heading + text + the structured diagram fields), and every
- * record of the 14 content files (name + description + the per-version
- * variant fields + the data-specific chip text the rendering page emits
- * + the structured diagram fields + both string-form `differences`
- * notes). Array order: nav pages in site.json nav order, then per content
- * file (in CONTENT_FILES order) its prose blocks in data order followed
- * by its records in data order. Prose blocks are anchored at the block's
+ * description, anchor ''), data/site.json's own home-page content — the
+ * `hero` block (eyebrow, title, subtitle, the stat value+label pairs)
+ * and every `prose` block (heading + text; issue #50) — every `prose`
+ * block of the 14 content data files (heading + text + the structured
+ * diagram fields), and every record of the 14 content files (name +
+ * description + the per-version variant fields + the data-specific chip
+ * text the rendering page emits + the structured diagram fields + both
+ * string-form `differences` notes). Array order: nav pages in site.json
+ * nav order, then site.json's hero + prose blocks, then per content file
+ * (in CONTENT_FILES order) its prose blocks in data order followed by its
+ * records in data order. Prose blocks are anchored at the block's
  * own DOM id when the page renders it via ROGUE.proseSections, else at
  * the containing section's id. Three blocks (hub what-the-hub-is /
  * hub-in-the-loop, safari entry-criteria) are ALSO rendered on the
@@ -647,6 +650,20 @@
     return parts.concat(stringDiffNotes(record));
   }
 
+  /**
+   * A quest record's search haystack — the SAME field union the palette
+   * indexes (name + description, trigger, requirements and rewards across
+   * BOTH per-version variants + flags + the display group(s) as rendered
+   * group headings), placeholder-resolved and lowercased. The palette's
+   * quest entry `text` and the Quests page's per-card data-search are
+   * BOTH this string (issue #50: the on-page filter has the same coverage
+   * as the site-wide palette — a query findable in one is findable in the
+   * other). Version-independent by design, like the palette index.
+   */
+  ROGUE.questSearchText = function (record) {
+    return ROGUE.resolvePlaceholders(recordParts('quests', record).join(' ')).toLowerCase();
+  };
+
   /* ------------------------------------------------------------------ *
    * Entry + index construction
    * ------------------------------------------------------------------ */
@@ -663,16 +680,19 @@
    * Build one Entry; `textParts` are joined and placeholder-resolved
    * ONCE — `text` keeps the result lowercased (matching), `textCase`
    * keeps the original casing (the 1:1 parallel the palette slices
-   * its snippets from).
+   * its snippets from). `text` may be precomputed (the quest entries
+   * pass ROGUE.questSearchText so the on-page filter shares the exact
+   * same lowercased haystack — issue #50).
    */
-  function makeEntry(id, title, textParts, page, anchor, versions) {
+  function makeEntry(id, title, textParts, page, anchor, versions, text) {
     var resolvedTitle = ROGUE.resolvePlaceholders(title);
     var haystack = ROGUE.resolvePlaceholders(textParts.join(' '));
+    if (text === undefined) text = haystack.toLowerCase();
     return {
       id: id,
       title: resolvedTitle,
       titleLower: resolvedTitle.toLowerCase(),
-      text: haystack.toLowerCase(),
+      text: text,
       textCase: haystack,
       page: page,
       anchor: anchor,
@@ -708,9 +728,10 @@
 
   /**
    * Build the full site search index (version-independent — see the
-   * header doc). Every nav page, every prose block and every record of
-   * the 14 content data files gets one entry (three prose blocks also
-   * render on the gameplay page and get a second entry there).
+   * header doc). Every nav page, data/site.json's own hero + prose
+   * blocks, and every prose block and record of the 14 content data
+   * files gets one entry (three prose blocks also render on the gameplay
+   * page and get a second entry there).
    */
   ROGUE.buildSearchIndex = function () {
     var entries = [];
@@ -726,7 +747,32 @@
       entries.push(makeEntry('page-' + navId, str(page.title), [str(page.title), str(page.description)], './' + navId + '.html', '', BOTH_VERSIONS));
     }
 
-    /* 2 + 3 — every prose block and every record of the content files. */
+    /* 2 — data/site.json's own home-page content (issue #50): the hero
+     * block (eyebrow/title/subtitle + the stat value+label pairs the home
+     * page renders) and every prose block ("About these docs"). The home
+     * page renders the hero at the top of the page (anchor '') and the
+     * prose via ROGUE.proseSections (anchor = the block's own DOM id). */
+    var hero = site.hero && typeof site.hero === 'object' ? site.hero : {};
+    if (hero.title) {
+      var heroParts = [str(hero.eyebrow), str(hero.title), str(hero.subtitle)];
+      var stats = Array.isArray(hero.stats) ? hero.stats : [];
+      for (var s = 0; s < stats.length; s++) {
+        var stat = stats[s];
+        if (stat && typeof stat === 'object') heroParts = heroParts.concat(toParts(stat.value), toParts(stat.label));
+      }
+      entries.push(makeEntry('prose-site-hero', str(hero.title), heroParts, './index.html', '', BOTH_VERSIONS));
+    }
+    var siteProse = Array.isArray(site.prose) ? site.prose : [];
+    for (var sp = 0; sp < siteProse.length; sp++) {
+      var spBlock = siteProse[sp];
+      if (!spBlock || typeof spBlock !== 'object') continue;
+      var spKey = spBlock.id || 'p' + sp;
+      entries.push(
+        makeEntry('prose-site-' + spKey, str(spBlock.heading), proseParts(spBlock), './index.html', spBlock.id ? '#' + spBlock.id : '', BOTH_VERSIONS)
+      );
+    }
+
+    /* 3 + 4 — every prose block and every record of the content files. */
     for (var f = 0; f < CONTENT_FILES.length; f++) {
       var fileId = CONTENT_FILES[f];
       var data;
@@ -760,7 +806,20 @@
         if (!record || typeof record !== 'object') continue;
         var recKey = record.id || 'r' + i;
         var recTarget = recordTarget(fileId, record);
-        entries.push(makeEntry('rec-' + fileId + '-' + recKey, str(record.name), recordParts(fileId, record), recTarget.page, recTarget.anchor, Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS));
+        // the quest entry's lowercased haystack IS ROGUE.questSearchText —
+        // the exact string the Quests page writes into each card's
+        // data-search (issue #50 on-page/palette parity)
+        entries.push(
+          makeEntry(
+            'rec-' + fileId + '-' + recKey,
+            str(record.name),
+            recordParts(fileId, record),
+            recTarget.page,
+            recTarget.anchor,
+            Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS,
+            fileId === 'quests' ? ROGUE.questSearchText(record) : undefined
+          )
+        );
       }
     }
 
