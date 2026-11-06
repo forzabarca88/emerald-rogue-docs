@@ -51,6 +51,43 @@ jobs:
       - run: npx --package=playwright@1.61.1 playwright install --with-deps chromium
       - run: npm test
 
+  verify:
+    # Merge gate for citation accuracy (issue #55): the verifier
+    # (scripts/verify/citations.mjs) reads the vendored game repo, which is
+    # gitignored and never committed — this job builds it at run time at the
+    # two baseline SHAs from scripts/verify/baseline.json. A depth-1 clone
+    # (the game repo's default branch is vanilla = the vanilla baseline)
+    # plus a depth-1 fetch of both baseline SHAs: the verifier reads full
+    # file contents from the vanilla working tree and from origin/expansion
+    # via git cat-file, so a partial/blobless fetch is not viable. Failure
+    # semantics: GATE — a stale citation, or a baseline SHA upstream no
+    # longer serves (which means the baseline must be re-cut and the docs
+    # re-baselined), fails the job.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Clone the game repo at the two baseline SHAs
+        run: |
+          set -euo pipefail
+          # SHAs from scripts/verify/baseline.json, upstream URL from
+          # data/site.json citations.repo (the single source for both).
+          GAME_REPO="$(node -p 'JSON.parse(require("fs").readFileSync("data/site.json","utf8")).citations.repo').git"
+          VANILLA_SHA="$(node -p 'JSON.parse(require("fs").readFileSync("scripts/verify/baseline.json","utf8")).vanilla.sha')"
+          EXPANSION_SHA="$(node -p 'JSON.parse(require("fs").readFileSync("scripts/verify/baseline.json","utf8")).expansion.sha')"
+          git clone --depth 1 "$GAME_REPO" references/pokeemerald-rogue
+          git -C references/pokeemerald-rogue fetch --depth 1 origin "$VANILLA_SHA" "$EXPANSION_SHA"
+          # The ref layout the verifier expects (assertRepoSane): the
+          # working tree on branch "vanilla" at the vanilla baseline, and
+          # origin/expansion resolving to the expansion baseline.
+          git -C references/pokeemerald-rogue checkout -B vanilla "$VANILLA_SHA"
+          git -C references/pokeemerald-rogue update-ref refs/remotes/origin/expansion "$EXPANSION_SHA"
+          echo "vanilla:   $(git -C references/pokeemerald-rogue rev-parse HEAD)"
+          echo "expansion: $(git -C references/pokeemerald-rogue rev-parse origin/expansion)"
+      - run: npm run verify:citations
+
   build:
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
