@@ -218,7 +218,7 @@
         'The run — room types',
         'Room types',
         adventure.meta && adventure.meta.description,
-        '<div class="grid">' + ROGUE.cards(rooms) + '</div>' +
+        '<div class="grid">' + ROGUE.cards(rooms, 'adventure') + '</div>' +
           (roomsNote
             ? '<h3 class="rooms__note">' + ROGUE.esc(roomsNote.heading) + '</h3>' +
               ROGUE.paragraphs(roomsNote.text)
@@ -238,7 +238,7 @@
         .map(function (b, i) {
           var idx = i + 1 < 10 ? '0' + (i + 1) : String(i + 1);
           return (
-            '<li class="ladder__item">' +
+            '<li class="ladder__item" id="' + ROGUE.esc(ROGUE.recId('adventure', b.id)) + '">' +
             '<span class="ladder__index" aria-hidden="true">' + idx + '</span>' +
             '<div class="ladder__main">' +
             '<div class="ladder__head">' +

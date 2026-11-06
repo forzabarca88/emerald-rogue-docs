@@ -9,11 +9,12 @@
  * sandbox whose fake `window` carries the REAL data/*.json files (read
  * from disk), and asserts end results — entry completeness and shape
  * (incl. the original-case textCase parallel of the lowercased text),
- * placeholder resolution, the FAIRY-swap union, query-time version
- * scoping, ranking/cap, the pre-cap total and matchIndex (+ matchEnd
- * alignment for accented queries), the #31
- * structured diagram fields' searchability, and the effective/placeholder
- * helper semantics.
+ * the per-record deep-link anchors (issue #45: record entries anchor at
+ * the per-card id, prose entries keep their section anchors), placeholder
+ * resolution, the FAIRY-swap union, query-time version scoping,
+ * ranking/cap, the pre-cap total and matchIndex (+ matchEnd alignment for
+ * accented queries), the #31 structured diagram fields' searchability, and
+ * the effective/placeholder helper semantics.
  * ROGUE.version is assigned directly on the sandbox's ROGUE (version.js is
  * NOT loaded — it needs localStorage/document).
  */
@@ -203,6 +204,96 @@ test('the index has exactly one entry per record, per prose block and per nav pa
     entries.filter((e) => e.id.startsWith('prose-')).length >= expectedProse,
     'every prose block must be indexed (cross-page blocks may add extra entries)'
   );
+});
+
+test('record entries anchor at the per-card deep-link id (issue #45); prose entries keep section anchors', () => {
+  // ARRANGE — the containing section each record's card renders into
+  // (recordTarget's mapping — the same-page fallback search.js uses when
+  // the card element is absent). The one cardless record (the campaigns
+  // trigger) has no section fallback: its anchor IS the section.
+  const sectionOf = (f, r) => {
+    switch (f) {
+      case 'adventure':
+        return r.category === 'boss' ? '#gp-boss' : '#gp-rooms';
+      case 'campaigns':
+        return r.id === 'campaign-trigger' ? undefined : '#mech-campaigns';
+      case 'charms':
+        return '#mech-charms';
+      case 'followmons':
+        return '#mech-followmons';
+      case 'game-modes':
+        return '#config-modes';
+      case 'gameshow':
+        return '#mech-gameshow';
+      case 'hub':
+        if (r.category === 'hub-area') return '#hub-areas';
+        if (r.category === 'hub-upgrade') return '#hub-upgrades';
+        if (r.category === 'home-decor') return '#hub-decor';
+        return undefined;
+      case 'quests':
+        return '#quest-log';
+      case 'routes':
+        return '#routes-table';
+      case 'safari':
+        return {
+          'pool-slot-layout': '#safari-pool',
+          'priority-eviction': '#safari-priority',
+          'legends-cave': '#safari-legends',
+          'pool-sign': '#safari-sign'
+        }[r.id] || (r.category === 'entry-criterion' ? '#safari-entry' : '');
+      case 'settings':
+        if (r.category === 'preset') return '#config-difficulty';
+        if (r.category === 'toggle') return '#config-toggles';
+        if (r.category === 'range') return '#config-ranges';
+        return undefined;
+      case 'timeofday':
+        return '#mech-timeofday';
+      case 'unique-mons':
+        return '#mech-uniquemons';
+      case 'versions':
+        return '#version-diffs';
+    }
+    throw new Error('unknown content file: ' + f);
+  };
+
+  // ASSERT — every record entry anchors at its per-card id (version-
+  // independent: derived from the record's identity, not the version) and
+  // carries its containing section as the same-page fallback
+  for (const f of CONTENT_FILES) {
+    for (const r of data[f].records) {
+      const e = byId.get('rec-' + f + '-' + r.id);
+      const expected =
+        f === 'campaigns' && r.id === 'campaign-trigger' ? '#config-campaigns' : '#rec-' + f + '-' + r.id;
+      assert.equal(e.anchor, expected, `${f}/${r.id}: record entries anchor at the per-card deep-link id`);
+      assert.equal(e.section, sectionOf(f, r), `${f}/${r.id}: the containing section rides along as the same-page fallback`);
+    }
+  }
+
+  // ASSERT — prose entries keep their section anchors (unchanged by the
+  // per-card deep links) and carry no section fallback
+  const proseAnchors = {
+    'prose-quests-display-groups': '#quest-log',
+    'prose-hub-what-the-hub-is': '#what-the-hub-is',
+    'prose-hub-wander-mons': '#hub-wander',
+    'prose-safari-entry-criteria': '#safari-entry',
+    'prose-routes-naming-scheme': '#routes-naming',
+    'prose-adventure-boss-ladder': '#gp-boss',
+    'prose-charms-what-they-are': '#mech-charms',
+    'prose-site-hero': ''
+  };
+  for (const [id, anchor] of Object.entries(proseAnchors)) {
+    const e = byId.get(id);
+    assert.ok(e, `missing prose entry ${id}`);
+    assert.equal(e.anchor, anchor, `${id}: prose anchors stay at the section level`);
+    assert.equal(e.section, undefined, `${id}: prose entries carry no section fallback`);
+  }
+  // the cross-page prose entries keep their per-page section anchors
+  const cross = byId.get('prose-hub-what-the-hub-is-gameplay');
+  assert.ok(cross, 'missing the cross-page hub prose entry');
+  assert.equal(cross.anchor, '#gp-hub', 'the cross-page entry anchors at the gameplay section');
+  const crossSafari = byId.get('prose-safari-entry-criteria-gameplay');
+  assert.ok(crossSafari, 'missing the cross-page safari prose entry');
+  assert.equal(crossSafari.anchor, '#gp-post-run', 'the cross-page entry anchors at the gameplay post-run section');
 });
 
 test('quest {PKMN}/{POKEBLOCK} placeholders are resolved in the index', () => {

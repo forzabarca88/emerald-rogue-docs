@@ -132,7 +132,7 @@
     /* --- Game modes ------------------------------------------------------ */
 
     function modeCard(record) {
-      var html = '<article class="card mode-card">';
+      var html = '<article class="card mode-card" id="' + ROGUE.esc(ROGUE.recId('game-modes', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' + ROGUE.esc(record.name) +
         '</h3>' + ROGUE.badge(record) + '</div>';
@@ -158,7 +158,7 @@
     /* --- Presets --------------------------------------------------------- */
 
     function presetCard(record) {
-      var html = '<article class="card">';
+      var html = '<article class="card" id="' + ROGUE.esc(ROGUE.recId('settings', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' + ROGUE.esc(record.name) +
         '</h3>' + ROGUE.badge(record) + '</div>';
@@ -185,7 +185,7 @@
     /* --- Toggles --------------------------------------------------------- */
 
     function toggleCard(record) {
-      var html = '<article class="card">';
+      var html = '<article class="card" id="' + ROGUE.esc(ROGUE.recId('settings', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' + ROGUE.esc(record.name) +
         '</h3>' + ROGUE.badge(record) + '</div>';
@@ -219,7 +219,7 @@
           : [];
       var values = Array.isArray(record.optionValues) ? record.optionValues : null;
 
-      var html = '<article class="card">';
+      var html = '<article class="card" id="' + ROGUE.esc(ROGUE.recId('settings', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' + ROGUE.esc(record.name) +
         '</h3>' + ROGUE.badge(record) + '</div>';

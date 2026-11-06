@@ -52,7 +52,7 @@
           ? ROGUE.chip(record.buildCost + ' Build Parts')
           : ROGUE.chip('Free to build');
 
-      var html = '<article class="card area-card">';
+      var html = '<article class="card area-card" id="' + ROGUE.esc(ROGUE.recId('hub', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +
         ROGUE.esc(record.name) +
@@ -81,7 +81,9 @@
       if (record.code) meta.push(ROGUE.chip(record.code));
 
       var html =
-        '<article class="card hub-upgrade" data-search="' +
+        '<article class="card hub-upgrade" id="' +
+        ROGUE.esc(ROGUE.recId('hub', record.id)) +
+        '" data-search="' +
         ROGUE.esc((record.name + ' ' + (record.description || '') + ' ' + (record.area || '')).toLowerCase()) +
         '">';
       html +=
@@ -405,7 +407,13 @@
             'Home Base',
             'Home styles & decor',
             null,
-            '<div class="grid">' + decor.map(ROGUE.simpleCard).join('') + '</div>'
+            '<div class="grid">' +
+              decor
+                .map(function (r) {
+                  return ROGUE.simpleCard(r, ROGUE.recId('hub', r.id));
+                })
+                .join('') +
+              '</div>'
           );
       }
 

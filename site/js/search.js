@@ -36,11 +36,17 @@
  *      filename);
  *   5. keyboard: ArrowDown/ArrowUp move the active row (WRAP-AROUND, via
  *      aria-activedescendant + [data-active]); Enter navigates to
- *      entry.page + entry.anchor as a RELATIVE url (./quests.html#quest-…
- *      form, plain relative navigation — the active version rides along
- *      via localStorage, never the URL). When the target IS the current
- *      page it scrolls to the anchor (or the page top) WITHOUT a reload or
- *      URL change; cross-page targets set location.href. Escape closes.
+ *      entry.page + entry.anchor as a RELATIVE url (./quests.html#rec-…
+ *      form — the per-card deep link, issue #45; plain relative
+ *      navigation, so the active version rides along via localStorage,
+ *      never the URL). When the target IS the current page it scrolls to
+ *      the CARD (the element with the anchor id) WITHOUT a reload or URL
+ *      change; if the card element is absent (a re-render race, or the
+ *      card hidden by an on-page filter) it falls back to the entry's
+ *      `section` anchor (the containing section), else the page top.
+ *      Prose entries anchor at their section id directly. Cross-page
+ *      targets set location.href (the browser scrolls to the anchor on
+ *      load). Escape closes.
  *      While open, Tab is swallowed — the APG dialog focus trap: the input
  *      is the dialog's only focusable control, so keyboard focus can never
  *      leave the palette while it is open. The header is therefore
@@ -346,15 +352,31 @@
 
     /* ---- navigation ----------------------------------------------------------- */
 
+    /** The anchor's element, or null when absent or not visible (a
+     * display:none element has an empty box — e.g. a card hidden by an
+     * on-page filter), so the caller can fall back to the section. */
+    function anchorEl(id) {
+      var el = document.getElementById(id);
+      if (!el) return null;
+      var r = el.getBoundingClientRect();
+      return r.width > 0 || r.height > 0 ? el : null;
+    }
+
     function navigate(result) {
       var targetFile = String(result.page || '').replace(/^\.\//, '');
       var segments = window.location.pathname.split('/');
       var currentFile = segments.length ? segments[segments.length - 1] : '';
       if (!currentFile) currentFile = 'index.html';
       if (targetFile === currentFile) {
-        // same page: scroll to the anchor (or the top) without a reload or URL change
-        var el = result.anchor ? document.getElementById(result.anchor.slice(1)) : null;
+        // same page: scroll to the per-card anchor (issue #45) without a
+        // reload or URL change; fall back to the containing section
+        // anchor (re-render race / card hidden), else the page top
+        var id = result.anchor ? result.anchor.slice(1) : null;
+        var el = id ? anchorEl(id) : null;
+        var sectionId = result.section ? result.section.slice(1) : null;
+        var section = sectionId ? anchorEl(sectionId) : null;
         if (el) el.scrollIntoView();
+        else if (section) section.scrollIntoView();
         else window.scrollTo(0, 0);
       } else {
         window.location.href = result.page + (result.anchor || '');

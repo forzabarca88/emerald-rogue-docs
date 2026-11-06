@@ -3,7 +3,8 @@
  * nav.js; page scripts build on these.
  *
  * Exposes: ROGUE.esc(s), ROGUE.badgeClass(record), ROGUE.badge(record),
- * ROGUE.paragraphs(text), ROGUE.cards(records), ROGUE.simpleCard(record),
+ * ROGUE.paragraphs(text), ROGUE.cards(records[, fileStem]),
+ * ROGUE.simpleCard(record[, id]), ROGUE.recId(fileStem, recordId),
  * ROGUE.table(records, columns), ROGUE.proseSections(prose),
  * ROGUE.section(id, eyebrow, heading, intro, body), ROGUE.chip(text),
  * ROGUE.stepStrip(steps[, label]), ROGUE.proseById(data, id),
@@ -27,6 +28,19 @@
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  };
+
+  /**
+   * A record card's stable deep-link DOM id (issue #45):
+   * 'rec-<fileStem>-<recordId>'. Derived from the record's identity, so it
+   * is VERSION-INDEPENDENT — a Vanilla/EX re-render emits the same id for
+   * the same record (a record that only exists in one build simply is not
+   * rendered under the other). The search index (search-index.js) anchors
+   * its record entries at this same string — this helper is the single
+   * source of the scheme.
+   */
+  ROGUE.recId = function (fileStem, recordId) {
+    return 'rec-' + fileStem + '-' + recordId;
   };
 
   /** Version badge CSS class for a record: badge--both | badge--ex | badge--vanilla. */
@@ -85,11 +99,15 @@
     return badgeHtml(record);
   };
 
-  /** Records → card markup (call ROGUE.filter(records) first for version scoping). */
-  ROGUE.cards = function (records) {
+  /**
+   * Records → card markup (call ROGUE.filter(records) first for version
+   * scoping). `fileStem`, when given, gives every card its deep-link id
+   * (ROGUE.recId — issue #45).
+   */
+  ROGUE.cards = function (records, fileStem) {
     return (Array.isArray(records) ? records : [])
       .map(function (r) {
-        var html = '<article class="card">';
+        var html = '<article class="card"' + (fileStem && r.id ? ' id="' + ROGUE.esc(ROGUE.recId(fileStem, r.id)) + '"' : '') + '>';
         html +=
           '<div class="card__head"><h3 class="card__title">' +
           ROGUE.esc(r.name) +
@@ -188,11 +206,11 @@
     );
   };
 
-  /** Plain record card: name, badge, description, diff note, source. */
-  ROGUE.simpleCard = function (record) {
-    var html = '<article class="card">';
-    html +=
-      '<div class="card__head"><h3 class="card__title">' +
+  /** Plain record card: name, badge, description, diff note, source.
+   *  `id`, when given, is the card's deep-link DOM id (ROGUE.recId). */
+  ROGUE.simpleCard = function (record, id) {
+    var html = '<article class="card"' + (id ? ' id="' + ROGUE.esc(id) + '"' : '') + '>';
+    html += '<div class="card__head"><h3 class="card__title">' +
       ROGUE.esc(record.name) +
       '</h3>' +
       ROGUE.badge(record) +

@@ -27,7 +27,14 @@
  *                 (computed against the folded lowercased text) slice it
  *                 identically; the palette slices snippets from it
  *     page        relative page path ('./quests.html' — all links relative)
- *     anchor      '#<section-id>' or '' (page top)
+ *     anchor      the deep-link target: the per-card DOM id
+ *                 ('#rec-<file>-<recordId>') for record entries (issue
+ *                 #45), the section/block id for prose entries, or ''
+ *                 (page top)
+ *     section     record entries only — the containing section's anchor,
+ *                 the same-page scroll fallback when the card element is
+ *                 absent (search.js navigate); absent for prose/page
+ *                 entries and for the one cardless record
  *     versions    entry's version availability, e.g. ['vanilla','ex'] —
  *                 used to scope results at QUERY time, not index time
  *
@@ -82,13 +89,25 @@
  *     casing) at the matchIndex/matchEnd computed against the folded
  *     lowercased `text` — the two strings are 1:1 aligned per code unit.
  *
- * Deep-link granularity (deliberate v1 scope): record cards carry NO
- * per-card DOM ids, so record entries anchor at the containing
- * section/region id (a search hit lands at the top of the section the
- * card lives in). Quests anchor at their group section — except a quest
- * whose display group differs per build (The Final Run.), which anchors
- * at the whole log (#quest-log) since its group heading only exists
- * under one version.
+ * Deep-link granularity (issue #45): record entries anchor at the
+ * per-card DOM id 'rec-<fileId>-<recordId>' — the id every page renderer
+ * emits on its record cards (ROGUE.recId in render.js is the single
+ * source of the scheme). The id is derived from the record's identity,
+ * so it is VERSION-INDEPENDENT: a Vanilla/EX re-render emits the same
+ * ids for the same records, and a record that only exists in one build
+ * is simply not rendered under the other (its id never appears in the
+ * DOM, and query-time version scoping keeps the entry out of the
+ * results there). Prose entries keep their section anchors (section-level
+ * deep links). The one record with no card of its own — the campaigns
+ * trigger (its description is parsed into the config easter-egg phrase
+ * table) — keeps the section anchor (#config-campaigns). The card's
+ * containing section rides along as the entry's `section` field: search.js
+ * uses it as the same-page fallback when the card element is absent (a
+ * re-render race, or the card hidden by an on-page filter). Quests used
+ * to anchor at their display-group section (a quest whose group differs
+ * per build — The Final Run. — at the whole log, #quest-log); the
+ * card-level id supersedes that: the card renders in the active
+ * version's group under either build and keeps the same id in both.
  *
  * Matching (searchQuery) is accent-INSENSITIVE: query and haystack are
  * NFD-folded (combining marks stripped) before the substring test, so a
@@ -433,72 +452,62 @@
     'pool-sign': '#safari-sign'
   };
 
-  /** The page + section id a record's card renders into. */
+  /**
+   * The page + deep-link anchor a record's card renders into.
+   * `anchor` is the per-card DOM id (ROGUE.recId — issue #45), stable
+   * across Vanilla/EX re-renders; `section` is the containing section's
+   * anchor (the same-page scroll fallback when the card element is
+   * absent — search.js). The one cardless record (the campaigns trigger)
+   * anchors at its section instead.
+   */
   function recordTarget(fileId, record) {
+    var card = record.id ? '#' + ROGUE.recId(fileId, record.id) : '';
     switch (fileId) {
       case 'adventure':
-        return { page: './gameplay.html', anchor: record.category === 'boss' ? '#gp-boss' : '#gp-rooms' };
+        return { page: './gameplay.html', anchor: card, section: record.category === 'boss' ? '#gp-boss' : '#gp-rooms' };
       case 'campaigns':
         // config.js owns the trigger record (the easter-egg phrase table
-        // is parsed out of its description); the rest render on mechanics.
-        return record.id === 'campaign-trigger'
-          ? { page: './config.html', anchor: '#config-campaigns' }
-          : { page: './mechanics.html', anchor: '#mech-campaigns' };
+        // is parsed out of its description) — it has no card of its own,
+        // so the section owns the deep link; the modes render as cards
+        // on mechanics.
+        if (record.id === 'campaign-trigger') return { page: './config.html', anchor: '#config-campaigns' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-campaigns' };
       case 'charms':
-        return { page: './mechanics.html', anchor: '#mech-charms' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-charms' };
       case 'followmons':
-        return { page: './mechanics.html', anchor: '#mech-followmons' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-followmons' };
       case 'game-modes':
-        return { page: './config.html', anchor: '#config-modes' };
+        return { page: './config.html', anchor: card, section: '#config-modes' };
       case 'gameshow':
-        return { page: './mechanics.html', anchor: '#mech-gameshow' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-gameshow' };
       case 'hub':
-        if (record.category === 'hub-area') return { page: './hub.html', anchor: '#hub-areas' };
-        if (record.category === 'hub-upgrade') return { page: './hub.html', anchor: '#hub-upgrades' };
-        if (record.category === 'home-decor') return { page: './hub.html', anchor: '#hub-decor' };
-        return { page: './hub.html', anchor: '' };
+        if (record.category === 'hub-area') return { page: './hub.html', anchor: card, section: '#hub-areas' };
+        if (record.category === 'hub-upgrade') return { page: './hub.html', anchor: card, section: '#hub-upgrades' };
+        if (record.category === 'home-decor') return { page: './hub.html', anchor: card, section: '#hub-decor' };
+        return { page: './hub.html', anchor: card };
       case 'quests':
-        return { page: './quests.html', anchor: questAnchor(record) };
+        // the card id is version-independent: The Final Run. moves between
+        // its per-build display groups, but the card keeps the same id in
+        // both (and is absent from the DOM under a build it doesn't exist in)
+        return { page: './quests.html', anchor: card, section: '#quest-log' };
       case 'routes':
-        // region groups carry data-region, not ids — the section owns the anchor
-        return { page: './routes.html', anchor: '#routes-table' };
+        return { page: './routes.html', anchor: card, section: '#routes-table' };
       case 'safari':
-        return { page: './safari.html', anchor: SAFARI_ANCHORS[record.id] || (record.category === 'entry-criterion' ? '#safari-entry' : '') };
+        return { page: './safari.html', anchor: card, section: SAFARI_ANCHORS[record.id] || (record.category === 'entry-criterion' ? '#safari-entry' : '') };
       case 'settings':
-        if (record.category === 'preset') return { page: './config.html', anchor: '#config-difficulty' };
-        if (record.category === 'toggle') return { page: './config.html', anchor: '#config-toggles' };
-        if (record.category === 'range') return { page: './config.html', anchor: '#config-ranges' };
-        return { page: './config.html', anchor: '' };
+        if (record.category === 'preset') return { page: './config.html', anchor: card, section: '#config-difficulty' };
+        if (record.category === 'toggle') return { page: './config.html', anchor: card, section: '#config-toggles' };
+        if (record.category === 'range') return { page: './config.html', anchor: card, section: '#config-ranges' };
+        return { page: './config.html', anchor: card };
       case 'timeofday':
-        return { page: './mechanics.html', anchor: '#mech-timeofday' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-timeofday' };
       case 'unique-mons':
-        return { page: './mechanics.html', anchor: '#mech-uniquemons' };
+        return { page: './mechanics.html', anchor: card, section: '#mech-uniquemons' };
       case 'versions':
-        return { page: './versions.html', anchor: '#version-diffs' };
+        return { page: './versions.html', anchor: card, section: '#version-diffs' };
       default:
         return { page: '', anchor: '' };
     }
-  }
-
-  /**
-   * A quest anchors at its group section — but only when the display
-   * group is the SAME in both builds; otherwise (The Final Run.) the
-   * group heading only exists under one version, so the whole log owns
-   * the deep link.
-   */
-  function questAnchor(record) {
-    var ex = str(record.display_group);
-    var vanilla = ex;
-    var diff = record && record.differences;
-    if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
-      if (diff.vanilla && typeof diff.vanilla === 'object' && typeof diff.vanilla.display_group === 'string') {
-        vanilla = diff.vanilla.display_group;
-      }
-      if (diff.ex && typeof diff.ex === 'object' && typeof diff.ex.display_group === 'string') {
-        ex = diff.ex.display_group;
-      }
-    }
-    return ex && ex === vanilla ? '#quest-' + ex : '#quest-log';
   }
 
   /* ------------------------------------------------------------------ *
@@ -682,9 +691,11 @@
    * keeps the original casing (the 1:1 parallel the palette slices
    * its snippets from). `text` may be precomputed (the quest entries
    * pass ROGUE.questSearchText so the on-page filter shares the exact
-   * same lowercased haystack — issue #50).
+   * same lowercased haystack — issue #50). `section` (record entries
+   * only) is the containing section's anchor — the same-page scroll
+   * fallback when the card element is absent (issue #45).
    */
-  function makeEntry(id, title, textParts, page, anchor, versions, text) {
+  function makeEntry(id, title, textParts, page, anchor, versions, text, section) {
     var resolvedTitle = ROGUE.resolvePlaceholders(title);
     var haystack = ROGUE.resolvePlaceholders(textParts.join(' '));
     if (text === undefined) text = haystack.toLowerCase();
@@ -696,7 +707,8 @@
       textCase: haystack,
       page: page,
       anchor: anchor,
-      versions: versions
+      versions: versions,
+      section: section
     };
   }
 
@@ -808,7 +820,8 @@
         var recTarget = recordTarget(fileId, record);
         // the quest entry's lowercased haystack IS ROGUE.questSearchText —
         // the exact string the Quests page writes into each card's
-        // data-search (issue #50 on-page/palette parity)
+        // data-search (issue #50 on-page/palette parity); the record
+        // entry's anchor is the per-card DOM id (issue #45)
         entries.push(
           makeEntry(
             'rec-' + fileId + '-' + recKey,
@@ -817,7 +830,8 @@
             recTarget.page,
             recTarget.anchor,
             Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS,
-            fileId === 'quests' ? ROGUE.questSearchText(record) : undefined
+            fileId === 'quests' ? ROGUE.questSearchText(record) : undefined,
+            recTarget.section
           )
         );
       }
@@ -954,6 +968,7 @@
         page: e.page,
         anchor: e.anchor,
         versions: e.versions,
+        section: e.section,
         tier: tier,
         // span of the match in the un-folded `text`/`textCase`
         // (foldAccents' map) — snippet-ready: slice `textCase` at
