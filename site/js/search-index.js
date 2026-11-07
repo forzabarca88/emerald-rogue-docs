@@ -502,12 +502,14 @@
     safari: [{ id: 'entry-criteria', page: './gameplay.html', anchor: '#gp-post-run' }]
   };
 
-  /** The safari record id → its section id (entry-criterion → the entry section). */
+  /** The safari record id → its section id (entry-criterion and
+   * run-start-ribbon → the entry section, where their cards render). */
   var SAFARI_ANCHORS = {
     'pool-slot-layout': '#safari-pool',
     'priority-eviction': '#safari-priority',
     'legends-cave': '#safari-legends',
-    'pool-sign': '#safari-sign'
+    'pool-sign': '#safari-sign',
+    'run-start-ribbon': '#safari-entry'
   };
 
   /**

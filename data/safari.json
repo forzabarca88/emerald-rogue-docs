@@ -2,7 +2,7 @@
   "meta": {
     "id": "safari",
     "title": "Safari Zone",
-    "description": "The hub's Safari Zone: the 60-slot Pokémon pool (slots 0–44 regular, 45–59 legendary), the four ways Pokémon enter it, the priority and eviction system that decides who stays, and the Legends Cave flow for re-battling the legendaries you've caught. All of the mechanics are identical between Vanilla and EX — what differs is which legendary species exist to catch."
+    "description": "The hub's Safari Zone: the 60-slot Pokémon pool (slots 0–44 regular, 45–59 legendary), the four ways Pokémon enter it, the temporary illegal ribbon that gates every push, the priority and eviction system that decides who stays, and the Legends Cave flow for re-battling the legendaries you've caught. All of the mechanics are identical between Vanilla and EX — what differs is which legendary species exist to catch."
   },
   "prose": [
     {
@@ -13,12 +13,12 @@
     {
       "id": "the-pool",
       "heading": "The 60-slot pool",
-      "text": "Beyond the 60 slots, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” is placed on each pushed Pokémon so the same mon can't be added twice. (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.)"
+      "text": "Beyond the 60 slots, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” (the code reuses the Marine ribbon slot) is what gates every push into the pool: a mon is only added if it does not carry the ribbon, and every successful push stamps it — so the same mon can't be added twice. The ribbon is also stamped on every member of your pre-run party and every Day Care mon at the start of every run — that is what keeps your home team out of the pool (see The run-start illegal ribbon). (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.)"
     },
     {
       "id": "entry-criteria",
       "heading": "How Pokémon enter the pool",
-      "text": "Four events push Pokémon into the pool — two while a run is active, one when the run ends, and a low-priority discard path."
+      "text": "Four events push Pokémon into the pool — two while a run is active, one when the run ends, and a low-priority discard path. Every push goes through the same gate — the run-start illegal ribbon — detailed after the four cards."
     },
     {
       "id": "priority-eviction",
@@ -38,7 +38,7 @@
       "short": "Mid-run — releasing a mon pushes it straight in.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
-      "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the endless trainer mode after the top of the boss ladder). Legendaries go to the legendary slots, everything else to the regular slots.",
+      "description": "While a run is active, releasing a Pokémon from your party immediately pushes it into the pool (except during the endless trainer mode after the top of the boss ladder) — if the mon isn't wearing its run-start illegal ribbon. A released pre-run party mon goes to the lab instead and comes back with the rest of your pre-run party when the run ends. Legendaries go to the legendary slots, everything else to the regular slots.",
       "source": "src/rogue_controller.c @vanilla L6426-6452 (RemoveMonAtSlot, push at L6451) / @origin/expansion L6417-6443 (push at L6442); src/rogue_safari.c @vanilla L94-105 / @origin/expansion L94-105 (RogueSafari_PushMon)"
     },
     {
@@ -47,17 +47,17 @@
       "short": "Mid-run — 0-HP party mons are pushed out after a win.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
-      "description": "After every battle you win in a run, any party Pokémon left at 0 HP is removed from your party and pushed into the pool the same way a release would be.",
+      "description": "After every battle you win in a run, any party Pokémon left at 0 HP is removed from your party and pushed into the pool the same way a release would be — again gated by the run-start illegal ribbon: a fainted pre-run party mon goes to the lab instead and is restored when the run ends.",
       "source": "src/rogue_controller.c @vanilla L6511-6562 (RemoveAnyFaintedMons, push at L6570; called after victories at L7202) / @origin/expansion L6502-6553 (push at L6561; L7193)"
     },
     {
       "id": "entry-run-end",
       "name": "When the run ends",
-      "short": "Run end — the whole party, then the Day Care, is added.",
+      "short": "Run end — the run-acquired party, then the Day Care, is added.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
-      "description": "When an adventure ends (victory or defeat), every Pokémon still in your party is added to the pool, and then every Pokémon in your Day Care is added too — so a run you lose still restocks the Safari Zone.",
-      "source": "src/rogue_controller.c @vanilla L4855-4890 (EndRogueRun; party push L4878, Day Care push L4889) / @origin/expansion L4846-4881 (party push L4869, Day Care push L4880); src/rogue_safari.c @vanilla L94-131 / @origin/expansion L94-131"
+      "description": "When an adventure ends (victory or defeat), every Pokémon in your party that isn't wearing its run-start illegal ribbon is added to the pool — in practice, the mons you picked up during the run — and then the same for your Day Care. Your pre-run party and Day Care wear the ribbon, so they are skipped and instead restored from the pre-run snapshot the run took of your hub state — a run you lose still returns your team, and the mons you caught restock the Safari Zone. Edge case: the Starter Bag upgrade hands you your random starter after the snapshot but before the ribbon stamping, so a starter that survives the whole run is neither added to the pool (it carries the ribbon) nor restored to your party (it isn't in the snapshot) — it is lost entirely.",
+      "source": "src/rogue_controller.c @vanilla L4855-4894 (EndRogueRun; party push L4878, Day Care push L4889, snapshot restore L4894) / @origin/expansion L4846-4885 (party push L4869, Day Care push L4880, snapshot restore L4885); src/rogue_safari.c @vanilla L94-105 and L120-131 (ribbon check L96, L122) / @origin/expansion L94-105 and L120-131; src/rogue_controller.c @vanilla L4650 (pre-run snapshot), L4759 (Starter Bag hand-out), L4795 (ribbon stamping) / @origin/expansion L4641, L4750, L4786"
     },
     {
       "id": "entry-discarded",
@@ -67,6 +67,15 @@
       "versions": ["vanilla", "ex"],
       "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at low priority (0) — it is evicted before any normally-added mon unless it is shiny, where it earns the +30 shiny bonus. (During a catching contest, non-shiny discards are skipped entirely.)",
       "source": "src/battle_script_commands.c @vanilla L10283-10300 (rogue_caughtmon battle command) / @origin/expansion L15521-15538; src/rogue_controller.c @vanilla L1335-1350 / @origin/expansion L1335-1350 (Rogue_DiscardedCaughtMon, push at L1343); src/rogue_safari.c @vanilla L107-118 / @origin/expansion L107-118 (RogueSafari_PushLowPriorityMon)"
+    },
+    {
+      "id": "run-start-ribbon",
+      "name": "The run-start illegal ribbon",
+      "short": "A temp ribbon gates every push — pre-run mons are stamped at run start, so only run-acquired mons can enter.",
+      "category": "pool-mechanic",
+      "versions": ["vanilla", "ex"],
+      "description": "Every push into the pool first checks the mon's temporary illegal ribbon (the code reuses the Marine ribbon slot): a mon carrying it is skipped, and every successful push stamps it, so a given mon can enter the pool at most once. At the start of every run — after the run has snapshotted your pre-run hub state (party, Day Care, bag and money) and, with the Starter Bag upgrade, handed out your random starter — the ribbon is stamped on every member of the current party and on every Day Care mon. That snapshot is what your hub state is restored to when the run ends, so pre-run mons can never enter the pool: they simply come back, and a pre-run mon released or fainted mid-run goes to the lab instead of the pool. Two other paths stamp the ribbon mid-run: picking up a mon from the lab (it already sits in the pool from its faint, so the stamp prevents a duplicate entry) and snagging a trainer mon under the Snag Curse. The edge case this creates: your Starter Bag starter is handed out after the snapshot but before the stamping, so a starter that survives the whole run is neither added to the pool (it carries the ribbon) nor restored to your party (it isn't in the snapshot) — the Pokémon is lost entirely. A snagged trainer mon that survives to run end meets the same fate.",
+      "source": "src/rogue_safari.c @vanilla L94-131 (RogueSafari_PushMon check L96 / stamp L101, RogueSafari_PushLowPriorityMon L107, RogueSafari_PushBoxMon check L122 / stamp L127) / @origin/expansion L94-131; src/rogue_controller.c @vanilla L4096-4125 (GiveMonPartnerRibbon: party stamp L4107-4108, Day Care stamp L4122), L4650 (snapshot taken first), L4795 (stamping call) / @origin/expansion L4087-4116 (party stamp L4098-4099, Day Care stamp L4113), L4641, L4786; src/rogue_controller.c @vanilla L4394-4418 (random starter hand-out: ClearPlayerTeam L4409, GiveMonToPlayer L4413) / @origin/expansion L4385-4409 (ClearPlayerTeam L4400, GiveMonToPlayer L4404); src/rogue_controller.c @vanilla L6415 (lab pickup stamp) and L1295-1300 (snag stamp) / @origin/expansion L6406 and L1295-1300; src/rogue_save.c @vanilla L403-443 (snapshot, party copy L417) and L445-486 (restore, party copy L478) (identical @origin/expansion)"
     },
     {
       "id": "pool-slot-layout",

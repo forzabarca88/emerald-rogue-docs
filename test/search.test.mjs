@@ -265,7 +265,8 @@ test('record entries anchor at the per-card deep-link id (issue #45); prose entr
           'pool-slot-layout': '#safari-pool',
           'priority-eviction': '#safari-priority',
           'legends-cave': '#safari-legends',
-          'pool-sign': '#safari-sign'
+          'pool-sign': '#safari-sign',
+          'run-start-ribbon': '#safari-entry'
         }[r.id] || (r.category === 'entry-criterion' ? '#safari-entry' : '');
       case 'settings':
         if (r.category === 'preset') return '#config-difficulty';

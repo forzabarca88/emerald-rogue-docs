@@ -251,8 +251,8 @@ const PAGES = [
       },
       entryCards: {
         sel: '.safari-entry article.card',
-        expected: 4,
-        why: 'data/safari.json has 4 entry-criterion records → 4 stacked cards (safari.js)',
+        expected: 5,
+        why: 'data/safari.json has 4 entry-criterion records + the run-start-ribbon record → 5 stacked cards (safari.js renders the ribbon card last in the same grid)',
       },
       entryFlowEvents: {
         sel: '.safari-entry-flow__event',
@@ -277,7 +277,7 @@ const PAGES = [
       recordCards: {
         sel: '#safari-pool article.card, #safari-priority article.card, #safari-legends article.card, #safari-sign article.card',
         expected: 4,
-        why: 'data/safari.json renders one cited card per record — the 4 entry-criterion cards above plus one each for pool-slot-layout, priority-eviction, legends-cave and pool-sign (8 cards total; this check covers the 4 non-entry cards)',
+        why: 'data/safari.json renders one cited card per record — the 5 entry-section cards above plus one each for pool-slot-layout, priority-eviction, legends-cave and pool-sign (9 cards total; this check covers the 4 non-entry cards)',
       },
     },
   },

@@ -12,6 +12,8 @@
  *      row per entry-criterion record: name + one-line `short` essence,
  *      arrows into a pool block whose counts come from the parsed slot
  *      ranges), above the four stacked cards (which carry the cites)
+ *      plus the run-start illegal ribbon card — the gate every push goes
+ *      through
  *   5. Priority & eviction — the priority score as a chip equation
  *      (terms/operators from the record's `score` field) plus the
  *      eviction sequence as a numbered step strip (`eviction` field),
@@ -228,9 +230,12 @@
           slotDiagram() + (layout ? ROGUE.simpleCard(layout, ROGUE.recId('safari', layout.id)) : '')
         );
 
-      /* Entry: the four events as a converging flow, then the cards. */
+      /* Entry: the four events as a converging flow, then the cards, then
+       * the run-start illegal ribbon card (the gate every push goes
+       * through — it renders last in the same stacked grid). */
       var entryProse = ROGUE.proseById(data, 'entry-criteria');
       var entries = ROGUE.filter(ROGUE.byCategory(records, 'entry-criterion'));
+      var ribbon = recordById('run-start-ribbon');
       html +=
         ROGUE.section(
           'safari-entry',
@@ -244,6 +249,7 @@
                 return ROGUE.simpleCard(r, ROGUE.recId('safari', r.id));
               })
               .join('') +
+            (ribbon ? ROGUE.simpleCard(ribbon, ROGUE.recId('safari', ribbon.id)) : '') +
             '</div>'
         );
 
