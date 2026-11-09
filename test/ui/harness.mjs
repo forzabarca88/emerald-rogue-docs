@@ -52,8 +52,9 @@
  *   console messages of type "error" plus pageerror events into `errors`.
  * - startServer() serves dist/ on an ephemeral port (port 0, bound port read
  *   back from the server) and runs the build first when dist/index.html is
- *   missing; the build is atomic (scripts/build.mjs builds to a temp dir then
- *   renames), so this is safe under node --test's concurrent test files.
+ *   missing; the build publishes in place (scripts/build.mjs assembles in a
+ *   temp dir, then atomically renames every file onto its dist/ path), so
+ *   this is safe under node --test's concurrent test files.
  * - openPage() waits for readiness with a 10s timeout per wait: for js=true,
  *   until window.ROGUE is defined AND the page has rendered its landmarks
  *   (header .site-brand plus a non-empty <main>); for js=false (no-JS

@@ -3,9 +3,10 @@
  * Zero-dependency build for the Emerald Rogue docs site.
  *
  * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>` — gitignored, see
- *    .gitignore), then atomically swaps it into `dist/` (double rename:
- *    retried a bounded number of times against a concurrent build's swap),
- *    so concurrent builds never see a half-written `dist/` — excluding
+ *    .gitignore), then publishes it in place: every file is atomically
+ *    renamed onto its `dist/` path (a per-file atomic replace on the same
+ *    filesystem — readers never observe a missing or half-written file,
+ *    even while builds run concurrently under `node --test`) — excluding
  *    `site/css/DESIGN.md`, the internal design contract, which stays in the
  *    repo (referenced by AGENTS.md and the CSS sheets) but is never shipped
  * 2. Validates every `data/*.json` against the binding data envelope:
@@ -74,11 +75,6 @@ const siteDir = path.join(root, 'site');
 const dataDir = path.join(root, 'data');
 const distDir = path.join(root, 'dist');
 const tmpDir = path.join(root, `dist.tmp-${process.pid}`);
-/** Bounded retries for the dist/ swap against a concurrent build's swap
- * (the worst case under `npm test` is the 4 UI test files building at once
- * on a fresh checkout — 10 leaves wide margin; a build that still cannot
- * win the race cleans its temp dir and throws). */
-const MAX_SWAP_ATTEMPTS = 10;
 
 /**
  * Strict shape for meta.id (and therefore for the derived bundle global
@@ -93,6 +89,27 @@ const MAX_SWAP_ATTEMPTS = 10;
 const BUNDLE_ID = /^[a-z][a-z0-9-]*$/;
 /** Files under site/ that are never published to dist/ (repo-internal docs). */
 const DIST_EXCLUDE = new Set(['css/DESIGN.md']);
+
+/** Every file under `dir` (recursive). */
+function* walkFiles(dir) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) yield* walkFiles(p);
+    else if (entry.isFile()) yield p;
+  }
+}
+
+/** Every entry of `live` (recursive) that has no counterpart in `fresh` —
+ * the stale entries a publish removes after the atomic per-file renames. */
+function* staleEntries(live, fresh) {
+  if (!existsSync(live)) return;
+  for (const entry of readdirSync(live, { withFileTypes: true })) {
+    const lp = path.join(live, entry.name);
+    const fp = path.join(fresh, entry.name);
+    if (!existsSync(fp)) yield lp;
+    else if (entry.isDirectory()) yield* staleEntries(lp, fp);
+  }
+}
 
 const ALLOWED_VERSIONS = new Set(['vanilla', 'ex']);
 const DIFFERENCE_FIELDS = new Set(['description', 'trigger', 'rewards', 'requirements', 'display_group']);
@@ -471,10 +488,10 @@ function main() {
   const seo = seoConfigFrom(siteData);
   if (!seo) return report();
 
-  // Assemble the complete build in the temp dir, then swap it into dist/
-  // (rename on the same filesystem). Readers of dist/ only ever see a
-  // complete build — never a half-written one (matters when builds run
-  // concurrently, e.g. under npm test).
+  // Assemble the complete build in the temp dir, then publish it in place
+  // (below). Readers of dist/ only ever see complete files — never a
+  // missing or half-written one (matters when builds run concurrently,
+  // e.g. under npm test, while other suites serve the same dist/).
   rmSync(tmpDir, { recursive: true, force: true });
   try {
     cpSync(siteDir, tmpDir, {
@@ -489,54 +506,41 @@ function main() {
     for (const [stem, line] of lazyChunks) {
       writeFileSync(path.join(tmpDir, 'data', `${stem}.js`), `${line}\n`, 'utf8');
     }
-    // SEO files are written into the temp dir BEFORE the rename below, so
-    // they are part of the atomic publish — readers of dist/ never see a
-    // build missing its sitemap.xml / robots.txt.
+    // SEO files are written into the temp dir BEFORE the publish below, so
+    // they are part of the same in-place publish — readers of dist/ never
+    // see a build missing its sitemap.xml / robots.txt.
     writeFileSync(path.join(tmpDir, 'sitemap.xml'), sitemapXml(seo.pages, new Date().toISOString()), 'utf8');
     writeFileSync(path.join(tmpDir, 'robots.txt'), robotsTxt(seo.base), 'utf8');
   } catch (err) {
     rmSync(tmpDir, { recursive: true, force: true });
     throw err;
   }
-  // Double-rename swap on the same filesystem: park the current dist/ under
-  // a pid-unique name, rename the temp dir into place, then delete the
-  // parked copy. Readers of dist/ observe exactly one complete build at all
-  // times — even while builds run concurrently (the suites build dist/ from
-  // scratch at the same time under node --test and serve it in the same
-  // window, so a rm + rename pair, which leaves dist/ missing between the
-  // two syscalls, is not safe). A concurrent build swapping between our two
-  // renames costs a bounded retry (MAX_SWAP_ATTEMPTS); a build that cannot
-  // win the race cleans its temp + parked dirs and throws.
-  const parked = [];
-  let swapped = false;
-  for (let attempt = 1; attempt <= MAX_SWAP_ATTEMPTS && !swapped; attempt += 1) {
-    try {
-      if (existsSync(distDir)) {
-        const p = path.join(root, `dist.parked-${process.pid}-${attempt}`);
-        renameSync(distDir, p);
-        parked.push(p);
-      }
-      renameSync(tmpDir, distDir);
-      swapped = true;
-    } catch (err) {
-      // ENOTEMPTY/ENOENT: a concurrent build renamed into (or out of)
-      // dist/ between our checks — retry the pair against the fresh state.
-      if (err.code !== 'ENOTEMPTY' && err.code !== 'ENOENT') {
-        for (const p of parked) rmSync(p, { recursive: true, force: true });
-        rmSync(tmpDir, { recursive: true, force: true });
-        throw err;
-      }
-    }
+  // Publish in place on the same filesystem: create each target dir, then
+  // rename every temp file onto its dist/ path — a per-file atomic replace.
+  // dist/ itself is never removed or re-parented, so a reader mid-publish
+  // sees, for every file, either the previous complete bytes or the new
+  // complete ones — never a missing file and never a half-written one
+  // (a directory swap, even a double rename, leaves a window in which
+  // dist/ itself is gone, and the suites serve dist/ while other suites
+  // build it under node --test). The published bytes are deterministic
+  // for a given site/ + data/ state, so even a crash mid-publish cannot
+  // leave a visible mix. Concurrent builds publish identical trees and
+  // last-writer-wins on every rename is therefore harmless. Stale entries
+  // (files a previous build shipped that this one no longer does) are
+  // removed only after every rename has landed.
+  // Stale entries must be enumerated BEFORE the renames — the files are
+  // moved out of the temp dir as they are published, so the comparison
+  // tree has to be read while it is still complete.
+  const stale = [...staleEntries(distDir, tmpDir)];
+  for (const file of walkFiles(tmpDir)) {
+    const target = path.join(distDir, path.relative(tmpDir, file));
+    mkdirSync(path.dirname(target), { recursive: true });
+    renameSync(file, target);
   }
-  if (!swapped) {
-    for (const p of parked) rmSync(p, { recursive: true, force: true });
-    rmSync(tmpDir, { recursive: true, force: true });
-    throw new Error(
-      `could not swap ${path.relative(root, tmpDir)} into dist/ after ${MAX_SWAP_ATTEMPTS} attempts ` +
-        '(a concurrent build keeps swapping into dist/ between the two renames)',
-    );
+  for (const entry of stale) {
+    rmSync(entry, { recursive: true, force: true });
   }
-  for (const p of parked) rmSync(p, { recursive: true, force: true });
+  rmSync(tmpDir, { recursive: true, force: true });
 
   const lazyCount = lazyChunks.size;
   console.log(

@@ -96,8 +96,9 @@ test('concurrent builds never expose a missing or half-written dist/', async () 
 
   try {
     // ACT — 6 concurrent builds while the main thread hammers the live
-    // server; every response must be a complete 200 (the old rm + rename
-    // swap left dist/ missing between the two syscalls — a 404 window)
+    // server; every response must be a complete 200 (a directory swap —
+    // rm + rename, or even a park + rename double rename — leaves dist/
+    // missing between the syscalls; the in-place per-file publish must not)
     const children = [];
     const exits = [];
     for (let i = 0; i < 6; i += 1) {
@@ -127,8 +128,8 @@ test('concurrent builds never expose a missing or half-written dist/', async () 
     for (const code of exits) assert.equal(code, 0, `a concurrent build exited ${code}`);
     assert.equal(badStatus.length, 0, `GET /index.html was not 200 during concurrent builds: ${badStatus.slice(0, 5).join(', ')} (${badStatus.length} bad)`);
     assert.ok(existsSync(indexFile), 'dist/index.html must exist after the concurrent builds');
-    // the swap leaves no parked/temp residue behind
-    const residue = readdirSync(root).filter((f) => f.startsWith('dist.parked-') || f.startsWith('dist.tmp-'));
+    // the publish leaves no temp residue behind
+    const residue = readdirSync(root).filter((f) => f.startsWith('dist.tmp-'));
     assert.deepEqual(residue, [], `build residue left in the repo root: ${residue.join(', ')}`);
   } finally {
     await new Promise((resolve) => server.close(resolve));

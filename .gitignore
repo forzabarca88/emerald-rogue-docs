@@ -1,6 +1,5 @@
 references/
 /dist/
 /dist.tmp-*/
-/dist.parked-*/
 test/ui/screenshots/
 /.SECURITY.md
