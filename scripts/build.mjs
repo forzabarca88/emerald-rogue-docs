@@ -32,10 +32,16 @@
  *      "Wild types:" phrasing routes.js parses
  *    - campaigns: the `campaign-trigger` record's description lists ≥5
  *      "'PHRASE' (Name)" hidden phrases in the format config.js parses
- * 3. Emits `dist/data/bundle.js` with one line per data file:
+ * 3. Emits `dist/data/bundle.js` with one line per non-lazy data file:
  *    `;window.ROGUE_DATA_<ID> = <json>;`  (ID = meta.id uppercased;
  *     bracket notation `window["..."]` for hyphenated ids — the only
- *     non-identifier characters that pass the meta.id validation)
+ *     non-identifier characters that pass the meta.id validation).
+ *    A data file that opts in with `meta.lazy: true` is validated exactly
+ *    like every other file (same envelope + prose contracts) but is kept
+ *    out of the shared bundle — it is emitted as its own
+ *    `dist/data/<stem>.js` chunk in the same line format, so only the page
+ *    that needs it has to load it. Both the bundle and the chunks are
+ *    written into the temp dir before the atomic swap, like everything else
  * 4. Emits `dist/sitemap.xml` (one absolute URL per nav page, each with a
  *    build-time `<lastmod>`; 404.html is a fallback, not a page, so it is
  *    omitted) and `dist/robots.txt` (allow all + a `Sitemap:` reference),
@@ -423,6 +429,10 @@ function main() {
   }
 
   const bundleLines = [];
+  // meta.lazy: true files opt out of the shared bundle (same validation,
+  // different emit) — each becomes its own dist/data/<stem>.js chunk, so
+  // the pages that don't need it never load it.
+  const lazyChunks = new Map(); // filename stem → the one-line chunk code
   let siteData = null;
   for (const file of dataFiles) {
     const stem = file.replace(/\.json$/, '');
@@ -445,7 +455,12 @@ function main() {
       const lhs = /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(globalName)
         ? `window.${globalName}`
         : `window["${globalName}"]`;
-      bundleLines.push(`;${lhs} = ${JSON.stringify(data)};`);
+      const line = `;${lhs} = ${JSON.stringify(data)};`;
+      if (data.meta.lazy === true) {
+        lazyChunks.set(stem, line);
+      } else {
+        bundleLines.push(line);
+      }
     }
   }
   if (errors.length) return report();
@@ -469,6 +484,11 @@ function main() {
     });
     mkdirSync(path.join(tmpDir, 'data'), { recursive: true });
     writeFileSync(path.join(tmpDir, 'data', 'bundle.js'), `${bundleLines.join('\n')}\n`, 'utf8');
+    // Lazy chunks share the bundle's line format and land next to it in the
+    // temp dir, so they are part of the same atomic publish.
+    for (const [stem, line] of lazyChunks) {
+      writeFileSync(path.join(tmpDir, 'data', `${stem}.js`), `${line}\n`, 'utf8');
+    }
     // SEO files are written into the temp dir BEFORE the rename below, so
     // they are part of the atomic publish — readers of dist/ never see a
     // build missing its sitemap.xml / robots.txt.
@@ -505,7 +525,12 @@ function main() {
     );
   }
 
-  console.log(`build ok — ${bundleLines.length} data file(s) bundled, sitemap.xml (${seo.pages.length} URLs) + robots.txt → dist/`);
+  const lazyCount = lazyChunks.size;
+  console.log(
+    `build ok — ${bundleLines.length + lazyCount} data file(s) bundled` +
+      (lazyCount ? ` (${lazyCount} lazy)` : '') +
+      `, sitemap.xml (${seo.pages.length} URLs) + robots.txt → dist/`,
+  );
 }
 
 function report() {
