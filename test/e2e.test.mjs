@@ -36,7 +36,7 @@
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
@@ -81,6 +81,57 @@ test('build exits 0 and bundles every data file', () => {
     } else {
       assert.ok(bundle.includes(key), `bundle.js is missing ${key} for data/${file}`);
     }
+  }
+});
+
+test('concurrent builds never expose a missing or half-written dist/', async () => {
+  // ARRANGE — the build test above leaves dist/ in place; this mirrors the
+  // CI condition where the e2e serve tests and the ui suites' builds hit
+  // dist/ at the same time a fresh build is swapping it in
+  const indexFile = path.join(distDir, 'index.html');
+  assert.ok(existsSync(indexFile), 'dist/index.html must exist before the concurrent builds');
+  const server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const url = `http://127.0.0.1:${server.address().port}/index.html`;
+
+  try {
+    // ACT — 6 concurrent builds while the main thread hammers the live
+    // server; every response must be a complete 200 (the old rm + rename
+    // swap left dist/ missing between the two syscalls — a 404 window)
+    const children = [];
+    const exits = [];
+    for (let i = 0; i < 6; i += 1) {
+      const child = spawn(process.execPath, ['scripts/build.mjs'], { cwd: root });
+      children.push(child);
+      child.on('close', (code) => exits.push(code));
+    }
+    const badStatus = [];
+    const t0 = Date.now();
+    while (exits.length < children.length) {
+      try {
+        const res = await fetch(url);
+        if (res.status !== 200) {
+          badStatus.push(res.status);
+          await res.body?.cancel();
+        } else {
+          await res.body?.cancel();
+        }
+      } catch {
+        badStatus.push('error');
+      }
+      if (Date.now() - t0 > 60_000) break; // backstop: never hang the suite
+    }
+
+    // ASSERT
+    assert.ok(exits.length === children.length, 'all builds must finish');
+    for (const code of exits) assert.equal(code, 0, `a concurrent build exited ${code}`);
+    assert.equal(badStatus.length, 0, `GET /index.html was not 200 during concurrent builds: ${badStatus.slice(0, 5).join(', ')} (${badStatus.length} bad)`);
+    assert.ok(existsSync(indexFile), 'dist/index.html must exist after the concurrent builds');
+    // the swap leaves no parked/temp residue behind
+    const residue = readdirSync(root).filter((f) => f.startsWith('dist.parked-') || f.startsWith('dist.tmp-'));
+    assert.deepEqual(residue, [], `build residue left in the repo root: ${residue.join(', ')}`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
   }
 });
 

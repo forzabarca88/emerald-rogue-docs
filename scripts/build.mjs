@@ -3,7 +3,7 @@
  * Zero-dependency build for the Emerald Rogue docs site.
  *
  * 1. Copies `site/` into a temp dir (`dist.tmp-<pid>` — gitignored, see
- *    .gitignore), then atomically swaps it into `dist/` (rm + rename,
+ *    .gitignore), then atomically swaps it into `dist/` (double rename:
  *    retried a bounded number of times against a concurrent build's swap),
  *    so concurrent builds never see a half-written `dist/` — excluding
  *    `site/css/DESIGN.md`, the internal design contract, which stays in the
@@ -498,32 +498,45 @@ function main() {
     rmSync(tmpDir, { recursive: true, force: true });
     throw err;
   }
-  // rmSync + renameSync on the same filesystem. A concurrent build may
-  // swap its own temp dir into dist/ mid-rm (our final rmdir then fails
-  // with ENOTEMPTY) or right after it (our rename does); retry the pair
-  // against the fresh state in either case — bounded (MAX_SWAP_ATTEMPTS),
-  // a build that cannot win the race cleans its temp dir and throws.
+  // Double-rename swap on the same filesystem: park the current dist/ under
+  // a pid-unique name, rename the temp dir into place, then delete the
+  // parked copy. Readers of dist/ observe exactly one complete build at all
+  // times — even while builds run concurrently (the suites build dist/ from
+  // scratch at the same time under node --test and serve it in the same
+  // window, so a rm + rename pair, which leaves dist/ missing between the
+  // two syscalls, is not safe). A concurrent build swapping between our two
+  // renames costs a bounded retry (MAX_SWAP_ATTEMPTS); a build that cannot
+  // win the race cleans its temp + parked dirs and throws.
+  const parked = [];
   let swapped = false;
-  for (let attempt = 1; attempt <= MAX_SWAP_ATTEMPTS; attempt += 1) {
+  for (let attempt = 1; attempt <= MAX_SWAP_ATTEMPTS && !swapped; attempt += 1) {
     try {
-      rmSync(distDir, { recursive: true, force: true });
+      if (existsSync(distDir)) {
+        const p = path.join(root, `dist.parked-${process.pid}-${attempt}`);
+        renameSync(distDir, p);
+        parked.push(p);
+      }
       renameSync(tmpDir, distDir);
       swapped = true;
-      break;
     } catch (err) {
-      if (err.code !== 'ENOTEMPTY') {
+      // ENOTEMPTY/ENOENT: a concurrent build renamed into (or out of)
+      // dist/ between our checks — retry the pair against the fresh state.
+      if (err.code !== 'ENOTEMPTY' && err.code !== 'ENOENT') {
+        for (const p of parked) rmSync(p, { recursive: true, force: true });
         rmSync(tmpDir, { recursive: true, force: true });
         throw err;
       }
     }
   }
   if (!swapped) {
+    for (const p of parked) rmSync(p, { recursive: true, force: true });
     rmSync(tmpDir, { recursive: true, force: true });
     throw new Error(
       `could not swap ${path.relative(root, tmpDir)} into dist/ after ${MAX_SWAP_ATTEMPTS} attempts ` +
-        '(a concurrent build keeps recreating dist/ between the rm and the rename)',
+        '(a concurrent build keeps swapping into dist/ between the two renames)',
     );
   }
+  for (const p of parked) rmSync(p, { recursive: true, force: true });
 
   const lazyCount = lazyChunks.size;
   console.log(
