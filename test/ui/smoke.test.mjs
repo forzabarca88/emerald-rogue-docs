@@ -68,8 +68,8 @@ const PAGES = [
     counts: {
       quickLinkCards: {
         sel: 'main a.card--link',
-        expected: 8,
-        why: `data/site.json nav lists 9 pages; the home page (home.js) renders a quick-link card for every one except itself: 9 − 1 = 8`,
+        expected: 9,
+        why: `data/site.json nav lists 10 pages; the home page (home.js) renders a quick-link card for every one except itself: 10 − 1 = 9`,
       },
       heroStats: {
         sel: '.hero__stat',

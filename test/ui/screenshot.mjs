@@ -8,7 +8,7 @@
  * artifacts, never committed):
  *   every page × version × viewport width × state
  *   pages:   index, gameplay, versions, quests, config, hub, safari, routes,
- *            mechanics, 404
+ *            pokedex, mechanics, 404
  *   version: vanilla, ex (passed as the ?version= one-time override)
  *   width:   1280, 360
  *   state:   plain        → <page>-<version>-<width>.png
@@ -76,7 +76,7 @@ import { startServer, openPage, closeAll, resolvePlaywright, SKIP_MESSAGE } from
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const outDir = path.join(root, 'test', 'ui', 'screenshots');
 
-const PAGES = ['index', 'gameplay', 'versions', 'quests', 'config', 'hub', 'safari', 'routes', 'mechanics', '404'];
+const PAGES = ['index', 'gameplay', 'versions', 'quests', 'config', 'hub', 'safari', 'routes', 'pokedex', 'mechanics', '404'];
 const VERSIONS = ['vanilla', 'ex'];
 const WIDTHS = [1280, 360];
 const HEIGHT = 800;
@@ -103,28 +103,50 @@ const brief = (err) => String(err && err.message ? err.message : err).split('\n'
 const HINT = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8')).search.hint;
 
 /**
- * The expected SEARCH_QUERY result count per version — the real index, not
- * a literal: site/js/data.js + render.js + search-index.js run over the
- * real data/*.json in a node:vm sandbox with a fake window (the same
- * no-mock setup as test/search.test.mjs). A data edit that changes the
+ * The expected SEARCH_QUERY result count per page + version — the real
+ * index, not a literal: site/js/data.js + render.js + search-index.js run
+ * over the data files in a node:vm sandbox with a fake window (the same
+ * no-mock setup as test/search.test.mjs). PAGE-SCOPED: the browser's
+ * palette on a given page indexes only the data files that page loads —
+ * every page loads the bundle, but only pokedex.html also loads the lazy
+ * dist/data/pokedex.js chunk — so every page EXCEPT pokedex derives its
+ * count over the data files excluding pokedex.json (a derivation over all
+ * files would settle on a count line the palette on those pages can never
+ * reach — the page-scoped-derivation tripwire). A data edit that changes a
  * count re-derives here automatically; a browser render that disagrees with
  * the index fails the capture instead of going stale.
+ *
+ * Returns { [page]: { [version]: count } }.
  */
 function deriveSearchCounts() {
   const dataDir = path.join(root, 'data');
-  const window = { ROGUE_DATA_SITE: JSON.parse(readFileSync(path.join(dataDir, 'site.json'), 'utf8')) };
+  // Parse each data file once and share the object across the per-page
+  // windows — the index modules only read it.
+  const parsed = {};
   for (const f of readdirSync(dataDir).filter((f) => f.endsWith('.json')).sort()) {
-    if (f === 'site.json') continue;
-    window['ROGUE_DATA_' + f.replace(/\.json$/, '').toUpperCase()] = JSON.parse(readFileSync(path.join(dataDir, f), 'utf8'));
+    parsed[f] = JSON.parse(readFileSync(path.join(dataDir, f), 'utf8'));
   }
-  const sandbox = { window };
-  vm.createContext(sandbox);
-  for (const mod of ['data', 'render', 'search-index']) {
-    vm.runInContext(readFileSync(path.join(root, 'site', 'js', mod + '.js'), 'utf8'), sandbox, { filename: mod + '.js' });
-  }
-  const entries = sandbox.window.ROGUE.buildSearchIndex();
+  const mods = ['data', 'render', 'search-index'].map((mod) => ({
+    filename: mod + '.js',
+    code: readFileSync(path.join(root, 'site', 'js', mod + '.js'), 'utf8'),
+  }));
   const counts = {};
-  for (const version of VERSIONS) counts[version] = sandbox.window.ROGUE.searchQuery(entries, SEARCH_QUERY, version).results.length;
+  for (const page of PAGES) {
+    // Exactly the file set the page loads: the bundle's data for every
+    // page, plus the lazy pokedex chunk only on pokedex.html itself.
+    const window = { ROGUE_DATA_SITE: parsed['site.json'] };
+    for (const f of Object.keys(parsed)) {
+      if (f === 'site.json') continue;
+      if (f === 'pokedex.json' && page !== 'pokedex') continue;
+      window['ROGUE_DATA_' + f.replace(/\.json$/, '').toUpperCase()] = parsed[f];
+    }
+    const sandbox = { window };
+    vm.createContext(sandbox);
+    for (const { filename, code } of mods) vm.runInContext(code, sandbox, { filename });
+    const entries = sandbox.window.ROGUE.buildSearchIndex();
+    counts[page] = {};
+    for (const version of VERSIONS) counts[page][version] = sandbox.window.ROGUE.searchQuery(entries, SEARCH_QUERY, version).results.length;
+  }
   return counts;
 }
 
@@ -247,7 +269,7 @@ async function capturePaletteState({ pageName, version, width, suffix, query }) 
       await waitForEmptyQuerySettled(opened.page, HINT);
     } else {
       await opened.page.keyboard.type(query);
-      await waitForQuerySettled(opened.page, searchCounts[version]);
+      await waitForQuerySettled(opened.page, searchCounts[pageName][version]);
     }
     await opened.page.screenshot({ path: path.join(outDir, file), fullPage: true });
     captured += 1;
@@ -260,7 +282,7 @@ async function capturePaletteState({ pageName, version, width, suffix, query }) 
   for (const error of opened.errors) failures.push(`${file}: ${error}`);
 }
 
-/** The full grid: 10×2×2 plain + 10×2×2 search states + 1×2×2 empty-query states. */
+/** The full grid: 11×2×2 plain + 11×2×2 search states + 1×2×2 empty-query states. */
 const TOTAL = PAGES.length * VERSIONS.length * WIDTHS.length * 2 + EMPTY_QUERY_PAGES.length * VERSIONS.length * WIDTHS.length;
 
 try {

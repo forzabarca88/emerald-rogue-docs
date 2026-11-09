@@ -28,9 +28,9 @@
  *   3. 404.html renders its static marker (the "Error 404" eyebrow and
  *      the "Page not found" h1 from site/404.html) at both viewports.
  *   4. No-JS fallback (harness `js: false`): the shells' static content —
- *      the static <h1> and the `<p class="page-fallback">` on all nine
+ *      the static <h1> and the `<p class="page-fallback">` on all ten
  *      content pages (index included) — is visible, and the static no-JS
- *      header/footer renders: brand linking home, exactly the nine nav
+ *      header/footer renders: brand linking home, exactly the ten nav
  *      links (href + label) from data/site.json, the page's own link
  *      marked current, both footer paragraphs, and NO JS-only controls
  *      (the search trigger / version toggle are omitted from the static
@@ -69,7 +69,7 @@ const VIEWPORTS = [
  * All 10 served pages. `h1` is the STATIC <h1> baked into the HTML shell
  * (the no-JS fallback; with JS on, the page scripts replace
  * main.innerHTML — the smoke suite pins the same titles from
- * data/site.json). `fallback` marks the nine content pages that also
+ * data/site.json). `fallback` marks the ten content pages that also
  * carry a static `<p class="page-fallback">` line (index included);
  * 404 is fully static with its own marker.
  */
@@ -387,7 +387,7 @@ for (const spec of PAGES) {
     const { page, errors, close } = await openPage({ path: spec.file, width: 360, height: 640, js: false });
     try {
       assert.deepEqual(errors, [], `${spec.file} (no-JS): unexpected page errors: ${errors.join('; ')}`);
-      // the static nav must carry exactly the nine sections from
+      // the static nav must carry exactly the ten sections from
       // data/site.json (href + label); 404 is not a nav page, so no link
       // is marked current on it
       const expectedLinks = site.nav.map((id) => [`./${id}.html`, site.pages[id].title]);
@@ -406,7 +406,7 @@ for (const spec of PAGES) {
         return {
           h1Text: h1 ? h1.textContent.trim() : null,
           h1Visible: visible(h1),
-          // all nine content pages carry a static <p class="page-fallback">
+          // all ten content pages carry a static <p class="page-fallback">
           // line in the shell (404 is static with its own marker)
           fallbackVisible: hasFallback ? visible(document.querySelector('main .page-fallback')) : null,
           brandVisible: visible(brand),
@@ -431,7 +431,7 @@ for (const spec of PAGES) {
       }
       // the static no-JS header/footer live in the shells (nav.js
       // replaces them in place when JS runs): the brand links home, the
-      // nav carries exactly the nine sections, and the page's own link is
+      // nav carries exactly the ten sections, and the page's own link is
       // the single one marked current
       assert.ok(f.brandVisible, `${spec.file} (no-JS): the static header brand must be visible`);
       assert.equal(
@@ -442,7 +442,7 @@ for (const spec of PAGES) {
       assert.deepEqual(
         f.navLinks,
         expectedLinks,
-        `${spec.file} (no-JS): the static nav must carry exactly the nine sections from data/site.json (href + label), got ${JSON.stringify(f.navLinks)}`
+        `${spec.file} (no-JS): the static nav must carry exactly the ten sections from data/site.json (href + label), got ${JSON.stringify(f.navLinks)}`
       );
       assert.deepEqual(
         f.currentHrefs,

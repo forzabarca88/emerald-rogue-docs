@@ -17,11 +17,11 @@
  *     files on disk, so the suite passes before and after lazy files land.
  * (3) The served site: serves dist/ over node:http on an ephemeral port and
  *     asserts every content page — index, gameplay, versions, quests, config,
- *     hub, safari, routes, mechanics and the 404 fallback — returns 200 with
+ *     hub, safari, routes, pokedex, mechanics and the 404 fallback — returns 200 with
  *     its page-specific static marker strings (titles from data/site.json),
- *     that every one of the 10 pages wires in the search overlay scripts
+ *     that every one of the 11 pages wires in the search overlay scripts
  *     (search-index.js before search.js, both after main.js), that the served
- *     sitemap.xml is well-formed XML listing exactly the nine nav pages with
+ *     sitemap.xml is well-formed XML listing exactly the ten nav pages with
  *     the site.json site.url base (no 404.html), that robots.txt allows all
  *     and references the sitemap, that every nav page's static og:title /
  *     og:description / og:url match its site.json `pages` entry (404.html
@@ -540,6 +540,32 @@ test('served routes page returns 200 and contains its static markers', async () 
   }
 });
 
+test('served pokedex page returns 200 and contains its static markers', async () => {
+  // ARRANGE
+  const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT
+    const res = await fetch(`${base}/pokedex.html`);
+    const body = await res.text();
+
+    // ASSERT
+    assert.equal(res.status, 200, `GET /pokedex.html returned ${res.status}`);
+    assert.ok(
+      body.includes(site.pages.pokedex.title),
+      'pokedex.html is missing the page title marker'
+    );
+    assert.ok(body.includes('evolution'), 'pokedex.html is missing the "evolution" marker');
+    assert.ok(body.includes('species'), 'pokedex.html is missing the "species" marker');
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
 test('served mechanics page returns 200 and contains its static markers', async () => {
   // ARRANGE
   const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
@@ -730,6 +756,7 @@ test('self-hosted font assets ship in dist and no page references the Google Fon
     'hub.html',
     'safari.html',
     'routes.html',
+    'pokedex.html',
     'mechanics.html',
     '404.html',
   ];
@@ -819,7 +846,7 @@ test('served 404 page returns 200 and contains its static marker', async () => {
 });
 
 test('every served page wires in the search overlay scripts (search-index.js before search.js, both after main.js)', async () => {
-  // ARRANGE — all 10 page shells share the same script-block convention
+  // ARRANGE — all 11 page shells share the same script-block convention
   const pages = [
     'index.html',
     'gameplay.html',
@@ -829,6 +856,7 @@ test('every served page wires in the search overlay scripts (search-index.js bef
     'hub.html',
     'safari.html',
     'routes.html',
+    'pokedex.html',
     'mechanics.html',
     '404.html',
   ];
