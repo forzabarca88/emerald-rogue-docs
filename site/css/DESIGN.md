@@ -230,7 +230,18 @@ in the task that touches the header, a table, or the hero.
   padding-block overrides that fight the rhythm (override only inside your
   `.page--<stem>` scope, and only where a layout truly needs it).
 - Don't copy any asset, sprite, or image from `references/` (license).
-  CSS/SVG/typography only; SVG must be inline, token-colored.
+  CSS/SVG/typography only; SVG must be inline, token-colored. One scoped
+  exception: the pre-converted species sprites in `site/assets/pokemon/` —
+  each species' in-game front art (its 4bpp
+  `graphics/pokemon/<species>/front.png`, or the first frame of the animated
+  front where the branch ships no still front) composited with its
+  ≤16-colour JASC `normal.pal`, rendered 2× (128×128) by the dev-only
+  `scripts/extract/sprites.mjs` from the vendored game repo at the pinned
+  `scripts/verify/baseline.json` baseline — ship as plain RGBA PNGs, are
+  generated + committed at dev time (the build and tests never read
+  `references/`), and are the **only** `references/` assets on the site;
+  everything else remains banned. The Pokedex page carries a provenance
+  note and the site footer's non-affiliation disclaimer applies.
 - Don't number sections with "01 / 02 / 03" markers — numbering is only
   for true sequences (e.g. the 14-boss ladder, Legends Cave steps).
 
