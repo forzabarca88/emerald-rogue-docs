@@ -2,13 +2,19 @@
  * End-to-end tests for the docs site (node --test, no mocks, no deps).
  *
  * (1) The build: runs `node scripts/build.mjs` as a child process, asserts
- *     exit 0, that dist/index.html exists, and that dist/data/bundle.js
- *     references a ROGUE_DATA_<ID> global for every current data file.
+ *     exit 0, that dist/index.html exists, and that every current data file's
+ *     ROGUE_DATA_<ID> global is referenced by dist/data/bundle.js — except
+ *     the meta.lazy files, whose global must instead be defined by their own
+ *     dist/data/<stem>.js chunk and be absent from bundle.js.
  * (2) The bundle: executes dist/data/bundle.js in a vm sandbox with a fake
  *     `window` and asserts every ROGUE_DATA_<ID> global is actually defined
  *     (catches bundle output that is not valid JavaScript, e.g. hyphenated
- *     meta.ids emitted as bare property assignments) — and that exactly the
- *     15 data files (14 content + site.json) define their one global each.
+ *     meta.ids emitted as bare property assignments) — and that the bundle
+ *     defines exactly the non-lazy data files' globals (one window key per
+ *     file), while every meta.lazy file's global comes from its own
+ *     dist/data/<stem>.js chunk (executed in the same sandbox) and appears
+ *     nowhere in bundle.js's code. The counts are derived from the data
+ *     files on disk, so the suite passes before and after lazy files land.
  * (3) The served site: serves dist/ over node:http on an ephemeral port and
  *     asserts every content page — index, gameplay, versions, quests, config,
  *     hub, safari, routes, mechanics and the 404 fallback — returns 200 with
@@ -30,7 +36,7 @@
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import vm from 'node:vm';
 import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
@@ -66,37 +72,124 @@ test('build exits 0 and bundles every data file', () => {
   for (const file of dataFiles) {
     const data = JSON.parse(readFileSync(path.join(root, 'data', file), 'utf8'));
     const key = `ROGUE_DATA_${String(data.meta.id).toUpperCase()}`;
-    assert.ok(bundle.includes(key), `bundle.js is missing ${key} for data/${file}`);
+    if (data.meta.lazy === true) {
+      // lazy files ship as their own chunk next to the bundle, never in it
+      const stem = file.replace(/\.json$/, '');
+      const chunk = readFileSync(path.join(distDir, 'data', `${stem}.js`), 'utf8');
+      assert.ok(chunk.includes(key), `dist/data/${stem}.js is missing ${key} for data/${file}`);
+      assert.ok(!bundle.includes(key), `bundle.js must not define ${key} for lazy data/${file}`);
+    } else {
+      assert.ok(bundle.includes(key), `bundle.js is missing ${key} for data/${file}`);
+    }
+  }
+});
+
+test('concurrent builds never expose a missing or half-written dist/', async () => {
+  // ARRANGE — the build test above leaves dist/ in place; this mirrors the
+  // CI condition where the e2e serve tests and the ui suites' builds hit
+  // dist/ at the same time a fresh build is swapping it in
+  const indexFile = path.join(distDir, 'index.html');
+  assert.ok(existsSync(indexFile), 'dist/index.html must exist before the concurrent builds');
+  const server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const url = `http://127.0.0.1:${server.address().port}/index.html`;
+
+  try {
+    // ACT — 6 concurrent builds while the main thread hammers the live
+    // server; every response must be a complete 200 (a directory swap —
+    // rm + rename, or even a park + rename double rename — leaves dist/
+    // missing between the syscalls; the in-place per-file publish must not)
+    const children = [];
+    const exits = [];
+    for (let i = 0; i < 6; i += 1) {
+      const child = spawn(process.execPath, ['scripts/build.mjs'], { cwd: root });
+      children.push(child);
+      child.on('close', (code) => exits.push(code));
+    }
+    const badStatus = [];
+    const t0 = Date.now();
+    while (exits.length < children.length) {
+      try {
+        const res = await fetch(url);
+        if (res.status !== 200) {
+          badStatus.push(res.status);
+          await res.body?.cancel();
+        } else {
+          await res.body?.cancel();
+        }
+      } catch {
+        badStatus.push('error');
+      }
+      if (Date.now() - t0 > 60_000) break; // backstop: never hang the suite
+    }
+
+    // ASSERT
+    assert.ok(exits.length === children.length, 'all builds must finish');
+    for (const code of exits) assert.equal(code, 0, `a concurrent build exited ${code}`);
+    assert.equal(badStatus.length, 0, `GET /index.html was not 200 during concurrent builds: ${badStatus.slice(0, 5).join(', ')} (${badStatus.length} bad)`);
+    assert.ok(existsSync(indexFile), 'dist/index.html must exist after the concurrent builds');
+    // the publish leaves no temp residue behind
+    const residue = readdirSync(root).filter((f) => f.startsWith('dist.tmp-'));
+    assert.deepEqual(residue, [], `build residue left in the repo root: ${residue.join(', ')}`);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
   }
 });
 
 test('bundle.js is valid JavaScript and defines every ROGUE_DATA_ global', () => {
-  // ARRANGE — dist/ is produced by the build test above
-  const dataFiles = readdirSync(path.join(root, 'data'))
+  // ARRANGE — dist/ is produced by the build test above; the data files are
+  // derived from disk and split by meta.lazy (the lazy set may be empty —
+  // the assertions hold either way)
+  const files = readdirSync(path.join(root, 'data'))
     .filter((f) => f.endsWith('.json'))
     .sort();
+  const dataFiles = files.map((file) => ({
+    file,
+    stem: file.replace(/\.json$/, ''),
+    data: JSON.parse(readFileSync(path.join(root, 'data', file), 'utf8')),
+  }));
+  const nonLazy = dataFiles.filter(({ data }) => data.meta.lazy !== true);
+  const lazy = dataFiles.filter(({ data }) => data.meta.lazy === true);
   const code = readFileSync(path.join(distDir, 'data', 'bundle.js'), 'utf8');
 
-  // ACT — execute the bundle with a fake `window`
+  // ACT — execute the bundle with a fake `window`, then every lazy chunk in
+  // the same sandbox
   const sandbox = { window: {} };
   vm.runInNewContext(code, sandbox, { filename: 'bundle.js' });
+  const bundleKeys = Object.keys(sandbox.window).sort();
+  for (const { stem } of lazy) {
+    vm.runInNewContext(readFileSync(path.join(distDir, 'data', `${stem}.js`), 'utf8'), sandbox, {
+      filename: `${stem}.js`,
+    });
+  }
 
-  // ASSERT — every bundled data file is reachable via string-key access
-  for (const file of dataFiles) {
-    const data = JSON.parse(readFileSync(path.join(root, 'data', file), 'utf8'));
+  // ASSERT — the bundle defines exactly the non-lazy data files' globals, no
+  // others (a lazy file that leaked into the bundle would fail this)
+  assert.deepEqual(
+    bundleKeys,
+    nonLazy.map(({ data }) => `ROGUE_DATA_${String(data.meta.id).toUpperCase()}`).sort(),
+    'bundle.js must define exactly the non-lazy data files\' ROGUE_DATA_* globals',
+  );
+  for (const { data } of nonLazy) {
     const key = `ROGUE_DATA_${String(data.meta.id).toUpperCase()}`;
     assert.ok(sandbox.window[key], `bundle.js did not define window["${key}"]`);
     assert.equal(sandbox.window[key].meta.id, data.meta.id, `window["${key}"] has the wrong meta.id`);
   }
 
-  // ASSERT — all 15 data files (14 content + site.json) define their global,
-  // and the bundle emits no other window keys (shape unchanged)
-  assert.equal(dataFiles.length, 15, `expected 15 data files (14 content + site.json), found ${dataFiles.length}`);
+  // ASSERT — in total (bundle + lazy chunks) there is exactly one window key
+  // per data file, each lazy chunk's global round-trips to its own meta.id,
+  // and no lazy global appears anywhere in bundle.js's code
   assert.equal(
     Object.keys(sandbox.window).length,
     dataFiles.length,
-    'bundle.js must define exactly one window key per data file',
+    'bundle + lazy chunks must define exactly one window key per data file',
   );
+  for (const { data, stem } of lazy) {
+    const key = `ROGUE_DATA_${String(data.meta.id).toUpperCase()}`;
+    assert.ok(sandbox.window[key], `dist/data/${stem}.js did not define window["${key}"]`);
+    assert.equal(sandbox.window[key].meta.id, data.meta.id, `window["${key}"] has the wrong meta.id`);
+    assert.ok(!code.includes(key), `bundle.js's code must not contain ${key} (lazy data/${stem}.json)`);
+  }
 });
 
 // Banned-phrase hygiene lists shared by the adventure guard and the
@@ -209,12 +302,13 @@ test('adventure.json makes no wrong per-run placement or goal claims (records, m
 });
 
 test('every content data file makes no wrong placement/goal claims or name leaks (records, meta description and prose)', () => {
-  // ARRANGE — all 14 content data files (site.json is the site config,
-  // not content, and carries no records)
+  // ARRANGE — every content data file on disk (site.json is the site config,
+  // not content, and carries no records); the set is derived from data/, so
+  // new (lazy or not) content files are scanned automatically
   const files = readdirSync(path.join(root, 'data'))
     .filter((f) => f.endsWith('.json') && f !== 'site.json')
     .sort();
-  assert.equal(files.length, 14, `expected 14 content data files, found ${files.length}`);
+  assert.ok(files.length >= 1, 'expected at least one content data file in data/');
 
   // ACT + ASSERT — the shared hygiene scan finds no hit in any file, and
   // each failure names the file, record id, field and offending phrase

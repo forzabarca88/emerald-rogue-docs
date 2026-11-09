@@ -108,14 +108,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { startServer, openPage, closeAll, skipIfNoPlaywright } from './harness.mjs';
+import { startServer, openPage, closeAll, resolvePlaywright, skipIfNoPlaywright } from './harness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
 
 let server;
 before(async () => {
-  server = await startServer();
+  // No Playwright → every test self-skips; skip the dist/ build too so a
+  // Playwright-less CI job does not race N concurrent builds against the
+  // e2e suite's own build.
+  if (resolvePlaywright()) server = await startServer();
 });
 after(async () => {
   await closeAll();
