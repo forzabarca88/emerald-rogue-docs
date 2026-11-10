@@ -60,6 +60,18 @@
  * stat numbers out). The palette's pokedex entry `text` and this
  * on-page filter are the SAME string (the issue-#50 on-page/palette
  * parity for the dex).
+ *
+ * The 3D species viewer (issue #79): the detail head's sprite sits in a
+ * .dex-viewer box that doubles as the mount for a three.js billboard
+ * turntable (js/three-viewer.js — the site's one 3D placement, see
+ * DESIGN.md §7). The vendored three.js (./vendor/three.min.js, the
+ * third self-hosted asset family, DESIGN.md §11) is deferred-injected
+ * ONCE (promise-memoized) the first time a species detail opens — never
+ * in any shell's static markup — and the viewer is disposed on
+ * deselect, version re-render and every re-init, so no loop or WebGL
+ * context accumulates under repeated toggles/deep links. The static
+ * <img> stays in the box as the no-WebGL / texture-failure fallback
+ * (no layout shift either way).
  */
 (function () {
   'use strict';
@@ -275,6 +287,56 @@
       );
     }
 
+    /* --- the 3D species viewer (issue #79) ----------------------------------
+     * The vendored three.js is deferred-injected once — promise-memoized,
+     * cached for the page lifetime — the first time a species detail
+     * opens. It resolves false (and is not retried — a missing vendor
+     * file is not a transient fault) when the script itself fails to
+     * load; the static sprite <img> stays in place on every failure
+     * path (js/three-viewer.js handles the rest). The viewer is
+     * (re-)mounted on every detail render and disposed on every
+     * overview render, so repeated deep links / version toggles never
+     * accumulate loops or WebGL contexts. */
+
+    var threeLoad = null;
+
+    function loadThree() {
+      if (window.THREE) return Promise.resolve(true);
+      if (threeLoad) return threeLoad;
+      threeLoad = new Promise(function (resolve) {
+        var script = document.createElement('script');
+        script.src = './vendor/three.min.js';
+        script.onload = function () {
+          resolve(true);
+        };
+        script.onerror = function () {
+          resolve(false);
+        };
+        document.body.appendChild(script);
+      });
+      return threeLoad;
+    }
+
+    function disposeViewer() {
+      if (window.ROGUE3D) window.ROGUE3D.dispose();
+    }
+
+    function mountViewer(record) {
+      var id = record.id;
+      disposeViewer(); /* re-init on every detail render (species change, version re-render) */
+      var src = spriteSrc(record);
+      var start = function () {
+        /* a later render may have superseded this one (a fast deep link or
+         * toggle) — mount only if this species is still the selection */
+        if (state.selection !== id || !window.THREE || !window.ROGUE3D) return;
+        var mount = document.querySelector('#dex-species .dex-viewer');
+        if (!mount) return;
+        window.ROGUE3D.init(mount, src);
+      };
+      if (window.THREE && window.ROGUE3D) start();
+      else loadThree().then(start);
+    }
+
     /* --- the species detail view ------------------------------------------ */
 
     function statRowsHtml(stats) {
@@ -414,7 +476,13 @@
 
       html +=
         '<div class="dex-species__head">' +
+        /* .dex-viewer is the sprite box AND the 3D viewer's mount (issue
+         * #79): the static <img> inside stays as the no-WebGL /
+         * texture-failure fallback layer; the box geometry is unchanged,
+         * so the canvas (when present) occupies the exact same box */
+        '<div class="dex-viewer">' +
         '<img class="dex-species__sprite" src="' + ROGUE.esc(spriteSrc(record)) + '" alt="' + ROGUE.esc(name) + '" width="128" height="128">' +
+        '</div>' +
         '<div class="dex-species__id">' +
         '<h2>' + ROGUE.esc(name) + '</h2>' +
         '<div class="dex-species__badges">' + ROGUE.badge(record) + '<span class="chip">#' + record.dexNum + '</span></div>' +
@@ -481,6 +549,9 @@
       if (selected) {
         var panel = document.getElementById(ROGUE.recId('pokedex', selected.id));
         if (panel) panel.scrollIntoView();
+        mountViewer(selected);
+      } else {
+        disposeViewer();
       }
     }
 

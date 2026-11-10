@@ -2098,7 +2098,9 @@
    number in mono. The #dex-species view (rendered only while a
    selection exists): the .dex-species panel, root id =
    ROGUE.recId('pokedex', record.id) — the #45 deep-link scheme — with
-   the sprite (--sprite-size), name, badge + #NNN chip, types, category,
+   the sprite box (.dex-viewer at --sprite-size — also the 3D viewer's
+   canvas mount, issue #79; the static <img> inside is the fallback
+   layer), name, badge + #NNN chip, types, category,
    the stat bars (.dex-stat: label + track + emerald fill, width =
    value/255 capped, BST row last), the meta rows, the Pokédex text,
    abilities, the .dex-evo line (neighbors as hash links with mono
@@ -2308,16 +2310,40 @@
   border-bottom: 1px solid var(--color-line);
 }
 
-.page--pokedex .dex-species__sprite {
+/* The sprite box — .dex-viewer is the box (and the 3D viewer's mount,
+   issue #79): it carries the exact geometry the bare .dex-species__sprite
+   used to (border-box size, padding, background, border, radius), so the
+   layout — 360px included — is identical whether or not the canvas is
+   present (DESIGN.md §7: no layout shift). The static <img> inside stays
+   as the no-WebGL / texture-failure fallback layer, and the canvas (when
+   mounted) occupies the same box via inset: 0 of the padding box. */
+.page--pokedex .dex-viewer {
+  position: relative;
   width: var(--sprite-size);
   height: var(--sprite-size);
   flex: none;
-  image-rendering: pixelated;
-  object-fit: contain;
   padding: var(--space-2);
   background: var(--color-bg);
   border: 2px solid var(--color-line);
   border-radius: var(--radius-md);
+  overflow: hidden; /* clips the canvas to the rounded box */
+}
+
+.page--pokedex .dex-viewer .dex-species__sprite {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+.page--pokedex .dex-viewer canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .page--pokedex .dex-species__id {

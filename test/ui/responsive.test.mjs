@@ -14,7 +14,7 @@
  *
  * Coverage:
  *   1. No horizontal overflow — `document.documentElement.scrollWidth <=
- *      window.innerWidth` — on all 10 pages at both viewports, checked at
+ *      window.innerWidth` — on all 11 pages at both viewports, checked at
  *      the default version (data/site.json `defaultVersion`, "ex") AND,
  *      for the toggle-sensitive pages (TOGGLE_SENSITIVE), at the other
  *      version ("vanilla") too, since re-rendered content can differ in
@@ -66,7 +66,7 @@ const VIEWPORTS = [
 ];
 
 /**
- * All 10 served pages. `h1` is the STATIC <h1> baked into the HTML shell
+ * All 11 served pages. `h1` is the STATIC <h1> baked into the HTML shell
  * (the no-JS fallback; with JS on, the page scripts replace
  * main.innerHTML — the smoke suite pins the same titles from
  * data/site.json). `fallback` marks the ten content pages that also
@@ -82,6 +82,7 @@ const PAGES = [
   { stem: 'hub', file: 'hub.html', h1: site.pages.hub.title, fallback: true },
   { stem: 'safari', file: 'safari.html', h1: site.pages.safari.title, fallback: true },
   { stem: 'routes', file: 'routes.html', h1: site.pages.routes.title, fallback: true },
+  { stem: 'pokedex', file: 'pokedex.html', h1: site.pages.pokedex.title, fallback: true },
   { stem: 'mechanics', file: 'mechanics.html', h1: site.pages.mechanics.title, fallback: true },
   { stem: '404', file: '404.html', h1: 'Page not found', fallback: false },
 ];
@@ -204,7 +205,7 @@ test('the default version is "ex" (the "other version" this suite checks is ther
 });
 
 for (const vp of VIEWPORTS) {
-  test(`no horizontal overflow at ${vp.width}×${vp.height} (default version ${VERSION}, all 10 pages)`, async (t) => {
+  test(`no horizontal overflow at ${vp.width}×${vp.height} (default version ${VERSION}, all 11 pages)`, async (t) => {
     if (skipIfNoPlaywright(t)) return;
     for (const spec of PAGES) {
       const { page, errors, close } = await openPage({ path: spec.file, width: vp.width, height: vp.height });
