@@ -42,6 +42,14 @@
  *                   Vanilla.
  *   safari.html   — a version-identical page: stable counts, only the
  *                   Legends Cave roster note flips (data/safari.json).
+ *   pokedex.html  — the lazy data/pokedex.json dex: the #dex-count line
+ *                   flips "1025 species · page 1 of 37" (EX: all 1025
+ *                   records) → "386 species · page 1 of 14" (Vanilla:
+ *                   the 386 shared records), 28 .dex-tile tiles in both
+ *                   (data/site.json dex.pageSize); an EX-only selection
+ *                   (turtwig, deep-link #rec-pokedex-turtwig) closes the
+ *                   .dex-species detail back to the overview under
+ *                   Vanilla and reopens it on the EX round-trip.
  *
  * Waiting is always on a version-specific DOM state (the re-render itself,
  * or the URL rewrite) — no arbitrary sleeps.
@@ -588,6 +596,87 @@ test('config.html: the 7 EX-only settings disappear under Vanilla (19 → 12 tog
     assert.equal(v.toggleCards, 12, 'data/settings.json: only 12 toggle records are available in Vanilla (the 7 EX-only ones are filtered out)');
     assert.equal(v.intro, '12 on/off switches in Vanilla, grouped by the settings submenu that holds them.', 'the section intro counts the active version');
     assert.deepEqual(v.present, [], 'no EX-only toggle card under Vanilla');
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and an EX-only selection closes to the overview under Vanilla, reopening on the round-trip', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    await assertToggle(page, 'ex', 'pokedex.html (default)');
+
+    // EX initial state: 28 tiles (data/site.json dex.pageSize) and the
+    // count line over all 1025 EX records (386 shared + 639 EX-only);
+    // no selection at load → no detail panel
+    assert.equal(await page.locator('.dex-tile').count(), 28, 'data/site.json dex.pageSize = 28 → 28 .dex-tile links on page 1 (pokedex.js)');
+    assert.equal(
+      (await page.locator('#dex-count').first().textContent())?.trim(),
+      '1025 species · page 1 of 37',
+      'data/pokedex.json: all 1025 records include ex → 1025 species; ceil(1025 / 28) = 37 pages (pokedex.js updateBrowse)'
+    );
+    assert.equal(await page.locator('.dex-species').count(), 0, 'no #rec-pokedex-<id> hash at load → the .dex-species detail panel is not rendered');
+
+    // Select the EX-only species turtwig via its deep-link hash (a Gen 4
+    // id — data/pokedex.json record versions ["ex"])
+    await page.evaluate(() => {
+      window.location.hash = '#rec-pokedex-turtwig';
+    });
+    await page.waitForFunction(
+      () => document.getElementById('rec-pokedex-turtwig') !== null,
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    const selected = await page.evaluate(() => ({
+      panel: document.getElementById('rec-pokedex-turtwig') !== null,
+      name: document.querySelector('.dex-species h2')?.textContent.trim() ?? null,
+      overviewHidden: document.getElementById('dex-overview')?.hidden === true,
+    }));
+    assert.equal(selected.panel, true, 'the deep link renders the .dex-species panel with id rec-pokedex-turtwig (ROGUE.recId)');
+    assert.equal(selected.name, 'Turtwig', 'the detail head shows the species name (data/pokedex.json turtwig record)');
+    assert.equal(selected.overviewHidden, true, 'the overview view hides while a species is selected (pokedex.js render)');
+
+    // EX → Vanilla: turtwig does not exist in Vanilla → the selection
+    // clears to the overview, and the count line re-scopes to the 386
+    // shared records (ceil(386 / 28) = 14 pages)
+    await clickToggle(
+      page,
+      'vanilla',
+      () =>
+        (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 14' &&
+        document.querySelector('.dex-species') === null,
+      'pokedex.html (EX→Vanilla)'
+    );
+    await assertToggle(page, 'vanilla', 'pokedex.html (after click)');
+    assert.equal(await page.locator('.dex-tile').count(), 28, 'data/pokedex.json: the 386 Vanilla records still fill the first page → 28 tiles (pokedex.js)');
+    assert.equal(
+      (await page.locator('#dex-count').first().textContent())?.trim(),
+      '386 species · page 1 of 14',
+      'data/pokedex.json: only the 386 shared records include vanilla → 386 species, ceil(386 / 28) = 14 pages'
+    );
+    assert.equal(
+      await page.locator('.dex-species').count(),
+      0,
+      'the EX-only selection (turtwig) cannot resolve under Vanilla → the detail closes back to the overview (pokedex.js selectedRecord)'
+    );
+
+    // Vanilla → EX round-trip: the selection state survives the re-render
+    // (state.selection), so the detail reopens with the EX count line
+    await clickToggle(
+      page,
+      'ex',
+      () => document.getElementById('rec-pokedex-turtwig') !== null,
+      'pokedex.html (Vanilla→EX)'
+    );
+    await assertToggle(page, 'ex', 'pokedex.html (after round-trip)');
+    assert.equal(await page.locator('.dex-species').count(), 1, 'the retained EX-only selection re-resolves under EX → the detail panel reopens');
+    assert.equal(
+      (await page.locator('#dex-count').first().textContent())?.trim(),
+      '1025 species · page 1 of 37',
+      'the round-trip restores the full 1025-record EX count line'
+    );
   } finally {
     await close();
   }

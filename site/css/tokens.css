@@ -153,6 +153,15 @@
   --radius-lg: 12px; /* reserved for future large panels */
 
   /* ---------------------------------------------------------------------
+     Display sizes — the sprite renderings on the pokedex page (the
+     128×128 2× species sprites scaled down with image-rendering:
+     pixelated; the sprites themselves are the one scoped references/
+     exception documented in DESIGN.md §10).
+     --------------------------------------------------------------------- */
+  --tile-sprite-size: 3rem; /* 48  pokedex overview-tile sprite */
+  --sprite-size:      8rem; /* 128 pokedex species-detail sprite */
+
+  /* ---------------------------------------------------------------------
      Motion — fast micro-interactions, one slow page entrance.
      Every animation/transform in the site is gated behind
      `prefers-reduced-motion: no-preference` (see base.css).

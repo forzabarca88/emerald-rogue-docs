@@ -2,7 +2,7 @@
  * All-page render + console-error + content-count smoke suite (node --test,
  * zero deps; Playwright resolved by the harness).
  *
- * For each of the 10 served pages, at the site's default version
+ * For each of the 11 served pages, at the site's default version
  * (data/site.json `defaultVersion` — currently "ex"), this asserts:
  *   1. zero console errors and zero pageerrors (a JS crash surfaces as a
  *      pageerror here — the existing e2e suite only fetches raw HTML and
@@ -337,6 +337,32 @@ const PAGES = [
         sel: '#routes-count',
         text: '36 routes across all 4 regions',
         why: 'the routes count line reads "36 routes across all 4 regions" under the "all" filter (routes.js applyRegion)',
+      },
+    },
+  },
+  {
+    stem: 'pokedex',
+    h1: site.pages.pokedex.title,
+    counts: {
+      dexTiles: {
+        sel: '.dex-tile',
+        expected: 28,
+        why: `data/site.json dex.pageSize = 28 (the in-game Overview's tile page) → pokedex.js renders exactly pageSize .dex-tile links on page 1 of the default ${VERSION} version`,
+      },
+      dexCount: {
+        sel: '#dex-count',
+        text: '1025 species · page 1 of 37',
+        why: `data/pokedex.json: all 1025 records include version ${VERSION} (386 shared + 639 EX-only) → “1025 species”; ceil(1025 / dex.pageSize 28) = 37 → “page 1 of 37” (pokedex.js updateBrowse)`,
+      },
+      regionButtons: {
+        sel: '.dex-filter__btn',
+        expected: 10,
+        why: 'data/pokedex.json records span 9 distinct regions (Kanto, Johto, Hoenn, Sinnoh, Unova, Kalos, Alola, Galar, Paldea) → the “All” button + one .dex-filter__btn per region: 1 + 9 = 10 (pokedex.js, derived like routes.js)',
+      },
+      dexSpecies: {
+        sel: '.dex-species',
+        expected: 0,
+        why: 'no species is selected at load (no #rec-pokedex-<id> hash) → pokedex.js renders only the overview view; the .dex-species detail panel enters the DOM only when a tile or evolution link is opened',
       },
     },
   },
