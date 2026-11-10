@@ -2086,6 +2086,425 @@
   }
 }
 
+/* --- pokedex ------------------------------------------------------------------------
+   Two views of one page (issue #78), emitted by js/pages/pokedex.js from
+   the lazy data/pokedex.json chunk. The #dex-overview view: the four
+   prose sections, then the toolbar (an on-page .search filter + the
+   region filter, selection surviving version re-renders), the live
+   #dex-count line and the .dex-grid — exactly data/site.json
+   dex.pageSize (28, the in-game Overview's tile page) .dex-tile <a>
+   links per page, each a lazy sprite (--tile-sprite-size, pixelated)
+   with an onerror placeholder tile (--placeholder) showing the dex
+   number in mono. The #dex-species view (rendered only while a
+   selection exists): the .dex-species panel, root id =
+   ROGUE.recId('pokedex', record.id) — the #45 deep-link scheme — with
+   the sprite (--sprite-size), name, badge + #NNN chip, types, category,
+   the stat bars (.dex-stat: label + track + emerald fill, width =
+   value/255 capped, BST row last), the meta rows, the Pokédex text,
+   abilities, the .dex-evo line (neighbors as hash links with mono
+   method captions; --absent for a species the active build lacks), the
+   three move groups, forms / "Included in" / ride chips, notes and the
+   .card__source citation. All rules scoped under .page--pokedex. */
+
+.page--pokedex .page-fallback {
+  max-width: 70ch;
+  color: var(--color-muted);
+}
+
+.page--pokedex .section__head > p:not(.eyebrow) {
+  max-width: 70ch;
+  color: var(--color-muted);
+}
+
+.page--pokedex .section__head p,
+.page--pokedex .section__body p,
+.page--pokedex .dex-desc,
+.page--pokedex .card__source {
+  overflow-wrap: anywhere;
+}
+
+.page--pokedex .section[id],
+.page--pokedex #dex-species {
+  scroll-margin-top: 112px;
+}
+
+.page--pokedex [hidden] {
+  display: none !important;
+}
+
+/* --- the overview view: toolbar, grid, pager -------------------------------- */
+
+.page--pokedex .dex-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.page--pokedex .dex-search {
+  flex: 1 1 220px;
+}
+
+.page--pokedex .dex-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.page--pokedex .dex-filter__btn {
+  cursor: pointer;
+}
+
+.page--pokedex .dex-filter__btn[aria-pressed="true"] {
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
+}
+
+.page--pokedex .dex-count {
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 152px), 1fr));
+  gap: var(--space-3);
+}
+
+.page--pokedex .dex-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2) var(--space-2);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.page--pokedex .dex-tile__sprite {
+  width: var(--tile-sprite-size);
+  height: var(--tile-sprite-size);
+  image-rendering: pixelated;
+  object-fit: contain;
+}
+
+/* the onerror placeholder tile: the dex number in mono where the sprite
+   would be (the sprite provenance prose promises this fallback) */
+.page--pokedex .dex-tile__ph {
+  display: none;
+  width: var(--tile-sprite-size);
+  height: var(--tile-sprite-size);
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  border: 1px dashed var(--color-line);
+  border-radius: var(--radius-sm);
+}
+
+.page--pokedex .dex-tile--placeholder .dex-tile__ph {
+  display: flex;
+}
+
+.page--pokedex .dex-tile__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-tile:hover {
+  border-color: var(--color-emerald);
+  background: var(--color-raised);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page--pokedex .dex-tile {
+    transition:
+      border-color var(--motion-fast) var(--ease-out),
+      background-color var(--motion-fast) var(--ease-out),
+      transform var(--motion-med) var(--ease-out);
+  }
+
+  .page--pokedex .dex-tile:hover {
+    transform: translateY(-3px);
+  }
+}
+
+.page--pokedex .dex-empty {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  margin-top: var(--space-5);
+}
+
+.page--pokedex .dex-pager__btn {
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-4);
+}
+
+.page--pokedex .dex-pager__btn:hover:not(:disabled) {
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
+}
+
+.page--pokedex .dex-pager__btn:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.page--pokedex .dex-pager__page {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* --- the species detail view ------------------------------------------------------ */
+
+.page--pokedex .dex-back {
+  display: inline-block;
+  margin-bottom: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.page--pokedex .dex-back:hover {
+  color: var(--color-emerald);
+}
+
+.page--pokedex .dex-species {
+  background: var(--color-surface);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.page--pokedex .dex-species__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-5);
+  padding-bottom: var(--space-5);
+  border-bottom: 1px solid var(--color-line);
+}
+
+.page--pokedex .dex-species__sprite {
+  width: var(--sprite-size);
+  height: var(--sprite-size);
+  flex: none;
+  image-rendering: pixelated;
+  object-fit: contain;
+  padding: var(--space-2);
+  background: var(--color-bg);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.page--pokedex .dex-species__id {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.page--pokedex .dex-species__id h2 {
+  margin: 0 0 var(--space-2);
+}
+
+.page--pokedex .dex-species__badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.page--pokedex .dex-species__types {
+  margin-bottom: var(--space-3);
+}
+
+.page--pokedex .dex-species__category {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+.page--pokedex .dex-species__body {
+  display: grid;
+  gap: var(--space-5);
+}
+
+/* the stat rows: label + track + value, the fill's width set inline
+   (value/255 capped at 100%, so a 720-BST record's bar pins to the end)
+   — BST row last, matching the data's stat order */
+.page--pokedex .dex-stats {
+  display: grid;
+  gap: 6px;
+  max-width: 560px;
+}
+
+.page--pokedex .dex-stat {
+  display: grid;
+  grid-template-columns: minmax(0, 48px) minmax(0, 1fr) minmax(0, 44px);
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.page--pokedex .dex-stat__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-stat__bar {
+  height: 12px;
+  border-radius: 2px;
+  background: var(--color-raised);
+  overflow: hidden;
+}
+
+.page--pokedex .dex-stat__fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--color-emerald);
+}
+
+.page--pokedex .dex-stat__value {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+  text-align: right;
+}
+
+.page--pokedex .dex-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+.page--pokedex .dex-meta__label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-meta__value {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.page--pokedex .dex-desc {
+  margin: 0;
+  max-width: 70ch;
+}
+
+/* the evolution line: prev → current → next, wrapping at narrow widths;
+   the current species wears the emerald border, a link cell lifts on
+   hover (the same pattern as .card--link, motion-gated) */
+.page--pokedex .dex-evo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.page--pokedex .dex-evo__cell {
+  background: var(--color-bg);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.page--pokedex .dex-evo__link:hover {
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page--pokedex .dex-evo__link {
+    transition:
+      border-color var(--motion-fast) var(--ease-out),
+      color var(--motion-fast) var(--ease-out),
+      transform var(--motion-med) var(--ease-out);
+  }
+
+  .page--pokedex .dex-evo__link:hover {
+    transform: translateY(-3px);
+  }
+}
+
+.page--pokedex .dex-evo__cell--current {
+  border-color: var(--color-emerald);
+  color: var(--color-emerald);
+}
+
+/* a neighbor the active build lacks (e.g. a Gen 4 pre-ev under
+   Vanilla) — not a link, visually receded */
+.page--pokedex .dex-evo__cell--absent {
+  opacity: 0.6;
+}
+
+.page--pokedex .dex-evo__method {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-moves {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.page--pokedex .dex-moves__group .chip-row {
+  margin-top: var(--space-2);
+}
+
+.page--pokedex .dex-moves__none {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-notes {
+  display: grid;
+  gap: var(--space-1);
+  margin: var(--space-2) 0 0;
+  padding-left: 1.2em;
+  list-style: disc;
+  color: var(--color-ink);
+}
+
 /* --- mechanics -----------------------------------------------------------------------
    One .section per system (Charms & Curses, Followmons, Game Show,
    Time of Day & Seasons, Unique mons, Campaigns): an in-page anchor-chip

@@ -63,8 +63,10 @@ woff2 files) — do not add families or weights, and no external font links:
 Full system fallbacks are in the token stacks — the site must render
 offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
 16 (body) · `--text-md` 18 · `--text-lg` 22 · `--text-xl` 28 (h2) ·
-`--text-2xl` 38 (inner h1) · `--text-3xl` 52 (hero/404). Body line-height
-1.65–1.7; headings 1.15.
+`--text-2xl` 38 (inner h1) · `--text-3xl` 52 (hero/404). Display sizes:
+`--tile-sprite-size` 48 (pokedex overview-tile sprite) · `--sprite-size`
+128 (pokedex species-detail sprite). Body line-height 1.65–1.7; headings
+1.15.
 
 ## 4. Layout
 
@@ -167,6 +169,7 @@ under your own `.page--<stem>`):
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
 | `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not restyle (the trigger's overlay is `.search-palette`, above). The shells hand-write only the static no-JS subset (brand + nav links + footer inner) so the page navigates without JS; `js/nav.js` replaces it wholesale when JS runs |
 | `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den`/`--gap` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
+| `.dex-toolbar` `.dex-search` `.dex-filter(-__btn)` `.dex-count` `.dex-grid` `.dex-tile(-__sprite/__num/__ph, --placeholder)` `.dex-empty` `.dex-pager(-__btn/-__page)` `.dex-back` `.dex-species(-__head/__sprite/__id/__types/__category/__body)` `.dex-stats` `.dex-stat(-__label/__bar/__fill)` `.dex-meta(-__row/__label/__value)` `.dex-desc` `.dex-evo(-__cell/-__link/-__method)` `.dex-moves(-__group/__none)` `.dex-notes` | the pokedex page (10th nav page, issue #78): the in-game Pokedex recreated as two views of one page — the `#dex-overview` tile grid (exactly `data/site.json` `dex.pageSize` `.dex-tile` `<a>` links per page, lazy sprites with the onerror placeholder tile, the live `#dex-count` line, the `.dex-pager`, and the on-page `.search` + region filter) and the `#dex-species` detail panel (root id = `ROGUE.recId('pokedex', record.id)`, the #45 deep-link scheme; sprite, stat bars with the BST row last, meta, `.dex-evo` line whose neighbors are hash links with mono method captions, the three move groups, forms / "Included in" / ride chips, notes, `.card__source` citation); emitted by `js/pages/pokedex.js` from the lazy `data/pokedex.json` chunk; rules in `pages.css` under `.page--pokedex` |
 
 ## 7. Motion
 

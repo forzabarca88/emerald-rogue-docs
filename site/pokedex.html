@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pokédex · Emerald Rogue Docs</title>
+  <meta name="description" content="Every Pokémon in both editions: stats, typing, evolution lines, learnable moves, forms, and which Pokédex variants include it.">
+  <!-- Open Graph tags are static (DESIGN.md §10: meta tags only, no JS-injected SEO —
+       crawlers without JS must see them). The values mirror data/site.json `pages`
+       (title = the JS-on document title main.js sets: page title + site name) and the
+       base URL lives once in site.json `site.url`. -->
+  <meta property="og:title" content="Pokédex · Emerald Rogue Docs">
+  <meta property="og:description" content="Every Pokémon in both editions: stats, typing, evolution lines, learnable moves, forms, and which Pokédex variants include it.">
+  <meta property="og:url" content="https://forzabarca88.github.io/emerald-rogue-docs/pokedex.html">
+  <link rel="stylesheet" href="./css/tokens.css">
+  <link rel="stylesheet" href="./css/base.css">
+  <link rel="stylesheet" href="./css/components.css">
+  <link rel="stylesheet" href="./css/pages.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2310241b'/%3E%3Crect x='1' y='6' width='4' height='4' fill='%232ec27e'/%3E%3Crect x='6' y='6' width='4' height='4' fill='%2390bc5d'/%3E%3Crect x='11' y='6' width='4' height='4' fill='%23f2b63c'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#10241b">
+</head>
+<body data-page="pokedex">
+  <header id="site-header">
+    <!-- Static no-JS header: brand + primary nav as plain links, mirroring
+         what js/nav.js builds from data/site.json (the same ten-page nav
+         set). The icon-only search trigger and the Vanilla/EX version
+         toggle are JS-only controls (they open the search overlay /
+         switch the build), so they are deliberately omitted here rather
+         than rendered inert. With JS on, js/nav.js replaces this markup
+         wholesale — it stays the single source of the header. -->
+    <div class="container site-header__inner">
+      <a class="site-brand" href="./index.html">Emerald Rogue Docs</a>
+      <nav class="site-nav" aria-label="Primary">
+        <a class="site-nav__link" href="./index.html">Home</a>
+        <a class="site-nav__link" href="./gameplay.html">Gameplay</a>
+        <a class="site-nav__link" href="./versions.html">Versions</a>
+        <a class="site-nav__link" href="./quests.html">Quests</a>
+        <a class="site-nav__link" href="./config.html">Configuration</a>
+        <a class="site-nav__link" href="./hub.html">Hub</a>
+        <a class="site-nav__link" href="./safari.html">Safari Zone</a>
+        <a class="site-nav__link" href="./routes.html">Routes</a>
+        <a class="site-nav__link site-nav__link--active" href="./pokedex.html" aria-current="page">Pokédex</a>
+        <a class="site-nav__link" href="./mechanics.html">Mechanics</a>
+      </nav>
+    </div>
+  </header>
+  <main class="page page--pokedex">
+    <h1>Pokédex</h1>
+    <p class="page-fallback">
+      The full Pokédex — every species in both editions, with stats, typing, evolution lines,
+      learnable moves, forms and Pokédex-variant membership — is rendered from the data files, so
+      this page needs JavaScript. Use the Vanilla / EX toggle above to scope the dex to the
+      species each edition carries.
+    </p>
+  </main>
+  <footer id="site-footer">
+    <!-- Static no-JS footer, mirroring what js/nav.js injects from
+         data/site.json site.footer (replaced by nav.js when JS is on). -->
+    <div class="container site-footer__inner">
+      <p>Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent AI generated guide based on its Github source code, and is not affiliated with the romhack's authors.</p>
+      <p class="site-footer__source">Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations.</p>
+    </div>
+  </footer>
+  <script src="./data/bundle.js"></script>
+  <!-- The Pokédex data file is a lazy chunk (meta.lazy in data/pokedex.json): it
+       ships as dist/data/pokedex.js and loads only on this page, never into the
+       bundle the other nine pages share. -->
+  <script src="./data/pokedex.js"></script>
+  <script src="./js/version.js"></script>
+  <script src="./js/data.js"></script>
+  <script src="./js/nav.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/main.js"></script>
+  <script src="./js/search-index.js"></script>
+  <script src="./js/search.js"></script>
+  <script src="./js/pages/pokedex.js"></script>
+</body>
+</html>

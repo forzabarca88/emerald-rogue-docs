@@ -1,6 +1,6 @@
 # Pokémon Emerald ROGUE — documentation site
 
-A static, zero-dependency documentation site for the Pokémon Emerald ROGUE fan-game (Vanilla vs Expansion builds), covering routes, quests, hub, Safari Zone, mechanics, settings, versions, and game modes.
+A static, zero-dependency documentation site for the Pokémon Emerald ROGUE fan-game (Vanilla vs Expansion builds), covering the Pokédex, routes, quests, hub, Safari Zone, mechanics, settings, versions, and game modes.
 
 **Live site:** <https://forzabarca88.github.io/emerald-rogue-docs/>
 

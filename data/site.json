@@ -42,6 +42,7 @@
     "hub",
     "safari",
     "routes",
+    "pokedex",
     "mechanics"
   ],
   "pages": {
@@ -77,10 +78,18 @@
       "title": "Routes",
       "description": "Route naming scheme, route types, regions, and wild typings."
     },
+    "pokedex": {
+      "title": "Pokédex",
+      "description": "Every Pokémon in both editions: stats, typing, evolution lines, learnable moves, forms, and which Pokédex variants include it."
+    },
     "mechanics": {
       "title": "Mechanics",
       "description": "Charms and curses, followmons, the Game Show, campaigns, and other systems."
     }
+  },
+  "dex": {
+    "_comment": "Pokedex page (site/pokedex.html): the in-game Overview page's tile size — the single source the on-page pager renders from (read via ROGUE.site().dex.pageSize by site/js/pages/pokedex.js).",
+    "pageSize": 28
   },
   "search": {
     "_comment": "Site-wide search palette (site/js/search-index.js + search.js, and the nav.js header trigger): the trigger's accessible label, the input placeholder, the keyboard hint, the open shortcut key, the result cap read by ROGUE.searchQuery, and the overflow suffix the count line appends when the query's pre-cap total exceeds the rows shown ({n} = the hidden count).",

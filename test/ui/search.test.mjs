@@ -39,7 +39,10 @@
  * Every expectation is a literal derived from the cited data file + the real
  * index (the same ROGUE.buildSearchIndex/ROGUE.searchQuery the browser runs,
  * verified against data/*.json at test-authoring time — see the "Derived
- * literals" block):
+ * literals" block). The index is built per page: the pokedex file is a
+ * LAZY chunk, so the ten pages without it index the 573 entries and
+ * pokedex.html alone indexes the full 1602 (the extra 1029 = the 1025
+ * species records + the 4 pokedex prose blocks).
  *   "mega evolution"  — under EX: 4 rows, row 0 the EX-only quest
  *                       "Mega Evolution" (data/quests.json versions ["ex"])
  *                       → ./quests.html#rec-quests-MEGA_EVOLUTION (the
@@ -56,14 +59,14 @@
  *                       #rec-quests-THE_FINAL_RUN is the same in both,
  *                       so the deep link lands on the card under either)
  *   "pokmon"          — the fuzzy tier (issue #46): one edit from
- *                       "pokemon". 338 index entries carry the whole token
+ *                       "pokemon". 339 index entries carry the whole token
  *                       "pokemon" under EX → the list caps at the 30-row
- *                       maxResults with the overflow suffix (308 more);
+ *                       maxResults with the overflow suffix (309 more);
  *                       every row is FUZZY (no exact substring) so NO row
  *                       carries a .search-palette__highlight mark, and row
  *                       0 is the first such entry in index order (the home
- *                       page, "Home"). The clean word "pokemon" (339
- *                       entries) is exact-only: capped too (309 more), and
+ *                       page, "Home"). The clean word "pokemon" (340
+ *                       entries) is exact-only: capped too (310 more), and
  *                       its tier-0 row 0 (the site hero, title "Pokémon
  *                       Emerald Rogue") highlights "Pokémon" in its
  *                       original casing. "zzzzqqqq" (beyond distance 1) →
@@ -71,10 +74,24 @@
  *   "national gen3"   — the Vanilla-side description of "The Final Run."
  *                       (data/quests.json differences.vanilla: "…National
  *                       Gen3…"; the EX description says Gen9). The only entry
- *                       in the whole 572-entry index containing "gen3" →
- *                       exactly 1 row under BOTH versions; its snippet
- *                       highlights the BODY match "National Gen3" in its
- *                       original casing.
+ *                       in the whole 573-entry index (the pages without the
+ *                       lazy pokedex chunk) containing "gen3" → exactly 1 row
+ *                       under BOTH versions; its snippet highlights the BODY
+ *                       match "National Gen3" in its original casing.
+ *   "pikachu"         — pokedex.html ONLY (the lazy-chunk page): 3 rows —
+ *                       the species card first (tier 0 → the same-page
+ *                       #rec-pokedex-pikachu deep link) + 2 non-pokedex
+ *                       entries (a quest, a mechanics record).
+ *   "turtwig"         — pokedex.html ONLY: 1 row under EX (the EX-only
+ *                       starter, badge--ex), 0 rows under Vanilla (the live
+ *                       re-scope drops it out).
+ *   "thunderbolt"     — pokedex.html: a MOVE name (absent from every species
+ *                       NAME) — 255 rows under EX (the learnset union made
+ *                       moves searchable); the SAME 255 on-page (the dex
+ *                       filter shares ROGUE.pokedexSearchText with the
+ *                       palette — the on-page/palette parity), first grid
+ *                       tile Rattata (#19, the first TM-86 learner in dex
+ *                       order).
  *   "/" (a second press while open) — 37 index entries contain a "/" → the
  *                       search.maxResults cap (data/site.json: 30) applies
  *                       (30 rows + the moreResults overflow suffix, 7 more).
@@ -91,7 +108,12 @@
  *   default_challenges the only visible ones (7 of 9 hidden);
  *   "wobbuffet" (issue #50 parity) → 1 card ("The Final Run." — the word is
  *   in its REWARD, absent from every quest's name + description);
- *   hub.html "unique" → 8 of 48 upgrades; routes.html Hoenn → 12 of 36.
+ *   hub.html "unique" → 8 of 48 upgrades; routes.html Hoenn → 12 of 36;
+ *   pokedex.html EX "thunderbolt" → "255 species · page 1 of 10" (the
+ *   count line — the 255-record match of the palette's "thunderbolt"),
+ *   first tile Rattata; "pikachu" → "1 species · page 1 of 1"; clearing
+ *   restores "1025 species · page 1 of 37" (EX) / "386 species · page 1
+ *   of 14" (Vanilla).
  *
  * Waiting is always on a DOM state (the count line, aria-activedescendant,
  * the anchor's bounding box) with a bounded timeout — no arbitrary sleeps;
@@ -361,7 +383,7 @@ test('index.html: typing filters live — the count line and rows track the quer
     await typeQuery(page, 'mega evolution');
     await waitForCount(page, COUNT(4, 'mega evolution'), 'index.html (EX, "mega evolution")');
     f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, 4, 'data-derived: exactly 4 index entries match "mega evolution" under EX (searchQuery over the 572-entry index)');
+    assert.equal(f.rows.length, 4, 'data-derived: exactly 4 index entries match "mega evolution" under EX (searchQuery over the 573-entry index)');
     const row0 = f.rows[0];
     assert.equal(row0.id, 'search-result-0', 'row ids are #search-result-<i>');
     assert.equal(row0.name, EX_ONLY_QUEST, 'the tier-0 title match ranks first: the EX-only quest "Mega Evolution" (data/quests.json)');
@@ -506,14 +528,14 @@ test('index.html: a typo query ("pokmon") shows the fuzzy tier 3 — capped, unh
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'index.html (trigger open)');
 
-    // "pokmon" (one edit from "pokemon"): 338 index entries carry the
+    // "pokmon" (one edit from "pokemon"): 339 index entries carry the
     // whole token "pokemon" under EX (data-derived over the real index) →
-    // the list caps at 30 rows and the count line signposts the 308
+    // the list caps at 30 rows and the count line signposts the 309
     // hidden matches
     await typeQuery(page, 'pokmon');
-    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 308, 'pokmon'), 'index.html (EX, "pokmon" — fuzzy, capped)');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 309, 'pokmon'), 'index.html (EX, "pokmon" — fuzzy, capped)');
     let f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, MAX_RESULTS, 'the fuzzy result caps at exactly search.maxResults rows (338 pre-cap, data-derived)');
+    assert.equal(f.rows.length, MAX_RESULTS, 'the fuzzy result caps at exactly search.maxResults rows (339 pre-cap, data-derived)');
     assert.equal(f.rows[0].name, 'Home', 'tier 3 keeps the stable index order: the first "pokemon" entry (the home page) is row 0');
     assert.ok(f.rows.every((r) => r.snippet.length > 0), 'every fuzzy row carries a snippet centred on the aligned token');
     // the fuzzy rows are UNHIGHLIGHTED: the span centres the snippet but
@@ -524,11 +546,11 @@ test('index.html: a typo query ("pokmon") shows the fuzzy tier 3 — capped, unh
     assert.deepEqual(fuzzyMarks, new Array(MAX_RESULTS).fill(0), 'no fuzzy row carries a .search-palette__highlight mark');
 
     // and the exact rows of the same root word still highlight: "pokemon"
-    // (339 entries, data-derived) is exact-only — capped at 30 rows with
-    // the 309-more overflow, tier-0 row 0 (the site hero) highlighting
+    // (340 entries, data-derived) is exact-only — capped at 30 rows with
+    // the 310-more overflow, tier-0 row 0 (the site hero) highlighting
     // "Pokémon" in its original casing
     await typeQuery(page, 'pokemon');
-    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 309, 'pokemon'), 'index.html (EX, "pokemon" — exact, capped)');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 310, 'pokemon'), 'index.html (EX, "pokemon" — exact, capped)');
     f = await page.evaluate(paletteFacts);
     const exactHl = await page.evaluate(() => {
       const row = document.querySelector('.search-palette__row');
@@ -827,6 +849,126 @@ test('hub.html: after a Vanilla re-render, a CROSS-page deep link still lands on
   }
 });
 
+test('pokedex.html: the palette indexes the dex (the lazy-chunk page) — "pikachu" 3 rows; the EX-only "turtwig" drops out on the live Vanilla re-scope', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors on pokedex.html: ${errors.join('; ')}`);
+
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'pokedex.html (trigger open)');
+    await typeQuery(page, 'pikachu');
+    await waitForCount(page, COUNT(3, 'pikachu'), 'pokedex.html (EX, "pikachu")');
+    let f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 3, 'data-derived: 3 entries match "pikachu" on the page that loads the lazy dex chunk (the species card + 2 non-pokedex entries — the other 10 pages never index the dex at all)');
+    assert.equal(f.rows[0].name, 'Pikachu', 'the species card ranks first (the tier-0 title match)');
+    assert.equal(f.rows[0].meta, site.pages.pokedex.title, 'row 0 targets the CURRENT page — the pokedex entries exist only here');
+    assert.equal(f.rows[0].exBadge, false, 'Pikachu is a shared species — no single-version badge');
+
+    // the EX-only starter: 1 row under EX, wearing the single-version badge
+    await typeQuery(page, 'turtwig');
+    await waitForCount(page, COUNT(1, 'turtwig'), 'pokedex.html (EX, "turtwig")');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows[0].name, 'Turtwig', 'the EX-only starter is the only match');
+    assert.ok(f.rows[0].exBadge, 'the EX-only species wears the badge--ex badge');
+
+    // the live re-scope (the palette sits z-ordered BELOW the sticky
+    // header, so the toggle stays clickable while open): Turtwig is
+    // EX-only → it drops out under Vanilla
+    await page.click('.version-toggle__option[data-version="vanilla"]');
+    await waitForCount(page, NO_RESULTS('turtwig'), 'pokedex.html (Vanilla, "turtwig" — re-scoped live)');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.open, true, 'the palette stays open across the live re-scope');
+    assert.equal(f.rows.length, 0, 'the EX-only species is absent under Vanilla');
+    assert.deepEqual(errors, [], `unexpected page errors across the palette re-scope: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html: Enter on a SAME-page entry scrolls to the CARD — or the overview section when no selection is open — without a reload or URL change', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    const inViewport = (id) =>
+      page.evaluate((x) => {
+        const el = document.getElementById(x);
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top >= -1 && r.top <= window.innerHeight;
+      }, id);
+
+    // 1. no selection: the species card is absent from the DOM (the detail
+    // panel renders only while a selection exists) → the entry's section
+    // fallback (#dex-overview) is the scroll target
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'pokedex.html (trigger open)');
+    await typeQuery(page, 'pikachu');
+    await waitForCount(page, COUNT(3, 'pikachu'), 'pokedex.html (same-page Enter, no selection)');
+    await page.evaluate(() => window.scrollBy(0, 500));
+    await page.waitForFunction(() => window.scrollY > 200, null, { timeout: SETTLE_TIMEOUT_MS });
+    const urlBefore1 = page.url();
+    let navigations = 0;
+    page.on('framenavigated', () => {
+      navigations += 1;
+    });
+
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(
+      () => {
+        const el = document.getElementById('dex-overview');
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top >= -1 && r.top <= window.innerHeight && window.scrollY < 200;
+      },
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    assert.ok(await inViewport('dex-overview'), 'the section fallback (#dex-overview) is in view after same-page Enter');
+    assert.equal(navigations, 0, 'same-page activation must not navigate (no framenavigated event)');
+    assert.equal(page.url(), urlBefore1, 'same-page activation must not change the URL (no hash added)');
+    assert.equal((await page.evaluate(paletteFacts)).open, false, 'the palette closes on Enter');
+    assert.equal((await page.evaluate(paletteFacts)).activeElementId, 'site-search-trigger', 'focus returns to the trigger');
+
+    // 2. deep link: the detail panel's root carries the card id → Enter
+    // scrolls to the CARD itself
+    await page.evaluate(() => {
+      window.location.hash = '#rec-pokedex-pikachu';
+    });
+    await page.waitForFunction(() => document.getElementById('rec-pokedex-pikachu') !== null, null, { timeout: SETTLE_TIMEOUT_MS });
+    assert.ok(await inViewport('rec-pokedex-pikachu'), 'the deep link renders the detail panel in view');
+
+    await page.keyboard.press('/');
+    await waitForOpen(page, 'pokedex.html (second open)');
+    await typeQuery(page, 'pikachu');
+    await waitForCount(page, COUNT(3, 'pikachu'), 'pokedex.html (same-page Enter, selection open)');
+    const urlBefore2 = page.url();
+    navigations = 0;
+    page.on('framenavigated', () => {
+      navigations += 1;
+    });
+
+    await page.keyboard.press('Enter');
+    await page.waitForFunction(
+      (id) => {
+        const el = document.getElementById(id);
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.top >= -1 && r.top <= window.innerHeight;
+      },
+      'rec-pokedex-pikachu',
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    assert.ok(await inViewport('rec-pokedex-pikachu'), 'the CARD is in view after same-page Enter (the card element exists while the selection is open)');
+    assert.equal(navigations, 0, 'same-page activation must not navigate (the card is found, no hash navigation)');
+    assert.equal(page.url(), urlBefore2, 'same-page activation must not change the URL');
+    assert.deepEqual(errors, [], `unexpected page errors across both same-page activations: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
 test('quests.html: with focus inside the in-page quest search, "/" does NOT open the palette', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'quests.html' });
@@ -975,6 +1117,61 @@ test('routes.html (in-page regression): the region chips change the visible rout
     await page.click('.routes-filter__btn[data-region="all"]');
     await page.waitForFunction(() => (document.getElementById('routes-count')?.textContent || '').trim() === '36 routes across all 4 regions', null, { timeout: SETTLE_TIMEOUT_MS });
     assert.equal((await routesState()).visible, 36, '"All" restores all 36 routes');
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html (in-page regression): the dex filter runs on the shared ROGUE.pokedexSearchText haystack (the issue-#50 parity)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    const dexState = () =>
+      page.evaluate(() => ({
+        line: (document.getElementById('dex-count')?.textContent || '').trim(),
+        visible: document.querySelectorAll('.dex-tile').length,
+        firstTile: document.querySelector('.dex-tile')?.getAttribute('aria-label') ?? null,
+        emptyVisible: document.getElementById('dex-empty')?.hidden === false,
+        empty: (document.getElementById('dex-empty')?.textContent || '').trim(),
+      }));
+
+    // "thunderbolt" — a MOVE name absent from every species NAME: the
+    // on-page filter must match the same 255 EX records the palette's
+    // "thunderbolt" query hits (both surfaces share ROGUE.pokedexSearchText
+    // — the learnset union made moves searchable)
+    await page.fill('#dex-search', 'thunderbolt');
+    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('255'), null, { timeout: SETTLE_TIMEOUT_MS });
+    const d1 = await dexState();
+    assert.equal(d1.line, '255 species \u00B7 page 1 of 10', 'the count line: the 255-record match paged at the 28-tile page size (data/site.json dex.pageSize; the same 255 the palette surfaces)');
+    assert.equal(d1.visible, 28, 'page 1 draws exactly 28 tiles');
+    assert.equal(d1.firstTile, 'Rattata', 'first grid tile in dex order: Rattata #19, the first TM-86 learner (data/pokedex.json learnset union)');
+
+    // "pikachu" — the species NAME: exactly one record (its forms live in
+    // that record's forms field, not as separate entries)
+    await page.fill('#dex-search', 'pikachu');
+    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('1 '), null, { timeout: SETTLE_TIMEOUT_MS });
+    const d1b = await dexState();
+    assert.equal(d1b.line, '1 species \u00B7 page 1 of 1', 'the name match: exactly the Pikachu record');
+    assert.equal(d1b.firstTile, 'Pikachu');
+
+    // nonsense: the empty state + no tiles
+    await page.fill('#dex-search', NOISE);
+    await page.waitForFunction(() => document.getElementById('dex-empty') && !document.getElementById('dex-empty').hidden, null, { timeout: SETTLE_TIMEOUT_MS });
+    const d2 = await dexState();
+    assert.equal(d2.line, '0 species \u00B7 page 1 of 1', 'no matches for a non-matching query');
+    assert.equal(d2.empty, `No species match ${Q_OPEN}${NOISE}${Q_CLOSE}.`, 'the empty state message (pokedex.js updateBrowse)');
+    assert.equal(d2.visible, 0, 'no tiles for a non-matching query');
+
+    // clearing restores the full dex, and the Vanilla re-scope keeps the
+    // shared count line
+    await page.fill('#dex-search', '');
+    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('1025'), null, { timeout: SETTLE_TIMEOUT_MS });
+    assert.equal((await dexState()).line, '1025 species \u00B7 page 1 of 37', 'clearing restores all 1025 EX species (data/pokedex.json; ceil(1025 / 28) = 37 pages)');
+    await page.click('.version-toggle__option[data-version="vanilla"]');
+    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('386'), null, { timeout: SETTLE_TIMEOUT_MS });
+    assert.equal((await dexState()).line, '386 species \u00B7 page 1 of 14', 'the Vanilla build re-scopes to the 386 shared species (ceil(386 / 28) = 14 pages)');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();
