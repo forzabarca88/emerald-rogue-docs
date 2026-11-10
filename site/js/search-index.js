@@ -54,11 +54,15 @@
  * description, anchor ''), data/site.json's own home-page content — the
  * `hero` block (eyebrow, title, subtitle, the stat value+label pairs)
  * and every `prose` block (heading + text; issue #50) — every `prose`
- * block of the 14 content data files (heading + text + the structured
- * diagram fields), and every record of the 14 content files (name +
+ * block of the 15 content data files (heading + text + the structured
+ * diagram fields), and every record of the 15 content files (name +
  * description + the per-version variant fields + the data-specific chip
  * text the rendering page emits + the structured diagram fields + both
- * string-form `differences` notes). Array order: nav pages in site.json
+ * string-form `differences` notes). The pokedex file is a LAZY chunk
+ * (meta.lazy): pages that don't load dist/data/pokedex.js throw from
+ * ROGUE.data('pokedex') and the file is skipped with a warn — the index
+ * there simply has no pokedex entries (the pokedex page's palette is the
+ * only one that indexes its ~1025 species). Array order: nav pages in site.json
  * nav order, then site.json's hero + prose blocks, then per content file
  * (in CONTENT_FILES order) its prose blocks in data order followed by its
  * records in data order. Prose blocks are anchored at the block's
@@ -184,7 +188,9 @@
  * over all entries' token lists to build the presence set (≈ the index's
  * total token count), ≤ ~1100 candidate-variant lookups per unknown query
  * token, then one candidate scan per entry's token list — linear in the
- * index size, no entries×tokens×tokens blowup for the 571-entry index.
+ * index size, no entries×tokens×tokens blowup (the full index — all 15
+ * files incl. the ~1025 pokedex records — is ~1600 entries, and the
+ * pokedex page is the only one that ever loads that many).
  *
  * Config: data/site.json `search` block — searchQuery caps the returned
  * list at `search.maxResults` (and reports the pre-cap `total`);
@@ -201,7 +207,7 @@
   var VERSION_IDS = ['vanilla', 'ex'];
   var BOTH_VERSIONS = ['vanilla', 'ex'];
 
-  /** The 14 content data files (every data/*.json except site.json). */
+  /** The 15 content data files (every data/*.json except site.json). */
   var CONTENT_FILES = [
     'adventure',
     'campaigns',
@@ -210,6 +216,7 @@
     'game-modes',
     'gameshow',
     'hub',
+    'pokedex',
     'quests',
     'routes',
     'safari',
@@ -465,6 +472,10 @@
       map: { 'wander-mons': '#hub-wander', 'time-weather-season': '#hub-time', 'hub-in-the-loop': '#hub-loop' }
     },
     quests: { page: './quests.html', self: true, map: { 'display-groups': '#quest-log' } },
+    // the pokedex page renders its four prose blocks via ROGUE.proseSections
+    // — each block keeps its own DOM id (the-dex, reading-entries, moves,
+    // sprite-provenance)
+    pokedex: { page: './pokedex.html', self: true },
     routes: {
       page: './routes.html',
       map: {
@@ -550,6 +561,11 @@
         // its per-build display groups, but the card keeps the same id in
         // both (and is absent from the DOM under a build it doesn't exist in)
         return { page: './quests.html', anchor: card, section: '#quest-log' };
+      case 'pokedex':
+        // the species detail panel's root carries the per-card id while a
+        // selection is open; the containing overview section is the
+        // same-page fallback when no selection is rendered
+        return { page: './pokedex.html', anchor: card, section: '#dex-overview' };
       case 'routes':
         return { page: './routes.html', anchor: card, section: '#routes-table' };
       case 'safari':
@@ -619,6 +635,16 @@
       }
       return parts;
     },
+
+    // the pokedex record's haystack — the SAME field union pokedex.js's
+    // on-page filter uses (ROGUE.pokedexSearchText below wraps this via
+    // recordParts): name (added centrally), dex number, category, region,
+    // description and ALL MOVE NAMES across BOTH per-version variants
+    // (top level = EX, plus the vanilla overlay's differing fields), the
+    // forms, the dex-variant names ("all" keeps the shorthand word), the
+    // ride moves and the notes. Strings only — the bare stat numbers, the
+    // catch rate and the EXP are data, not user text (the module's rule).
+    pokedex: pokedexParts,
 
     quests: function (r) {
       // name is added centrally; everything else is the UNION of both
@@ -710,6 +736,62 @@
     }
   };
 
+  /**
+   * The pokedex record's haystack parts — one string per user-visible
+   * field, BOTH per-version variants unioned (top-level = EX, the vanilla
+   * overlay's differing fields on top; mirrors the on-page reader), in
+   * the order the local pokedex.js filter used before Step 7 promoted
+   * this to the shared ROGUE.pokedexSearchText. The species name itself
+   * is added centrally by recordParts — only the overlay's DIFFERING
+   * vanilla name is repeated here. Strings only: a field value that is
+   * not a string (a bare number, a null) contributes nothing.
+   */
+  function pokedexParts(r) {
+    var parts = [];
+    var push = function (v) {
+      if (typeof v === 'string' && v) parts.push(v);
+    };
+    var pushList = function (v) {
+      if (Array.isArray(v)) {
+        for (var i = 0; i < v.length; i++) push(v[i]);
+      }
+    };
+    var pushVariants = function (v) {
+      if (v === 'all') push('all');
+      else pushList(v);
+    };
+    var pushMoves = function (m) {
+      if (!m || typeof m !== 'object') return;
+      var levelUp = Array.isArray(m.levelUp) ? m.levelUp : [];
+      for (var i = 0; i < levelUp.length; i++) push(Array.isArray(levelUp[i]) ? levelUp[i][0] : levelUp[i]);
+      pushList(m.tm);
+      pushList(m.tutor);
+    };
+    push(String(r.dexNum));
+    push(r.category);
+    push(r.region);
+    push(r.description);
+    pushList(r.types);
+    pushList(r.forms);
+    pushList(r.ride);
+    pushList(r.notes);
+    pushVariants(r.dexVariants);
+    pushMoves(r.moves);
+    var v = r.vanilla;
+    if (v && typeof v === 'object') {
+      push(v.name);
+      push(v.category);
+      push(v.description);
+      pushList(v.types);
+      pushList(v.forms);
+      pushList(v.ride);
+      pushList(v.notes);
+      pushVariants(v.dexVariants);
+      pushMoves(v.moves);
+    }
+    return parts;
+  }
+
   /** name + file-specific parts + structured diagram fields + both string-form difference notes. */
   function recordParts(fileId, record) {
     var parts = [str(record.name)];
@@ -731,6 +813,19 @@
    */
   ROGUE.questSearchText = function (record) {
     return ROGUE.resolvePlaceholders(recordParts('quests', record).join(' ')).toLowerCase();
+  };
+
+  /**
+   * A pokedex record's search haystack — the SAME field union the palette
+   * indexes (name, dex number, category, region, description, both
+   * variants' types, all move names, forms, variant names, ride, notes —
+   * strings only, bare stat numbers out), lowercased. The palette's
+   * pokedex entry `text` and the Pokedex page's on-page filter are BOTH
+   * this string (the issue-#50 on-page/palette parity for the dex),
+   * version-independent by design, like the palette index.
+   */
+  ROGUE.pokedexSearchText = function (record) {
+    return ROGUE.resolvePlaceholders(recordParts('pokedex', record).join(' ')).toLowerCase();
   };
 
   /* ------------------------------------------------------------------ *
@@ -836,7 +931,7 @@
   /**
    * Build the full site search index (version-independent — see the
    * header doc). Every nav page, data/site.json's own hero + prose
-   * blocks, and every prose block and record of the 14 content data
+   * blocks, and every prose block and record of the 15 content data
    * files gets one entry (three prose blocks also render on the gameplay
    * page and get a second entry there).
    */
@@ -915,8 +1010,11 @@
         var recTarget = recordTarget(fileId, record);
         // the quest entry's lowercased haystack IS ROGUE.questSearchText —
         // the exact string the Quests page writes into each card's
-        // data-search (issue #50 on-page/palette parity); the record
-        // entry's anchor is the per-card DOM id (issue #45)
+        // data-search (issue #50 on-page/palette parity); the pokedex
+        // entry's IS ROGUE.pokedexSearchText — the exact string the
+        // Pokedex page's on-page filter uses; the record entry's anchor
+        // is the per-card DOM id (issue #45)
+        var sharedHaystack = fileId === 'quests' ? ROGUE.questSearchText(record) : fileId === 'pokedex' ? ROGUE.pokedexSearchText(record) : undefined;
         entries.push(
           makeEntry(
             'rec-' + fileId + '-' + recKey,
@@ -925,7 +1023,7 @@
             recTarget.page,
             recTarget.anchor,
             Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS,
-            fileId === 'quests' ? ROGUE.questSearchText(record) : undefined,
+            sharedHaystack,
             recTarget.section
           )
         );

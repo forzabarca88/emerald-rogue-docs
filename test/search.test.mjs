@@ -30,7 +30,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
-/** The 14 content data files — every data/*.json except site.json. */
+/** The 15 content data files — every data/*.json except site.json. */
 const CONTENT_FILES = [
   'adventure',
   'campaigns',
@@ -39,6 +39,7 @@ const CONTENT_FILES = [
   'game-modes',
   'gameshow',
   'hub',
+  'pokedex',
   'quests',
   'routes',
   'safari',
@@ -113,6 +114,8 @@ function expectedPage(fileId, record) {
       return './config.html';
     case 'hub':
       return './hub.html';
+    case 'pokedex':
+      return './pokedex.html';
     case 'quests':
       return './quests.html';
     case 'routes':
@@ -183,7 +186,7 @@ test('the index has exactly one entry per record, per prose block and per nav pa
     assert.ok(e.text.includes(p.text.toLowerCase()), `site.json "${p.id}" text must be in the haystack`);
   }
 
-  // ASSERT — records: exactly one rec- entry per record of each of the 14 files,
+  // ASSERT — records: exactly one rec- entry per record of each of the 15 files,
   // carrying the record's own versions array and the page that renders it
   let expectedRecs = 0;
   for (const f of CONTENT_FILES) {
@@ -258,6 +261,9 @@ test('record entries anchor at the per-card deep-link id (issue #45); prose entr
         return undefined;
       case 'quests':
         return '#quest-log';
+      case 'pokedex':
+        // the species detail panel renders into the overview section
+        return '#dex-overview';
       case 'routes':
         return '#routes-table';
       case 'safari':
@@ -303,6 +309,8 @@ test('record entries anchor at the per-card deep-link id (issue #45); prose entr
     'prose-hub-what-the-hub-is': '#what-the-hub-is',
     'prose-hub-wander-mons': '#hub-wander',
     'prose-safari-entry-criteria': '#safari-entry',
+    'prose-pokedex-reading-entries': '#reading-entries',
+    'prose-pokedex-sprite-provenance': '#sprite-provenance',
     'prose-routes-naming-scheme': '#routes-naming',
     'prose-adventure-boss-ladder': '#gp-boss',
     'prose-charms-what-they-are': '#mech-charms',
@@ -441,6 +449,44 @@ test('the FAIRY-swap routes index BOTH the EX and the Vanilla wild types', () =>
   }
 });
 
+test('the pokedex entries land on the Pokedex page with the shared on-page haystack (issue #50 parity)', () => {
+  // ARRANGE — pokedex is a LAZY chunk: only pokedex.html loads it in the
+  // browser, but this sandbox loads every data file (the full index). The
+  // palette contract: every species record gets one entry that anchors at
+  // the species detail panel's per-card id (issue #45) with the overview
+  // section as the same-page fallback
+  const byPokeId = (id) => byId.get('rec-pokedex-' + id);
+  const pikachu = byPokeId('pikachu');
+  assert.ok(pikachu, 'fixture: the Pikachu record is expected');
+  assert.equal(pikachu.page, './pokedex.html', 'the palette entry deep-links the Pokedex page');
+  assert.equal(pikachu.anchor, '#rec-pokedex-pikachu', 'the entry anchors at the species detail panel card id');
+  assert.equal(pikachu.section, '#dex-overview', 'the containing overview section rides along as the same-page fallback');
+  assert.deepEqual([...pikachu.versions], VERSIONS, 'Pikachu is a shared species');
+
+  // ACT + ASSERT — a species name ranks its own card first (tier 0), and a
+  // concrete MOVE name — absent from every species NAME — surfaces the
+  // species that learn it (the learnset union made moves searchable)
+  const byName = rogue.searchQuery(entries, 'pikachu', 'ex');
+  assert.equal(byName.results[0].id, 'rec-pokedex-pikachu', '"pikachu" ranks the Pikachu species card first');
+  assert.equal(byName.results[0].page, './pokedex.html');
+  const byMove = rogue.searchQuery(entries, 'thunderbolt', 'ex');
+  assert.ok(byMove.results.some((r) => r.id === 'rec-pokedex-rattata'), '"thunderbolt" surfaces a species that learns it (TM)');
+  assert.ok(byMove.results.some((r) => r.id === 'rec-pokedex-pikachu'), '"thunderbolt" surfaces Pikachu');
+
+  // ASSERT — an EX-only species (Turtwig) is scoped out under Vanilla, the
+  // same query-time version scoping as the quests
+  assert.equal(rogue.searchQuery(entries, 'turtwig', 'vanilla').total, 0, '"turtwig" (EX-only) must not surface under Vanilla');
+  assert.equal(rogue.searchQuery(entries, 'turtwig', 'ex').results[0].id, 'rec-pokedex-turtwig');
+
+  // ASSERT — the palette entry text IS ROGUE.pokedexSearchText for every
+  // record (the issue-#50 on-page/palette parity for the dex)
+  for (const r of data.pokedex.records) {
+    const e = byId.get('rec-pokedex-' + r.id);
+    assert.ok(e, `missing rec entry for ${r.id}`);
+    assert.equal(e.text, rogue.pokedexSearchText(r), r.id + ': palette text must equal the on-page filter haystack');
+  }
+});
+
 test('the #31 structured diagram fields are searchable (trimmed-but-rendered text)', () => {
   // ARRANGE — queries that are user-visible strings the #31 batch moved
   // into structured fields. The first four are absent from the owning
@@ -464,7 +510,7 @@ test('the #31 structured diagram fields are searchable (trimmed-but-rendered tex
     { q: 'gym bosses', id: 'prose-settings-difficulty-scale', page: './config.html', total: 1 },
     { q: '30 if shiny', id: 'rec-safari-priority-eviction', page: './safari.html', total: 1 },
     { q: 'mid-run \u2014 releasing', id: 'rec-safari-entry-released', page: './safari.html', total: 1 },
-    { q: 'spring', id: 'prose-hub-time-weather-season', page: './hub.html', total: 5 },
+    { q: 'spring', id: 'prose-hub-time-weather-season', page: './hub.html', total: 18 },
     { q: 'odd badge', id: 'rec-adventure-room-honey-tree', page: './gameplay.html', total: 3 }
   ];
 
@@ -777,9 +823,9 @@ test('known words never gain fuzzy matches (the unknown-word guard, issue #46)',
   // neighbours ("mega"→"meta", "spring"→"string") must NOT count, or
   // every broad query would flood tier 3 and break the pinned counts
   const pinned = [
-    ['mega evolution', 4], // the screenshot literal (EX)
+    ['mega evolution', 5], // the screenshot literal (EX, pokedex page; 4 on the pages without the lazy chunk)
     ['the final run', 2],
-    ['spring', 5]
+    ['spring', 18] // the 5 pre-pokedex hits + 13 pokedex species with spring-season dex text
   ];
 
   // ACT + ASSERT — each stays at its pinned exact count, fuzzy-free

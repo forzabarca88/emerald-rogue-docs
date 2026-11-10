@@ -53,12 +53,13 @@
  * query survive re-renders, like routes.js / quests.js.
  *
  * The on-page search filters the same lowercased haystack the
- * site-wide palette will index — pokedexSearchText() below (the union
- * of name, dex number, category, both variants' types, description,
- * region, all move names, forms, variant names, ride, notes — strings
- * only, bare stat numbers out). Step 7 promotes this function to
- * ROGUE.pokedexSearchText shared with search-index.js; the swap is
- * then a one-line change at the two call sites.
+ * site-wide palette indexes — ROGUE.pokedexSearchText(record)
+ * (search-index.js, loaded before this page script; the union of name,
+ * dex number, category, both variants' types, description, region, all
+ * move names, forms, variant names, ride, notes — strings only, bare
+ * stat numbers out). The palette's pokedex entry `text` and this
+ * on-page filter are the SAME string (the issue-#50 on-page/palette
+ * parity for the dex).
  */
 (function () {
   'use strict';
@@ -114,58 +115,14 @@
     };
 
     /* The lowercased on-page search haystack per record, precomputed
-     * once (version-independent — it unions BOTH variants, exactly as
-     * the future palette index will). LOCAL for now: Step 7 promotes
-     * it to ROGUE.pokedexSearchText (search-index.js) — the swap is a
-     * one-line change at the two call sites below. */
-    function pokedexSearchText(record) {
-      var parts = [];
-      var push = function (v) {
-        if (typeof v === 'string' && v) parts.push(v);
-      };
-      var pushList = function (v) {
-        if (Array.isArray(v)) v.forEach(push);
-      };
-      var pushVariants = function (v) {
-        if (v === 'all') parts.push('all');
-        else pushList(v);
-      };
-      var pushMoves = function (m) {
-        if (!m || typeof m !== 'object') return;
-        (Array.isArray(m.levelUp) ? m.levelUp : []).forEach(function (p) {
-          push(Array.isArray(p) ? p[0] : p);
-        });
-        pushList(m.tm);
-        pushList(m.tutor);
-      };
-      push(record.name);
-      push(String(record.dexNum));
-      push(record.category);
-      push(record.region);
-      push(record.description);
-      pushList(record.types);
-      pushList(record.forms);
-      pushList(record.ride);
-      pushList(record.notes);
-      pushVariants(record.dexVariants);
-      pushMoves(record.moves);
-      var v = record.vanilla;
-      if (v && typeof v === 'object') {
-        push(v.name);
-        push(v.category);
-        push(v.description);
-        pushList(v.types);
-        pushList(v.forms);
-        pushList(v.ride);
-        pushList(v.notes);
-        pushVariants(v.dexVariants);
-        pushMoves(v.moves);
-      }
-      return parts.join(' ').toLowerCase();
-    }
+     * once via the SHARED ROGUE.pokedexSearchText (search-index.js) —
+     * the exact string the site-wide palette indexes for the pokedex
+     * entries, so the on-page filter has the same coverage as the
+     * palette (the issue-#50 parity). Version-independent — it unions
+     * BOTH variants. */
     var searchText = {};
     records.forEach(function (r) {
-      searchText[r.id] = pokedexSearchText(r);
+      searchText[r.id] = ROGUE.pokedexSearchText(r);
     });
 
     /**
