@@ -42,7 +42,10 @@
  *    out of the shared bundle — it is emitted as its own
  *    `dist/data/<stem>.js` chunk in the same line format, so only the page
  *    that needs it has to load it. Both the bundle and the chunks are
- *    written into the temp dir before the atomic swap, like everything else
+ *    written into the temp dir before the atomic swap, like everything else.
+ *    A lazy file whose stem collides with one of the build's own
+ *    dist/data/ outputs (bundle) fails the build — it would otherwise be
+ *    emitted as dist/data/<stem>.js on top of that output, clobbering it
  * 4. Emits `dist/sitemap.xml` (one absolute URL per nav page, each with a
  *    build-time `<lastmod>`; 404.html is a fallback, not a page, so it is
  *    omitted) and `dist/robots.txt` (allow all + a `Sitemap:` reference),
@@ -89,6 +92,10 @@ const tmpDir = path.join(root, `dist.tmp-${process.pid}`);
 const BUNDLE_ID = /^[a-z][a-z0-9-]*$/;
 /** Files under site/ that are never published to dist/ (repo-internal docs). */
 const DIST_EXCLUDE = new Set(['css/DESIGN.md']);
+/** Fixed file names the build itself emits into dist/data/ — a lazy data
+ * file's stem must not match one, or its dist/data/<stem>.js chunk would
+ * land on top of the build's own output and clobber it. */
+const RESERVED_DATA_STEMS = new Set(['bundle']);
 
 /** Every file under `dir` (recursive). */
 function* walkFiles(dir) {
@@ -474,6 +481,12 @@ function main() {
         : `window["${globalName}"]`;
       const line = `;${lhs} = ${JSON.stringify(data)};`;
       if (data.meta.lazy === true) {
+        if (RESERVED_DATA_STEMS.has(stem)) {
+          fail(
+            `data/${file}: lazy data files may not use the reserved stem ${JSON.stringify(stem)}` +
+              ` — it would be emitted as dist/data/${stem}.js, clobbering the build's own output (rename the data file)`,
+          );
+        }
         lazyChunks.set(stem, line);
       } else {
         bundleLines.push(line);

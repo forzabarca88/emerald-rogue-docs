@@ -1702,10 +1702,12 @@ function extract(repo) {
         else if (field === 'type1' || field === 'type2') (e.types ??= []).push(resolveListValue(vanPp, value, typeNames, vanTypeByValue, 'type', where));
         else if (field === 'eggGroup1' || field === 'eggGroup2') (e.eggGroups ??= []).push(resolveListValue(vanPp, value, eggGroupNames, vanEggGroupByValue, 'egg group', where));
         else if (field === 'types') e.types = parseBracedList(value, 'types', where).map((p) => resolveListValue(vanPp, p, typeNames, vanTypeByValue, 'type', where));
-        else if (['catchRate', 'expYield', 'genderRatio', 'abilities'].includes(field)) e[field] = value;
+        else if (field === 'catchRate' || field === 'expYield') e[field] = vanPp.evalExpr(value, where); // numbers, like the EX path — the vanilla overlay keeps only genuinely differing values
+        else if (field === 'genderRatio' || field === 'abilities') e[field] = value; // raw: genderOf/parseBracedList resolve them
         else if (field === 'eggGroups') (e.eggGroups ??= []).push(...parseBracedList(value, 'eggGroups', where).map((g2) => resolveListValue(vanPp, g2, eggGroupNames, vanEggGroupByValue, 'egg group', where)));
       }
-      e.types = (e.types ?? []).filter((t) => t !== 'None');
+      // monotypes are stored as { T, T } (never T + TYPE_NONE) — dedupe, mirroring the EX path
+      e.types = [...new Set((e.types ?? []).filter((t) => t !== 'None'))];
       for (const req of ['hp', 'atk', 'def', 'spa', 'spd', 'spe', 'types', 'catchRate', 'expYield', 'genderRatio', 'eggGroups', 'abilities']) {
         if (e[req] === undefined || (Array.isArray(e[req]) && e[req].length === 0)) fail(`${where}: missing .${req}`);
       }
