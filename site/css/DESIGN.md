@@ -169,7 +169,7 @@ under your own `.page--<stem>`):
 | `.version-toggle` / `.version-toggle__option` | see §5.2 (styled in `base.css`) |
 | `.site-brand` `.site-nav` `.site-nav__link(-–active)` `.site-search-trigger` `.site-header__inner` `.site-footer__inner` `.site-footer__source` | emitted by `js/nav.js` — do not restyle (the trigger's overlay is `.search-palette`, above). The shells hand-write only the static no-JS subset (brand + nav links + footer inner) so the page navigates without JS; `js/nav.js` replaces it wholesale when JS runs |
 | `.hero` `.hero__subtitle` `.hero__stats` `.hero__stat(-value/-label)` `.run-path*` (incl. `--labeled`, `__cell`, `__label`, `--den`/`--gap` nodes) `.path-diagram(-__caption)` `.rooms__den` | index hero + run path, emitted by `js/pages/home.js` (including the run-path markup); the labelled segment + wild-den path diagrams on the gameplay page, emitted by `js/pages/gameplay.js`; run-path rules in `pages.css` (unscoped family), figure scaffolds under `.page--gameplay` |
-| `.dex-toolbar` `.dex-search` `.dex-filter(-__btn)` `.dex-count` `.dex-grid` `.dex-tile(-__sprite/__num/__ph, --placeholder)` `.dex-empty` `.dex-pager(-__btn/-__page)` `.dex-back` `.dex-species(-__head/__sprite/__id/__types/__category/__body)` `.dex-stats` `.dex-stat(-__label/__bar/__fill)` `.dex-meta(-__row/__label/__value)` `.dex-desc` `.dex-evo(-__cell/-__link/-__method)` `.dex-moves(-__group/__none)` `.dex-notes` | the pokedex page (10th nav page, issue #78): the in-game Pokedex recreated as two views of one page — the `#dex-overview` tile grid (exactly `data/site.json` `dex.pageSize` `.dex-tile` `<a>` links per page, lazy sprites with the onerror placeholder tile, the live `#dex-count` line, the `.dex-pager`, and the on-page `.search` + region filter) and the `#dex-species` detail panel (root id = `ROGUE.recId('pokedex', record.id)`, the #45 deep-link scheme; sprite, stat bars with the BST row last, meta, `.dex-evo` line whose neighbors are hash links with mono method captions, the three move groups, forms / "Included in" / ride chips, notes, `.card__source` citation); emitted by `js/pages/pokedex.js` from the lazy `data/pokedex.json` chunk; rules in `pages.css` under `.page--pokedex` |
+| `.dex-toolbar` `.dex-search` `.dex-filter(-__btn)` `.dex-count` `.dex-grid` `.dex-tile(-__sprite/__num/__ph, --placeholder)` `.dex-empty` `.dex-pager(-__btn/-__page)` `.dex-back` `.dex-viewer` `.dex-species(-__head/__sprite/__id/__types/__category/__body)` `.dex-stats` `.dex-stat(-__label/__bar/__fill)` `.dex-meta(-__row/__label/__value)` `.dex-desc` `.dex-evo(-__cell/-__link/-__method)` `.dex-moves(-__group/__none)` `.dex-notes` | the pokedex page (10th nav page, issue #78): the in-game Pokedex recreated as two views of one page — the `#dex-overview` tile grid (exactly `data/site.json` `dex.pageSize` `.dex-tile` `<a>` links per page, lazy sprites with the onerror placeholder tile, the live `#dex-count` line, the `.dex-pager`, and the on-page `.search` + region filter) and the `#dex-species` detail panel (root id = `ROGUE.recId('pokedex', record.id)`, the #45 deep-link scheme; the `.dex-viewer` sprite box — the 3D viewer's canvas mount (issue #79) with the static sprite `<img>` inside as the no-WebGL fallback layer, same box either way, stat bars with the BST row last, meta, `.dex-evo` line whose neighbors are hash links with mono method captions, the three move groups, forms / "Included in" / ride chips, notes, `.card__source` citation); emitted by `js/pages/pokedex.js` from the lazy `data/pokedex.json` chunk; rules in `pages.css` under `.page--pokedex` |
 
 ## 7. Motion
 
@@ -181,6 +181,21 @@ Every animation and transform in the site lives inside
 in `base.css` is final. If a page wants to animate, the pattern is: define
 the `@keyframes` in `pages.css` under your `.page--<stem>` scope and apply
 it only inside the `no-preference` block.
+
+**3D (the Pokedex species viewer, issue #79):** the one JS-driven animation
+on the site — a `requestAnimationFrame` loop (slow turntable + gentle idle
+bob) that runs **only** when `matchMedia('(prefers-reduced-motion:
+no-preference)')` matches; under reduced motion the scene renders exactly
+one static frame and no loop starts (deterministic for the screenshot
+pipeline). Scene colors are read from the CSS tokens at init
+(`getComputedStyle` on the `--color-*` values), so nothing leaves
+`tokens.css`. No WebGL context (or a failed texture load) → the static
+sprite `<img>` stays: no layout shift, no console error. The Pokedex
+species detail is the **one** 3D placement: the home-hero run path is the
+§5.1 binding pure-CSS signature ("do not add per-page animations") and
+the hub/safari diagrams are tested layout surfaces where a WebGL layer
+would risk the §9 360px contract — per issue #79's "use it only where it
+is useful", one done-well placement is the call.
 
 ## 8. Accessibility
 
@@ -258,3 +273,14 @@ in the task that touches the header, a table, or the hero.
 4. **New motion** → follow §7 (no-preference gate, pages.css scope).
 5. After changing any of the above, re-run `npm run build` + `npm test` and
    screenshot the affected page at 1280px and 360px.
+
+**Vendored three.js (issue #79):** `site/vendor/three.min.js` — three.js
+0.159.0, the last release to ship a UMD `build/three.min.js` (the site
+loads it as a classic script; no modules, no build step) with the
+unmodified MIT license beside it (`site/vendor/three/LICENSE`) — is the
+third self-hosted asset family after `site/fonts/` (issue #49) and
+`site/assets/pokemon/` (issue #78): fetched from upstream at pin time,
+committed at dev time, zero npm dependencies. It loads **only** on the
+Pokedex page and **only** when a species detail first opens — a deferred
+`<script>` injection from `js/pages/pokedex.js`, **never** in any shell's
+static markup — and its motion follows the §7 rule above.

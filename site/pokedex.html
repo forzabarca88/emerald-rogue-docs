@@ -73,6 +73,13 @@
   <script src="./js/main.js"></script>
   <script src="./js/search-index.js"></script>
   <script src="./js/search.js"></script>
+  <!-- The 3D species viewer module (issue #79): inert until pages/pokedex.js
+       calls ROGUE3D.init — and that only after the deferred vendored-three.js
+       injection resolves when a species detail first opens (the vendored
+       three.js is never in static markup — DESIGN.md §11, and the e2e vendor
+       guard asserts the shells contain no reference to it).
+       Loaded on this page only; the other nine pages never load three.js. -->
+  <script src="./js/three-viewer.js"></script>
   <script src="./js/pages/pokedex.js"></script>
 </body>
 </html>
