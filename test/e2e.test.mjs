@@ -26,9 +26,13 @@
  *     and references the sitemap, that every nav page's static og:title /
  *     og:description / og:url match its site.json `pages` entry (404.html
  *     carries none — it is not indexable), and that the internal design
- *     contract site/css/DESIGN.md is NOT published (404), and that the
+ *     contract site/css/DESIGN.md is NOT published (404), that the
  *     self-hosted font assets (site/fonts/ — issue #49) ship in dist and
- *     serve 200 while no page references the Google Fonts CDN.
+ *     serve 200 while no page references the Google Fonts CDN, and that
+ *     the vendored three.js (site/vendor/ — issue #79) ships in
+ *     dist/vendor/ and serves 200 while no page references any CDN host
+ *     (jsdelivr / unpkg / cdnjs / Google Fonts) or statically references
+ *     the vendored script (it is deferred-injected at run time only).
  * (4) The poisoned build: a temp copy of the repo's build inputs with one
  *     data file whose meta.id breaks out of the window["..."] global-name
  *     interpolation must fail the build (naming the offending file) instead
@@ -779,6 +783,56 @@ test('self-hosted font assets ship in dist and no page references the Google Fon
       assert.ok(
         !body.includes('fonts.googleapis.com') && !body.includes('fonts.gstatic.com'),
         `${page} still references the Google Fonts CDN`
+      );
+    }
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    server = undefined;
+  }
+});
+
+test('vendored three.js ships in dist and no page references any CDN host', async () => {
+  // ARRANGE — the pinned three.js 0.159.0 UMD build (issue #79; the last
+  // release shipping build/three.min.js) plus its unmodified MIT license,
+  // committed like the issue-#49 fonts and shipped verbatim into dist/vendor/
+  const pages = [
+    'index.html',
+    'gameplay.html',
+    'versions.html',
+    'quests.html',
+    'config.html',
+    'hub.html',
+    'safari.html',
+    'routes.html',
+    'pokedex.html',
+    'mechanics.html',
+    '404.html',
+  ];
+  const cdnHosts = [
+    'cdn.jsdelivr.net',
+    'unpkg.com',
+    'cdnjs.cloudflare.com',
+    'fonts.googleapis.com',
+    'fonts.gstatic.com',
+  ];
+  server = createStaticServer(distDir);
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  try {
+    // ACT — fetch the vendored assets and every page's static HTML
+    for (const file of ['vendor/three.min.js', 'vendor/three/LICENSE']) {
+      const res = await fetch(`${base}/${file}`);
+      assert.equal(res.status, 200, `GET /${file} returned ${res.status} (vendored three.js must ship in dist)`);
+    }
+    for (const page of pages) {
+      const body = await (await fetch(`${base}/${page}`)).text();
+      for (const host of cdnHosts) {
+        assert.ok(!body.includes(host), `${page} references a CDN host (${host})`);
+      }
+      assert.ok(
+        !body.includes('vendor/three.min.js'),
+        `${page} statically references the vendored three.js (it must be deferred-injected at run time by the Pokedex page script, never baked into a shell)`
       );
     }
   } finally {

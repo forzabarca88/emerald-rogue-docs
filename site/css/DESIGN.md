@@ -182,6 +182,16 @@ in `base.css` is final. If a page wants to animate, the pattern is: define
 the `@keyframes` in `pages.css` under your `.page--<stem>` scope and apply
 it only inside the `no-preference` block.
 
+**3D (the Pokedex species viewer, issue #79):** the one JS-driven animation
+on the site — a `requestAnimationFrame` loop (slow turntable + gentle idle
+bob) that runs **only** when `matchMedia('(prefers-reduced-motion:
+no-preference)')` matches; under reduced motion the scene renders exactly
+one static frame and no loop starts (deterministic for the screenshot
+pipeline). Scene colors are read from the CSS tokens at init
+(`getComputedStyle` on the `--color-*` values), so nothing leaves
+`tokens.css`. No WebGL context (or a failed texture load) → the static
+sprite `<img>` stays: no layout shift, no console error.
+
 ## 8. Accessibility
 
 - **Focus:** one global `:focus-visible` style (2px emerald outline, 2px
@@ -258,3 +268,14 @@ in the task that touches the header, a table, or the hero.
 4. **New motion** → follow §7 (no-preference gate, pages.css scope).
 5. After changing any of the above, re-run `npm run build` + `npm test` and
    screenshot the affected page at 1280px and 360px.
+
+**Vendored three.js (issue #79):** `site/vendor/three.min.js` — three.js
+0.159.0, the last release to ship a UMD `build/three.min.js` (the site
+loads it as a classic script; no modules, no build step) with the
+unmodified MIT license beside it (`site/vendor/three/LICENSE`) — is the
+third self-hosted asset family after `site/fonts/` (issue #49) and
+`site/assets/pokemon/` (issue #78): fetched from upstream at pin time,
+committed at dev time, zero npm dependencies. It loads **only** on the
+Pokedex page and **only** when a species detail first opens — a deferred
+`<script>` injection from `js/pages/pokedex.js`, **never** in any shell's
+static markup — and its motion follows the §7 rule above.
