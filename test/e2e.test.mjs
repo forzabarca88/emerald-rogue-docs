@@ -36,7 +36,10 @@
  * (4) The poisoned build: a temp copy of the repo's build inputs with one
  *     data file whose meta.id breaks out of the window["..."] global-name
  *     interpolation must fail the build (naming the offending file) instead
- *     of emitting injectable JavaScript into bundle.js.
+ *     of emitting injectable JavaScript into bundle.js — and a second
+ *     poisoned build in which a meta.lazy data file's stem collides with a
+ *     fixed build output (bundle) must fail the build (naming the file)
+ *     instead of clobbering dist/data/bundle.js.
  */
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -872,6 +875,43 @@ test('a data file with a bad meta.id fails the build (no injection into bundle.j
     assert.ok(
       /"meta\.id".*must match/.test(result.stderr),
       `error must explain the meta.id pattern violation:\n${result.stderr}`,
+    );
+    assert.ok(!existsSync(path.join(tmpRoot, 'dist')), 'a failing build must not publish a dist/');
+  } finally {
+    rmSync(tmpRoot, { recursive: true, force: true });
+  }
+});
+
+test('a lazy data file whose stem collides with a fixed build output (bundle) fails the build', () => {
+  // ARRANGE — a temp copy of the repo's build inputs (site/, scripts/, data/)
+  // with one extra lazy data file whose stem (bundle) would be emitted as
+  // dist/data/bundle.js — on top of the shared bundle the build itself emits
+  const tmpRoot = mkdtempSync(path.join(os.tmpdir(), 'build-reserved-'));
+  try {
+    cpSync(path.join(root, 'site'), path.join(tmpRoot, 'site'), { recursive: true });
+    cpSync(path.join(root, 'scripts'), path.join(tmpRoot, 'scripts'), { recursive: true });
+    cpSync(path.join(root, 'data'), path.join(tmpRoot, 'data'), { recursive: true });
+    const poison = {
+      meta: { id: 'bundle', title: 'Reserved-stem poison', lazy: true },
+      prose: [{ heading: 'Poison', text: 'A lazy data file named bundle.js would clobber the shared bundle.' }],
+    };
+    writeFileSync(path.join(tmpRoot, 'data', 'bundle.json'), JSON.stringify(poison));
+
+    // ACT — run the real build against the poisoned data dir
+    const result = spawnSync(process.execPath, ['scripts/build.mjs'], {
+      cwd: tmpRoot,
+      encoding: 'utf8',
+    });
+
+    // ASSERT — the build fails, naming the offending file, and never publishes a dist/
+    assert.equal(result.status, 1, `reserved-stem build unexpectedly succeeded:\n${result.stdout}`);
+    assert.ok(
+      result.stderr.includes('data/bundle.json'),
+      `error must name the offending file:\n${result.stderr}`,
+    );
+    assert.ok(
+      result.stderr.includes('reserved stem'),
+      `error must explain the reserved-stem collision:\n${result.stderr}`,
     );
     assert.ok(!existsSync(path.join(tmpRoot, 'dist')), 'a failing build must not publish a dist/');
   } finally {

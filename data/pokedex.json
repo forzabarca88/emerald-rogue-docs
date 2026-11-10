@@ -215,8 +215,6 @@
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "64",
         "description": "BULBASAUR can be seen napping in bright\nsunlight. There is a seed on its back.\nBy soaking up the sun's rays, the seed\ngrows progressively larger.",
         "moves": {
           "levelUp": [
@@ -524,8 +522,7 @@
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "141",
+        "baseExp": 141,
         "description": "To support its bulb, IVYSAUR's legs\ngrow sturdy. If it spends more time lying in\nthe sunlight, the bud will soon bloom into\na large flower.",
         "moves": {
           "levelUp": [
@@ -849,8 +846,7 @@
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "208",
+        "baseExp": 208,
         "description": "VENUSAUR's flower is said to take on vivid\ncolors if it gets plenty of nutrition and\nsunlight. The flower's aroma soothes the\nemotions of people.",
         "moves": {
           "levelUp": [
@@ -1154,15 +1150,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LIZARD Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "65",
+        "baseExp": 65,
         "description": "The flame that burns at the tip of its\ntail is an indication of its emotions.\nThe flame wavers when CHARMANDER is\nhappy, and blazes when it is enraged.",
         "moves": {
           "levelUp": [
@@ -1477,15 +1468,9 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FLAME Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "142",
         "moves": {
           "levelUp": [
             [
@@ -1843,8 +1828,7 @@
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "209",
+        "baseExp": 209,
         "description": "A CHARIZARD flies about in search of\nstrong opponents. It breathes intense\nflames that can melt any material. However,\nit will never torch a weaker foe.",
         "moves": {
           "levelUp": [
@@ -2172,15 +2156,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TINY TURTLE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "66",
+        "baseExp": 66,
         "description": "Its shell is not just for protection.\nIts rounded shape and the grooves on its\nsurface minimize resistance in water,\nenabling SQUIRTLE to swim at high speeds.",
         "moves": {
           "levelUp": [
@@ -2504,15 +2483,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TURTLE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "143",
+        "baseExp": 143,
         "description": "Its large tail is covered with rich, thick\nfur that deepens in color with age.\nThe scratches on its shell are evidence\nof this POKéMON's toughness in battle.",
         "moves": {
           "levelUp": [
@@ -2860,15 +2834,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SHELLFISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "210",
+        "baseExp": 210,
         "moves": {
           "levelUp": [
             [
@@ -3085,15 +3054,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WORM Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "abilities": [
           "Shield Dust"
         ],
-        "catchRate": "255",
-        "baseExp": "53",
+        "baseExp": 53,
         "moves": {
           "levelUp": [
             [
@@ -3202,12 +3166,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COCOON Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
-        "catchRate": "120",
-        "baseExp": "72",
         "description": "Its shell is as hard as an iron slab.\nA METAPOD does not move very much\nbecause it is preparing its soft innards\nfor evolution inside the shell.",
         "moves": {
           "levelUp": [
@@ -3434,8 +3392,7 @@
         "abilities": [
           "Compoundeyes"
         ],
-        "catchRate": "45",
-        "baseExp": "160",
+        "baseExp": 160,
         "moves": {
           "levelUp": [
             [
@@ -3638,8 +3595,7 @@
         "abilities": [
           "Shield Dust"
         ],
-        "catchRate": "255",
-        "baseExp": "52",
+        "baseExp": 52,
         "description": "A WEEDLE has an extremely acute sense\nof smell. It distinguishes its favorite\nkinds of leaves from those it dislikes by\nsniffing with its big red proboscis (nose).",
         "moves": {
           "levelUp": [
@@ -3750,8 +3706,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COCOON Pokémon",
-        "catchRate": "120",
-        "baseExp": "71",
+        "baseExp": 71,
         "moves": {
           "levelUp": [
             [
@@ -3969,8 +3924,7 @@
         "abilities": [
           "Swarm"
         ],
-        "catchRate": "45",
-        "baseExp": "159",
+        "baseExp": 159,
         "description": "A BEEDRILL is extremely territorial.\nFor safety reasons, no one should \never approach its nest. If angered,\nthey will attack in a swarm.",
         "moves": {
           "levelUp": [
@@ -4248,8 +4202,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "255",
-        "baseExp": "55",
+        "baseExp": 55,
         "moves": {
           "levelUp": [
             [
@@ -4525,8 +4478,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "120",
-        "baseExp": "113",
+        "baseExp": 113,
         "description": "This POKéMON flies around, patrolling its\nlarge territory. If its living space is\nviolated, it shows no mercy in thoroughly\npunishing the foe with its sharp claws.",
         "moves": {
           "levelUp": [
@@ -4815,8 +4767,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "45",
-        "baseExp": "172",
+        "baseExp": 172,
         "description": "This POKéMON has gorgeous, glossy\nfeathers. Many TRAINERS are so captivated\nby the beautiful feathers on its head that\nthey choose PIDGEOT as their POKéMON.",
         "moves": {
           "levelUp": [
@@ -5103,16 +5054,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away",
           "Guts"
         ],
-        "catchRate": "255",
-        "baseExp": "57",
+        "baseExp": 57,
         "description": "A RATTATA is cautious in the extreme.\nEven while it is asleep, it constantly\nmoves its ears and listens for danger.\nIt will make its nest anywhere.",
         "moves": {
           "levelUp": [
@@ -5423,16 +5369,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away",
           "Guts"
         ],
-        "catchRate": "127",
-        "baseExp": "116",
+        "baseExp": 116,
         "description": "A RATICATE's sturdy fangs grow steadily.\nTo keep them ground down, it gnaws on\nrocks and logs. It may even chew on the\nwalls of houses.",
         "moves": {
           "levelUp": [
@@ -5725,8 +5666,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "255",
-        "baseExp": "58",
+        "baseExp": 58,
         "moves": {
           "levelUp": [
             [
@@ -6011,8 +5951,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "90",
-        "baseExp": "162",
+        "baseExp": 162,
         "moves": {
           "levelUp": [
             [
@@ -6309,16 +6248,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SNAKE Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Intimidate",
           "Shed Skin"
         ],
-        "catchRate": "255",
-        "baseExp": "62",
+        "baseExp": 62,
         "description": "An EKANS curls itself up in a spiral while\nit rests. This position allows it to quickly\nrespond to an enemy from any direction\nwith a threat from its upraised head.",
         "moves": {
           "levelUp": [
@@ -6671,10 +6605,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COBRA Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "stats": {
           "hp": 60,
           "atk": 85,
@@ -6688,8 +6618,7 @@
           "Intimidate",
           "Shed Skin"
         ],
-        "catchRate": "90",
-        "baseExp": "147",
+        "baseExp": 147,
         "description": "This POKéMON has a terrifically strong\nconstricting power. It can even flatten\nsteel oil drums. Once it wraps its body\naround its foe, escaping is impossible.",
         "moves": {
           "levelUp": [
@@ -7041,10 +6970,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "stats": {
           "hp": 35,
           "atk": 55,
@@ -7057,8 +6982,7 @@
         "abilities": [
           "Static"
         ],
-        "catchRate": "190",
-        "baseExp": "82",
+        "baseExp": 82,
         "evo": {
           "next": {
             "id": "raichu",
@@ -7422,10 +7346,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "stats": {
           "hp": 60,
           "atk": 90,
@@ -7438,8 +7358,7 @@
         "abilities": [
           "Static"
         ],
-        "catchRate": "75",
-        "baseExp": "122",
+        "baseExp": 122,
         "evo": {
           "prev": {
             "id": "pikachu",
@@ -7766,15 +7685,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Sand Veil"
         ],
-        "catchRate": "255",
-        "baseExp": "93",
+        "baseExp": 93,
         "moves": {
           "levelUp": [
             [
@@ -8122,15 +8036,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOUSE Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Sand Veil"
         ],
-        "catchRate": "90",
-        "baseExp": "163",
+        "baseExp": 163,
         "moves": {
           "levelUp": [
             [
@@ -8422,15 +8331,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON PIN Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "235",
-        "baseExp": "59",
+        "baseExp": 59,
         "description": "Its highly toxic barbs are thought to have\ndeveloped as protection for this small-\nbodied POKéMON. When enraged, it releases\na horrible toxin from its horn.",
         "moves": {
           "levelUp": [
@@ -8725,18 +8629,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON PIN Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "120",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "117",
+        "baseExp": 117,
         "evo": {
           "next": {
             "id": "nidoqueen",
@@ -9102,11 +9001,10 @@
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "194",
+        "baseExp": 194,
         "description": "It is adept at sending foes flying with\nharsh tackles using its tough, scaly body.\nThis POKéMON is at its strongest when\nit is defending its young.",
         "evo": {
           "prev": {
@@ -9425,15 +9323,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON PIN Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "235",
-        "baseExp": "60",
+        "baseExp": 60,
         "description": "The male NIDORAN has developed muscles\nthat freely move its ears in any direction.\nEven the slightest sound does not escape\nthis POKéMON's notice.",
         "moves": {
           "levelUp": [
@@ -9728,15 +9621,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON PIN Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "120",
-        "baseExp": "118",
+        "baseExp": 118,
         "evo": {
           "next": {
             "id": "nidoking",
@@ -10099,8 +9987,7 @@
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "45",
-        "baseExp": "195",
+        "baseExp": 195,
         "description": "A NIDOKING's thick tail packs enormously\ndestructive power capable of toppling\na metal transmission tower. Once it goes\non a rampage, there is no stopping it.",
         "evo": {
           "prev": {
@@ -10504,14 +10391,12 @@
       "vanilla": {
         "category": "FAIRY Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "150",
-        "baseExp": "68",
+        "baseExp": 68,
         "description": "On every night of a full moon, they come\nout to play. When dawn arrives, the tired\nCLEFAIRY go to sleep nestled up against\neach other in deep and quiet mountains.",
         "evo": {
           "next": {
@@ -10900,7 +10785,6 @@
       "vanilla": {
         "category": "FAIRY Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "stats": {
@@ -10915,8 +10799,7 @@
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "25",
-        "baseExp": "129",
+        "baseExp": 129,
         "description": "A CLEFABLE uses its wings to skip lightly \nas if it were flying. Its bouncy step\nlets it even walk on water. On quiet,\nmoonlit nights, it strolls on lakes.",
         "evo": {
           "prev": {
@@ -11255,15 +11138,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FOX Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Flash Fire"
         ],
-        "catchRate": "190",
-        "baseExp": "63",
+        "baseExp": 63,
         "evo": {
           "next": {
             "id": "ninetales",
@@ -11544,15 +11422,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FOX Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Flash Fire"
         ],
-        "catchRate": "75",
-        "baseExp": "178",
+        "baseExp": 178,
         "description": "It has long been said that each of the\nnine tails embody an enchanted power.\nA long-lived NINETALES will have fur that\nshines like gold.",
         "evo": {
           "prev": {
@@ -11902,14 +11775,12 @@
       "vanilla": {
         "category": "BALLOON Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "170",
-        "baseExp": "76",
+        "baseExp": 76,
         "description": "Nothing can avoid falling asleep hearing a\nJIGGLYPUFF's song. The sound waves of its\nsinging voice match the brain waves of\nsomeone in a deep sleep.",
         "evo": {
           "next": {
@@ -12337,7 +12208,6 @@
       "vanilla": {
         "category": "BALLOON Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "stats": {
@@ -12352,8 +12222,7 @@
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "50",
-        "baseExp": "109",
+        "baseExp": 109,
         "description": "Its fur is the ultimate in luxuriousness.\nSleeping alongside a WIGGLYTUFF is simply\ndivine. Its body expands seemingly without\nend when it inhales.",
         "evo": {
           "prev": {
@@ -12674,8 +12543,7 @@
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "255",
-        "baseExp": "54",
+        "baseExp": 54,
         "moves": {
           "levelUp": [
             [
@@ -12986,8 +12854,7 @@
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "90",
-        "baseExp": "171",
+        "baseExp": 171,
         "description": "Its fangs easily puncture even thick\nanimal hide. It loves to feast on the blood\nof people and POKéMON. It flits about in\ndarkness and strikes from behind.",
         "moves": {
           "levelUp": [
@@ -13282,8 +13149,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "255",
-        "baseExp": "78",
+        "baseExp": 78,
         "description": "This POKéMON grows by absorbing moonlight.\nDuring the daytime, it buries itself in the\nground, leaving only its leaves exposed to\navoid detection by its enemies.",
         "moves": {
           "levelUp": [
@@ -13564,8 +13430,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "120",
-        "baseExp": "132",
+        "baseExp": 132,
         "evo": {
           "next": {
             "id": "vileplume",
@@ -13876,8 +13741,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "184",
+        "baseExp": 184,
         "description": "In seasons when it produces more pollen,\nthe air around a VILEPLUME turns yellow\nwith the powder as it walks. The pollen is\nhighly toxic and causes paralysis.",
         "evo": {
           "prev": {
@@ -14160,8 +14024,7 @@
         "abilities": [
           "Effect Spore"
         ],
-        "catchRate": "190",
-        "baseExp": "70",
+        "baseExp": 70,
         "description": "A PARAS has parasitic tochukaso\nmushrooms growing on its back. They grow\nby drawing nutrients from the host. They\nare valued as a medicine for long life.",
         "moves": {
           "levelUp": [
@@ -14459,8 +14322,7 @@
         "abilities": [
           "Effect Spore"
         ],
-        "catchRate": "75",
-        "baseExp": "128",
+        "baseExp": 128,
         "description": "PARASECT are known to infest the roots of\nlarge trees en masse and drain nutrients.\nWhen an infested tree dies, they move\nonto another tree all at once.",
         "moves": {
           "levelUp": [
@@ -14746,8 +14608,7 @@
         "abilities": [
           "Compoundeyes"
         ],
-        "catchRate": "190",
-        "baseExp": "75",
+        "baseExp": 75,
         "moves": {
           "levelUp": [
             [
@@ -15049,8 +14910,7 @@
         "abilities": [
           "Shield Dust"
         ],
-        "catchRate": "75",
-        "baseExp": "138",
+        "baseExp": 138,
         "description": "VENOMOTH are nocturnal--they only are\nactive at night. Their favorite prey are\ninsects that gather around streetlights,\nattracted by the light in the darkness.",
         "moves": {
           "levelUp": [
@@ -15360,16 +15220,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOLE Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Sand Veil",
           "Arena Trap"
         ],
-        "catchRate": "255",
-        "baseExp": "81",
+        "baseExp": 81,
         "description": "DIGLETT are raised in most farms.\nThe reason is simple--wherever they\nburrow, the soil is left perfectly tilled\nfor growing delicious crops.",
         "moves": {
           "levelUp": [
@@ -15680,10 +15535,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOLE Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "stats": {
           "hp": 35,
           "atk": 80,
@@ -15697,8 +15548,7 @@
           "Sand Veil",
           "Arena Trap"
         ],
-        "catchRate": "50",
-        "baseExp": "153",
+        "baseExp": 153,
         "moves": {
           "levelUp": [
             [
@@ -16013,15 +15863,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SCRATCH CAT Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Pickup"
         ],
-        "catchRate": "255",
-        "baseExp": "69",
+        "baseExp": 69,
         "description": "MEOWTH withdraw their sharp claws into\ntheir paws to silently sneak about.\nFor some reason, this POKéMON loves\nshiny coins that glitter with light.",
         "moves": {
           "levelUp": [
@@ -16360,15 +16205,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CLASSY CAT Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Limber"
         ],
-        "catchRate": "90",
-        "baseExp": "148",
+        "baseExp": 148,
         "description": "A PERSIAN's six bold whiskers sense air\nmovements to determine what is in its\nvicinity. It becomes docile if grabbed\nby the whiskers.",
         "moves": {
           "levelUp": [
@@ -16705,16 +16545,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DUCK Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Damp",
           "Cloud Nine"
         ],
-        "catchRate": "190",
-        "baseExp": "80",
+        "baseExp": 80,
         "moves": {
           "levelUp": [
             [
@@ -17061,16 +16896,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DUCK Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Damp",
           "Cloud Nine"
         ],
-        "catchRate": "75",
-        "baseExp": "174",
+        "baseExp": 174,
         "description": "A GOLDUCK is an adept swimmer.\nIt sometimes joins competitive swimmers\nin training. It uses psychic powers when\nits forehead shimmers with light.",
         "moves": {
           "levelUp": [
@@ -17402,15 +17232,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PIG MONKEY Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Vital Spirit"
         ],
-        "catchRate": "190",
-        "baseExp": "74",
+        "baseExp": 74,
         "moves": {
           "levelUp": [
             [
@@ -17777,15 +17602,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PIG MONKEY Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Vital Spirit"
         ],
-        "catchRate": "75",
-        "baseExp": "149",
+        "baseExp": 149,
         "evo": {
           "prev": {
             "id": "mankey",
@@ -18131,16 +17951,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PUPPY Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Intimidate",
           "Flash Fire"
         ],
-        "catchRate": "190",
-        "baseExp": "91",
+        "baseExp": 91,
         "description": "Its superb sense of smell ensures that\nthis POKéMON won't forget any scent,\nno matter what. It uses its sense of smell\nto detect the emotions of others.",
         "evo": {
           "next": {
@@ -18480,16 +18295,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LEGENDARY Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Intimidate",
           "Flash Fire"
         ],
-        "catchRate": "75",
-        "baseExp": "213",
+        "baseExp": 213,
         "description": "This fleet-footed POKéMON is said to run\nover 6,200 miles in a single day and night.\nThe fire that blazes wildly within its body\nis its source of power.",
         "evo": {
           "prev": {
@@ -18764,16 +18574,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TADPOLE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Absorb",
           "Damp"
         ],
-        "catchRate": "255",
-        "baseExp": "77",
+        "baseExp": 77,
         "description": "It is possible to see this POKéMON's spiral\ninnards right through its thin skin.\nHowever, the skin is also very flexible.\nEven sharp fangs bounce right off it.",
         "moves": {
           "levelUp": [
@@ -19065,16 +18870,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TADPOLE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Absorb",
           "Damp"
         ],
-        "catchRate": "120",
-        "baseExp": "131",
+        "baseExp": 131,
         "evo": {
           "next": {
             "id": "poliwrath",
@@ -19396,8 +19196,7 @@
           "Water Absorb",
           "Damp"
         ],
-        "catchRate": "45",
-        "baseExp": "185",
+        "baseExp": 185,
         "description": "Its highly developed muscles never grow\nfatigued, however much it exercises.\nThis POKéMON can swim back and forth\nacross the Pacific Ocean without effort.",
         "evo": {
           "prev": {
@@ -19669,16 +19468,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PSI Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Synchronize",
           "Inner Focus"
         ],
-        "catchRate": "200",
-        "baseExp": "73",
+        "baseExp": 73,
         "description": "A POKéMON that sleeps 18 hours a day.\nObservation revealed that it uses\nTELEPORT to change its location once\nevery hour.",
         "moves": {
           "levelUp": [
@@ -19989,16 +19783,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PSI Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Synchronize",
           "Inner Focus"
         ],
-        "catchRate": "100",
-        "baseExp": "145",
+        "baseExp": 145,
         "description": "It is rumored that a boy with psychic\nabilities suddenly transformed into\nKADABRA while he was assisting research\ninto extrasensory powers.",
         "moves": {
           "levelUp": [
@@ -20355,10 +20144,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PSI Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "stats": {
           "hp": 55,
           "atk": 50,
@@ -20372,8 +20157,7 @@
           "Synchronize",
           "Inner Focus"
         ],
-        "catchRate": "50",
-        "baseExp": "186",
+        "baseExp": 186,
         "description": "While it has strong psychic abilities and\nhigh intelligence, an ALAKAZAM's muscles\nare very weak. It uses psychic power to\nmove its body.",
         "moves": {
           "levelUp": [
@@ -20716,15 +20500,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SUPERPOWER Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Guts"
         ],
-        "catchRate": "180",
-        "baseExp": "88",
+        "baseExp": 88,
         "moves": {
           "levelUp": [
             [
@@ -21063,15 +20842,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SUPERPOWER Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Guts"
         ],
-        "catchRate": "90",
-        "baseExp": "146",
+        "baseExp": 146,
         "description": "A belt is worn by a MACHOKE to keep its\noverwhelming power under control.\nBecause it is so dangerous, no one has\never removed the belt.",
         "moves": {
           "levelUp": [
@@ -21423,15 +21197,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SUPERPOWER Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Guts"
         ],
-        "catchRate": "45",
-        "baseExp": "193",
+        "baseExp": 193,
         "moves": {
           "levelUp": [
             [
@@ -21748,8 +21517,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "255",
-        "baseExp": "84",
+        "baseExp": 84,
         "description": "A BELLSPROUT's thin and flexible body lets\nit bend and sway to avoid any attack,\nhowever strong it may be. From its mouth,\nit leaks a fluid that melts even iron.",
         "moves": {
           "levelUp": [
@@ -22049,8 +21817,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "120",
-        "baseExp": "151",
+        "baseExp": 151,
         "description": "At night, a WEEPINBELL hangs on to a tree\nbranch with its hooked rear and sleeps.\nIf it moves around in its sleep, it may\nwake up to find itself on the ground.",
         "evo": {
           "next": {
@@ -22341,8 +22108,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "191",
+        "baseExp": 191,
         "evo": {
           "prev": {
             "id": "weepinbell",
@@ -22627,8 +22393,7 @@
           "Clear Body",
           "Liquid Ooze"
         ],
-        "catchRate": "190",
-        "baseExp": "105",
+        "baseExp": 105,
         "moves": {
           "levelUp": [
             [
@@ -22950,8 +22715,7 @@
           "Clear Body",
           "Liquid Ooze"
         ],
-        "catchRate": "60",
-        "baseExp": "205",
+        "baseExp": 205,
         "moves": {
           "levelUp": [
             [
@@ -23260,8 +23024,7 @@
           "Rock Head",
           "Sturdy"
         ],
-        "catchRate": "255",
-        "baseExp": "86",
+        "baseExp": 86,
         "moves": {
           "levelUp": [
             [
@@ -23596,8 +23359,7 @@
           "Rock Head",
           "Sturdy"
         ],
-        "catchRate": "120",
-        "baseExp": "134",
+        "baseExp": 134,
         "moves": {
           "levelUp": [
             [
@@ -23944,8 +23706,7 @@
           "Rock Head",
           "Sturdy"
         ],
-        "catchRate": "45",
-        "baseExp": "177",
+        "baseExp": 177,
         "moves": {
           "levelUp": [
             [
@@ -24251,16 +24012,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FIRE HORSE Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Run Away",
           "Flash Fire"
         ],
-        "catchRate": "190",
-        "baseExp": "152",
+        "baseExp": 152,
         "description": "A PONYTA is very weak at birth. It can\nbarely stand up. Its legs become stronger\nas it stumbles and falls while trying to\nkeep up with its parent.",
         "moves": {
           "levelUp": [
@@ -24570,16 +24326,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FIRE HORSE Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Run Away",
           "Flash Fire"
         ],
-        "catchRate": "60",
-        "baseExp": "192",
+        "baseExp": 192,
         "description": "It usually canters casually in the fields\nand plains. But once a RAPIDASH turns\nserious, its fiery manes flare and blaze\nas it gallops its way up to 150 mph.",
         "moves": {
           "levelUp": [
@@ -24917,8 +24668,7 @@
           "Oblivious",
           "Own Tempo"
         ],
-        "catchRate": "190",
-        "baseExp": "99",
+        "baseExp": 99,
         "moves": {
           "levelUp": [
             [
@@ -25302,8 +25052,7 @@
           "Oblivious",
           "Own Tempo"
         ],
-        "catchRate": "75",
-        "baseExp": "164",
+        "baseExp": 164,
         "description": "Its tail has a SHELLDER firmly attached\nwith a bite. As a result, the tail can't be\nused for fishing anymore. This forces it\nto reluctantly swim and catch prey.",
         "moves": {
           "levelUp": [
@@ -25650,8 +25399,7 @@
           "Magnet Pull",
           "Sturdy"
         ],
-        "catchRate": "190",
-        "baseExp": "89",
+        "baseExp": 89,
         "moves": {
           "levelUp": [
             [
@@ -25958,8 +25706,7 @@
           "Magnet Pull",
           "Sturdy"
         ],
-        "catchRate": "60",
-        "baseExp": "161",
+        "baseExp": 161,
         "description": "It is actually three MAGNEMITE linked\nby magnetism. It generates powerful radio\nwaves that raise temperatures by 3.6\ndegrees F within a 3,300-foot radius.",
         "evo": {
           "prev": {
@@ -26269,8 +26016,7 @@
           "Keen Eye",
           "Inner Focus"
         ],
-        "catchRate": "45",
-        "baseExp": "94",
+        "baseExp": 94,
         "description": "It is always seen with a stick from a plant.\nApparently, there are good sticks and bad\nsticks. This POKéMON occasionally fights\nwith others over choice sticks.",
         "moves": {
           "levelUp": [
@@ -26560,8 +26306,7 @@
           "Run Away",
           "Early Bird"
         ],
-        "catchRate": "190",
-        "baseExp": "96",
+        "baseExp": 96,
         "moves": {
           "levelUp": [
             [
@@ -26860,8 +26605,7 @@
           "Run Away",
           "Early Bird"
         ],
-        "catchRate": "45",
-        "baseExp": "158",
+        "baseExp": 158,
         "description": "A peculiar POKéMON species with three\nheads. It vigorously races across grassy\nplains even in arid seasons with little\nrainfall.",
         "moves": {
           "levelUp": [
@@ -27159,15 +26903,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SEA LION Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "190",
-        "baseExp": "100",
+        "baseExp": 100,
         "description": "SEEL hunt for prey in frigid, ice-covered\nseas. When it needs to breathe, it punches\na hole through the ice with the sharply\nprotruding section of its head.",
         "moves": {
           "levelUp": [
@@ -27489,8 +27228,7 @@
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "75",
-        "baseExp": "176",
+        "baseExp": 176,
         "description": "It loves to snooze on bitterly cold ice.\nThe sight of this POKéMON sleeping on\na glacier was mistakenly thought to be\na mermaid by a mariner long ago.",
         "moves": {
           "levelUp": [
@@ -27806,16 +27544,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SLUDGE Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Stench",
           "Sticky Hold"
         ],
-        "catchRate": "190",
-        "baseExp": "90",
+        "baseExp": 90,
         "description": "Born from polluted sludge in the sea,\nGRIMER's favorite food is anything filthy.\nThey feed on wastewater pumped out from\nfactories.",
         "moves": {
           "levelUp": [
@@ -28161,16 +27894,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SLUDGE Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Stench",
           "Sticky Hold"
         ],
-        "catchRate": "75",
-        "baseExp": "157",
+        "baseExp": 157,
         "description": "It prefers warm and humid habitats.\nIn the summertime, the toxic substances\nin its body intensify, making MUK reek like\nputrid kitchen garbage.",
         "moves": {
           "levelUp": [
@@ -28471,15 +28199,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIVALVE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Shell Armor"
         ],
-        "catchRate": "190",
-        "baseExp": "97",
+        "baseExp": 97,
         "evo": {
           "next": {
             "id": "cloyster",
@@ -28798,8 +28521,7 @@
         "abilities": [
           "Shell Armor"
         ],
-        "catchRate": "60",
-        "baseExp": "203",
+        "baseExp": 203,
         "description": "It swims in the sea by swallowing water,\nthen jetting it out toward the rear.\nThe CLOYSTER shoots spikes from its\nshell using the same system.",
         "evo": {
           "prev": {
@@ -29104,8 +28826,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GAS Pokémon",
-        "catchRate": "190",
-        "baseExp": "95",
+        "baseExp": 95,
         "description": "When exposed to a strong wind, a GASTLY's\ngaseous body quickly dwindles away.\nThey cluster under the eaves of houses\nto escape the ravages of wind.",
         "moves": {
           "levelUp": [
@@ -29438,8 +29159,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GAS Pokémon",
-        "catchRate": "90",
-        "baseExp": "126",
+        "baseExp": 126,
         "description": "If a HAUNTER beckons you while it is\nfloating in darkness, don't approach it.\nThis POKéMON will try to lick you with its\ntongue and steal your life away.",
         "moves": {
           "levelUp": [
@@ -29795,8 +29515,7 @@
         "abilities": [
           "Levitate"
         ],
-        "catchRate": "45",
-        "baseExp": "190",
+        "baseExp": 190,
         "description": "Deep in the night, your shadow cast by\na streetlight may suddenly overtake you.\nIt is actually a GENGAR running past\nyou, pretending to be your shadow.",
         "moves": {
           "levelUp": [
@@ -30155,8 +29874,7 @@
           "Rock Head",
           "Sturdy"
         ],
-        "catchRate": "45",
-        "baseExp": "108",
+        "baseExp": 108,
         "description": "There is a magnet in its brain that\nprevents an ONIX from losing direction\nwhile tunneling. As it grows older, its body\nbecomes steadily rounder and smoother.",
         "evo": {
           "next": {
@@ -30489,15 +30207,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HYPNOSIS Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Insomnia"
         ],
-        "catchRate": "190",
-        "baseExp": "102",
+        "baseExp": 102,
         "description": "If your nose becomes itchy while you are\nsleeping, it's a sure sign that a DROWZEE is\nstanding above your pillow and trying to\neat your dream through your nostrils.",
         "moves": {
           "levelUp": [
@@ -30850,15 +30563,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HYPNOSIS Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Insomnia"
         ],
-        "catchRate": "75",
-        "baseExp": "165",
+        "baseExp": 165,
         "description": "The arcing movement and glitter of the\npendulum in a HYPNO's hand lull the foe\ninto deep hypnosis. While searching for\nprey, it polishes the pendulum.",
         "moves": {
           "levelUp": [
@@ -31174,16 +30882,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "RIVER CRAB Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Hyper Cutter",
           "Shell Armor"
         ],
-        "catchRate": "225",
-        "baseExp": "115",
+        "baseExp": 115,
         "description": "KRABBY live in holes dug into beaches.\nOn sandy shores with little in the way\nof food, they can be seen squabbling with\neach other over territory.",
         "moves": {
           "levelUp": [
@@ -31488,16 +31191,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PINCER Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Hyper Cutter",
           "Shell Armor"
         ],
-        "catchRate": "60",
-        "baseExp": "206",
+        "baseExp": 206,
         "description": "It waves its huge, oversized claw in the\nair to communicate with others.\nBut since the claw is so heavy, this\nPOKéMON quickly tires.",
         "moves": {
           "levelUp": [
@@ -31798,16 +31496,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BALL Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Soundproof",
           "Static"
         ],
-        "catchRate": "190",
-        "baseExp": "103",
+        "baseExp": 103,
         "description": "It bears an uncanny and unexplained\nresemblance to a POKé BALL. Because it\nexplodes at the slightest shock, even\nveteran TRAINERS treat it with caution.",
         "moves": {
           "levelUp": [
@@ -32110,10 +31803,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BALL Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "stats": {
           "hp": 60,
           "atk": 50,
@@ -32127,8 +31816,7 @@
           "Soundproof",
           "Static"
         ],
-        "catchRate": "60",
-        "baseExp": "150",
+        "baseExp": 150,
         "moves": {
           "levelUp": [
             [
@@ -32414,8 +32102,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "90",
-        "baseExp": "98",
+        "baseExp": 98,
         "evo": {
           "next": {
             "id": "exeggutor",
@@ -32771,8 +32458,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "212",
+        "baseExp": 212,
         "description": "Originally from the tropics, EXEGGUTOR's\nheads grow larger from exposure to strong\nsunlight. It is said that when the heads\nfall, they group to form an EXEGGCUTE.",
         "evo": {
           "prev": {
@@ -33076,16 +32762,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LONELY Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Rock Head",
           "Lightningrod"
         ],
-        "catchRate": "190",
-        "baseExp": "87",
+        "baseExp": 87,
         "moves": {
           "levelUp": [
             [
@@ -33427,16 +33108,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BONE KEEPER Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Rock Head",
           "Lightningrod"
         ],
-        "catchRate": "75",
-        "baseExp": "124",
+        "baseExp": 124,
         "description": "A MAROWAK is the evolved form of a CUBONE\nthat has grown tough by overcoming the\ngrief of losing its mother. Its tempered\nand hardened spirit is not easily broken.",
         "moves": {
           "levelUp": [
@@ -33779,15 +33455,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "KICKING Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Limber"
         ],
-        "catchRate": "45",
-        "baseExp": "139",
+        "baseExp": 139,
         "moves": {
           "levelUp": [
             [
@@ -34133,15 +33804,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PUNCHING Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "45",
-        "baseExp": "140",
+        "baseExp": 140,
         "description": "A HITMONCHAN is said to possess the\nspirit of a boxer who aimed to become the\nworld champion. Having an indomitable\nspirit means that it will never give up.",
         "moves": {
           "levelUp": [
@@ -34466,16 +34132,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LICKING Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Own Tempo",
           "Oblivious"
         ],
-        "catchRate": "45",
-        "baseExp": "127",
+        "baseExp": 127,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -34816,15 +34477,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON GAS Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Levitate"
         ],
-        "catchRate": "190",
-        "baseExp": "114",
+        "baseExp": 114,
         "description": "Getting up close to a KOFFING will give\nyou a chance to observe, through its thin\nskin, the toxic gases swirling inside. It\nblows up at the slightest stimulation.",
         "moves": {
           "levelUp": [
@@ -35143,15 +34799,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON GAS Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Levitate"
         ],
-        "catchRate": "60",
-        "baseExp": "173",
+        "baseExp": 173,
         "description": "By diluting its toxic gases with a special\nprocess, the highest grade of perfume can\nbe extracted. To WEEZING, gases emanating\nfrom garbage are the ultimate feast.",
         "moves": {
           "levelUp": [
@@ -35484,8 +35135,7 @@
           "Lightningrod",
           "Rock Head"
         ],
-        "catchRate": "120",
-        "baseExp": "135",
+        "baseExp": 135,
         "moves": {
           "levelUp": [
             [
@@ -35861,8 +35511,7 @@
           "Lightningrod",
           "Rock Head"
         ],
-        "catchRate": "60",
-        "baseExp": "204",
+        "baseExp": 204,
         "evo": {
           "prev": {
             "id": "rhyhorn",
@@ -36256,16 +35905,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "EGG Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Natural Cure",
           "Serene Grace"
         ],
-        "catchRate": "30",
-        "baseExp": "255",
+        "baseExp": 255,
         "description": "CHANSEY lay nutritionally excellent eggs\nevery day. The eggs are so delicious, they\nare eagerly devoured by even those people\nwho have lost their appetite.",
         "evo": {
           "next": {
@@ -36624,15 +36268,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VINE Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "166",
+        "baseExp": 166,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -36978,15 +36617,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PARENT Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Early Bird"
         ],
-        "catchRate": "45",
-        "baseExp": "175",
+        "baseExp": 175,
         "description": "If you come across a young KANGASKHAN\nplaying by itself, never try to catch it.\nThe baby's parent is sure to be in the area,\nand it will become violently enraged.",
         "moves": {
           "levelUp": [
@@ -37319,15 +36953,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DRAGON Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "225",
-        "baseExp": "83",
+        "baseExp": 83,
         "moves": {
           "levelUp": [
             [
@@ -37609,15 +37238,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DRAGON Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Poison Point"
         ],
-        "catchRate": "75",
-        "baseExp": "155",
+        "baseExp": 155,
         "evo": {
           "next": {
             "id": "kingdra",
@@ -37896,16 +37520,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GOLDFISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim",
           "Water Veil"
         ],
-        "catchRate": "225",
-        "baseExp": "111",
+        "baseExp": 111,
         "description": "In the springtime, schools of GOLDEEN\ncan be seen swimming up falls and rivers.\nIt metes out staggering damage with its\nsingle horn.",
         "moves": {
           "levelUp": [
@@ -38186,16 +37805,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GOLDFISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim",
           "Water Veil"
         ],
-        "catchRate": "60",
-        "baseExp": "170",
+        "baseExp": 170,
         "moves": {
           "levelUp": [
             [
@@ -38491,16 +38105,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "STAR SHAPE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Illuminate",
           "Natural Cure"
         ],
-        "catchRate": "225",
-        "baseExp": "106",
+        "baseExp": 106,
         "evo": {
           "next": {
             "id": "starmie",
@@ -38838,8 +38447,7 @@
           "Illuminate",
           "Natural Cure"
         ],
-        "catchRate": "60",
-        "baseExp": "207",
+        "baseExp": 207,
         "description": "People in ancient times imagined that\nSTARMIE were transformed from the\nreflections of stars that twinkled on\ngentle waves at night.",
         "evo": {
           "prev": {
@@ -39195,14 +38803,12 @@
       "vanilla": {
         "category": "BARRIER Pokémon",
         "types": [
-          "Psychic",
           "Psychic"
         ],
         "abilities": [
           "Soundproof"
         ],
-        "catchRate": "45",
-        "baseExp": "136",
+        "baseExp": 136,
         "description": "A MR. MIME is a master of pantomime. It can\nconvince others that something unseeable\nactually exists. Once believed, the\nimaginary object does become real.",
         "evo": null,
         "moves": {
@@ -39569,8 +39175,7 @@
         "abilities": [
           "Swarm"
         ],
-        "catchRate": "45",
-        "baseExp": "187",
+        "baseExp": 187,
         "evo": {
           "next": {
             "id": "scizor",
@@ -39901,8 +39506,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "45",
-        "baseExp": "137",
+        "baseExp": 137,
         "description": "A JYNX sashays rhythmically as if it were\ndancing. Its motions are so bouncingly\nalluring, people seeing it are compelled to\nshake their hips without noticing.",
         "moves": {
           "levelUp": [
@@ -40244,15 +39848,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ELECTRIC Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static"
         ],
-        "catchRate": "45",
-        "baseExp": "156",
+        "baseExp": 156,
         "description": "When a storm approaches, it competes with\nothers to scale heights that are likely to\nbe stricken by lightning. Some towns use\nELECTABUZZ in place of lightning rods.",
         "evo": {
           "prev": {
@@ -40579,15 +40178,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SPITFIRE Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Flame Body"
         ],
-        "catchRate": "45",
-        "baseExp": "167",
+        "baseExp": 167,
         "evo": {
           "prev": {
             "id": "magby",
@@ -40902,15 +40496,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "STAG BEETLE Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "abilities": [
           "Hyper Cutter"
         ],
-        "catchRate": "45",
-        "baseExp": "200",
+        "baseExp": 200,
         "description": "Their pincers are strong enough to\nshatter thick logs. Because they dislike\ncold, PINSIR burrow and sleep under\nthe ground on chilly nights.",
         "moves": {
           "levelUp": [
@@ -41226,15 +40815,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WILD BULL Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "211",
+        "baseExp": 211,
         "description": "It is not satisfied unless it is rampaging\nat all times. If there is no opponent for\nTAUROS to battle, it will charge at thick\ntrees and knock them down to calm itself.",
         "moves": {
           "levelUp": [
@@ -41451,15 +41035,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "255",
-        "baseExp": "20",
+        "baseExp": 20,
         "description": "Its swimming muscles are weak, so it is\neasily washed away by currents. In places\nwhere water pools, you can see many\nMAGIKARP deposited there by the flow.",
         "moves": {
           "levelUp": [
@@ -41734,8 +41313,7 @@
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "214",
+        "baseExp": 214,
         "description": "It is an extremely vicious and violent\nPOKéMON. When humans begin to fight,\nit will appear and burn everything to the\nground with intensely hot flames.",
         "moves": {
           "levelUp": [
@@ -42076,8 +41654,7 @@
           "Water Absorb",
           "Shell Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "219",
+        "baseExp": 219,
         "description": "People have driven LAPRAS almost to the\npoint of extinction. In the evenings,\nit is said to sing plaintively as it seeks\nwhat few others of its kind still remain.",
         "moves": {
           "levelUp": [
@@ -42288,15 +41865,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TRANSFORM Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Limber"
         ],
-        "catchRate": "35",
-        "baseExp": "61",
+        "baseExp": 61,
         "description": "A DITTO rearranges its cell structure to\ntransform itself. However, if it tries to\nchange based on its memory, it will get\ndetails wrong.",
         "dexVariants": [
           "Kanto (Red/Blue/Yellow)",
@@ -42499,15 +42071,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "EVOLUTION Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away"
         ],
-        "catchRate": "45",
-        "baseExp": "92",
+        "baseExp": 92,
         "description": "An EEVEE has an unstable genetic makeup\nthat suddenly mutates due to its\nenvironment. Radiation from various\nSTONES causes this POKéMON to evolve.",
         "evo": {
           "next": {
@@ -42844,15 +42411,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BUBBLE JET Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Absorb"
         ],
-        "catchRate": "45",
-        "baseExp": "196",
+        "baseExp": 196,
         "description": "VAPOREON underwent a spontaneous\nmutation and grew fins and gills that\nallow them to live underwater. They have\nthe ability to freely control water.",
         "moves": {
           "levelUp": [
@@ -43213,15 +42775,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LIGHTNING Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Volt Absorb"
         ],
-        "catchRate": "45",
-        "baseExp": "197",
+        "baseExp": 197,
         "evo": {
           "prev": {
             "id": "eevee",
@@ -43570,15 +43127,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FLAME Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Flash Fire"
         ],
-        "catchRate": "45",
-        "baseExp": "198",
+        "baseExp": 198,
         "description": "FLAREON's fluffy fur releases heat into\nthe air so that its body does not get\nexcessively hot. Its body temperature can\nrise to a maximum of 1,650 degrees F.",
         "moves": {
           "levelUp": [
@@ -43877,15 +43429,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VIRTUAL Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Trace"
         ],
-        "catchRate": "45",
-        "baseExp": "130",
+        "baseExp": 130,
         "description": "It is capable of reverting itself entirely\nback to program data in order to enter\ncyberspace. A PORYGON is copy-\nprotected so it cannot be duplicated.",
         "evo": {
           "next": {
@@ -44206,8 +43753,7 @@
           "Swift Swim",
           "Shell Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "120",
+        "baseExp": 120,
         "description": "One of the ancient and long-since-extinct\nPOKéMON that have been regenerated\nfrom fossils by humans. If attacked,\nit withdraws into its hard shell.",
         "moves": {
           "levelUp": [
@@ -44519,8 +44065,7 @@
           "Swift Swim",
           "Shell Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "199",
+        "baseExp": 199,
         "description": "An OMASTAR uses its tentacles to capture\nits prey. It is believed to have become\nextinct because its shell grew too large,\nmaking its movements slow and ponderous.",
         "moves": {
           "levelUp": [
@@ -44831,8 +44376,7 @@
           "Swift Swim",
           "Battle Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "119",
+        "baseExp": 119,
         "description": "It is a POKéMON that has been regenerated\nfrom a fossil. However, in rare cases, living\nexamples have been discovered. KABUTO\nhave not changed for 300 million years.",
         "moves": {
           "levelUp": [
@@ -45166,8 +44710,7 @@
           "Swift Swim",
           "Battle Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "201",
+        "baseExp": 201,
         "description": "KABUTOPS once swam underwater to hunt \nfor prey. It was apparently evolving from\nbeing a water dweller to living on land as\nevident from changes in its gills and legs.",
         "moves": {
           "levelUp": [
@@ -45514,8 +45057,7 @@
           "Rock Head",
           "Pressure"
         ],
-        "catchRate": "45",
-        "baseExp": "202",
+        "baseExp": 202,
         "description": "AERODACTYL is a POKéMON from the age\nof dinosaurs. It was regenerated from DNA\nextracted from amber. It is imagined to\nhave been the king of the skies.",
         "moves": {
           "levelUp": [
@@ -45921,16 +45463,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SLEEPING Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Immunity",
           "Thick Fat"
         ],
-        "catchRate": "25",
-        "baseExp": "154",
+        "baseExp": 154,
         "description": "SNORLAX's typical day consists of nothing\nmore than eating and sleeping. It is such\na docile POKéMON that there are children\nwho use its big belly as a place to play.",
         "evo": null,
         "moves": {
@@ -46293,11 +45830,10 @@
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "215",
+        "baseExp": 215,
         "description": "ARTICUNO is a legendary bird POKéMON that\ncan control ice. The flapping of its wings\nchills the air. As a result, it is said that\nwhen this POKéMON flies, snow will fall.",
         "moves": {
           "levelUp": [
@@ -46608,11 +46144,10 @@
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "216",
+        "baseExp": 216,
         "description": "ZAPDOS is a legendary bird POKéMON that\nhas the ability to control electricity.\nIt usually lives in thunderclouds. It gains\npower if it is stricken by lightning bolts.",
         "moves": {
           "levelUp": [
@@ -46923,11 +46458,10 @@
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "217",
+        "baseExp": 217,
         "description": "MOLTRES is a legendary bird POKéMON\nthat can control fire. If injured, it is said\nto dip its body in the molten magma of\na volcano to burn and heal itself.",
         "moves": {
           "levelUp": [
@@ -47235,15 +46769,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DRAGON Pokémon",
-        "types": [
-          "Dragon",
-          "Dragon"
-        ],
         "abilities": [
           "Shed Skin"
         ],
-        "catchRate": "45",
-        "baseExp": "67",
+        "baseExp": 67,
         "description": "A DRATINI continually molts and sloughs\noff its old skin. It does so because the\nlife energy within its body steadily builds\nto reach uncontrollable levels.",
         "moves": {
           "levelUp": [
@@ -47569,15 +47098,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DRAGON Pokémon",
-        "types": [
-          "Dragon",
-          "Dragon"
-        ],
         "abilities": [
           "Shed Skin"
         ],
-        "catchRate": "45",
-        "baseExp": "144",
+        "baseExp": 144,
         "description": "A DRAGONAIR stores an enormous amount of\nenergy inside its body. It is said to alter\nthe weather around it by loosing energy\nfrom the crystals on its neck and tail.",
         "moves": {
           "levelUp": [
@@ -47967,8 +47491,7 @@
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "45",
-        "baseExp": "218",
+        "baseExp": 218,
         "description": "It can circle the globe in just 16 hours.\nIt is a kindhearted POKéMON that leads\nlost and foundering ships in a storm\nto the safety of land.",
         "moves": {
           "levelUp": [
@@ -48373,18 +47896,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GENETIC Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "220",
+        "baseExp": 220,
         "description": "A POKéMON that was created by genetic\nmanipulation. However, even though the\nscientific power of humans made its body,\nthey failed to give it a warm heart.",
         "moves": {
           "levelUp": [
@@ -48949,15 +48467,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "NEW SPECIES Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "64",
+        "baseExp": 64,
         "description": "A MEW is said to possess the genes of all\nPOKéMON. It is capable of making itself\ninvisible at will, so it entirely avoids\nnotice even if it approaches people.",
         "moves": {
           "levelUp": [
@@ -49322,15 +48835,9 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LEAF Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "64",
         "moves": {
           "levelUp": [
             [
@@ -49623,15 +49130,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LEAF Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "141",
+        "baseExp": 141,
         "description": "A BAYLEEF's neck is ringed by curled-up\nleaves. Inside each leaf is a small tree\nshoot. The fragrance of this shoot\nmakes people peppy.",
         "moves": {
           "levelUp": [
@@ -49948,15 +49450,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HERB Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "208",
+        "baseExp": 208,
         "description": "The fragrance of a MEGANIUM's flower\nsoothes and calms emotions. In battle,\nit gives off more of its becalming scent\nto blunt the foe's fighting spirit.",
         "moves": {
           "levelUp": [
@@ -50251,15 +49748,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FIRE MOUSE Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "65",
+        "baseExp": 65,
         "description": "It flares flames from its back to protect\nitself. The fire burns vigorously if the\nPOKéMON is angry. When it is tired,\nit sputters with incomplete combustion.",
         "moves": {
           "levelUp": [
@@ -50549,15 +50041,9 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VOLCANO Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "142",
         "moves": {
           "levelUp": [
             [
@@ -50884,15 +50370,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VOLCANO Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "209",
+        "baseExp": 209,
         "description": "It can hide behind a shimmering heat haze\nthat it creates using its intense flames.\nTYPHLOSION create blazing explosive\nblasts that burn everything to cinders.",
         "moves": {
           "levelUp": [
@@ -51201,15 +50682,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIG JAW Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "66",
+        "baseExp": 66,
         "description": "Despite its small body, TOTODILE's jaws\nare very powerful. While it may think it is\njust playfully nipping, its bite has enough\nstrength to cause serious injury.",
         "moves": {
           "levelUp": [
@@ -51531,15 +51007,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIG JAW Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "143",
+        "baseExp": 143,
         "moves": {
           "levelUp": [
             [
@@ -51882,15 +51353,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIG JAW Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "210",
+        "baseExp": 210,
         "moves": {
           "levelUp": [
             [
@@ -52206,16 +51672,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SCOUT Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away",
           "Keen Eye"
         ],
-        "catchRate": "255",
-        "baseExp": "57",
+        "baseExp": 57,
         "moves": {
           "levelUp": [
             [
@@ -52549,16 +52010,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LONG BODY Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away",
           "Keen Eye"
         ],
-        "catchRate": "90",
-        "baseExp": "116",
+        "baseExp": 116,
         "description": "A FURRET has a very slim build. When under\nattack, it can squirm through narrow\nspaces and get away. In spite of its short\nlimbs, it is very nimble and fleet.",
         "moves": {
           "levelUp": [
@@ -52887,8 +52343,7 @@
           "Insomnia",
           "Keen Eye"
         ],
-        "catchRate": "255",
-        "baseExp": "58",
+        "baseExp": 58,
         "description": "It has an internal organ that senses\nthe earth's rotation. Using this special\norgan, a HOOTHOOT begins hooting at\nprecisely the same time every day.",
         "moves": {
           "levelUp": [
@@ -53218,8 +52673,7 @@
           "Insomnia",
           "Keen Eye"
         ],
-        "catchRate": "90",
-        "baseExp": "162",
+        "baseExp": 162,
         "description": "It unfailingly catches prey in darkness.\nNOCTOWL owe their success to superior\nvision that allows them to see in minimal\nlight, and to their supple and silent wings.",
         "moves": {
           "levelUp": [
@@ -53515,8 +52969,7 @@
           "Swarm",
           "Early Bird"
         ],
-        "catchRate": "255",
-        "baseExp": "54",
+        "baseExp": 54,
         "description": "LEDYBA communicate using a fluid that\nthey secrete from where the legs join the\nbody. They are said to convey feelings to\nothers by altering the fluid's scent.",
         "moves": {
           "levelUp": [
@@ -53819,8 +53272,7 @@
           "Swarm",
           "Early Bird"
         ],
-        "catchRate": "90",
-        "baseExp": "134",
+        "baseExp": 134,
         "description": "It is said that in lands with clean air,\nwhere the stars fill the sky, there live\nmany LEDIAN. For good reason, they use\nthe light of the stars as energy.",
         "moves": {
           "levelUp": [
@@ -54132,8 +53584,7 @@
           "Swarm",
           "Insomnia"
         ],
-        "catchRate": "255",
-        "baseExp": "54",
+        "baseExp": 54,
         "description": "The web it spins can be considered its\nsecond nervous system. It is said that a\nSPINARAK determines its prey by the tiny\nvibrations it feels through the web.",
         "moves": {
           "levelUp": [
@@ -54469,8 +53920,7 @@
           "Swarm",
           "Insomnia"
         ],
-        "catchRate": "90",
-        "baseExp": "134",
+        "baseExp": 134,
         "moves": {
           "levelUp": [
             [
@@ -54787,8 +54237,7 @@
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "90",
-        "baseExp": "204",
+        "baseExp": 204,
         "moves": {
           "levelUp": [
             [
@@ -55093,8 +54542,7 @@
           "Volt Absorb",
           "Illuminate"
         ],
-        "catchRate": "190",
-        "baseExp": "90",
+        "baseExp": 90,
         "moves": {
           "levelUp": [
             [
@@ -55414,8 +54862,7 @@
           "Volt Absorb",
           "Illuminate"
         ],
-        "catchRate": "75",
-        "baseExp": "156",
+        "baseExp": 156,
         "description": "The light-emitting orbs on its back are\nvery bright. They are formed from a part of\nits dorsal fin. This POKéMON illuminates\nthe inky darkness of deep seas.",
         "moves": {
           "levelUp": [
@@ -55687,18 +55134,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TINY MOUSE Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static"
         ],
-        "catchRate": "190",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "42",
+        "baseExp": 42,
         "moves": {
           "levelUp": [
             [
@@ -55971,17 +55413,15 @@
       "vanilla": {
         "category": "STAR SHAPE Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "150",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "37",
+        "baseExp": 37,
         "description": "On nights with many shooting stars,\nCLEFFA can be seen dancing in a ring.\nThey dance until daybreak, when they\nquench their thirst with the morning dew.",
         "moves": {
           "levelUp": [
@@ -56266,17 +55706,15 @@
       "vanilla": {
         "category": "BALLOON Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "170",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "39",
+        "baseExp": 39,
         "moves": {
           "levelUp": [
             [
@@ -56581,18 +56019,16 @@
       "vanilla": {
         "category": "SPIKE BALL Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Hustle",
           "Serene Grace"
         ],
-        "catchRate": "190",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "74",
+        "baseExp": 74,
         "description": "As its energy, it uses the feelings of\ncompassion and pleasure exuded by\npeople and POKéMON. It stores up happy\nfeelings in its shell, then shares them out.",
         "moves": {
           "levelUp": [
@@ -56945,8 +56381,7 @@
           "Hustle",
           "Serene Grace"
         ],
-        "catchRate": "75",
-        "baseExp": "114",
+        "baseExp": 114,
         "description": "It is said to be a POKéMON that brings good\nfortune. When it spots someone who is pure\nof heart, a TOGETIC appears and shares its\nhappiness with that person.",
         "evo": {
           "prev": {
@@ -57279,8 +56714,7 @@
           "Synchronize",
           "Early Bird"
         ],
-        "catchRate": "190",
-        "baseExp": "73",
+        "baseExp": 73,
         "description": "It runs up short trees that grow on the\nsavanna to peck at new shoots.\nA NATU's eyes look as if they are\nalways observing something.",
         "moves": {
           "levelUp": [
@@ -57593,8 +57027,7 @@
           "Synchronize",
           "Early Bird"
         ],
-        "catchRate": "75",
-        "baseExp": "171",
+        "baseExp": 171,
         "description": "It has the enigmatic power of foreseeing\nthe future. Some people in different lands\nhave long believed that XATU are\nemissaries from another world.",
         "moves": {
           "levelUp": [
@@ -57894,15 +57327,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WOOL Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static"
         ],
-        "catchRate": "235",
-        "baseExp": "59",
+        "baseExp": 59,
         "moves": {
           "levelUp": [
             [
@@ -58193,15 +57621,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WOOL Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static"
         ],
-        "catchRate": "120",
-        "baseExp": "117",
+        "baseExp": 117,
         "moves": {
           "levelUp": [
             [
@@ -58532,10 +57955,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LIGHT Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "stats": {
           "hp": 90,
           "atk": 75,
@@ -58548,8 +57967,7 @@
         "abilities": [
           "Static"
         ],
-        "catchRate": "45",
-        "baseExp": "194",
+        "baseExp": 194,
         "moves": {
           "levelUp": [
             [
@@ -58853,10 +58271,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FLOWER Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "stats": {
           "hp": 75,
           "atk": 80,
@@ -58869,8 +58283,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "184",
+        "baseExp": 184,
         "moves": {
           "levelUp": [
             [
@@ -59169,15 +58582,13 @@
       "vanilla": {
         "category": "AQUA MOUSE Pokémon",
         "types": [
-          "Water",
           "Water"
         ],
         "abilities": [
           "Thick Fat",
           "Huge Power"
         ],
-        "catchRate": "190",
-        "baseExp": "58",
+        "baseExp": 58,
         "moves": {
           "levelUp": [
             [
@@ -59518,7 +58929,6 @@
       "vanilla": {
         "category": "AQUA RABBIT Pokémon",
         "types": [
-          "Water",
           "Water"
         ],
         "stats": {
@@ -59534,8 +58944,7 @@
           "Thick Fat",
           "Huge Power"
         ],
-        "catchRate": "75",
-        "baseExp": "153",
+        "baseExp": 153,
         "moves": {
           "levelUp": [
             [
@@ -59870,16 +59279,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "IMITATION Pokémon",
-        "types": [
-          "Rock",
-          "Rock"
-        ],
         "abilities": [
           "Sturdy",
           "Rock Head"
         ],
-        "catchRate": "65",
-        "baseExp": "135",
+        "baseExp": 135,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -60157,16 +59561,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FROG Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Absorb",
           "Damp"
         ],
-        "catchRate": "45",
-        "baseExp": "185",
+        "baseExp": 185,
         "moves": {
           "levelUp": [
             [
@@ -60470,8 +59869,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "255",
-        "baseExp": "74",
+        "baseExp": 74,
         "description": "This POKéMON drifts and floats with the\nwind. If it senses the approach of strong\nwinds, a HOPPIP links leaves with others\nto prepare against being blown away.",
         "moves": {
           "levelUp": [
@@ -60775,8 +60173,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "120",
-        "baseExp": "136",
+        "baseExp": 136,
         "moves": {
           "levelUp": [
             [
@@ -61082,8 +60479,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "45",
-        "baseExp": "176",
+        "baseExp": 176,
         "description": "JUMPLUFF ride warm southern winds to\ncross the sea and fly to foreign lands.\nThis POKéMON lands when it encounters\ncold air while it is floating.",
         "moves": {
           "levelUp": [
@@ -61387,16 +60783,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LONG TAIL Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Run Away",
           "Pickup"
         ],
-        "catchRate": "45",
-        "baseExp": "94",
+        "baseExp": 94,
         "description": "Its tail ends with a dexterous, handlike\nappendage. However, because it uses the\ntail so much, AIPOM's real hands have\nbecome rather clumsy.",
         "evo": null,
         "moves": {
@@ -61703,15 +61094,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SEED Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "235",
-        "baseExp": "52",
+        "baseExp": 52,
         "description": "SUNKERN try to minimize movement to\nconserve the nutrients they have stored\nin their bodies for evolution. They will\nnot eat, subsisting only on morning dew.",
         "evo": {
           "next": {
@@ -62002,15 +61388,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SUN Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "120",
-        "baseExp": "146",
+        "baseExp": 146,
         "description": "SUNFLORA convert solar energy into\nnutrition. They are highly active in the\nwarm daytime but suddenly stop moving as\nsoon as the sun sets.",
         "evo": {
           "prev": {
@@ -62302,8 +61683,7 @@
           "Speed Boost",
           "Compoundeyes"
         ],
-        "catchRate": "75",
-        "baseExp": "147",
+        "baseExp": 147,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -62618,8 +61998,7 @@
           "Damp",
           "Water Absorb"
         ],
-        "catchRate": "255",
-        "baseExp": "52",
+        "baseExp": 52,
         "description": "WOOPER usually live in water but come\nout onto land seeking food occasionally.\nOn land, they coat their bodies with a\ngooey, toxic film.",
         "moves": {
           "levelUp": [
@@ -62961,8 +62340,7 @@
           "Damp",
           "Water Absorb"
         ],
-        "catchRate": "90",
-        "baseExp": "137",
+        "baseExp": 137,
         "description": "A QUAGSIRE hunts by leaving its mouth wide\nopen in water and waiting for its prey to\nblunder in. Because it doesn't move, it\ndoes not get very hungry.",
         "moves": {
           "levelUp": [
@@ -63326,15 +62704,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SUN Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Synchronize"
         ],
-        "catchRate": "45",
-        "baseExp": "197",
+        "baseExp": 197,
         "description": "An ESPEON is extremely loyal to any\nTRAINER it considers to be worthy. It is\nsaid to have developed precognitive\npowers to protect its TRAINER from harm.",
         "moves": {
           "levelUp": [
@@ -63686,15 +63059,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MOONLIGHT Pokémon",
-        "types": [
-          "Dark",
-          "Dark"
-        ],
         "abilities": [
           "Synchronize"
         ],
-        "catchRate": "45",
-        "baseExp": "197",
+        "baseExp": 197,
         "description": "UMBREON evolved from exposure to the\nmoon's energy pulses. It lurks in darkness\nand waits for its foes to move. The rings\non its body glow when it leaps to attack.",
         "moves": {
           "levelUp": [
@@ -64016,8 +63384,7 @@
         "abilities": [
           "Insomnia"
         ],
-        "catchRate": "30",
-        "baseExp": "107",
+        "baseExp": 107,
         "description": "MURKROW were feared as the alleged\nbearers of ill fortune. It shows strong\ninterest in anything that sparkles. It will\neven try to steal rings from women.",
         "evo": null,
         "moves": {
@@ -64382,8 +63749,7 @@
           "Oblivious",
           "Own Tempo"
         ],
-        "catchRate": "70",
-        "baseExp": "164",
+        "baseExp": 164,
         "description": "It undertakes research every day to\nsolve the mysteries of the world.\nHowever, it apparently forgets everything\nif the SHELLDER on its head comes off.",
         "moves": {
           "levelUp": [
@@ -64726,12 +64092,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SCREECH Pokémon",
-        "types": [
-          "Ghost",
-          "Ghost"
-        ],
-        "catchRate": "45",
-        "baseExp": "147",
+        "baseExp": 147,
         "description": "A MISDREAVUS frightens people with a\ncreepy, sobbing cry. It apparently uses\nits red spheres to absorb the fear of foes\nas its nutrition.",
         "evo": null,
         "moves": {
@@ -64950,15 +64311,10 @@
       ],
       "vanilla": {
         "category": "SYMBOL Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
-        "catchRate": "225",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "61",
+        "baseExp": 61,
         "description": "This POKéMON is shaped like ancient text\ncharacters. Although research is ongoing,\nit is a mystery as to which came first,\nthe ancient writings or the various UNOWN.",
         "moves": {
           "levelUp": [
@@ -65091,15 +64447,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PATIENT Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Shadow Tag"
         ],
-        "catchRate": "45",
-        "baseExp": "177",
+        "baseExp": 177,
         "description": "Usually docile, a WOBBUFFET strikes back\nferociously if its black tail is attacked.\nIt makes its lair in caves where it waits\nfor nightfall.",
         "moves": {
           "levelUp": [
@@ -65363,8 +64714,7 @@
           "Inner Focus",
           "Early Bird"
         ],
-        "catchRate": "60",
-        "baseExp": "149",
+        "baseExp": 149,
         "description": "A GIRAFARIG is an herbivore--it eats\ngrass and tree shoots. While it is eating,\nits tail makes chewing and swallowing\nmotions as if it were also eating.",
         "evo": null,
         "moves": {
@@ -65680,15 +65030,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BAGWORM Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "abilities": [
           "Sturdy"
         ],
-        "catchRate": "190",
-        "baseExp": "60",
+        "baseExp": 60,
         "description": "A PINECO hangs from a tree branch and\nwaits for prey. While eating, if it is\ndisturbed by someone shaking its tree, it\nfalls on the ground and suddenly explodes.",
         "moves": {
           "levelUp": [
@@ -66024,8 +65369,7 @@
         "abilities": [
           "Sturdy"
         ],
-        "catchRate": "75",
-        "baseExp": "118",
+        "baseExp": 118,
         "moves": {
           "levelUp": [
             [
@@ -66354,16 +65698,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LAND SNAKE Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Serene Grace",
           "Run Away"
         ],
-        "catchRate": "190",
-        "baseExp": "75",
+        "baseExp": 75,
         "description": "Its drill-tipped tail is used to burrow into\nthe ground backwards. This POKéMON is\nknown to make its nest in complex shapes\ndeep under the ground.",
         "evo": null,
         "moves": {
@@ -66720,8 +66059,7 @@
           "Hyper Cutter",
           "Sand Veil"
         ],
-        "catchRate": "60",
-        "baseExp": "108",
+        "baseExp": 108,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -67085,8 +66423,7 @@
           "Rock Head",
           "Sturdy"
         ],
-        "catchRate": "25",
-        "baseExp": "196",
+        "baseExp": 196,
         "description": "STEELIX live even further underground\nthan ONIX. This POKéMON is known to dig\ntoward the earth's core, reaching a depth\nof over six-tenths of a mile underground.",
         "evo": {
           "prev": {
@@ -67434,15 +66771,13 @@
       "vanilla": {
         "category": "FAIRY Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Intimidate",
           "Run Away"
         ],
-        "catchRate": "190",
-        "baseExp": "63",
+        "baseExp": 63,
         "description": "By baring its fangs and making a scary\nface, it sends smaller POKéMON scurrying\nin terror. The SNUBBULL does seem a\nlittle sad at making its foes flee.",
         "moves": {
           "levelUp": [
@@ -67834,15 +67169,13 @@
       "vanilla": {
         "category": "FAIRY Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Intimidate",
           "Intimidate"
         ],
-        "catchRate": "75",
-        "baseExp": "178",
+        "baseExp": 178,
         "description": "It has a particularly well-developed lower\njaw. The huge fangs are heavy, causing\nit to tilt its head. Unless it is startled, it\nwill not try to bite.",
         "moves": {
           "levelUp": [
@@ -68217,8 +67550,7 @@
           "Poison Point",
           "Swift Swim"
         ],
-        "catchRate": "45",
-        "baseExp": "100",
+        "baseExp": 100,
         "description": "A QWILFISH uses the pressure of water\nit swallows to shoot toxic quills all at\nonce from all over its body. It finds\nswimming to be somewhat challenging.",
         "moves": {
           "levelUp": [
@@ -68562,8 +67894,7 @@
         "abilities": [
           "Swarm"
         ],
-        "catchRate": "25",
-        "baseExp": "200",
+        "baseExp": 200,
         "description": "A SCIZOR has a body with the hardness of\nsteel. It is not easily fazed by ordinary\nsorts of attacks. It flaps its wings to\nregulate its body temperature.",
         "evo": {
           "prev": {
@@ -68873,8 +68204,7 @@
         "abilities": [
           "Sturdy"
         ],
-        "catchRate": "190",
-        "baseExp": "80",
+        "baseExp": 80,
         "description": "A SHUCKLE hides under rocks, keeping its\nbody concealed inside its shell while\neating stored berries. The berries mix with\nits body fluids to become a juice.",
         "moves": {
           "levelUp": [
@@ -69190,8 +68520,7 @@
           "Swarm",
           "Guts"
         ],
-        "catchRate": "45",
-        "baseExp": "200",
+        "baseExp": 200,
         "moves": {
           "levelUp": [
             [
@@ -69523,8 +68852,7 @@
           "Inner Focus",
           "Keen Eye"
         ],
-        "catchRate": "60",
-        "baseExp": "132",
+        "baseExp": 132,
         "description": "A SNEASEL scales trees by punching its\nhooked claws into the bark. It seeks out\nunguarded nests and steals eggs for food\nwhile the parents are away.",
         "evo": null,
         "moves": {
@@ -69868,15 +69196,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LITTLE BEAR Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Pickup"
         ],
-        "catchRate": "120",
-        "baseExp": "124",
+        "baseExp": 124,
         "description": "It licks its palms that are sweetened by\nbeing soaked in honey. A TEDDIURSA makes\nits own honey by blending fruits and pollen\ncollected by BEEDRILL.",
         "moves": {
           "levelUp": [
@@ -70223,15 +69546,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HIBERNATOR Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Guts"
         ],
-        "catchRate": "60",
-        "baseExp": "189",
+        "baseExp": 189,
         "description": "In forests, it is said that there are many\nstreams and towering trees where an\nURSARING gathers food. It walks through\nits forest collecting food every day.",
         "evo": {
           "prev": {
@@ -70561,16 +69879,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LAVA Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Magma Armor",
           "Flame Body"
         ],
-        "catchRate": "190",
-        "baseExp": "78",
+        "baseExp": 78,
         "description": "It is a species of POKéMON that lives in\nvolcanic areas. If its body cools, its skin\nhardens and immobilizes it. To avoid that,\nit sleeps near magma.",
         "moves": {
           "levelUp": [
@@ -70894,8 +70207,7 @@
           "Magma Armor",
           "Flame Body"
         ],
-        "catchRate": "75",
-        "baseExp": "154",
+        "baseExp": 154,
         "description": "The shell on its back is made of hardened\nmagma. Tens of thousands of years spent\nliving in volcanic craters have turned\nMAGCARGO's bodies into magma.",
         "moves": {
           "levelUp": [
@@ -71195,8 +70507,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "225",
-        "baseExp": "78",
+        "baseExp": 78,
         "moves": {
           "levelUp": [
             [
@@ -71517,8 +70828,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "75",
-        "baseExp": "160",
+        "baseExp": 160,
         "description": "A PILOSWINE is covered by a thick coat\nof long hair for enduring freezing cold.\nIt uses its tusks to dig up food that has\nbeen buried under ice.",
         "evo": {
           "prev": {
@@ -71845,8 +71155,7 @@
           "Hustle",
           "Natural Cure"
         ],
-        "catchRate": "60",
-        "baseExp": "113",
+        "baseExp": 113,
         "description": "CORSOLA live in warm southern seas.\nIf the sea becomes polluted, the beautiful\ncoral stalks become discolored and crumble\naway in tatters.",
         "moves": {
           "levelUp": [
@@ -72162,15 +71471,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "JET Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Hustle"
         ],
-        "catchRate": "190",
-        "baseExp": "78",
+        "baseExp": 78,
         "description": "A REMORAID uses its abdominal muscles\nto forcefully expel swallowed water, then\nshoot down flying prey. When evolution\napproaches, it travels down rivers.",
         "moves": {
           "levelUp": [
@@ -72486,15 +71790,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "JET Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Suction Cups"
         ],
-        "catchRate": "75",
-        "baseExp": "164",
+        "baseExp": 164,
         "moves": {
           "levelUp": [
             [
@@ -72764,8 +72063,7 @@
           "Vital Spirit",
           "Hustle"
         ],
-        "catchRate": "45",
-        "baseExp": "183",
+        "baseExp": 183,
         "description": "It carries food bundled up in its tail.\nThere was a famous explorer who\nmanaged to scale Mt. Everest thanks\nto a DELIBIRD sharing its food.",
         "moves": {
           "levelUp": [
@@ -73074,8 +72372,7 @@
           "Swift Swim",
           "Water Absorb"
         ],
-        "catchRate": "25",
-        "baseExp": "168",
+        "baseExp": 168,
         "description": "On sunny days, schools of MANTINE can be\nseen elegantly leaping over the waves.\nIt is not bothered by the REMORAID that\nhitches rides.",
         "evo": null,
         "moves": {
@@ -73393,8 +72690,7 @@
           "Keen Eye",
           "Sturdy"
         ],
-        "catchRate": "25",
-        "baseExp": "168",
+        "baseExp": 168,
         "description": "A POKéMON that has a body and wings of\nsteel. People in the past used feathers\nfallen from SKARMORY to make swords and\nknives.",
         "moves": {
           "levelUp": [
@@ -73718,8 +73014,7 @@
           "Early Bird",
           "Flash Fire"
         ],
-        "catchRate": "120",
-        "baseExp": "114",
+        "baseExp": 114,
         "description": "HOUNDOUR communicate with each other\nusing a variety of cries to corner their\nprey. This POKéMON's remarkable teamwork\nis simply unparalleled.",
         "moves": {
           "levelUp": [
@@ -74064,8 +73359,7 @@
           "Early Bird",
           "Flash Fire"
         ],
-        "catchRate": "45",
-        "baseExp": "204",
+        "baseExp": 204,
         "description": "In a HOUNDOOM pack, the one with its horns\nraked sharply back serves a leadership\nrole. They choose their leader by fighting\namong themselves.",
         "moves": {
           "levelUp": [
@@ -74393,8 +73687,7 @@
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "45",
-        "baseExp": "207",
+        "baseExp": 207,
         "evo": {
           "prev": {
             "id": "seadra",
@@ -74674,15 +73967,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LONG NOSE Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Pickup"
         ],
-        "catchRate": "120",
-        "baseExp": "124",
+        "baseExp": 124,
         "description": "PHANPY's big ears serve as broad fans.\nWhen it becomes hot, it flaps the ears\nbusily to cool down. Even the young are\nvery strong.",
         "moves": {
           "levelUp": [
@@ -74996,15 +74284,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ARMOR Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Sturdy"
         ],
-        "catchRate": "60",
-        "baseExp": "189",
+        "baseExp": 189,
         "description": "A DONPHAN is so strong it can easily haul\na dump truck. Its hide has toughened to a\nrock-hard state. An ordinary sort of\nattack won't even leave a scratch.",
         "moves": {
           "levelUp": [
@@ -75297,15 +74580,9 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VIRTUAL Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Trace"
         ],
-        "catchRate": "45",
-        "baseExp": "180",
         "evo": {
           "prev": {
             "id": "porygon",
@@ -75638,15 +74915,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIG HORN Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "165",
+        "baseExp": 165,
         "description": "STANTLER's magnificent antlers were\nonce traded at high prices as works of art.\nAs a result, this POKéMON was hunted\nclose to extinction.",
         "evo": null,
         "moves": {
@@ -75880,15 +75152,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PAINTER Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Own Tempo"
         ],
-        "catchRate": "45",
-        "baseExp": "106",
+        "baseExp": 106,
         "description": "A SMEARGLE marks its territory using a\nfluid that leaks out from the tip of its\ntail. About 5,000 different marks left by\nthis POKéMON have been found.",
         "moves": {
           "levelUp": [
@@ -76050,18 +75317,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SCUFFLE Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Guts"
         ],
-        "catchRate": "75",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "91",
+        "baseExp": 91,
         "description": "TYROGUE become stressed out if they do\nnot get to train every day. When raising\nthis POKéMON, the TRAINER must establish\na regular training schedule.",
         "moves": {
           "levelUp": [
@@ -76333,15 +75595,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HANDSTAND Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "138",
+        "baseExp": 138,
         "description": "Its technique of kicking while spinning is\na remarkable mix of both offense and\ndefense. HITMONTOP travel faster\nspinning than they do walking.",
         "moves": {
           "levelUp": [
@@ -76648,11 +75905,10 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "87",
+        "baseExp": 87,
         "moves": {
           "levelUp": [
             [
@@ -76967,18 +76223,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ELECTRIC Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "106",
+        "baseExp": 106,
         "description": "If it touches metal and discharges the\nelectricity it has stored in its body, an\nELEKID begins swinging its arms in circles\nto recharge itself.",
         "moves": {
           "levelUp": [
@@ -77276,18 +76527,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LIVE COAL Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Flame Body"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "117",
+        "baseExp": 117,
         "description": "If a MAGBY is spouting yellow flames from\nits mouth, it is in good health. When it is\nfatigued, black smoke will be mixed in with\nthe flames.",
         "moves": {
           "levelUp": [
@@ -77593,15 +76839,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MILK COW Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "45",
-        "baseExp": "200",
+        "baseExp": 200,
         "moves": {
           "levelUp": [
             [
@@ -77990,16 +77231,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HAPPINESS Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Natural Cure",
           "Serene Grace"
         ],
-        "catchRate": "30",
-        "baseExp": "255",
+        "baseExp": 255,
         "description": "If it senses sadness with its fluffy fur,\na BLISSEY will rush over to the sad person,\nhowever far away, to share an egg of\nhappiness that brings a smile to any face.",
         "moves": {
           "levelUp": [
@@ -78362,18 +77598,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "THUNDER Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "216",
+        "baseExp": 216,
         "description": "RAIKOU embodies the speed of lightning.\nIts roars send shock waves shuddering\nthrough the air and ground as if\nlightning bolts were crashing down.",
         "moves": {
           "levelUp": [
@@ -78682,18 +77913,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "VOLCANO Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "217",
+        "baseExp": 217,
         "description": "ENTEI embodies the passion of magma.\nIt is thought to have been born in the\neruption of a volcano. It blasts fire that\nconsumes all that it touches.",
         "moves": {
           "levelUp": [
@@ -79000,18 +78226,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "AURORA Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "215",
+        "baseExp": 215,
         "description": "SUICUNE embodies the compassion of\na pure spring of water. It runs across\nthe land with gliding elegance. It has the\npower to purify dirty water.",
         "moves": {
           "levelUp": [
@@ -79340,8 +78561,7 @@
         "abilities": [
           "Guts"
         ],
-        "catchRate": "45",
-        "baseExp": "67",
+        "baseExp": 67,
         "description": "A LARVITAR is born deep under the ground.\nIt must eat its way through the soil above\nand reach the surface for it to see its\nparents' faces.",
         "moves": {
           "levelUp": [
@@ -79668,8 +78888,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "HARD SHELL Pokémon",
-        "catchRate": "45",
-        "baseExp": "144",
         "description": "A PUPITAR creates a gas inside its body\nthat it ejects under compression to propel\nitself like a jet. Its body can withstand\na collision with solid steel.",
         "moves": {
           "levelUp": [
@@ -80058,8 +79276,7 @@
         "abilities": [
           "Sand Stream"
         ],
-        "catchRate": "45",
-        "baseExp": "218",
+        "baseExp": 218,
         "description": "A TYRANITAR is so overwhelmingly powerful,\nit can bring down a whole mountain to make\nits nest. It roams in mountains seeking\nnew opponents to fight.",
         "moves": {
           "levelUp": [
@@ -80422,11 +79639,10 @@
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "220",
+        "baseExp": 220,
         "description": "LUGIA is so powerful even a light\nfluttering of its wings can blow apart\nhouses. As a result, it chooses to live out\nof sight deep under the sea.",
         "moves": {
           "levelUp": [
@@ -80778,11 +79994,10 @@
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "220",
+        "baseExp": 220,
         "moves": {
           "levelUp": [
             [
@@ -81111,11 +80326,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TIME TRAVEL Pokémon",
-        "catchRate": "45",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "64",
+        "baseExp": 64,
         "description": "This POKéMON came from the future by\ncrossing over time. It is thought that so\nlong as CELEBI appears, a bright and\nshining future awaits us.",
         "moves": {
           "levelUp": [
@@ -81423,15 +80637,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WOOD GECKO Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "65",
+        "baseExp": 65,
         "moves": {
           "levelUp": [
             [
@@ -81757,15 +80966,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WOOD GECKO Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "141",
+        "baseExp": 141,
         "description": "Leaves grow out of this POKéMON's body.\nThey help obscure a GROVYLE from the eyes\nof its enemies while it is in a thickly\novergrown forest.",
         "moves": {
           "levelUp": [
@@ -82117,15 +81321,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FOREST Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Overgrow"
         ],
-        "catchRate": "45",
-        "baseExp": "208",
+        "baseExp": 208,
         "description": "In the jungle, its power is without equal.\nThis POKéMON carefully grows trees and\nplants. It regulates its body temperature\nby basking in sunlight.",
         "moves": {
           "levelUp": [
@@ -82441,15 +81640,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CHICK Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "65",
+        "baseExp": 65,
         "description": "If attacked, it strikes back by spitting\nballs of fire it forms in its stomach.\nA TORCHIC dislikes darkness because it\ncan't see its surroundings.",
         "moves": {
           "levelUp": [
@@ -82769,8 +81963,6 @@
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "142",
         "moves": {
           "levelUp": [
             [
@@ -83127,8 +82319,7 @@
         "abilities": [
           "Blaze"
         ],
-        "catchRate": "45",
-        "baseExp": "209",
+        "baseExp": 209,
         "moves": {
           "levelUp": [
             [
@@ -83451,15 +82642,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MUD FISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "65",
+        "baseExp": 65,
         "moves": {
           "levelUp": [
             [
@@ -83783,8 +82969,7 @@
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "143",
+        "baseExp": 143,
         "moves": {
           "levelUp": [
             [
@@ -84142,8 +83327,7 @@
         "abilities": [
           "Torrent"
         ],
-        "catchRate": "45",
-        "baseExp": "210",
+        "baseExp": 210,
         "moves": {
           "levelUp": [
             [
@@ -84462,15 +83646,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BITE Pokémon",
-        "types": [
-          "Dark",
-          "Dark"
-        ],
         "abilities": [
           "Run Away"
         ],
-        "catchRate": "255",
-        "baseExp": "55",
+        "baseExp": 55,
         "moves": {
           "levelUp": [
             [
@@ -84799,15 +83978,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BITE Pokémon",
-        "types": [
-          "Dark",
-          "Dark"
-        ],
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "127",
-        "baseExp": "128",
+        "baseExp": 128,
         "description": "In the wild, MIGHTYENA live in a pack.\nThey never defy their leader's orders.\nThey defeat foes with perfectly\ncoordinated teamwork.",
         "moves": {
           "levelUp": [
@@ -85108,15 +84282,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TINYRACCOON Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Pickup"
         ],
-        "catchRate": "255",
-        "baseExp": "60",
+        "baseExp": 60,
         "moves": {
           "levelUp": [
             [
@@ -85450,15 +84619,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "RUSHING Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Pickup"
         ],
-        "catchRate": "90",
-        "baseExp": "128",
+        "baseExp": 128,
         "moves": {
           "levelUp": [
             [
@@ -85677,15 +84841,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WORM Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "abilities": [
           "Shield Dust"
         ],
-        "catchRate": "255",
-        "baseExp": "54",
+        "baseExp": 54,
         "moves": {
           "levelUp": [
             [
@@ -85788,12 +84947,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COCOON Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
-        "catchRate": "120",
-        "baseExp": "71",
+        "baseExp": 71,
         "description": "It prepares for evolution using the\nenergy it stored while it was a WURMPLE.\nIt keeps watch over the surroundings with\nits two eyes.",
         "moves": {
           "levelUp": [
@@ -85990,8 +85144,7 @@
         "abilities": [
           "Swarm"
         ],
-        "catchRate": "45",
-        "baseExp": "161",
+        "baseExp": 161,
         "moves": {
           "levelUp": [
             [
@@ -86165,12 +85318,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COCOON Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
-        "catchRate": "120",
-        "baseExp": "72",
         "moves": {
           "levelUp": [
             [
@@ -86362,8 +85509,7 @@
         "abilities": [
           "Shield Dust"
         ],
-        "catchRate": "45",
-        "baseExp": "160",
+        "baseExp": 160,
         "description": "It is a nocturnal POKéMON that flies from\nfields and mountains to the attraction of\nstreetlights at night. It looses highly\ntoxic powder from its wings.",
         "moves": {
           "levelUp": [
@@ -86644,8 +85790,7 @@
           "Swift Swim",
           "Rain Dish"
         ],
-        "catchRate": "255",
-        "baseExp": "74",
+        "baseExp": 74,
         "description": "This POKéMON lives in ponds with clean\nwater. It is known to ferry small POKéMON\nacross ponds by carrying them on the\nbroad leaf on its head.",
         "moves": {
           "levelUp": [
@@ -86961,8 +86106,7 @@
           "Swift Swim",
           "Rain Dish"
         ],
-        "catchRate": "120",
-        "baseExp": "141",
+        "baseExp": 141,
         "evo": {
           "next": {
             "id": "ludicolo",
@@ -87266,8 +86410,7 @@
           "Swift Swim",
           "Rain Dish"
         ],
-        "catchRate": "45",
-        "baseExp": "181",
+        "baseExp": 181,
         "evo": {
           "prev": {
             "id": "lombre",
@@ -87550,16 +86693,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ACORN Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Chlorophyll",
           "Early Bird"
         ],
-        "catchRate": "255",
-        "baseExp": "74",
+        "baseExp": 74,
         "moves": {
           "levelUp": [
             [
@@ -87882,8 +87020,7 @@
           "Chlorophyll",
           "Early Bird"
         ],
-        "catchRate": "120",
-        "baseExp": "141",
+        "baseExp": 141,
         "description": "A forest-dwelling POKéMON that is skilled\nat climbing trees. Its long and pointed\nnose is its weak point. It loses power if\nthe nose is gripped.",
         "evo": {
           "next": {
@@ -88224,8 +87361,7 @@
           "Chlorophyll",
           "Early Bird"
         ],
-        "catchRate": "45",
-        "baseExp": "181",
+        "baseExp": 181,
         "description": "It is said to arrive on chilly, wintry winds.\nFeared from long ago as the guardian of\nforests, this POKéMON lives in a deep\nforest where people do not venture.",
         "evo": {
           "prev": {
@@ -88502,8 +87638,7 @@
         "abilities": [
           "Guts"
         ],
-        "catchRate": "200",
-        "baseExp": "59",
+        "baseExp": 59,
         "description": "Although it is small, it is very courageous.\nIt will take on a larger SKARMORY on an\nequal footing. However, its will weakens if\nit becomes hungry.",
         "moves": {
           "levelUp": [
@@ -88786,8 +87921,7 @@
         "abilities": [
           "Guts"
         ],
-        "catchRate": "45",
-        "baseExp": "162",
+        "baseExp": 162,
         "description": "A SWELLOW dives upon prey from far above.\nIt never misses its targets. It takes to\nthe skies in search of lands with a warm\nclimate.",
         "moves": {
           "levelUp": [
@@ -89063,8 +88197,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "190",
-        "baseExp": "64",
+        "baseExp": 64,
         "moves": {
           "levelUp": [
             [
@@ -89394,8 +88527,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "45",
-        "baseExp": "164",
+        "baseExp": 164,
         "moves": {
           "levelUp": [
             [
@@ -89723,18 +88855,16 @@
       "vanilla": {
         "category": "FEELING Pokémon",
         "types": [
-          "Psychic",
           "Psychic"
         ],
         "abilities": [
           "Synchronize",
           "Trace"
         ],
-        "catchRate": "235",
         "eggGroups": [
           "Amorphous"
         ],
-        "baseExp": "70",
+        "baseExp": 70,
         "description": "A RALTS has the power to sense the\nemotions of people and POKéMON with the\nhorns on its head. It takes cover if it\nsenses any hostility.",
         "moves": {
           "levelUp": [
@@ -90080,18 +89210,16 @@
       "vanilla": {
         "category": "EMOTION Pokémon",
         "types": [
-          "Psychic",
           "Psychic"
         ],
         "abilities": [
           "Synchronize",
           "Trace"
         ],
-        "catchRate": "120",
         "eggGroups": [
           "Amorphous"
         ],
-        "baseExp": "140",
+        "baseExp": 140,
         "description": "A KIRLIA has the psychic power to create \na rip in the dimensions and see into the\nfuture. It is said to dance with pleasure\non sunny mornings.",
         "moves": {
           "levelUp": [
@@ -90466,18 +89594,16 @@
       "vanilla": {
         "category": "EMBRACE Pokémon",
         "types": [
-          "Psychic",
           "Psychic"
         ],
         "abilities": [
           "Synchronize",
           "Trace"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Amorphous"
         ],
-        "baseExp": "208",
+        "baseExp": 208,
         "description": "It apparently does not feel the pull of\ngravity because it supports itself with\npsychic power. It will give its life to\nprotect its TRAINER.",
         "moves": {
           "levelUp": [
@@ -90776,8 +89902,7 @@
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "200",
-        "baseExp": "63",
+        "baseExp": 63,
         "moves": {
           "levelUp": [
             [
@@ -91083,8 +90208,7 @@
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "75",
-        "baseExp": "128",
+        "baseExp": 128,
         "moves": {
           "levelUp": [
             [
@@ -91350,15 +90474,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MUSHROOM Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Effect Spore"
         ],
-        "catchRate": "255",
-        "baseExp": "65",
+        "baseExp": 65,
         "description": "It loves to eat damp, composted soil in\nforests. If you enter a forest after a\nlong rain, you can see many SHROOMISH\nfeasting on composted soil.",
         "moves": {
           "levelUp": [
@@ -91680,8 +90799,7 @@
         "abilities": [
           "Effect Spore"
         ],
-        "catchRate": "90",
-        "baseExp": "165",
+        "baseExp": 165,
         "moves": {
           "levelUp": [
             [
@@ -91987,12 +91105,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SLACKER Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
-        "catchRate": "255",
-        "baseExp": "83",
+        "baseExp": 83,
         "moves": {
           "levelUp": [
             [
@@ -92326,12 +91439,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WILD MONKEY Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
-        "catchRate": "120",
-        "baseExp": "126",
+        "baseExp": 126,
         "moves": {
           "levelUp": [
             [
@@ -92696,12 +91804,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LAZY Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
-        "catchRate": "45",
-        "baseExp": "210",
+        "baseExp": 210,
         "description": "Hordes of SLAKING gather around trees\nwhen fruits come into season. They wait\naround patiently for ripened fruits to fall\nout of the trees.",
         "moves": {
           "levelUp": [
@@ -92981,8 +92084,7 @@
         "abilities": [
           "Compoundeyes"
         ],
-        "catchRate": "255",
-        "baseExp": "65",
+        "baseExp": 65,
         "moves": {
           "levelUp": [
             [
@@ -93277,8 +92379,7 @@
         "abilities": [
           "Speed Boost"
         ],
-        "catchRate": "120",
-        "baseExp": "155",
+        "baseExp": 155,
         "moves": {
           "levelUp": [
             [
@@ -93569,8 +92670,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SHED Pokémon",
-        "catchRate": "45",
-        "baseExp": "95",
+        "baseExp": 95,
         "description": "A peculiar POKéMON that floats in air even\nthough its wings remain completely still.\nThe inside of its body is hollow and\nutterly dark.",
         "moves": {
           "levelUp": [
@@ -93840,15 +92940,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WHISPER Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Soundproof"
         ],
-        "catchRate": "190",
-        "baseExp": "68",
+        "baseExp": 68,
         "moves": {
           "levelUp": [
             [
@@ -94148,15 +93243,9 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIG VOICE Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Soundproof"
         ],
-        "catchRate": "120",
-        "baseExp": "126",
         "moves": {
           "levelUp": [
             [
@@ -94504,10 +93593,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LOUD NOISE Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "stats": {
           "hp": 104,
           "atk": 91,
@@ -94520,8 +93605,7 @@
         "abilities": [
           "Soundproof"
         ],
-        "catchRate": "45",
-        "baseExp": "184",
+        "baseExp": 184,
         "moves": {
           "levelUp": [
             [
@@ -94868,16 +93952,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "GUTS Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Thick Fat",
           "Guts"
         ],
-        "catchRate": "180",
-        "baseExp": "87",
+        "baseExp": 87,
         "description": "It loves to toughen up its body above all\nelse. If you hear quaking rumbles in a cave,\nit is the sound of MAKUHITA undertaking\nstrenuous training.",
         "moves": {
           "levelUp": [
@@ -95231,16 +94310,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ARM THRUST Pokémon",
-        "types": [
-          "Fighting",
-          "Fighting"
-        ],
         "abilities": [
           "Thick Fat",
           "Guts"
         ],
-        "catchRate": "200",
-        "baseExp": "184",
+        "baseExp": 184,
         "moves": {
           "levelUp": [
             [
@@ -95523,18 +94597,16 @@
       "vanilla": {
         "category": "POLKA DOT Pokémon",
         "types": [
-          "Normal",
           "Normal"
         ],
         "abilities": [
           "Thick Fat",
           "Huge Power"
         ],
-        "catchRate": "150",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "33",
+        "baseExp": 33,
         "moves": {
           "levelUp": [
             [
@@ -95827,16 +94899,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COMPASS Pokémon",
-        "types": [
-          "Rock",
-          "Rock"
-        ],
         "abilities": [
           "Sturdy",
           "Magnet Pull"
         ],
-        "catchRate": "255",
-        "baseExp": "108",
+        "baseExp": 108,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -96166,15 +95233,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "KITTEN Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "255",
-        "baseExp": "65",
+        "baseExp": 65,
         "description": "A SKITTY's adorably cute behavior makes it\nhighly popular. In battle, it makes its tail\npuff out. It threatens foes with a sharp\ngrowl.",
         "evo": {
           "next": {
@@ -96463,10 +95525,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PRIM Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "stats": {
           "hp": 70,
           "atk": 65,
@@ -96479,8 +95537,7 @@
         "abilities": [
           "Cute Charm"
         ],
-        "catchRate": "60",
-        "baseExp": "138",
+        "baseExp": 138,
         "evo": {
           "prev": {
             "id": "skitty",
@@ -96833,8 +95890,7 @@
         "abilities": [
           "Keen Eye"
         ],
-        "catchRate": "45",
-        "baseExp": "98",
+        "baseExp": 98,
         "description": "It digs branching holes in caves using its\nsharp claws in search of food--raw gems.\nA SABLEYE lurks in darkness and is seen\nonly rarely.",
         "moves": {
           "levelUp": [
@@ -97207,15 +96263,13 @@
       "vanilla": {
         "category": "DECEIVER Pokémon",
         "types": [
-          "Steel",
           "Steel"
         ],
         "abilities": [
           "Hyper Cutter",
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "98",
+        "baseExp": 98,
         "moves": {
           "levelUp": [
             [
@@ -97550,8 +96604,7 @@
           "Sturdy",
           "Rock Head"
         ],
-        "catchRate": "180",
-        "baseExp": "96",
+        "baseExp": 96,
         "description": "A POKéMON that is clad in steel armor.\nA new suit of armor is made when it evolves.\nThe old, discarded armor is salvaged as\nmetal for making iron products.",
         "moves": {
           "levelUp": [
@@ -97875,8 +96928,7 @@
           "Sturdy",
           "Rock Head"
         ],
-        "catchRate": "90",
-        "baseExp": "152",
+        "baseExp": 152,
         "description": "When two LAIRON meet in the wild, they\nfight for territory by bashing into each\nother with their steel bodies. The sound\nof their collision carries for miles.",
         "moves": {
           "levelUp": [
@@ -98246,8 +97298,7 @@
           "Sturdy",
           "Rock Head"
         ],
-        "catchRate": "45",
-        "baseExp": "205",
+        "baseExp": 205,
         "description": "Its iron horns grow longer a little at\na time. They are used to determine the\nAGGRON's age. The gouges in its armor are\nworn with pride as mementos from battles.",
         "moves": {
           "levelUp": [
@@ -98619,8 +97670,7 @@
         "abilities": [
           "Pure Power"
         ],
-        "catchRate": "180",
-        "baseExp": "91",
+        "baseExp": 91,
         "moves": {
           "levelUp": [
             [
@@ -98981,8 +98031,7 @@
         "abilities": [
           "Pure Power"
         ],
-        "catchRate": "90",
-        "baseExp": "153",
+        "baseExp": 153,
         "moves": {
           "levelUp": [
             [
@@ -99293,16 +98342,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "LIGHTNING Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static",
           "Lightningrod"
         ],
-        "catchRate": "120",
-        "baseExp": "104",
+        "baseExp": 104,
         "moves": {
           "levelUp": [
             [
@@ -99602,16 +98646,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DISCHARGE Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Static",
           "Lightningrod"
         ],
-        "catchRate": "45",
-        "baseExp": "168",
+        "baseExp": 168,
         "description": "Because lightning falls in their vicinities,\nMANECTRIC were thought to have been born\nfrom lightning. In battle, they create\nthunderclouds.",
         "moves": {
           "levelUp": [
@@ -99912,15 +98951,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CHEERING Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Plus"
         ],
-        "catchRate": "200",
-        "baseExp": "120",
+        "baseExp": 120,
         "description": "It has the trait of cheering on its fellow\nPOKéMON. By shorting out the electricity\nit releases from its paws, it creates\npom-poms for cheering.",
         "moves": {
           "levelUp": [
@@ -100222,15 +99256,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CHEERING Pokémon",
-        "types": [
-          "Electric",
-          "Electric"
-        ],
         "abilities": [
           "Minus"
         ],
-        "catchRate": "200",
-        "baseExp": "120",
+        "baseExp": 120,
         "description": "At a meeting of POKéMON academics, it was\nannounced that simultaneous exposure to\nelectricity from a PLUSLE and MINUN will\npromote circulation and boost vitality.",
         "moves": {
           "levelUp": [
@@ -100538,10 +99567,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FIREFLY Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "stats": {
           "hp": 65,
           "atk": 73,
@@ -100555,8 +99580,7 @@
           "Illuminate",
           "Swarm"
         ],
-        "catchRate": "150",
-        "baseExp": "146",
+        "baseExp": 146,
         "description": "With their taillights lit, VOLBEAT fly in\na swarm, drawing geometric designs in the\nnight sky. They move their nests if their\npond water becomes dirty.",
         "moves": {
           "levelUp": [
@@ -100881,10 +99905,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FIREFLY Pokémon",
-        "types": [
-          "Bug",
-          "Bug"
-        ],
         "stats": {
           "hp": 65,
           "atk": 47,
@@ -100897,8 +99917,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "150",
-        "baseExp": "146",
+        "baseExp": 146,
         "description": "A nocturnal POKéMON that becomes active\nupon nightfall. It leads a VOLBEAT swarm\nto draw patterns in the night sky. Over 200\ndifferent patterns have been confirmed.",
         "moves": {
           "levelUp": [
@@ -101228,8 +100247,7 @@
           "Natural Cure",
           "Poison Point"
         ],
-        "catchRate": "150",
-        "baseExp": "152",
+        "baseExp": 152,
         "description": "A ROSELIA that drinks nutritionally rich\nspringwater blooms with lovely flowers.\nThe fragrance of its flowers has the\neffect of making its foes careless.",
         "evo": null,
         "moves": {
@@ -101550,16 +100568,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "STOMACH Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Liquid Ooze",
           "Sticky Hold"
         ],
-        "catchRate": "225",
-        "baseExp": "75",
+        "baseExp": 75,
         "description": "This POKéMON's stomach fluid can even\ndigest scrap iron. In one gulp, it can\nswallow something that is as large as\nitself.",
         "moves": {
           "levelUp": [
@@ -101892,16 +100905,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "POISON BAG Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Liquid Ooze",
           "Sticky Hold"
         ],
-        "catchRate": "75",
-        "baseExp": "168",
+        "baseExp": 168,
         "description": "Its powerful stomach acid is capable of\ndigesting almost anything. The one thing\nin the whole world a SWALOT can't digest is\nits own stomach.",
         "moves": {
           "levelUp": [
@@ -102216,8 +101224,7 @@
         "abilities": [
           "Rough Skin"
         ],
-        "catchRate": "225",
-        "baseExp": "88",
+        "baseExp": 88,
         "description": "CARVANHA attack ships in swarms, making\nthem sink. Although it is said to be a very\nvicious POKéMON, it timidly flees as soon\nas it finds itself alone.",
         "moves": {
           "levelUp": [
@@ -102530,8 +101537,7 @@
         "abilities": [
           "Rough Skin"
         ],
-        "catchRate": "60",
-        "baseExp": "175",
+        "baseExp": 175,
         "moves": {
           "levelUp": [
             [
@@ -102848,16 +101854,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BALL WHALE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Veil",
           "Oblivious"
         ],
-        "catchRate": "125",
-        "baseExp": "137",
+        "baseExp": 137,
         "description": "While this POKéMON usually lives in the sea,\nit can survive on land, although not too\nlong. It loses vitality if its body becomes\ndried out.",
         "moves": {
           "levelUp": [
@@ -103179,16 +102180,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FLOAT WHALE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Water Veil",
           "Oblivious"
         ],
-        "catchRate": "60",
-        "baseExp": "206",
+        "baseExp": 206,
         "description": "It breathes through nostrils that it\nraises above the sea. By inhaling to its\nmaximum capacity, a WAILORD can dive close\nto 10,000 feet beneath the waves.",
         "moves": {
           "levelUp": [
@@ -103515,8 +102511,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "255",
-        "baseExp": "88",
+        "baseExp": 88,
         "description": "A NUMEL stores boiling magma in the hump\non its back. It is a hardy POKéMON that can\ntransport a 220-pound load. It has served\nhumans at work since long ago.",
         "moves": {
           "levelUp": [
@@ -103844,8 +102839,7 @@
         "abilities": [
           "Magma Armor"
         ],
-        "catchRate": "150",
-        "baseExp": "175",
+        "baseExp": 175,
         "description": "A POKéMON that lives in the crater of\na volcano. Every 10 years, the volcanoes\non its back erupt violently. Research is\nunder way on the cause of eruption.",
         "moves": {
           "levelUp": [
@@ -104169,15 +103163,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COAL Pokémon",
-        "types": [
-          "Fire",
-          "Fire"
-        ],
         "abilities": [
           "White Smoke"
         ],
-        "catchRate": "90",
-        "baseExp": "161",
+        "baseExp": 161,
         "moves": {
           "levelUp": [
             [
@@ -104480,16 +103469,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BOUNCE Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Thick Fat",
           "Own Tempo"
         ],
-        "catchRate": "255",
-        "baseExp": "89",
+        "baseExp": 89,
         "description": "A POKéMON that manipulates psychic power\nat will. It doesn't stop bouncing even when\nit is asleep. It loves eating mushrooms\nthat grow underground.",
         "moves": {
           "levelUp": [
@@ -104844,16 +103828,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MANIPULATE Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Thick Fat",
           "Own Tempo"
         ],
-        "catchRate": "60",
-        "baseExp": "164",
+        "baseExp": 164,
         "moves": {
           "levelUp": [
             [
@@ -105181,15 +104160,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SPOT PANDA Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Own Tempo"
         ],
-        "catchRate": "255",
-        "baseExp": "85",
+        "baseExp": 85,
         "moves": {
           "levelUp": [
             [
@@ -105506,19 +104480,14 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ANT PIT Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
         "abilities": [
           "Hyper Cutter",
           "Arena Trap"
         ],
-        "catchRate": "255",
         "eggGroups": [
           "Bug"
         ],
-        "baseExp": "73",
+        "baseExp": 73,
         "moves": {
           "levelUp": [
             [
@@ -105836,11 +104805,10 @@
           "Levitate",
           "Levitate"
         ],
-        "catchRate": "120",
         "eggGroups": [
           "Bug"
         ],
-        "baseExp": "126",
+        "baseExp": 126,
         "description": "It looses ultrasonic waves by rubbing its\nwings together. Since a VIBRAVA's wings\nare still in the process of growing, it can\nonly fly short distances.",
         "moves": {
           "levelUp": [
@@ -106184,11 +105152,10 @@
           "Levitate",
           "Levitate"
         ],
-        "catchRate": "45",
         "eggGroups": [
           "Bug"
         ],
-        "baseExp": "197",
+        "baseExp": 197,
         "moves": {
           "levelUp": [
             [
@@ -106508,15 +105475,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CACTUS Pokémon",
-        "types": [
-          "Grass",
-          "Grass"
-        ],
         "abilities": [
           "Sand Veil"
         ],
-        "catchRate": "190",
-        "baseExp": "97",
+        "baseExp": 97,
         "description": "CACNEA live in deserts with virtually no\nrainfall. It battles by swinging its thick,\nspiked arms. Once a year, a yellow flower\nblooms.",
         "moves": {
           "levelUp": [
@@ -106856,8 +105818,7 @@
         "abilities": [
           "Sand Veil"
         ],
-        "catchRate": "60",
-        "baseExp": "177",
+        "baseExp": 177,
         "moves": {
           "levelUp": [
             [
@@ -107165,8 +106126,7 @@
         "abilities": [
           "Natural Cure"
         ],
-        "catchRate": "255",
-        "baseExp": "74",
+        "baseExp": 74,
         "description": "A POKéMON that has wings like cottony\nclouds. After enduring winter, in which\nlittle food is available, SWABLU flocks\nmove closer to towns in the spring.",
         "moves": {
           "levelUp": [
@@ -107508,8 +106468,7 @@
         "abilities": [
           "Natural Cure"
         ],
-        "catchRate": "45",
-        "baseExp": "188",
+        "baseExp": 188,
         "moves": {
           "levelUp": [
             [
@@ -107860,15 +106819,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CAT FERRET Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Immunity"
         ],
-        "catchRate": "90",
-        "baseExp": "165",
+        "baseExp": 165,
         "description": "When it battles, it stands on its hind legs\nand attacks with its sharply clawed\nforelegs. Its fur bristles if it encounters\nany SEVIPER.",
         "moves": {
           "levelUp": [
@@ -108233,15 +107187,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FANG SNAKE Pokémon",
-        "types": [
-          "Poison",
-          "Poison"
-        ],
         "abilities": [
           "Shed Skin"
         ],
-        "catchRate": "90",
-        "baseExp": "165",
+        "baseExp": 165,
         "description": "SEVIPER and ZANGOOSE are eternal rivals.\nIt counters a ZANGOOSE's dazzling agility\nwith its swordlike tail, which also oozes\na horrible poison.",
         "moves": {
           "levelUp": [
@@ -108566,8 +107515,7 @@
           "spe": 70,
           "total": 440
         },
-        "catchRate": "45",
-        "baseExp": "150",
+        "baseExp": 150,
         "description": "It becomes very active on the night of\na full moon. This POKéMON was first\ndiscovered 40 years ago at the site of\na meteor strike.",
         "moves": {
           "levelUp": [
@@ -108901,8 +107849,7 @@
           "spe": 70,
           "total": 440
         },
-        "catchRate": "45",
-        "baseExp": "150",
+        "baseExp": 150,
         "description": "Solar energy is the source of this \nPOKéMON's power. On sunny days, groups of\nSOLROCK line up facing the sun and absorb\nits light.",
         "moves": {
           "levelUp": [
@@ -109213,8 +108160,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "190",
-        "baseExp": "92",
+        "baseExp": 92,
         "description": "Its body is covered with a slimy film.\nThe film acts as a barrier to prevent germs\nin muddy water from entering the\nBARBOACH's body.",
         "moves": {
           "levelUp": [
@@ -109537,8 +108483,7 @@
         "abilities": [
           "Oblivious"
         ],
-        "catchRate": "75",
-        "baseExp": "158",
+        "baseExp": 158,
         "moves": {
           "levelUp": [
             [
@@ -109844,16 +108789,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "RUFFIAN Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Hyper Cutter",
           "Shell Armor"
         ],
-        "catchRate": "205",
-        "baseExp": "111",
+        "baseExp": 111,
         "description": "Once it grips prey with its large pincers,\nit will never let go, no matter what.\nIt is a hardy POKéMON that can thrive\nin any environment.",
         "moves": {
           "levelUp": [
@@ -110197,8 +109137,7 @@
           "Hyper Cutter",
           "Shell Armor"
         ],
-        "catchRate": "155",
-        "baseExp": "161",
+        "baseExp": 161,
         "description": "A brutish POKéMON that loves to battle.\nA veteran CRAWDAUNT that has prevailed in\nhundreds of battles has giant pincers\nmarked with countless scars.",
         "moves": {
           "levelUp": [
@@ -110525,8 +109464,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CLAY DOLL Pokémon",
-        "catchRate": "255",
-        "baseExp": "58",
+        "baseExp": 58,
         "description": "A BALTOY moves by spinning on its single\nfoot. It has been depicted in murals \nadorning the walls of a once-bustling city\nin an ancient age.",
         "moves": {
           "levelUp": [
@@ -110871,8 +109809,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CLAY DOLL Pokémon",
-        "catchRate": "90",
-        "baseExp": "189",
+        "baseExp": 189,
         "description": "A CLAYDOL sleeps while hovering in midair.\nIts arms are separate from its body.\nThey are kept floating by the POKéMON's\nmanipulation of psychic power.",
         "moves": {
           "levelUp": [
@@ -111177,8 +110114,7 @@
         "abilities": [
           "Suction Cups"
         ],
-        "catchRate": "45",
-        "baseExp": "121",
+        "baseExp": 121,
         "moves": {
           "levelUp": [
             [
@@ -111466,8 +110402,7 @@
         "abilities": [
           "Suction Cups"
         ],
-        "catchRate": "45",
-        "baseExp": "201",
+        "baseExp": 201,
         "description": "It drags its heavy body along the\nseafloor. It makes its nest in the shallows\nof warm seas. CRADILY can be seen on\nbeaches when the tide goes out.",
         "moves": {
           "levelUp": [
@@ -111748,8 +110683,7 @@
         "abilities": [
           "Battle Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "119",
+        "baseExp": 119,
         "moves": {
           "levelUp": [
             [
@@ -112036,8 +110970,7 @@
         "abilities": [
           "Battle Armor"
         ],
-        "catchRate": "45",
-        "baseExp": "200",
+        "baseExp": 200,
         "description": "ARMALDO usually lives on land. However,\nwhen it hunts for prey, it dives beneath\nthe ocean. It swims around using its two\nlarge wings.",
         "moves": {
           "levelUp": [
@@ -112277,15 +111210,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FISH Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "255",
-        "baseExp": "61",
+        "baseExp": 61,
         "description": "FEEBAS live in ponds that are heavily\ninfested with weeds. Because of its\nhopelessly shabby appearance, it\nseems as if few TRAINERS raise it.",
         "moves": {
           "levelUp": [
@@ -112582,15 +111510,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "TENDER Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Marvel Scale"
         ],
-        "catchRate": "60",
-        "baseExp": "213",
+        "baseExp": 213,
         "description": "It is said to live at the bottom of\nlarge lakes. Considered to be the most\nbeautiful of all POKéMON, it has been\ndepicted in paintings and statues.",
         "moves": {
           "levelUp": [
@@ -112882,12 +111805,7 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WEATHER Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
-        "catchRate": "45",
-        "baseExp": "145",
+        "baseExp": 145,
         "moves": {
           "levelUp": [
             [
@@ -113222,15 +112140,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "COLOR SWAP Pokémon",
-        "types": [
-          "Normal",
-          "Normal"
-        ],
         "abilities": [
           "Color Change"
         ],
-        "catchRate": "200",
-        "baseExp": "132",
+        "baseExp": 132,
         "description": "A POKéMON that has the ability to alter its\nbody colors to match its surroundings.\nA KECLEON reverts to its original colors if\nit is startled.",
         "moves": {
           "levelUp": [
@@ -113585,15 +112498,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "PUPPET Pokémon",
-        "types": [
-          "Ghost",
-          "Ghost"
-        ],
         "abilities": [
           "Insomnia"
         ],
-        "catchRate": "225",
-        "baseExp": "97",
+        "baseExp": 97,
         "description": "This POKéMON roams about deep in the\nnight seeking such negative emotions as\ngrudges and envy. It retreats to its nest\nwhen the sun begins to rise.",
         "moves": {
           "levelUp": [
@@ -113917,15 +112825,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "MARIONETTE Pokémon",
-        "types": [
-          "Ghost",
-          "Ghost"
-        ],
         "abilities": [
           "Insomnia"
         ],
-        "catchRate": "45",
-        "baseExp": "179",
+        "baseExp": 179,
         "description": "An abandoned plush doll became this\nPOKéMON. They are said to live in garbage\ndumps and wander about in search of the\nchildren that threw them away.",
         "moves": {
           "levelUp": [
@@ -114227,15 +113130,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "REQUIEM Pokémon",
-        "types": [
-          "Ghost",
-          "Ghost"
-        ],
         "abilities": [
           "Levitate"
         ],
-        "catchRate": "190",
-        "baseExp": "97",
+        "baseExp": 97,
         "description": "A glare from its single scarlet eye makes\neven burly grown-ups freeze in utter fear.\nIt is a nocturnal POKéMON that roams\nabout under the cloak of darkness.",
         "moves": {
           "levelUp": [
@@ -114578,15 +113476,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BECKON Pokémon",
-        "types": [
-          "Ghost",
-          "Ghost"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "90",
-        "baseExp": "179",
+        "baseExp": 179,
         "evo": {
           "prev": {
             "id": "duskull",
@@ -114942,8 +113835,7 @@
         "abilities": [
           "Chlorophyll"
         ],
-        "catchRate": "200",
-        "baseExp": "169",
+        "baseExp": 169,
         "moves": {
           "levelUp": [
             [
@@ -115263,10 +114155,6 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WIND CHIME Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "stats": {
           "hp": 65,
           "atk": 50,
@@ -115276,8 +114164,7 @@
           "spe": 65,
           "total": 425
         },
-        "catchRate": "45",
-        "baseExp": "147",
+        "baseExp": 147,
         "evo": null,
         "moves": {
           "levelUp": [
@@ -115614,15 +114501,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DISASTER Pokémon",
-        "types": [
-          "Dark",
-          "Dark"
-        ],
         "abilities": [
           "Pressure"
         ],
-        "catchRate": "30",
-        "baseExp": "174",
+        "baseExp": 174,
         "description": "It sharply senses even subtle changes in\nthe sky and the land to predict natural\ndisasters. It is a long-lived POKéMON that\nhas a life-span of 100 years.",
         "moves": {
           "levelUp": [
@@ -115877,18 +114759,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BRIGHT Pokémon",
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
         "abilities": [
           "Shadow Tag"
         ],
-        "catchRate": "125",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "44",
+        "baseExp": 44,
         "description": "A WYNAUT loves to eat sweet fruits.\nIt cleverly picks fruits using its earlike\narms. They gather in fruit gardens, drawn\nby the fragrance.",
         "moves": {
           "levelUp": [
@@ -116116,15 +114993,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SNOW HAT Pokémon",
-        "types": [
-          "Ice",
-          "Ice"
-        ],
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "190",
-        "baseExp": "74",
+        "baseExp": 74,
         "description": "They tend to move about in groups of\naround five SNORUNT. In snowy regions,\nit is said that when they are seen late at\nnight, snowfall will arrive by morning.",
         "moves": {
           "levelUp": [
@@ -116447,15 +115319,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "FACE Pokémon",
-        "types": [
-          "Ice",
-          "Ice"
-        ],
         "abilities": [
           "Inner Focus"
         ],
-        "catchRate": "75",
-        "baseExp": "187",
+        "baseExp": 187,
         "description": "A GLALIE has the power to instantaneously\nfreeze moisture in the atmosphere.\nA dazzling cloud of diamondlike ice\ncrystals forms around its body.",
         "moves": {
           "levelUp": [
@@ -116762,8 +115629,7 @@
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "255",
-        "baseExp": "75",
+        "baseExp": 75,
         "moves": {
           "levelUp": [
             [
@@ -117069,8 +115935,7 @@
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "120",
-        "baseExp": "128",
+        "baseExp": 128,
         "description": "SEALEO live in herds on ice floes. Using its\npowerful flippers, it shatters ice.\nIt dives into the sea to hunt prey five\ntimes a day.",
         "moves": {
           "levelUp": [
@@ -117397,8 +116262,7 @@
         "abilities": [
           "Thick Fat"
         ],
-        "catchRate": "45",
-        "baseExp": "192",
+        "baseExp": 192,
         "moves": {
           "levelUp": [
             [
@@ -117652,15 +116516,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "BIVALVE Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Shell Armor"
         ],
-        "catchRate": "255",
-        "baseExp": "142",
+        "baseExp": 142,
         "description": "A CLAMPERL slams its shell closed on prey\nto prevent escape. The pearl it creates\nupon evolution is said to be infused with\na mysterious energy.",
         "evo": {
           "next": {
@@ -117913,15 +116772,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "DEEP SEA Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "60",
-        "baseExp": "178",
+        "baseExp": 178,
         "evo": {
           "prev": {
             "id": "clamperl",
@@ -118191,15 +117045,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SOUTH SEA Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "60",
-        "baseExp": "178",
+        "baseExp": 178,
         "description": "A GOREBYSS siphons the body fluids of prey\nthrough its thin, tubular mouth. Its light\npink body color turns vivid when it\nfinishes feeding.",
         "moves": {
           "levelUp": [
@@ -118489,8 +117338,7 @@
           "Swift Swim",
           "Rock Head"
         ],
-        "catchRate": "25",
-        "baseExp": "198",
+        "baseExp": 198,
         "description": "A POKéMON that was once believed to have\nbeen extinct. The species has not changed\nits form for 100 million years. It walks on\nthe seafloor using its pectoral fins.",
         "moves": {
           "levelUp": [
@@ -118779,15 +117627,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "RENDEZVOUS Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
         "abilities": [
           "Swift Swim"
         ],
-        "catchRate": "225",
-        "baseExp": "110",
+        "baseExp": 110,
         "description": "LUVDISC make the branches of CORSOLA\ntheir nests. There is a custom from long\nago of giving a LUVDISC as a gift to\nexpress one's feelings of love.",
         "moves": {
           "levelUp": [
@@ -119068,15 +117911,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ROCK HEAD Pokémon",
-        "types": [
-          "Dragon",
-          "Dragon"
-        ],
         "abilities": [
           "Rock Head"
         ],
-        "catchRate": "45",
-        "baseExp": "89",
+        "baseExp": 89,
         "description": "Although it is small, this POKéMON is very\npowerful because its body is a bundle of\nmuscles. It launches head-butts with its\nironlike skull.",
         "moves": {
           "levelUp": [
@@ -119380,15 +118218,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ENDURANCE Pokémon",
-        "types": [
-          "Dragon",
-          "Dragon"
-        ],
         "abilities": [
           "Rock Head"
         ],
-        "catchRate": "45",
-        "baseExp": "144",
+        "baseExp": 144,
         "moves": {
           "levelUp": [
             [
@@ -119737,8 +118570,7 @@
         "abilities": [
           "Intimidate"
         ],
-        "catchRate": "45",
-        "baseExp": "218",
+        "baseExp": 218,
         "moves": {
           "levelUp": [
             [
@@ -119967,8 +118799,7 @@
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
-        "baseExp": "103",
+        "baseExp": 103,
         "description": "When BELDUM gather in a swarm, they move\nin perfect unison as if they were but one\nPOKéMON. They communicate with each other\nusing brain waves.",
         "moves": {
           "levelUp": [
@@ -120198,8 +119029,7 @@
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
-        "baseExp": "153",
+        "baseExp": 153,
         "moves": {
           "levelUp": [
             [
@@ -120556,8 +119386,7 @@
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
-        "baseExp": "210",
+        "baseExp": 210,
         "description": "METAGROSS has four brains that are joined\nby a complex neural network. As a result of\nintegration, this POKéMON is smarter than\na supercomputer.",
         "moves": {
           "levelUp": [
@@ -120875,18 +119704,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ROCK PEAK Pokémon",
-        "types": [
-          "Rock",
-          "Rock"
-        ],
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "217",
+        "baseExp": 217,
         "description": "A POKéMON that is made entirely of rocks\nand boulders. If parts of its body chip off\nin battle, REGIROCK repairs itself by\nadding new rocks.",
         "moves": {
           "levelUp": [
@@ -121190,18 +120014,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "ICEBERG Pokémon",
-        "types": [
-          "Ice",
-          "Ice"
-        ],
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "216",
+        "baseExp": 216,
         "moves": {
           "levelUp": [
             [
@@ -121521,18 +120340,13 @@
       "spriteEx": true,
       "vanilla": {
         "category": "IRON Pokémon",
-        "types": [
-          "Steel",
-          "Steel"
-        ],
         "abilities": [
           "Clear Body"
         ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "215",
+        "baseExp": 215,
         "moves": {
           "levelUp": [
             [
@@ -121881,11 +120695,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "EON Pokémon",
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "211",
+        "baseExp": 211,
         "description": "They make a small herd of only several\nmembers. They rarely make contact with\npeople or other POKéMON. They disappear\nif they sense enemies.",
         "moves": {
           "levelUp": [
@@ -122250,11 +121063,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "EON Pokémon",
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "211",
+        "baseExp": 211,
         "moves": {
           "levelUp": [
             [
@@ -122572,15 +121384,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SEA BASIN Pokémon",
-        "types": [
-          "Water",
-          "Water"
-        ],
-        "catchRate": "5",
+        "catchRate": 5,
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "218",
+        "baseExp": 218,
         "description": "KYOGRE has appeared in mythology as the\ncreator of the sea. After long years of\nfeuding with GROUDON, it took to sleep at\nthe bottom of the sea.",
         "moves": {
           "levelUp": [
@@ -122915,15 +121723,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "CONTINENT Pokémon",
-        "types": [
-          "Ground",
-          "Ground"
-        ],
-        "catchRate": "5",
+        "catchRate": 5,
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "218",
+        "baseExp": 218,
         "description": "GROUDON has appeared in mythology as the\ncreator of the land. It sleeps in magma\nunderground and is said to make volcanoes\nerupt on awakening.",
         "moves": {
           "levelUp": [
@@ -123293,11 +122097,11 @@
       "spriteEx": true,
       "vanilla": {
         "category": "SKY HIGH Pokémon",
-        "catchRate": "3",
+        "catchRate": 3,
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "220",
+        "baseExp": 220,
         "description": "A POKéMON that flies endlessly in the\nozone layer. It is said it would descend\nto the ground if KYOGRE and GROUDON\nwere to fight.",
         "moves": {
           "levelUp": [
@@ -123644,11 +122448,10 @@
       "spriteEx": true,
       "vanilla": {
         "category": "WISH Pokémon",
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "215",
+        "baseExp": 215,
         "description": "JIRACHI is said to make wishes come true.\nWhile it sleeps, a tough crystalline shell\nenvelops the body to protect it from\nenemies.",
         "moves": {
           "levelUp": [
@@ -123992,15 +122795,10 @@
       ],
       "spriteEx": true,
       "vanilla": {
-        "types": [
-          "Psychic",
-          "Psychic"
-        ],
-        "catchRate": "3",
         "eggGroups": [
           "Undiscovered"
         ],
-        "baseExp": "215",
+        "baseExp": 215,
         "description": "A POKéMON that mutated from an\nextraterrestrial virus exposed to a laser\nbeam. Its body is configured for superior\nagility and speed.",
         "moves": {
           "levelUp": [
