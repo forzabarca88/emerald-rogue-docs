@@ -2007,20 +2007,45 @@ function extract(repo) {
     return `${baseName} (${titleCaseId(rest)})`;
   };
 
-  const formsOf = (exId, profileId) => {
-    // the profile's Species list is the authoritative form roster when it
-    // lists any (the base is Species[0]); otherwise fall back to the
-    // species' form table
+  // the record's form ids: the profile's Species list is the authoritative
+  // form roster when it lists any (the base is Species[0]); otherwise fall
+  // back to the species' form table (the base excluded)
+  const formRosterOf = (exId, profileId) => {
     const p = profile('ex', profileId);
-    const baseName = exDisplayNames.get(exId);
-    if (p && p.species.length > 1) {
-      const names = p.species.slice(1).map((s) => exDisplayNames.get(s) ?? missingFormName(exId, baseName, s));
-      return names.length > 0 ? names : null;
-    }
+    if (p && p.species.length > 1) return p.species.slice(1);
     const entry = exEntries.get(exId);
-    if (entry.formIds.length < 2) return null;
-    const others = entry.formIds.filter((f) => f !== exId).map((f) => exDisplayNames.get(f) ?? fail(`${f}: no display name`));
-    return others.length > 0 ? others : null;
+    if (entry.formIds.length < 2) return [];
+    return entry.formIds.filter((f) => f !== exId);
+  };
+
+  // per-form data from the form's own species_info entry (dex-less forms —
+  // the mega battle forms and regional variants — live in exNoDexMap); each
+  // optional field is included only when the entry carries it
+  const formObjectOf = (f, exId, baseName, fromProfile) => {
+    const entry = exEntries.get(f) ?? exNoDexMap.get(f);
+    // rogue-only custom megas (profile-listed, no species_info entry at all)
+    // render name-only; a form-table id without an entry is a parse bug
+    if (!entry) {
+      if (!fromProfile) fail(`${f}: no display name`);
+      return { name: missingFormName(exId, baseName, f) };
+    }
+    const form = { name: exDisplayNames.get(f) };
+    form.types = entry.types;
+    const st = statsOf(entry.stats);
+    if ([st.hp, st.atk, st.def, st.spa, st.spd, st.spe].every(Number.isFinite)) form.stats = st;
+    form.abilities = entry.abilities;
+    if (Number.isFinite(entry.stats.height)) form.height = entry.height;
+    if (Number.isFinite(entry.stats.weight)) form.weight = entry.weight;
+    if (entry.description !== null) form.description = entry.description;
+    return form;
+  };
+
+  const formsOf = (exId, profileId) => {
+    const p = profile('ex', profileId);
+    const fromProfile = p && p.species.length > 1;
+    const baseName = exDisplayNames.get(exId);
+    const forms = formRosterOf(exId, profileId).map((f) => formObjectOf(f, exId, baseName, fromProfile));
+    return forms.length > 0 ? forms : null;
   };
 
   // ----- join vanilla <-> EX and build records ------------------------------------
@@ -2136,7 +2161,14 @@ function extract(repo) {
     }
     push(`${ex.file} @origin/expansion`);
     if (ex.namedTextFields.length > 0) push('src/data/pokemon/species_info.h @origin/expansion');
-    if (rec.forms) push('src/data/pokemon/form_species_tables.h @origin/expansion');
+    if (rec.forms) {
+      push('src/data/pokemon/form_species_tables.h @origin/expansion');
+      // the per-form data comes from each form's own species_info entry
+      for (const f of formRosterOf(exId, movesProfileId)) {
+        const fe = exEntries.get(f) ?? exNoDexMap.get(f);
+        if (fe) push(`${fe.file} @origin/expansion`);
+      }
+    }
     if (exProfileFile) push(`${exProfileFile} @origin/expansion`);
     // sprite source: the committed <id>.png is vanilla-preferred (the
     // vanilla working tree's front.png) with the EX front file as the
@@ -2236,7 +2268,7 @@ function buildDoc({ records, counts }) {
       {
         id: 'moves',
         heading: 'Moves',
-        text: `moves comes from each species' per-species learnset profile (src/data/rogue/pokemon/{vanilla,expansion}/<id>/), the JSON the game bakes into the Pokédex: levelUp is the [move, level] list (level 0 marks moves learned on evolving), tutor the list of tutor-movable moves, and tm the TMs the species can learn — a TM is learnable only when its sTMHMMoves move appears in the species' level-up or tutor list (CanSpeciesLearnTM), so tm is the intersection of that list with the build's TM table (50 TMs under both builds). Forms are not separate records: the game resolves a species to its base form (GET_BASE_SPECIES_ID) before reading the profile, so the record's learnset is the base species' profile and the forms field merely names the base's forms. Learnsets here are the base profile, not the trainer-revised one.`,
+        text: `moves comes from each species' per-species learnset profile (src/data/rogue/pokemon/{vanilla,expansion}/<id>/), the JSON the game bakes into the Pokédex: levelUp is the [move, level] list (level 0 marks moves learned on evolving), tutor the list of tutor-movable moves, and tm the TMs the species can learn — a TM is learnable only when its sTMHMMoves move appears in the species' level-up or tutor list (CanSpeciesLearnTM), so tm is the intersection of that list with the build's TM table (50 TMs under both builds). Forms are not separate records: the game resolves a species to its base form (GET_BASE_SPECIES_ID) before reading the profile, so the record's learnset is the base species' profile; the forms field itself carries each form's own data (name, types, stats, abilities, height and weight, plus its Pokédex blurb where the entry has one) rather than merely naming the base's forms. Learnsets here are the base profile, not the trainer-revised one.`,
         source: 'src/pokemon.c @vanilla; src/pokemon.c @origin/expansion; src/data/party_menu.h @vanilla; src/data/party_menu.h @origin/expansion',
       },
       {
