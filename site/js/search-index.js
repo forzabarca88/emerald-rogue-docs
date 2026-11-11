@@ -343,6 +343,9 @@
    *   values    routes calm-average-tough — row labels + the per-sub-type
    *             cells (string cells: "5", "−20", "65%", "—"…)
    *   terrains  routes type-taxonomy — the terrain names
+   *   list      prose fact lists — plain string items (the charms
+   *             where-they-come-from sources; the pokedex four-block
+   *             rewrite, issue #84 — the pokedex page renders them as chips)
    * Record fields (RECORD_STRUCTURED — the safari `legends-cave` record's
    * `steps` is already indexed by the safari extractor, so `steps` is
    * prose-only here):
@@ -354,7 +357,7 @@
    * ------------------------------------------------------------------ */
 
   /** Prose-block allow-list, in the order the parts are folded in. */
-  var PROSE_STRUCTURED = ['ladder', 'steps', 'cycles', 'roll', 'values', 'terrains'];
+  var PROSE_STRUCTURED = ['ladder', 'steps', 'cycles', 'roll', 'values', 'terrains', 'list'];
 
   /** Record allow-list, in the order the parts are folded in. */
   var RECORD_STRUCTURED = ['short', 'score', 'eviction', 'placement', 'stack'];
@@ -427,7 +430,7 @@
     if (field === 'stack') {
       return typeof value === 'object' && !Array.isArray(value) ? toParts(value.unit) : [];
     }
-    // 'steps', 'terrains', 'short', 'eviction' — plain string (array) fields
+    // 'steps', 'terrains', 'list', 'short', 'eviction' — plain string (array) fields
     return toParts(value);
   }
 
@@ -932,16 +935,13 @@
 
   /**
    * A prose block's haystack parts: heading + text, plus the optional
-   * `list` items and `trailing` paragraph some blocks carry (charms
-   * where-they-come-from) so list-form content stays as searchable as
-   * the prose it replaced, plus the structured diagram fields the #31
-   * batch moved out of the prose (structuredText).
+   * `trailing` paragraph some blocks carry (charms where-they-come-from)
+   * and the allow-listed structured fields (PROSE_STRUCTURED — `list`
+   * fact lists fold in there, issue #84) so list-form content stays as
+   * searchable as the prose it replaced.
    */
   function proseParts(block) {
     var parts = [str(block && block.heading), str(block && block.text)];
-    if (block && Array.isArray(block.list)) {
-      for (var i = 0; i < block.list.length; i++) parts.push(str(block.list[i]));
-    }
     if (block && block.trailing) parts.push(str(block.trailing));
     parts = parts.concat(structuredText(block, PROSE_STRUCTURED));
     return parts;
