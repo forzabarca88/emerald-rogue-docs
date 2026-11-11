@@ -29,7 +29,13 @@
  *      requirement; a target missing from the active build renders as a
  *      plain non-link cell), the three move groups (Level Up as
  *      "Name (Lv n)" chips — level 0 renders "(Evo)" per the moves
- *      prose — / TM & TR / Tutor), the forms chips, the "Included in"
+ *      prose — / TM & TR / Tutor), the structured forms section
+ *      (issue #85 — one .dex-form block per form: the display-face
+ *      name, the form’s type chips, its stat rows (the shared
+ *      statRowsHtml in a .dex-stats box, BST row last), its
+ *      abilities, its height/weight in the base meta’s mono
+ *      treatment, its Pokédex text; a rogue-only custom mega with no
+ *      species entry is a plain name row), the “Included in”
  *      dex-variant chips (a single "All N variants" chip for the
  *      dexVariants: "all" shorthand, N from the settings.json
  *      range-pokedex-variant record's optionsByVersion length), the
@@ -451,6 +457,63 @@
       return '<div class="dex-species__field"><span class="field-label">' + label + '</span>' + inner + '</div>';
     }
 
+    /**
+     * One .dex-form block (issue #85): the display-face form name, the
+     * form's type chips (deduped the same way as the base types), its
+     * stat rows — the shared statRowsHtml() in the same .dex-stats box
+     * the base stats use, so the BST row is last — its abilities
+     * (the in-game triple repeat kept, like the base abilities), its
+     * height/weight in the base meta's mono treatment, and its
+     * Pokédex text. A rogue-only custom mega (a name with no species
+     * entry) renders as a plain name row — no empty stat block or
+     * chip rows.
+     */
+    function formHtml(f) {
+      var name = f && typeof f.name === 'string' ? f.name : '';
+      var types = [];
+      (Array.isArray(f && f.types) ? f.types : []).forEach(function (t) {
+        if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
+      });
+      var abilities = Array.isArray(f && f.abilities) ? f.abilities : [];
+      var stats = f && f.stats && typeof f.stats === 'object' ? f.stats : null;
+      var height = f && typeof f.height === 'string' ? f.height : '';
+      var weight = f && typeof f.weight === 'string' ? f.weight : '';
+      var description = f && typeof f.description === 'string' ? f.description : '';
+
+      /* name-only form (no per-form data) — a plain name row */
+      if (!types.length && !stats && !abilities.length && !height && !weight && !description) {
+        return '<div class="dex-form dex-form--plain"><h3 class="dex-form__name">' + ROGUE.esc(name) + '</h3></div>';
+      }
+
+      var html = '<div class="dex-form"><h3 class="dex-form__name">' + ROGUE.esc(name) + '</h3>';
+      if (types.length) html += '<div class="chip-row">' + types.map(ROGUE.chip).join('') + '</div>';
+      if (stats) html += '<div class="dex-stats">' + statRowsHtml(stats) + '</div>';
+      if (abilities.length) html += '<div class="chip-row">' + abilities.map(ROGUE.chip).join('') + '</div>';
+      if (height || weight) {
+        html +=
+          '<div class="dex-form__meta">' +
+          (height
+            ? '<div class="dex-meta__row"><span class="dex-meta__label">Height</span><span class="dex-meta__value">' +
+              ROGUE.esc(height) +
+              '</span></div>'
+            : '') +
+          (weight
+            ? '<div class="dex-meta__row"><span class="dex-meta__label">Weight</span><span class="dex-meta__value">' +
+              ROGUE.esc(weight) +
+              '</span></div>'
+            : '') +
+          '</div>';
+      }
+      if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
+      html += '</div>';
+      return html;
+    }
+
+    /** The Forms field: one .dex-form block per structured form (issue #85). */
+    function formsHtml(forms) {
+      return '<div class="dex-forms">' + forms.map(formHtml).join('') + '</div>';
+    }
+
     function speciesSection(record) {
       var name = dexVariant(record, 'name');
       var category = dexVariant(record, 'category');
@@ -501,7 +564,7 @@
       );
       html += evoHtml(record);
       html += movesHtml(moves);
-      if (forms.length) html += fieldBlock('Forms', '<div class="chip-row">' + forms.map(ROGUE.chip).join('') + '</div>');
+      if (forms.length) html += fieldBlock('Forms', formsHtml(forms));
       html += fieldBlock(
         'Included in',
         variants === 'all'

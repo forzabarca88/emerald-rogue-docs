@@ -49,7 +49,10 @@
  *                   (data/site.json dex.pageSize); an EX-only selection
  *                   (turtwig, deep-link #rec-pokedex-turtwig) closes the
  *                   .dex-species detail back to the overview under
- *                   Vanilla and reopens it on the EX round-trip.
+ *                   Vanilla and reopens it on the EX round-trip; a
+ *                   deep-linked charizard detail renders its structured
+ *                   forms (issue #85) — one .dex-form block per form,
+ *                   Mega Charizard X carrying its per-form BST 634.
  *
  * Waiting is always on a version-specific DOM state (the re-render itself,
  * or the URL rewrite) — no arbitrary sleeps.
@@ -676,6 +679,55 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and
       (await page.locator('#dex-count').first().textContent())?.trim(),
       '1025 species · page 1 of 37',
       'the round-trip restores the full 1025-record EX count line'
+    );
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html (EX): a deep-linked charizard detail renders its structured forms with per-form stat rows', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    await assertToggle(page, 'ex', 'pokedex.html (default)');
+
+    // Deep-link charizard (data/pokedex.json: 3 structured forms —
+    // Mega Charizard X, Mega Charizard Y, Gigantamax Charizard)
+    await page.evaluate(() => {
+      window.location.hash = '#rec-pokedex-charizard';
+    });
+    await page.waitForFunction(
+      () => document.getElementById('rec-pokedex-charizard') !== null,
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+
+    const facts = await page.evaluate(() => {
+      const panel = document.querySelector('.dex-species');
+      if (!panel) return null;
+      return {
+        panelText: panel.textContent,
+        names: [...panel.querySelectorAll('.dex-forms .dex-form .dex-form__name')].map((e) => e.textContent.trim()),
+        megaX: [...panel.querySelectorAll('.dex-forms .dex-form')].find((f) =>
+          (f.querySelector('.dex-form__name')?.textContent || '').includes('Mega Charizard X')
+        )?.textContent ?? null,
+      };
+    });
+    assert.ok(facts, 'the deep link renders the .dex-species detail panel');
+    assert.ok(
+      facts.panelText.includes('Mega Charizard X'),
+      'the panel contains the first form name (data/pokedex.json charizard.forms[0].name, pokedex.js formHtml)'
+    );
+    assert.deepEqual(
+      facts.names,
+      ['Mega Charizard X', 'Mega Charizard Y', 'Gigantamax Charizard'],
+      'data/pokedex.json charizard.forms: the 3 structured forms render one .dex-form block each, in data order (pokedex.js formHtml)'
+    );
+    assert.ok(facts.megaX, 'the first .dex-form block is Mega Charizard X');
+    assert.ok(
+      facts.megaX.includes('634'),
+      "Mega Charizard X's per-form stat rows render its BST 634 end-to-end (extractor → data/pokedex.json → pokedex.js statRowsHtml)"
     );
   } finally {
     await close();
