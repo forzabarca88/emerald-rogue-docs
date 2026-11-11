@@ -6,24 +6,39 @@
  * (the 1025 records are a multi-megabyte file). The page recreates the
  * in-game Pokedex (src/rogue_pokedex.c) as two views of one page:
  *
- *   1. the overview view (#dex-overview) — the four prose blocks
- *      (issue #84 — each renders its short 1–2 sentence `text` plus
- *      its `list` facts as a scannable .dex-facts list, in place of
- *      the dense paragraphs ROGUE.proseSections used to emit), then
- *      the toolbar (an on-page .search filter + a region filter
- *      whose selection survives version re-renders, derived like
- *      routes.js), the live #dex-count line ("<N> species · page <x>
- *      of <y>"), and the .dex-grid: exactly site.json dex.pageSize
- *      (28 — the in-game Overview's tile page) .dex-tile <a> links per
- *      page, each a lazy-loaded sprite (onerror → the placeholder tile
- *      showing the dex number in mono) + the active version's #NNN.
- *      The .dex-pager (prev / next buttons + "page X of Y") pages the
- *      list; any filter change (search or region) resets to page 1.
+ *   1. the overview view (#dex-overview) — GRID-FIRST (issue #86): the
+ *      dex is the first thing on the page. The browse section leads
+ *      with the .dex-browse bar — one container holding the toolbar
+ *      (an on-page .search filter + a region filter whose selection
+ *      survives version re-renders, derived like routes.js), the live
+ *      #dex-count line ("<N> species · page <x> of <y>") and the
+ *      .dex-pager (prev / next buttons + "page X of Y"), with the pager
+ *      BETWEEN the count and the grid, so paging never requires
+ *      scrolling down. The bar sticks under the site header: step 8
+ *      wires the offset only (--dex-browse-top on <main>, the
+ *      #site-header.offsetHeight measured on load + resize — the
+ *      search.js setPaletteTop pattern; the position: sticky rule and
+ *      the scroll clearance are step 9's CSS, which reads the same
+ *      variable). The .dex-grid follows the bar: exactly site.json
+ *      dex.pageSize (28 — the in-game Overview's tile page) .dex-tile
+ *      <a> links per page, each a lazy-loaded sprite (onerror → the
+ *      placeholder tile showing the dex number in mono) + the active
+ *      version's #NNN. The four prose blocks (issue #84 — each
+ *      renders its short 1–2 sentence `text` plus its `list` facts as
+ *      a scannable .dex-facts list) sit BELOW the grid now — their
+ *      ids stay intact, so the search palette's same-page Enter still
+ *      scrolls to them. Any filter change (search or region) resets to
+ *      page 1.
  *   2. the species detail view (#dex-species) — rendered only while a
  *      selection exists; the .dex-species panel's root carries
  *      id = ROGUE.recId('pokedex', record.id) (the issue-#45 deep-link
  *      scheme, #rec-pokedex-<id>): the pixelated sprite, the name, the
  *      version badge, the #NNN chip, the type chips, the category, the
+ *      .dex-nav prev/next strip (issue #86 — plain #rec-pokedex-<id>
+ *      hash links to the neighbours in the active version's FULL
+ *      dex-order list, the grid's list before the on-page filter, so
+ *      the neighbours always match what the grid shows; the missing
+ *      side at a list end renders as an empty slot), the
  *      seven stat rows with value bars (width = value/255 capped, BST
  *      row last), the meta rows (catch rate / height / weight / gender
  *      / egg groups / base EXP), the Pokédex text, the abilities, the
@@ -208,6 +223,18 @@
       return 0;
     }
 
+    /**
+     * The active version's FULL record list in data order (= dex
+     * order) — the base the browse grid derives its filtered list
+     * from (filteredList applies the region/query filters on top of
+     * it). The detail's prev/next neighbours (issue #86) come from
+     * this unfiltered list, so they always match what the grid shows
+     * for the active build.
+     */
+    function orderedList() {
+      return ROGUE.filter(records);
+    }
+
     /** The (version-scoped, region-filtered, query-filtered) list, in data order. */
     function filteredList() {
       var q = state.query.trim().toLowerCase();
@@ -307,11 +334,22 @@
           })
           .join('');
 
+      /* The .dex-browse bar (issue #86): toolbar + count + pager in ONE
+       * container — the pager sits between the count and the grid, so
+       * paging never requires scrolling down. This is the sticky bar's
+       * markup: step 9 styles it in pages.css (position: sticky, top:
+       * var(--dex-browse-top), solid token background, z-index below
+       * --z-header — the variable setBrowseTop below) and documents
+       * the new page-scoped class in DESIGN.md §6. Note the container's
+       * CLASS is .dex-browse while the enclosing section's id is also
+       * "dex-browse" (ROGUE.section) — a .dex-browse selector targets
+       * the bar only. */
       return ROGUE.section(
         'dex-browse',
         'Overview',
         'Browse the ' + ROGUE.versionLabel(ROGUE.version) + ' dex',
         'As the in-game Overview draws it — ' + pageSize + ' tiles a page. Open a tile for the full entry, or search and filter first.',
+        '<div class="dex-browse">' +
         '<div class="dex-toolbar">' +
         '<div class="search dex-search"><input type="search" id="dex-search" placeholder="Search species" aria-label="Search species"></div>' +
         '<div class="dex-filter" role="group" aria-label="Filter species by region">' +
@@ -319,9 +357,10 @@
         '</div>' +
         '</div>' +
         '<p class="dex-count" id="dex-count" role="status"></p>' +
+        '<nav class="dex-pager" id="dex-pager" aria-label="Dex pages"></nav>' +
+        '</div>' +
         '<div class="dex-grid" id="dex-grid"></div>' +
-        '<p class="dex-empty" id="dex-empty" hidden></p>' +
-        '<nav class="dex-pager" id="dex-pager" aria-label="Dex pages"></nav>'
+        '<p class="dex-empty" id="dex-empty" hidden></p>'
       );
     }
 
@@ -546,6 +585,52 @@
       return '<div class="dex-forms">' + forms.map(formHtml).join('') + '</div>';
     }
 
+    /**
+     * The detail's prev/next strip (issue #86): the neighbours in the
+     * active version's FULL record list (orderedList — data order =
+     * dex order, the grid's list before the on-page region/query
+     * filter, so the neighbours always match what the grid shows for
+     * the active build). Each neighbour is a plain hash link
+     * (#rec-pokedex-<id>) — the existing hashchange routing re-renders
+     * the detail without a page load — with the neighbour's #NNN
+     * (dexNum) + active-version name. At the ends of the list the
+     * missing side renders as an empty slot, so the strip keeps its
+     * two-sided layout.
+     */
+    function dexNavHtml(record) {
+      var list = orderedList();
+      var idx = list.indexOf(record);
+      if (idx === -1) return '';
+      var link = function (rec, dir) {
+        var name = ROGUE.esc(dexVariant(rec, 'name'));
+        var arrow = dir === 'prev' ? '&larr; Prev\u00A0\u00A0' : 'Next\u00A0\u00A0';
+        var tail = dir === 'next' ? '\u00A0\u00A0&rarr;' : '';
+        return (
+          '<a class="dex-nav__link dex-nav__link--' +
+          dir +
+          '" href="#' +
+          ROGUE.esc(ROGUE.recId('pokedex', rec.id)) +
+          '">' +
+          arrow +
+          '#' +
+          rec.dexNum +
+          ' ' +
+          name +
+          tail +
+          '</a>'
+        );
+      };
+      var slot = function (rec, dir) {
+        return rec ? link(rec, dir) : '<span class="dex-nav__end" aria-hidden="true"></span>';
+      };
+      return (
+        '<nav class="dex-nav" aria-label="Adjacent species in dex order">' +
+        slot(idx > 0 ? list[idx - 1] : null, 'prev') +
+        slot(idx < list.length - 1 ? list[idx + 1] : null, 'next') +
+        '</nav>'
+      );
+    }
+
     function speciesSection(record) {
       var name = dexVariant(record, 'name');
       var category = dexVariant(record, 'category');
@@ -585,6 +670,11 @@
         (category ? '<p class="dex-species__category">' + ROGUE.esc(category) + '</p>' : '') +
         '</div>' +
         '</div>';
+
+      /* The prev/next strip (issue #86) sits directly under the head,
+       * so the neighbouring species are reachable without scrolling
+       * back to the grid or the page top. */
+      html += dexNavHtml(record);
 
       html += '<div class="dex-species__body">';
       html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>');
@@ -630,8 +720,12 @@
 
       var html = '<h1>' + ROGUE.esc(title) + '</h1>';
       html += '<div id="dex-overview"' + (selected ? ' hidden' : '') + '>';
-      html += (Array.isArray(data.prose) ? data.prose : []).map(proseBlockHtml).join('');
+      /* Grid-first (issue #86): the dex is the first thing on the page
+       * — the browse section (bar + grid) leads and the four prose
+       * blocks follow (their ids stay intact, so the search palette's
+       * same-page Enter still scrolls to them). */
       html += browseSection();
+      html += (Array.isArray(data.prose) ? data.prose : []).map(proseBlockHtml).join('');
       html += '</div>';
       if (selected) html += speciesSection(selected);
 
@@ -724,14 +818,43 @@
 
     /* --- wiring ------------------------------------------------------------- */
 
+    /**
+     * The sticky browse bar's top offset (issue #86, step 8 — the JS
+     * wiring; step 9's CSS declares position: sticky + the scroll
+     * clearance from the same variable): the #site-header's rendered
+     * height (one row ≥820px, two rows below), set on <main> as
+     * --dex-browse-top. The search.js setPaletteTop pattern exactly —
+     * measure the header on load, re-measure on resize — with this
+     * page's own element + variable name so it never clashes with the
+     * palette's --palette-top. Set on <main> (which the bar and the
+     * deep-link scroll targets all inherit from), not on the bar
+     * itself, so step 9 can extend the scroll targets'
+     * scroll-margin-top to clear header + bar via the one variable.
+     */
+    function setBrowseTop() {
+      var main = document.querySelector('main');
+      if (!main) return;
+      var header = document.getElementById('site-header');
+      var top = header ? header.offsetHeight : 60;
+      main.style.setProperty('--dex-browse-top', top + 'px');
+    }
+
     state.selection = hashSelection();
     render();
+    setBrowseTop();
 
     /* A #rec-pokedex-<id> hash selects that species; any other hash —
      * including the empty one — returns to the overview. */
     window.addEventListener('hashchange', function () {
       state.selection = hashSelection();
       render();
+    });
+
+    /* A header reflow (the one-row → two-row switch at the 820px
+     * breakpoint) changes the sticky bar's top offset — re-measure
+     * (the search.js resize-listener pattern for --palette-top). */
+    window.addEventListener('resize', function () {
+      setBrowseTop();
     });
 
     /* Version changes re-render (the grid re-scopes, the sprites and
