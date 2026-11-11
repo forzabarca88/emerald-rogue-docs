@@ -641,9 +641,12 @@
     // recordParts): name (added centrally), dex number, category, region,
     // description and ALL MOVE NAMES across BOTH per-version variants
     // (top level = EX, plus the vanilla overlay's differing fields), the
-    // forms, the dex-variant names ("all" keeps the shorthand word), the
-    // ride moves and the notes. Strings only — the bare stat numbers, the
-    // catch rate and the EXP are data, not user text (the module's rule).
+    // FORM DISPLAY NAMES (issue #85's structured form objects contribute
+    // names only — their per-form types/stats/abilities/descriptions stay
+    // out of the haystack), the dex-variant names ("all" keeps the
+    // shorthand word), the ride moves and the notes. Strings only — the
+    // bare stat numbers, the catch rate and the EXP are data, not user
+    // text (the module's rule).
     pokedex: pokedexParts,
 
     quests: function (r) {
@@ -743,8 +746,11 @@
    * the order the local pokedex.js filter used before Step 7 promoted
    * this to the shared ROGUE.pokedexSearchText. The species name itself
    * is added centrally by recordParts — only the overlay's DIFFERING
-   * vanilla name is repeated here. Strings only: a field value that is
-   * not a string (a bare number, a null) contributes nothing.
+   * vanilla name is repeated here. `forms` is the structured object list
+   * (issue #85) and contributes the form display NAMES only — the
+   * per-form types/stats/abilities/descriptions stay out of the haystack.
+   * Strings only: a field value that is not a string (a bare number, a
+   * null) contributes nothing.
    */
   function pokedexParts(r) {
     var parts = [];
@@ -754,6 +760,18 @@
     var pushList = function (v) {
       if (Array.isArray(v)) {
         for (var i = 0; i < v.length; i++) push(v[i]);
+      }
+    };
+    // the structured form objects (issue #85): the display NAME per form,
+    // in the same position the old string[] forms occupied — the per-form
+    // types/stats/abilities/descriptions deliberately stay out of the
+    // haystack (the pinned search counts depend on the names-only union)
+    var pushForms = function (v) {
+      if (Array.isArray(v)) {
+        for (var i = 0; i < v.length; i++) {
+          var f = v[i];
+          push(f && typeof f === 'object' ? f.name : f);
+        }
       }
     };
     var pushVariants = function (v) {
@@ -772,7 +790,7 @@
     push(r.region);
     push(r.description);
     pushList(r.types);
-    pushList(r.forms);
+    pushForms(r.forms);
     pushList(r.ride);
     pushList(r.notes);
     pushVariants(r.dexVariants);
@@ -783,7 +801,7 @@
       push(v.category);
       push(v.description);
       pushList(v.types);
-      pushList(v.forms);
+      pushForms(v.forms);
       pushList(v.ride);
       pushList(v.notes);
       pushVariants(v.dexVariants);
@@ -818,8 +836,9 @@
   /**
    * A pokedex record's search haystack — the SAME field union the palette
    * indexes (name, dex number, category, region, description, both
-   * variants' types, all move names, forms, variant names, ride, notes —
-   * strings only, bare stat numbers out), lowercased. The palette's
+   * variants' types, all move names, form display names, variant names,
+   * ride, notes — strings only, bare stat numbers out), lowercased. The
+   * palette's
    * pokedex entry `text` and the Pokedex page's on-page filter are BOTH
    * this string (the issue-#50 on-page/palette parity for the dex),
    * version-independent by design, like the palette index.
