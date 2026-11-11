@@ -2105,8 +2105,12 @@
    value/255 capped, BST row last), the meta rows, the Pokédex text,
    abilities, the .dex-evo line (neighbors as hash links with mono
    method captions; --absent for a species the active build lacks), the
-   three move groups, forms / "Included in" / ride chips, notes and the
-   .card__source citation. All rules scoped under .page--pokedex. */
+   three move groups, the structured forms section (issue #85 —
+   one .dex-form block per form: the display-face name, the form’s
+   type chips, its stat rows, abilities, height/weight and Pokédex
+   text; --plain for a rogue-only custom mega), “Included in” / ride
+   chips, notes and the .card__source citation. All rules scoped
+   under .page--pokedex. */
 
 .page--pokedex .page-fallback {
   max-width: 70ch;
@@ -2520,6 +2524,50 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   color: var(--color-muted);
+}
+
+/* the structured forms section (issue #85): one .dex-form block per
+   form — the display-face name, the form's type chips, its stat rows
+   (the shared .dex-stats / .dex-stat markup, BST row last), its
+   abilities, its height/weight in the base meta's mono treatment
+   (.dex-meta__row cells), and its Pokédex text (.dex-desc). A
+   rogue-only custom mega (a name with no species entry) is a plain,
+   box-less name row (--plain). */
+.page--pokedex .dex-forms {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page--pokedex .dex-form {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+}
+
+/* a name-only form — a rogue-only custom mega with no per-form data */
+.page--pokedex .dex-form--plain {
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+}
+
+/* the form name — the display face (base.css h3) at the step below
+   the species name's h2 */
+.page--pokedex .dex-form__name {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+/* the form's height/weight — the base meta's mono treatment without
+   the bordered .dex-meta box */
+.page--pokedex .dex-form__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+  gap: var(--space-2) var(--space-4);
 }
 
 .page--pokedex .dex-notes {
