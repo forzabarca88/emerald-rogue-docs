@@ -2088,21 +2088,25 @@
 
 /* --- pokedex ------------------------------------------------------------------------
    Two views of one page (issue #78), emitted by js/pages/pokedex.js from
-   the lazy data/pokedex.json chunk. The #dex-overview view: the four
-   prose blocks (issue #84 — short text + each block's `list` facts
-   as a .dex-facts list), then the toolbar (an on-page .search filter + the
-   region filter, selection surviving version re-renders), the live
-   #dex-count line and the .dex-grid — exactly data/site.json
-   dex.pageSize (28, the in-game Overview's tile page) .dex-tile <a>
-   links per page, each a lazy sprite (--tile-sprite-size, pixelated)
-   with an onerror placeholder tile (--placeholder) showing the dex
-   number in mono. The #dex-species view (rendered only while a
-   selection exists): the .dex-species panel, root id =
+   the lazy data/pokedex.json chunk. The #dex-overview view is grid-first
+   (issue #86): the sticky .dex-browse bar leads (one container: the
+   toolbar — an on-page .search filter + the region filter, selection
+   surviving version re-renders — the live #dex-count line and the
+   .dex-pager between the count and the grid), then the .dex-grid —
+   exactly data/site.json dex.pageSize (28, the in-game Overview's tile
+   page) .dex-tile <a> links per page, each a lazy sprite
+   (--tile-sprite-size, pixelated) with an onerror placeholder tile
+   (--placeholder) showing the dex number in mono — and the four prose
+   blocks (issue #84 — short text + each block's `list` facts as a
+   .dex-facts list) below the grid. The #dex-species view (rendered only
+   while a selection exists): the .dex-species panel, root id =
    ROGUE.recId('pokedex', record.id) — the #45 deep-link scheme — with
    the sprite box (.dex-viewer at --sprite-size — also the 3D viewer's
    canvas mount, issue #79; the static <img> inside is the fallback
-   layer), name, badge + #NNN chip, types, category,
-   the stat bars (.dex-stat: label + track + emerald fill, width =
+   layer), name, badge + #NNN chip, types, category, the .dex-nav
+   prev/next strip (issue #86 — the neighbours in the active version's
+   full dex order, two-sided; the name span is the 360px ellipsis
+   point), the stat bars (.dex-stat: label + track + emerald fill, width =
    value/255 capped, BST row last), the meta rows, the Pokédex text,
    abilities, the .dex-evo line (neighbors as hash links with mono
    method captions; --absent for a species the active build lacks), the
@@ -2130,7 +2134,20 @@
   overflow-wrap: anywhere;
 }
 
-.page--pokedex .section[id],
+/* Deep-link / search-Enter targets. The overview's sections (the
+   #dex-browse section + the four prose blocks below the grid) must
+   land BELOW the sticky header PLUS the sticky .dex-browse bar: the
+   bar's height is viewport-dependent (the region chips wrap to extra
+   rows at 360px), so it is measured in js/pages/pokedex.js
+   (setBrowseTop) and published on <main> as --dex-scroll-clear
+   (header height + the bar's offsetHeight + a 16px margin) — never
+   hardcoded here; the 320px fallback only applies before the first
+   measurement. #dex-species keeps the header-only 112px: the detail
+   REPLACES the overview, so the bar is hidden while it is open. */
+.page--pokedex #dex-overview .section[id] {
+  scroll-margin-top: var(--dex-scroll-clear, 320px);
+}
+
 .page--pokedex #dex-species {
   scroll-margin-top: 112px;
 }
@@ -2151,7 +2168,34 @@
   max-width: 70ch;
 }
 
-/* --- the overview view: toolbar, grid, pager -------------------------------- */
+/* --- the overview view: sticky browse bar, grid, pager ---------------------- */
+
+/* The sticky browse bar (issue #86): one container holding the toolbar
+   (search + region filter), the live #dex-count line and the
+   .dex-pager (between the count and the grid). It pins under the site
+   header while the user pages through the grid — sticky is bounded by
+   the #dex-browse section, so it releases once the prose blocks below
+   the grid begin. The top offset (--dex-browse-top, the header's
+   rendered height — one row ≥820px, two rows below) and the deep-link
+   scroll clearance (--dex-scroll-clear, header + this bar's measured
+   offsetHeight + 16px — see the scroll-margin rule above) are both
+   measured on load + resize in js/pages/pokedex.js (setBrowseTop).
+   The bar's OWN height is not fixed here — at 360px the 10 region
+   chips wrap to extra rows — only its top is measured; the solid
+   page-background token keeps the grid tiles from showing through
+   while it is stuck, and the 1px line hairline + padding is what makes
+   it read as a bar. z-index 10: above the page content, below the
+   search palette (calc(--z-header) - 1) and the sticky site header
+   (--z-header). */
+.page--pokedex .dex-browse {
+  position: sticky;
+  top: var(--dex-browse-top, 60px);
+  z-index: 10;
+  background: var(--color-bg);
+  padding: var(--space-3) 0 var(--space-2);
+  border-bottom: 1px solid var(--color-line);
+  margin-bottom: var(--space-4);
+}
 
 .page--pokedex .dex-toolbar {
   display: flex;
@@ -2310,6 +2354,62 @@
 
 .page--pokedex .dex-back:hover {
   color: var(--color-emerald);
+}
+
+/* The detail's prev/next strip (issue #86): the neighbours in the
+   active version's full dex order, two-sided — prev left, next right;
+   the .dex-nav__end slot (zero width) keeps the layout two-sided when
+   a side is missing at a list end. The mono label (arrow +
+   "Prev"/"Next" + #NNN, the trailing arrow on the next side) follows
+   the .dex-back link treatment (muted mono, emerald on hover; focus is
+   the site-wide :focus-visible ring). The species name wears the
+   display face the detail's other names use. At 360px the name span is
+   the one shrinking part of the strip (min-width: 0 + ellipsis; the
+   full name stays in the link's title attribute), so the strip never
+   forces horizontal overflow. No transitions — the color-only hover,
+   like .dex-back. */
+.page--pokedex .dex-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+  margin: var(--space-3) 0 var(--space-5);
+}
+
+.page--pokedex .dex-nav__link {
+  display: flex;
+  align-items: baseline;
+  flex: 0 1 auto;
+  min-width: 0;
+  gap: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.page--pokedex .dex-nav__link:hover {
+  color: var(--color-emerald);
+}
+
+.page--pokedex .dex-nav__label {
+  flex: none;
+  white-space: nowrap;
+}
+
+/* the species name — display face, and the ellipsis point at 360px */
+.page--pokedex .dex-nav__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-display);
+}
+
+/* the empty slot at a list end — keeps the two-sided layout */
+.page--pokedex .dex-nav__end {
+  flex: none;
 }
 
 .page--pokedex .dex-species {
