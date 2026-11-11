@@ -6,8 +6,11 @@
  * (the 1025 records are a multi-megabyte file). The page recreates the
  * in-game Pokedex (src/rogue_pokedex.c) as two views of one page:
  *
- *   1. the overview view (#dex-overview) — the four prose sections,
- *      then the toolbar (an on-page .search filter + a region filter
+ *   1. the overview view (#dex-overview) — the four prose blocks
+ *      (issue #84 — each renders its short 1–2 sentence `text` plus
+ *      its `list` facts as a scannable .dex-facts list, in place of
+ *      the dense paragraphs ROGUE.proseSections used to emit), then
+ *      the toolbar (an on-page .search filter + a region filter
  *      whose selection survives version re-renders, derived like
  *      routes.js), the live #dex-count line ("<N> species · page <x>
  *      of <y>"), and the .dex-grid: exactly site.json dex.pageSize
@@ -234,6 +237,35 @@
     }
 
     /* --- the overview view ------------------------------------------------ */
+
+    /**
+     * One of the four prose blocks (issue #84): the SAME structure
+     * ROGUE.proseSections emits — <section class="section" id="…">
+     * with a .section__head h2 and a .section__body — the ids are
+     * load-bearing anchors (the search index indexes its pokedex
+     * prose entries at #<block-id>). The body is the block's short
+     * 1–2 sentence `text` (the same ROGUE.paragraphs treatment the
+     * shared renderer used) followed by its `list` facts as a
+     * scannable .dex-facts list — the contract .chip is
+     * white-space: nowrap, and the fact sentences run to ~90 chars,
+     * so chips would overflow the 360px viewport.
+     */
+    function proseBlockHtml(block) {
+      var html = '<section class="section"' + (block.id ? ' id="' + ROGUE.esc(block.id) + '"' : '') + '>';
+      html += '<div class="section__head"><h2>' + ROGUE.esc(block.heading) + '</h2></div>';
+      html += '<div class="section__body">' + ROGUE.paragraphs(block.text);
+      if (Array.isArray(block.list)) {
+        html +=
+          '<ul class="dex-facts">' +
+          block
+            .list.map(function (item) {
+              return '<li>' + ROGUE.esc(item) + '</li>';
+            })
+            .join('') +
+          '</ul>';
+      }
+      return html + '</div></section>';
+    }
 
     /** One .dex-tile link: lazy sprite (+ onerror placeholder), #NNN. */
     function dexTile(record) {
@@ -598,7 +630,7 @@
 
       var html = '<h1>' + ROGUE.esc(title) + '</h1>';
       html += '<div id="dex-overview"' + (selected ? ' hidden' : '') + '>';
-      html += ROGUE.proseSections(data.prose);
+      html += (Array.isArray(data.prose) ? data.prose : []).map(proseBlockHtml).join('');
       html += browseSection();
       html += '</div>';
       if (selected) html += speciesSection(selected);

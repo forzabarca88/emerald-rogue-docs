@@ -2089,7 +2089,8 @@
 /* --- pokedex ------------------------------------------------------------------------
    Two views of one page (issue #78), emitted by js/pages/pokedex.js from
    the lazy data/pokedex.json chunk. The #dex-overview view: the four
-   prose sections, then the toolbar (an on-page .search filter + the
+   prose blocks (issue #84 — short text + each block's `list` facts
+   as a .dex-facts list), then the toolbar (an on-page .search filter + the
    region filter, selection surviving version re-renders), the live
    #dex-count line and the .dex-grid — exactly data/site.json
    dex.pageSize (28, the in-game Overview's tile page) .dex-tile <a>
@@ -2136,6 +2137,18 @@
 
 .page--pokedex [hidden] {
   display: none !important;
+}
+
+/* --- the four prose blocks (issue #84) -------------------------------------
+   Each block's short 1–2 sentence text + its `list` facts as a
+   scannable .dex-facts list (the mechanics .mech-list pattern — plain
+   list, token spacing; the contract .chip is white-space: nowrap, so
+   the ~90-char fact sentences would overflow 360px as chips). The
+   70ch cap matches the .section__body paragraph cap. */
+.page--pokedex .dex-facts {
+  display: grid;
+  gap: var(--space-2);
+  max-width: 70ch;
 }
 
 /* --- the overview view: toolbar, grid, pager -------------------------------- */
