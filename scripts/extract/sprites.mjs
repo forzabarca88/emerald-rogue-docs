@@ -18,6 +18,24 @@
  *       front.png + normal.pal                          (253 species)
  *       anim_front.png (first 64×64 frame) + normal.pal (773 species)
  *
+ * FORM SPRITES (purely additive — the base-species loop above is untouched):
+ * for every Expansion species-table entry that is NOT a base species (its id
+ * does not name a top-level `graphics/pokemon/` directory), the shared
+ * resolver `./sprite-forms.mjs` (imported by BOTH extractors) classifies the
+ * form from the game's own INCBIN tables + species entries:
+ *   - `own` — the form's resolved (front, palette) pair differs from its base
+ *     directory's pair → a dedicated FLAT `<formEntryId>.png` is emitted
+ *     through the exact same composite pipeline (e.g. `charizard_mega_x.png`);
+ *   - `base-identical` — the pair is the base directory's pair (the base
+ *     sprite already looks right, e.g. Deoxys (Normal)) → no file;
+ *   - `ternary-macro` — the one pinned exception (`silvally_fairy`, see
+ *     sprite-forms.mjs) → base art, no file.
+ * Form ids with no species entry at all (the rogue-only custom forms)
+ * deliberately get no file — the site falls back to the base sprite.
+ * A full per-form resolution report (own / base-identical / ternary, with
+ * every form's source files) is printed, and the run fails if any entry's
+ * front/palette does not resolve to a real INCBIN source in the EX tree.
+ *
  * The 387 species present in BOTH branches are byte-compared (vanilla vs
  * expansion composite); any divergence emits `<id>-ex.png` alongside
  * `<id>.png` (vanilla-preferred) and the full divergent id list is printed.
@@ -59,11 +77,12 @@
  */
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
+import { formRosterDomain, formSpriteFile, formSpriteManifest } from './sprite-forms.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -220,6 +239,12 @@ function unfilter(scanlines, stride, height, label) {
  * sprites are all exactly this shape (64 × {64,128,256}).
  * The tRNS chunk is deliberately ignored: GBA OBJ index 0 is the
  * transparent index regardless of it.
+ *
+ * The PLTE is an artist preview: the base fronts carry ≤16 entries, but the
+ * EX form art (e.g. the Gigantamax sprites) ships 256 — the game still uses
+ * the 16-colour JASC palette, and the index-range checks below (against the
+ * PLTE length AND the JASC palette length) are the real gate, so the PLTE
+ * size is only sanity-bounded (≤256 entries), never assumed.
  */
 function decodeIndices(buf, label) {
   const chunks = parseChunks(buf, label);
@@ -240,7 +265,7 @@ function decodeIndices(buf, label) {
   if (comp !== 0 || filt !== 0 || inter !== 0) fail(`${label}: non-zero compression/filter/interlace in IHDR`);
   if (w !== 64 || h !== 64 && h !== 128 && h !== 256) fail(`${label}: unexpected size ${w}×${h} (expected 64×64, 64×128 or 64×256)`);
   const plte = byType.PLTE ? byType.PLTE[0].data : null;
-  if (!plte || plte.length % 3 !== 0 || plte.length === 0 || plte.length > 48) fail(`${label}: missing/invalid PLTE`);
+  if (!plte || plte.length === 0 || plte.length % 3 !== 0 || plte.length > 768) fail(`${label}: missing/invalid PLTE`);
   if (!(byType.IDAT ?? []).length) fail(`${label}: no IDAT chunk`);
   const raw = inflateSync(Buffer.concat(byType.IDAT.map((c) => c.data)));
   const stride = Math.ceil((w * depth) / 8);
@@ -425,22 +450,36 @@ function resolveVanilla(id) {
 // Expansion side (origin/expansion, read-only, one batched cat-file)
 // ---------------------------------------------------------------------------
 
-function loadExpansion() {
+// Phase 1 of the expansion side: the tree listing (top-level species id set +
+// every file relative to graphics/pokemon/ + top-level filenames per id).
+function expListing() {
   const listing = git('ls-tree', '-r', '--name-only', 'origin/expansion', '--', 'graphics/pokemon');
   const filesBySpecies = new Map(); // id -> Set(top-level filenames)
+  const treeFiles = new Set(); // paths relative to graphics/pokemon/
   for (const line of listing.trim().split('\n')) {
     if (!line) continue;
     const parts = line.split('/');
     if (parts.length < 4 || parts[0] !== 'graphics' || parts[1] !== 'pokemon') continue;
+    treeFiles.add(line.slice('graphics/pokemon/'.length));
     const id = parts[2];
     if (!filesBySpecies.has(id)) filesBySpecies.set(id, new Set());
     if (parts.length === 4) filesBySpecies.get(id).add(parts[3]);
   }
+  return { ids: new Set(filesBySpecies.keys()), treeFiles, filesBySpecies };
+}
+
+// Phase 2: fetch the base-candidate blobs plus any extra form-sprite sources
+// (one batched cat-file) and expose per-id base resolution + raw blob access.
+function loadExpansion({ filesBySpecies, treeFiles }, extraWanted) {
   const want = new Map(); // repo path -> true
   for (const [id, files] of filesBySpecies) {
     for (const name of ['front.png', 'anim_front.png', 'normal.pal']) {
       if (files.has(name)) want.set(`graphics/pokemon/${id}/${name}`, true);
     }
+  }
+  for (const p of extraWanted) {
+    if (!treeFiles.has(p.slice('graphics/pokemon/'.length))) fail(`form-sprite source ${p} is not in the EX tree (re-run after 'git fetch origin')`);
+    want.set(p, true);
   }
   const tree = git('ls-tree', '-r', 'origin/expansion', '--', 'graphics/pokemon');
   const shaByPath = new Map();
@@ -475,7 +514,43 @@ function loadExpansion() {
     }
     return null;
   };
-  return { ids: new Set(filesBySpecies.keys()), resolve };
+  const blob = (repoPath) => bySha.get(shaByPath.get(repoPath));
+  return { resolve, blob };
+}
+
+// Phase 3: the parsed expansion-profile Species lists (one batched
+// cat-file) — inputs to the shared form-roster rule (which form ids a
+// record's `forms` list carries).
+function expansionProfiles() {
+  const tree = git('ls-tree', '-r', 'origin/expansion', '--', 'src/data/rogue/pokemon/expansion');
+  const files = [];
+  const shas = [];
+  for (const line of tree.trim().split('\n')) {
+    if (!line || !line.endsWith('expansion_profile.json')) continue;
+    const tab = line.indexOf('\t');
+    files.push(line.slice(tab + 1));
+    shas.push(line.slice(0, tab).split(' ')[2]);
+  }
+  if (shas.length === 0) return new Map();
+  const batch = gitBytes(['cat-file', '--batch'], shas.join('\n') + '\n');
+  const out = new Map();
+  let off = 0;
+  for (const file of files) {
+    const nl = batch.indexOf(0x0a, off);
+    if (nl < 0) fail('malformed git cat-file --batch response (profiles)');
+    const [ , , size] = batch.toString('utf8', off, nl).split(' ');
+    off = nl + 1;
+    const body = batch.toString('utf8', off, off + Number(size));
+    off += Number(size) + 1; // include the trailing 0x00
+    let data;
+    try { data = JSON.parse(body); } catch { continue; }
+    const sp = (data.Species ?? []).map((s) => s.slice('SPECIES_'.length).toLowerCase());
+    if (sp.length > 0) {
+      const id = file.replace(/^src\/data\/rogue\/pokemon\/expansion\//, '').replace(/\/expansion_profile\.json$/, '');
+      out.set(id, sp);
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -485,11 +560,44 @@ function loadExpansion() {
 assertRepoSane();
 warnBaselineDrift();
 
-const exp = loadExpansion();
+const expTree = expListing();
 
 const vanillaDirs = readdirSync(path.join(repoPath, 'graphics', 'pokemon'))
   .filter((d) => statSync(path.join(repoPath, 'graphics', 'pokemon', d)).isDirectory())
   .sort();
+
+// Form-sprite manifest (shared with the pokedex extractor — the single
+// source of the form→art rule). Needs the RAW headers: the species
+// initializers are macro calls whose #define lives in the same headers.
+const formManifest = formSpriteManifest({
+  pokemonH: git('show', 'origin/expansion:src/data/graphics/pokemon.h'),
+  speciesTableTexts: [
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
+    git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
+  ],
+  baseDirs: new Set([...vanillaDirs, ...expTree.ids].map((d) => d.toLowerCase())),
+  exTreeFiles: expTree.treeFiles,
+  label: 'sprites',
+});
+const formWanted = [...formManifest.forms.values()].filter((f) => f.cls === 'own').flatMap((f) => [f.frontPath, f.palPath]);
+const exp = { ids: expTree.ids, ...loadExpansion(expTree, new Set(formWanted)) };
+
+// Form rosters (shared rule with the pokedex extractor): an own form ships
+// art only when a record's `forms` list can reference it. Same raw headers
+// as the manifest above.
+const formRosters = formRosterDomain({
+  pokedexH: git('show', 'origin/expansion:include/constants/pokedex.h'),
+  speciesTableTexts: [
+    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
+    git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
+  ],
+  formTableTexts: [
+    git('show', 'origin/expansion:src/data/pokemon/form_species_tables.h'),
+    git('show', 'origin/expansion:src/data/pokemon/form_change_tables.h'),
+  ],
+  profiles: expansionProfiles(),
+  label: 'sprites',
+});
 
 const union = [...new Set([...vanillaDirs, ...exp.ids])].sort();
 const skipped = [];
@@ -543,6 +651,32 @@ for (const id of union) {
   }
 }
 
+// ---- form sprites (purely additive — base outputs above are untouched) ----
+const formStats = { own: 0, unreferenced: 0, baseIdentical: 0, ternary: 0 };
+const formReport = []; // one line per form entry, sorted by id
+for (const [id, form] of formManifest.forms) {
+  if (form.cls !== 'own') {
+    formStats[form.cls === 'base-identical' ? 'baseIdentical' : 'ternary']++;
+    formReport.push([id, form.cls, `${form.cls} — base art (sources: ${form.frontPath} + ${form.palPath})`]);
+    continue;
+  }
+  if (!formRosters.referenced.has(id)) {
+    formStats.unreferenced++;
+    formReport.push([id, 'own', 'own — NOT referenced by any record form roster — no file (dead species-table data)']);
+    continue;
+  }
+  const png = exp.blob(form.frontPath);
+  const pal = exp.blob(form.palPath);
+  if (!png || !pal) fail(`form ${id}: ls-tree lists ${form.frontPath}/${form.palPath} but cat-file returned no blob — repo state inconsistent, re-run after 'git fetch origin'`);
+  const r = composite(png, pal, `expansion-form/${id} (${form.frontPath.split('/').slice(-2).join('/')})`);
+  bump('expansion', r.h === 64 ? '64x64' : `64x${r.h}-frame0`);
+  bump('expansion', `depth${r.depth}`);
+  formStats.own++;
+  formReport.push([id, 'own', `own → ${form.frontPath} + ${form.palPath}`]);
+  outputs.set(formSpriteFile(id), r.png);
+}
+formReport.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+
 const expansionOnly = expansionCount;
 const total = outputs.size;
 
@@ -561,6 +695,19 @@ if (check) {
   }
   console.log(`check ok: ${total} sprite(s) in ${rel(outDir)} are up to date`);
   process.exit(0);
+}
+
+// Stale form outputs: a prior generation's <formEntryId>.png for a form that
+// is no longer roster-referenced (form-scope only — base files are never
+// touched here; --check reports them as unexpected instead).
+if (existsSync(outDir)) {
+  for (const f of readdirSync(outDir)) {
+    const id = f.slice(0, -'.png'.length);
+    if (formManifest.forms.has(id) && !outputs.has(f)) {
+      rmSync(path.join(outDir, f));
+      console.log(`removed stale form output ${f}`);
+    }
+  }
 }
 
 mkdirSync(outDir, { recursive: true });
@@ -583,4 +730,6 @@ if (divergent.length) {
 } else {
   console.log('divergent: 0 (every shared id composites identically on both branches)');
 }
+console.log(`form sprites: ${formStats.own} own (emitted as <formEntryId>.png — roster-referenced) · ${formStats.unreferenced} own but unreferenced by any record form roster (no file) · ${formStats.baseIdentical} base-identical (base art) · ${formStats.ternary} ternary-macro (base art) — forms with no species entry get no file (base-sprite fallback)`);
+for (const [id, cls, detail] of formReport) console.log(`  ${id}: ${detail}`);
 console.log(`wrote ${written} file(s) (${total} total) to ${rel(outDir)}`);
