@@ -345,7 +345,8 @@
    *   terrains  routes type-taxonomy — the terrain names
    *   list      prose fact lists — plain string items (the charms
    *             where-they-come-from sources; the pokedex four-block
-   *             rewrite, issue #84 — the pokedex page renders them as chips)
+   *             rewrite, issue #84 — the pokedex page renders them as
+   *             .dex-facts lists; the contract .chip is nowrap)
    * Record fields (RECORD_STRUCTURED — the safari `legends-cave` record's
    * `steps` is already indexed by the safari extractor, so `steps` is
    * prose-only here):
@@ -475,9 +476,9 @@
       map: { 'wander-mons': '#hub-wander', 'time-weather-season': '#hub-time', 'hub-in-the-loop': '#hub-loop' }
     },
     quests: { page: './quests.html', self: true, map: { 'display-groups': '#quest-log' } },
-    // the pokedex page renders its four prose blocks via ROGUE.proseSections
-    // — each block keeps its own DOM id (the-dex, reading-entries, moves,
-    // sprite-provenance)
+    // the pokedex page renders its four prose blocks via the page-local
+    // proseBlockHtml (pages/pokedex.js) — each block keeps its own DOM id
+    // (the-dex, reading-entries, moves, sprite-provenance)
     pokedex: { page: './pokedex.html', self: true },
     routes: {
       page: './routes.html',
