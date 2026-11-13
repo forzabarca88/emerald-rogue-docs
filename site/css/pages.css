@@ -2091,8 +2091,11 @@
    the lazy data/pokedex.json chunk. The #dex-overview view is grid-first
    (issue #86): the sticky .dex-browse bar leads (one container: the
    toolbar — an on-page .search filter + the region filter, selection
-   surviving version re-renders — the live #dex-count line and the
-   .dex-pager between the count and the grid), then the .dex-grid —
+   surviving version re-renders, + the dex-variant .dex-variant__select
+   (issue #92 — the in-game Pokédex-variant menu as a native <select>,
+   the active build's settings.json options, "All variants" default) —
+   the live #dex-count line and the .dex-pager between the count and the
+   grid), then the .dex-grid —
    exactly data/site.json dex.pageSize (28, the in-game Overview's tile
    page) .dex-tile <a> links per page, each a lazy sprite
    (--tile-sprite-size, pixelated) with an onerror placeholder tile
@@ -2225,6 +2228,32 @@
 .page--pokedex .dex-filter__btn[aria-pressed="true"] {
   border-color: var(--color-emerald);
   color: var(--color-emerald);
+}
+
+/* The dex-variant select (issue #92): a native <select> is the only
+   360px-safe form for up to 37 options (chips would overflow), so the
+   in-game Pokédex-variant menu rides the toolbar's existing flex-wrap —
+   at narrow widths it takes its own line and the bar simply grows
+   taller, which the JS-measured sticky offsets (setBrowseTop) already
+   track, so no new breakpoint is needed. Tokens only: the line border,
+   surface background, --text-sm type and --radius-sm rounding; the
+   max-width caps the box (the longest option name elides inside the
+   native control, it never widens the bar). The global :focus-visible
+   outline applies; the border-color flip mirrors the .search input. */
+.page--pokedex .dex-variant__select {
+  max-width: 170px;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.page--pokedex .dex-variant__select:focus-visible {
+  border-color: var(--color-emerald);
 }
 
 .page--pokedex .dex-count {
