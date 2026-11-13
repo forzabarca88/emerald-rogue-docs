@@ -2182,8 +2182,9 @@
    header while the user pages through the grid — sticky is bounded by
    the #dex-browse section, so it releases once the prose blocks below
    the grid begin. The top offset (--dex-browse-top, the header's
-   rendered height — two rows at every width (issue #90), still
-   varying at the 820px breakpoint with the brand font-size) and the
+   rendered height — two rows at every width (issue #90),
+   width-dependent only at ≤560px (the compact search-trigger/toggle
+   set)) and the
    deep-link scroll clearance (--dex-scroll-clear, header + this bar's
    measured offsetHeight + 16px — see the scroll-margin rule above)
    are both measured on load + resize in js/pages/pokedex.js
