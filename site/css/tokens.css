@@ -182,6 +182,6 @@
    documented here and in DESIGN.md §9 and kept in sync with base.css /
    components.css / pages.css:
      1024px (lg) — wide grid columns
-     820px  (md) — header wraps: brand + toggle on row 1, nav scrolls on row 2
+     820px  (md) — brand font-size only (the header is two rows at every width, #90 — its height is width-dependent only at the ≤560px compact trigger/toggle set)
      560px  (sm) — gutter 16px, brand/toggle compact, hero stats 2×2
    -------------------------------------------------------------------------- */
