@@ -10,7 +10,12 @@
  *      dex is the first thing on the page. The browse section leads
  *      with the .dex-browse bar — one container holding the toolbar
  *      (an on-page .search filter + a region filter whose selection
- *      survives version re-renders, derived like routes.js), the live
+ *      survives version re-renders, derived like routes.js + the
+ *      dex-variant <select> (issue #92) — the active build's
+ *      range-pokedex-variant options from settings.json with an "All
+ *      variants" default, filtering by the records' dexVariants
+ *      membership and resetting to "all" on a version change that no
+ *      longer offers the selection), the live
  *      #dex-count line ("<N> species · page <x> of <y>") and the
  *      .dex-pager (prev / next buttons + "page X of Y"), with the pager
  *      BETWEEN the count and the grid, so paging never requires
@@ -83,8 +88,10 @@
  * object the other data files use, not this custom per-record overlay).
  * ROGUE.filter scopes the grid; an EX-only selection that cannot
  * resolve under Vanilla clears to the overview (and re-resolves, with
- * the detail back, if the toggle returns). The region selection and the
- * query survive re-renders, like routes.js / quests.js.
+ * the detail back, if the toggle returns). The region selection, the
+ * query and the variant survive re-renders, like routes.js / quests.js
+ * (the variant resets to "all" when the new build's option list no
+ * longer carries it).
  *
  * The on-page search filters the same lowercased haystack the
  * site-wide palette indexes — ROGUE.pokedexSearchText(record)
@@ -147,8 +154,10 @@
     var pageSize = Number(site && site.dex ? site.dex.pageSize : NaN);
     if (!Number.isFinite(pageSize) || pageSize <= 0) pageSize = 28;
 
-    /* Surviving state: the query and region filter persist across
-     * version re-renders (quests.js / routes.js pattern); the page
+    /* Surviving state: the query, region and variant filters persist
+     * across version re-renders (quests.js / routes.js pattern) — the
+     * variant is the one filter that also RESETS (to 'all') when the
+     * new build's option list no longer offers the selection; the page
      * clamps itself when a version change shrinks the list; the
      * selection (a record id from the URL hash) persists so an
      * EX-only species that is hidden under Vanilla comes back with
@@ -156,6 +165,7 @@
     var state = {
       query: '',
       region: 'all',
+      variant: 'all',
       page: 1,
       selection: null
     };
@@ -227,26 +237,56 @@
     var regions = uniqueRegions();
 
     /**
-     * The active version's dex-variant count for the "All N variants"
-     * chip: the settings.json range-pokedex-variant record's
-     * optionsByVersion list for the active build (7 Vanilla / 37 EX —
-     * the same counts the-dex prose documents). 0 when the record is
-     * absent, so the label degrades to "All variants".
+     * The active build's dex-variant option list (issue #92): the
+     * settings.json range-pokedex-variant record's optionsByVersion
+     * array for the active build (7 Vanilla / 37 EX — the same list
+     * the in-game Pokédex menu offers; the the-dex prose documents the
+     * counts). [] when the record is absent, so the browse bar's
+     * select degrades to "All variants" only and the detail's chip to
+     * "All variants".
      */
-    function variantCount() {
+    function variantOptions() {
       try {
         var settings = ROGUE.data('settings');
         var list = Array.isArray(settings.records) ? settings.records : [];
         for (var i = 0; i < list.length; i++) {
           var r = list[i];
           if (r && r.id === 'range-pokedex-variant' && r.optionsByVersion && Array.isArray(r.optionsByVersion[ROGUE.version])) {
-            return r.optionsByVersion[ROGUE.version].length;
+            return r.optionsByVersion[ROGUE.version];
           }
         }
       } catch (e) {
-        /* settings absent — the label degrades to "All variants" */
+        /* settings absent — no variant options */
       }
-      return 0;
+      return [];
+    }
+
+    /** The active version's dex-variant count (the "All N variants" chip). */
+    function variantCount() {
+      return variantOptions().length;
+    }
+
+    /**
+     * Whether a record belongs to the selected dex variant (issue #92):
+     * the record's `dexVariants` — read version-scoped through the
+     * dexVariant() overlay resolver — is either the 'all' shorthand
+     * (every variant of the active build) or an array of the game's
+     * fully-qualified variant names, "<region> (<option>)" (the
+     * range-pokedex-variant option name is the parenthesized part — the
+     * same strings the extractor derives from the game's region +
+     * variant display names), so membership is the option name as the
+     * qualified name's tail.
+     */
+    function variantIncludes(record, option) {
+      var dv = dexVariant(record, 'dexVariants');
+      if (dv === 'all') return true;
+      if (!Array.isArray(dv)) return false;
+      var suffix = ' (' + option + ')';
+      for (var i = 0; i < dv.length; i++) {
+        var v = dv[i];
+        if (typeof v === 'string' && v.length >= suffix.length && v.slice(v.length - suffix.length) === suffix) return true;
+      }
+      return false;
     }
 
     /**
@@ -261,11 +301,12 @@
       return ROGUE.filter(records);
     }
 
-    /** The (version-scoped, region-filtered, query-filtered) list, in data order. */
+    /** The (version-scoped, region-, variant- and query-filtered) list, in data order. */
     function filteredList() {
       var q = state.query.trim().toLowerCase();
       return ROGUE.filter(records).filter(function (r) {
         if (state.region !== 'all' && r.region !== state.region) return false;
+        if (state.variant !== 'all' && !variantIncludes(r, state.variant)) return false;
         if (q && searchText[r.id].indexOf(q) === -1) return false;
         return true;
       });
@@ -360,6 +401,24 @@
           })
           .join('');
 
+      /* The dex-variant selector (issue #92): a native <select> is the
+       * only 360px-safe form for up to 37 options (chips would
+       * overflow) — "All variants" (value "all") first, then the active
+       * build's option names verbatim (the settings.json
+       * range-pokedex-variant record), the current selection carried as
+       * the selected option. The toolbar's flex-wrap absorbs it and
+       * setBrowseTop's JS-measured sticky offsets track any extra wrap
+       * line, so no new breakpoint is needed. */
+      var variantSel =
+        '<select id="dex-variant" class="dex-variant__select" aria-label="Filter species by Pokédex variant">' +
+        '<option value="all"' + (state.variant === 'all' ? ' selected' : '') + '>All variants</option>' +
+        variantOptions()
+          .map(function (o) {
+            return '<option value="' + ROGUE.esc(o) + '"' + (state.variant === o ? ' selected' : '') + '>' + ROGUE.esc(o) + '</option>';
+          })
+          .join('') +
+        '</select>';
+
       /* The .dex-browse bar (issue #86): toolbar + count + pager in ONE
        * container — the pager sits between the count and the grid, so
        * paging never requires scrolling down. This is the sticky bar
@@ -380,6 +439,7 @@
         '<div class="dex-filter" role="group" aria-label="Filter species by region">' +
         filterBtns +
         '</div>' +
+        variantSel +
         '</div>' +
         '<p class="dex-count" id="dex-count" role="status"></p>' +
         '<nav class="dex-pager" id="dex-pager" aria-label="Dex pages"></nav>' +
@@ -844,11 +904,22 @@
         empty.hidden = slice.length !== 0;
         empty.textContent = q
           ? 'No species match \u201C' + q + '\u201D.'
-          : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + '.';
+          : state.variant !== 'all'
+            ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + ' under ' + state.variant + '.'
+            : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + '.';
       }
       count.textContent = list.length + ' species \u00B7 page ' + state.page + ' of ' + pages;
       pager.innerHTML = pagerInner(pages);
       bindBrowse();
+
+      /* The region chips' pressed state follows state.region (issue
+       * #91): the full render generates the initial aria-pressed with
+       * this SAME comparison, and this sync keeps the click-driven
+       * refresh (which re-renders only grid/count/pager) in step — the
+       * indicator moves with the filter. */
+      document.querySelectorAll('.dex-filter__btn').forEach(function (btn) {
+        btn.setAttribute('aria-pressed', String(btn.getAttribute('data-region') === state.region));
+      });
     }
 
     /* Listeners on the parts updateBrowse() replaces: the pager buttons
@@ -872,9 +943,10 @@
       });
     }
 
-    /* Listeners on the toolbar (search input + region buttons) — bound on
-     * the full render only; they keep the input alive by refreshing just
-     * the browse end state (updateBrowse), never re-rendering main. */
+    /* Listeners on the toolbar (search input, region buttons, variant
+     * select) — bound on the full render only; they keep the input alive
+     * by refreshing just the browse end state (updateBrowse), never
+     * re-rendering main. */
     function bindToolbar() {
       var input = document.getElementById('dex-search');
       if (input) {
@@ -892,6 +964,19 @@
           updateBrowse();
         });
       });
+      var variant = document.getElementById('dex-variant');
+      if (variant) {
+        /* The selected option in the fresh markup comes from
+         * state.variant; reading the value back makes the select
+         * authoritative, so a value the current build's option list
+         * lacks can never linger in state (it falls back to "all"). */
+        state.variant = variant.value;
+        variant.addEventListener('change', function () {
+          state.variant = variant.value;
+          state.page = 1;
+          updateBrowse();
+        });
+      }
     }
 
     /* --- wiring ------------------------------------------------------------- */
@@ -954,7 +1039,13 @@
 
     /* Version changes re-render (the grid re-scopes, the sprites and
      * per-version fields flip, an EX-only selection clears to the
-     * overview); the query, region and selection survive. */
-    ROGUE.onChange(render);
+     * overview); the query, region, variant and selection survive —
+     * except the variant when the new build's option list (per-build:
+     * 7 Vanilla / 37 EX) no longer offers the selection (e.g. the
+     * EX-only "Modern" under Vanilla), which resets to "all". */
+    ROGUE.onChange(function () {
+      if (state.variant !== 'all' && variantOptions().indexOf(state.variant) === -1) state.variant = 'all';
+      render();
+    });
   });
 })();
