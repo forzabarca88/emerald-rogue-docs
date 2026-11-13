@@ -984,8 +984,11 @@
     /**
      * The sticky browse bar's measurements (issue #86 — the JS wiring;
      * the pages.css rules read both variables): the #site-header's
-     * rendered height (one row ≥820px, two rows below), set on <main>
-     * as --dex-browse-top (the bar's sticky top offset), plus
+     * rendered height (the header is two rows at EVERY width — issue
+     * #90 — but its height still varies at the 820px breakpoint with
+     * the brand font-size, which is why the bar re-measures on
+     * resize), set on <main> as --dex-browse-top (the bar's sticky top
+     * offset), plus
      * --dex-scroll-clear = header + the bar's rendered offsetHeight +
      * 16px — the scroll-margin-top the overview's sections (the
      * #dex-browse section + the four prose blocks) use so

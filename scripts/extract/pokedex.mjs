@@ -58,7 +58,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
-import { formSpriteManifest, parseSpriteTables } from './sprite-forms.mjs';
+import { NON_SPECIES_DIRS, formSpriteManifest, parseSpriteTables } from './sprite-forms.mjs';
 import { fileURLToPath } from 'node:url';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -1957,7 +1957,11 @@ function extract(repo) {
       ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => exProvider.fetch(`src/data/pokemon/species_info/gen_${g}.h`)),
       exProvider.fetch('src/data/pokemon/species_info.h'),
     ],
-    baseDirs: new Set([...vanillaArtDirs, ...[...exSpriteFiles].map((p) => p.split('/')[0].toLowerCase())]),
+    // only species art directories — the manifest's baseDirs contract
+    // (the icon-palette / placeholder dirs are not base directories)
+    baseDirs: new Set(
+      [...vanillaArtDirs, ...[...exSpriteFiles].map((p) => p.split('/')[0].toLowerCase())].filter((d) => !NON_SPECIES_DIRS.has(d)),
+    ),
     exTreeFiles: exSpriteFiles,
     label: 'pokedex',
   });
