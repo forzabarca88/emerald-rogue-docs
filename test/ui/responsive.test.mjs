@@ -3,14 +3,18 @@
  * resolved by the harness).
  *
  * DESIGN.md §9 rule: "the site must not break at 360px". DESIGN.md §4
- * rule: the sticky header is ONE row above 820px (brand | scrollable nav |
- * version toggle — the nav shrinks and scrolls instead of wrapping the
- * toggle), and at/below 820px the nav wraps to a full-width second row
- * while brand + toggle stay on row 1. This suite pins both rules at the
- * two canonical viewports:
+ * rule (issue #90): the sticky header is TWO rows at EVERY width —
+ * row 1 = brand + (JS-only) search trigger + version toggle, row 2 =
+ * the full ten-link nav at full content width, which must never
+ * horizontally scroll at ≥ 821px (821–839px tightens the links' padding
+ * to fit; below 820px row 2 keeps the scrollable-nav allowance). This
+ * suite pins that contract at the two canonical viewports:
  *
- *   1280×800 — desktop: single-row header, no horizontal overflow
- *   360×640  — mobile:   two-row header,  no horizontal overflow
+ *   1280×800 — desktop: two-row header, no hidden nav scroll, no overflow
+ *   360×640  — mobile:   two-row header (row 2 may scroll), no overflow
+ *
+ * plus the 821px fit-threshold guard (the narrowest width at which the
+ * ten links must already fit without any hidden horizontal scroll).
  *
  * Coverage:
  *   1. No horizontal overflow — `document.documentElement.scrollWidth <=
@@ -20,11 +24,16 @@
  *      version ("vanilla") too, since re-rendered content can differ in
  *      width.
  *   2. Header contract (base.css `#site-header` rules, DESIGN.md §4/§9):
- *      - 1280px: brand, nav and toggle share ONE row (comparable
- *        offsetTop) and the toggle is visible and clickable;
+ *      - 1280px: two rows — the nav sits strictly BELOW the brand +
+ *        toggle row, spans the full content width, and its ten links
+ *        fit without any hidden horizontal scroll (the issue #90
+ *        regression guard); the toggle is visible and clickable;
+ *      - 821px (fit threshold, guard only): the ten-link nav fits
+ *        without scrolling at the narrowest width the contract covers;
  *      - 360px: the nav drops to a full-width second row (strictly below
  *        the brand), brand + toggle remain on row 1, and the header
- *        itself does not overflow horizontally.
+ *        itself does not overflow horizontally (row 2 may scroll — the
+ *        360px allowance).
  *   3. 404.html renders its static marker (the "Error 404" eyebrow and
  *      the "Page not found" h1 from site/404.html) at both viewports.
  *   4. No-JS fallback (harness `js: false`): the shells' static content —
@@ -155,6 +164,11 @@ const headerFacts = () => {
       inner && pad
         ? Math.round((inner.clientWidth - parseFloat(pad.paddingLeft) - parseFloat(pad.paddingRight)) * 10) / 10
         : null,
+    /* the issue #90 guard inputs: the nav's own horizontal scroll
+     * (scrollWidth > clientWidth = links clipped in the invisible
+     * scroll region the old one-row layout created) */
+    navScrollWidth: nav ? nav.scrollWidth : null,
+    navClientWidth: nav ? nav.clientWidth : null,
     headerScrollWidth: document.querySelector('header')?.scrollWidth ?? null,
     innerWidth: window.innerWidth,
   };
@@ -244,7 +258,7 @@ for (const vp of VIEWPORTS) {
   });
 }
 
-test('header at 1280×800: brand, nav and version toggle share ONE row, and the toggle is visible + clickable', async (t) => {
+test('header at 1280×800: two rows (issue #90) — brand + toggle on row 1, the full nav on row 2 at full content width, no hidden nav scroll, and the toggle is visible + clickable', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'index.html', width: 1280, height: 800 });
   try {
@@ -253,21 +267,41 @@ test('header at 1280×800: brand, nav and version toggle share ONE row, and the 
     for (const [name, value] of Object.entries({ brandTop: f.brandTop, navTop: f.navTop, toggleTop: f.toggleTop })) {
       assert.ok(typeof value === 'number', `missing header item for ${name} (nav.js markup changed?)`);
     }
-    // DESIGN.md §4: "Above 820px the header is always one row" — the three
-    // items are vertically centered in the same flex row, so their
-    // offsetTops stay within SAME_ROW_PX of each other; a wrapped second
-    // row would sit a full row height (~40px) lower.
+    // DESIGN.md §4 (issue #90): the header is two rows at EVERY width —
+    // the nav sits strictly below both row-1 items, which remain on one
+    // row together (the toggle's margin-left: auto keeps it rightmost)
     assert.ok(
-      Math.abs(f.brandTop - f.navTop) <= SAME_ROW_PX,
-      `1280px: brand (offsetTop ${f.brandTop}) and nav (offsetTop ${f.navTop}) must share one row (within ${SAME_ROW_PX}px); DESIGN.md §4`
+      f.navTop > f.brandTop,
+      `1280px: the nav (offsetTop ${f.navTop}) must be on the second row, below the brand (offsetTop ${f.brandTop}); DESIGN.md §4`
     );
     assert.ok(
-      Math.abs(f.navTop - f.toggleTop) <= SAME_ROW_PX,
-      `1280px: nav (offsetTop ${f.navTop}) and toggle (offsetTop ${f.toggleTop}) must share one row (within ${SAME_ROW_PX}px); DESIGN.md §4`
+      f.navTop > f.toggleTop,
+      `1280px: the nav (offsetTop ${f.navTop}) must be on the second row, below the toggle (offsetTop ${f.toggleTop}); DESIGN.md §4`
     );
     assert.ok(
       Math.abs(f.brandTop - f.toggleTop) <= SAME_ROW_PX,
-      `1280px: brand (offsetTop ${f.brandTop}) and toggle (offsetTop ${f.toggleTop}) must share one row (within ${SAME_ROW_PX}px); DESIGN.md §4`
+      `1280px: brand (offsetTop ${f.brandTop}) and toggle (offsetTop ${f.toggleTop}) must share row 1 (within ${SAME_ROW_PX}px); DESIGN.md §4`
+    );
+    // …and it is a FULL-WIDTH row: .site-nav is `flex: 1 1 100%` on the
+    // wrapped row, so its rendered width equals the header row's content
+    // width (container minus gutter)
+    assert.ok(
+      f.navWidth !== null && f.rowContentWidth !== null && Math.abs(f.navWidth - f.rowContentWidth) <= 2,
+      `1280px: the second-row nav must span the full content width (nav ${f.navWidth}px vs row content ${f.rowContentWidth}px); DESIGN.md §4`
+    );
+    // the issue #90 regression guard: the ten links must not sit in an
+    // invisible horizontal scroll region — the nav's content fits its
+    // rendered width (the old one-row layout clipped the last links
+    // behind the hidden scrollbar)
+    assert.ok(
+      f.navScrollWidth <= f.navClientWidth + 1,
+      `1280px: the nav scrolls horizontally (scrollWidth ${f.navScrollWidth}px > clientWidth ${f.navClientWidth}px) — the ten links must fit without scrolling; issue #90`
+    );
+    // explicit header overflow check (the page-level rule covers the
+    // document, but the header is the element §9 calls out)
+    assert.ok(
+      f.headerScrollWidth <= f.innerWidth,
+      `1280px: the header overflows horizontally (header.scrollWidth ${f.headerScrollWidth}px > ${f.innerWidth}px viewport); DESIGN.md §9`
     );
 
     // the toggle is visible: a non-degenerate box fully inside the viewport
@@ -288,6 +322,31 @@ test('header at 1280×800: brand, nav and version toggle share ONE row, and the 
       [box.x + box.width / 2, box.y + box.height / 2]
     );
     assert.ok(hitInsideToggle, '1280px: elementFromPoint at the toggle center must resolve inside .version-toggle (nothing covers it)');
+  } finally {
+    await close();
+  }
+});
+
+test('header at 821×800 (the fit threshold): the ten-link nav fits without any hidden horizontal scroll (issue #90)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  // 821px is the narrowest width the DESIGN.md §4 contract covers (the
+  // two-row layout starts at 821px): the ten-link row's natural width is
+  // ≤ 792px ("Configuration" active), which the full content width
+  // (viewport − 2×gutter) only reaches from 840px up — the 821–839px
+  // band tightens the links' horizontal padding 10px → 8px to close the
+  // gap. The guard checks the threshold itself; the rest of this suite
+  // stays at the canonical 1280/360 viewports.
+  const { page, errors, close } = await openPage({ path: 'index.html', width: 821, height: 800 });
+  try {
+    assert.deepEqual(errors, [], 'unexpected page errors: ' + errors.join('; '));
+    const f = await page.evaluate(headerFacts);
+    for (const name of ['brandTop', 'navTop', 'toggleTop']) {
+      assert.ok(typeof f[name] === 'number', `missing header item for ${name} (nav.js markup changed?)`);
+    }
+    assert.ok(
+      f.navScrollWidth <= f.navClientWidth + 1,
+      `821px: the nav scrolls horizontally (scrollWidth ${f.navScrollWidth}px > clientWidth ${f.navClientWidth}px) — the ten links must fit without scrolling; issue #90`
+    );
   } finally {
     await close();
   }

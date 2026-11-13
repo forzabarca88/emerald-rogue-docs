@@ -1030,9 +1030,11 @@
       render();
     });
 
-    /* A header reflow (the one-row → two-row switch at the 820px
-     * breakpoint) changes the sticky bar's top offset — re-measure
-     * (the search.js resize-listener pattern for --palette-top). */
+    /* The header is two rows at every width (issue #90), but its
+     * rendered height still changes at the 820px breakpoint (the
+     * brand font-size) and so does the bar's own wrapping —
+     * re-measure (the search.js resize-listener pattern for
+     * --palette-top). */
     window.addEventListener('resize', function () {
       setBrowseTop();
     });
