@@ -58,6 +58,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
+import { formSpriteManifest, parseSpriteTables } from './sprite-forms.mjs';
 import { fileURLToPath } from 'node:url';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -1446,7 +1447,8 @@ function extract(repo) {
           evoBlocks.push(...splitTopLevelBraces(inner[1], where));
         }
         else if (field === 'formSpeciesIdTable') e.formSpeciesIdTable = value.trim();
-        else if (['eggCycles', 'friendship', 'growthRate', 'bodyColor', 'forceTeraType', 'cryId', 'footprint', 'cannotBeTraded', 'itemCommon', 'itemRare', 'enemyMonElevation', 'noFlip', 'formChangeTable', 'levelUpLearnset', 'teachableLearnset', 'palette', 'shinyPalette', 'paletteFemale', 'shinyPaletteFemale', 'allPerfectIVs', 'pokemonOffset', 'pokemonScale', 'trainerOffset', 'trainerScale', 'backAnimId', 'backPic', 'backPicSize', 'backPicYOffset', 'frontAnimDelay', 'frontAnimFrames', 'frontAnimId', 'frontPic', 'frontPicSize', 'frontPicYOffset', 'frontPicFemale', 'frontPicSizeFemale', 'backPicFemale', 'backPicSizeFemale', 'iconPalIndex', 'iconSprite', 'iconSpriteFemale', 'iconPalIndexFemale', 'stub'].includes(field)) { /* present in the game struct but not part of the record schema (moves come from the per-species profiles; sprites from the committed site assets; LEARNSETS(x) expands to .stub = 0) */ }
+        else if (field === 'frontPic' || field === 'palette') e[field] = value.trim(); // resolved by the shared sprite-forms manifest (see below)
+        else if (['eggCycles', 'friendship', 'growthRate', 'bodyColor', 'forceTeraType', 'cryId', 'footprint', 'cannotBeTraded', 'itemCommon', 'itemRare', 'enemyMonElevation', 'noFlip', 'formChangeTable', 'levelUpLearnset', 'teachableLearnset', 'shinyPalette', 'paletteFemale', 'shinyPaletteFemale', 'allPerfectIVs', 'pokemonOffset', 'pokemonScale', 'trainerOffset', 'trainerScale', 'backAnimId', 'backPic', 'backPicSize', 'backPicYOffset', 'frontAnimDelay', 'frontAnimFrames', 'frontAnimId', 'frontPicSize', 'frontPicYOffset', 'frontPicFemale', 'frontPicSizeFemale', 'backPicFemale', 'backPicSizeFemale', 'iconPalIndex', 'iconSprite', 'iconSpriteFemale', 'iconPalIndexFemale', 'stub'].includes(field)) { /* present in the game struct but not part of the record schema (moves come from the per-species profiles; sprites from the committed site assets; LEARNSETS(x) expands to .stub = 0) */ }
         else fail(`${where}: unhandled entry field .${field}`);
       }
       for (const req of ['hp', 'atk', 'def', 'spa', 'spd', 'spe', 'types', 'catchRate', 'expYield', 'genderRatio', 'eggGroups', 'abilities', 'natDexNum', 'height', 'weight', 'description', 'categoryName', 'speciesName']) {
@@ -1476,6 +1478,10 @@ function extract(repo) {
         flags: Object.fromEntries(FLAG_FIELDS.map((f) => [f.slice(2).toLowerCase(), e[f] ?? false])),
         evoBlocks,
         formTable: e.formSpeciesIdTable ?? null,
+        // the entry's own sprite symbols (cross-checked against the shared
+        // sprite-forms manifest — see below; never part of the data record)
+        frontPic: e.frontPic ?? null,
+        palette: e.palette ?? null,
         namedTextFields: [e.namedName, e.namedCategory, e.namedDescription].filter(Boolean),
         file,
       });
@@ -1934,6 +1940,49 @@ function extract(repo) {
     : exSpriteFiles.has(`${id}/anim_front.png`) ? `graphics/pokemon/${id}/anim_front.png`
     : null;
 
+  // ----- form sprites (shared resolver with scripts/extract/sprites.mjs) ---
+  // The manifest parses the species tables from RAW text — the preprocessed
+  // 'output' above strips #define, so the macro-initializer entries (the
+  // OGERPON / XERNEAS / SILVALLY / MINIOR / GENESECT family calls) cannot be
+  // re-derived from it. Both parsers must agree, entry for entry (gate below).
+  const vanillaArtDirs = new Set();
+  if (existsSync(path.join(repo, 'graphics', 'pokemon'))) {
+    for (const d of readdirSync(path.join(repo, 'graphics', 'pokemon'), { withFileTypes: true })) {
+      if (d.isDirectory()) vanillaArtDirs.add(d.name.toLowerCase());
+    }
+  }
+  const formManifest = formSpriteManifest({
+    pokemonH: exProvider.fetch('src/data/graphics/pokemon.h'),
+    speciesTableTexts: [
+      ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => exProvider.fetch(`src/data/pokemon/species_info/gen_${g}.h`)),
+      exProvider.fetch('src/data/pokemon/species_info.h'),
+    ],
+    baseDirs: new Set([...vanillaArtDirs, ...[...exSpriteFiles].map((p) => p.split('/')[0].toLowerCase())]),
+    exTreeFiles: exSpriteFiles,
+    label: 'pokedex',
+  });
+  // Gate: the manifest's raw-text parse must agree with this extractor's
+  // preprocessor parse — the same entry-id set AND the same resolved
+  // front/palette source for every entry.
+  const realExIds = new Set([...exNoDexMap.keys(), ...exEntries.keys()]);
+  for (const id of exSynthesized) realExIds.delete(id); // synthesized bases have no initializer
+  for (const id of formManifest.entries.keys()) if (!realExIds.has(id)) fail(`sprite-forms manifest entry ${id} is missing from the species parse`);
+  for (const id of realExIds) if (!formManifest.entries.has(id)) fail(`species entry ${id} is missing from the sprite-forms manifest`);
+  const manifestTables = parseSpriteTables(exProvider.fetch('src/data/graphics/pokemon.h'));
+  for (const [id, man] of formManifest.entries) {
+    const entry = exEntries.get(id) ?? exNoDexMap.get(id);
+    if (!entry.frontPic || !entry.palette) fail(`entry ${id}: .frontPic/.palette not captured — skip-list regression?`);
+    if (manifestTables.fronts.get(entry.frontPic) !== man.frontPath) fail(`entry ${id}: .frontPic ${entry.frontPic} resolves to ${manifestTables.fronts.get(entry.frontPic) ?? 'nothing'}, manifest has ${man.frontPath}`);
+    if (manifestTables.palettes.get(entry.palette) !== man.palPath) fail(`entry ${id}: .palette ${entry.palette} resolves to ${manifestTables.palettes.get(entry.palette) ?? 'nothing'}, manifest has ${man.palPath}`);
+  }
+  console.error(`note: form sprites — ${formManifest.counts.own} own entries, ${formManifest.counts.baseIdentical} base-identical + ${formManifest.counts.ternary} ternary-macro use the base art; roster-referenced own forms ship <formEntryId>.png (verified against site/assets/pokemon after the records are built); forms with no species entry fall back to the base sprite`);
+
+  // cross-extractor drift guard state (filled by formsOf, checked after the
+  // record loop): every own-classified roster form must have its shipped
+  // PNG on disk — the sprite extractor emits exactly this set
+  const referencedOwn = new Set();
+  const missingFormArt = [];
+
   // ----- profiles ------------------------------------------------------------------
   const profileCache = new Map();
   const profile = (branch, id) => {
@@ -2037,6 +2086,11 @@ function extract(repo) {
     if (Number.isFinite(entry.stats.height)) form.height = entry.height;
     if (Number.isFinite(entry.stats.weight)) form.weight = entry.weight;
     if (entry.description !== null) form.description = entry.description;
+    // form art: only forms that OWN their sprite carry a marker — a bare
+    // formEntryId whose art ships as <formEntryId>.png (the shared
+    // sprite-forms rule; base-identical / ternary / no-entry forms fall
+    // back to the base sprite and stay name-only)
+    if (formManifest.classify(f).own) form.sprite = f;
     return form;
   };
 
@@ -2044,6 +2098,12 @@ function extract(repo) {
     const p = profile('ex', profileId);
     const fromProfile = p && p.species.length > 1;
     const baseName = exDisplayNames.get(exId);
+    for (const f of formRosterOf(exId, profileId)) {
+      const art = formManifest.classify(f);
+      if (!art.own) continue;
+      referencedOwn.add(f);
+      if (!existsSync(path.join(spriteDir, `${f}.png`))) missingFormArt.push(f);
+    }
     const forms = formRosterOf(exId, profileId).map((f) => formObjectOf(f, exId, baseName, fromProfile));
     return forms.length > 0 ? forms : null;
   };
@@ -2163,10 +2223,17 @@ function extract(repo) {
     if (ex.namedTextFields.length > 0) push('src/data/pokemon/species_info.h @origin/expansion');
     if (rec.forms) {
       push('src/data/pokemon/form_species_tables.h @origin/expansion');
-      // the per-form data comes from each form's own species_info entry
+      // the per-form data comes from each form's own species_info entry,
+      // and an own-art form's sprite source (the palette file too, when it
+      // lives outside the form's front directory)
       for (const f of formRosterOf(exId, movesProfileId)) {
         const fe = exEntries.get(f) ?? exNoDexMap.get(f);
         if (fe) push(`${fe.file} @origin/expansion`);
+        const art = formManifest.classify(f);
+        if (art.own) {
+          push(`${art.frontPath} @origin/expansion`);
+          if (path.dirname(art.palPath) !== path.dirname(art.frontPath)) push(`${art.palPath} @origin/expansion`);
+        }
       }
     }
     if (exProfileFile) push(`${exProfileFile} @origin/expansion`);
@@ -2236,6 +2303,11 @@ function extract(repo) {
 
   records.sort((a, b) => (a.dexNum - b.dexNum) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 
+  if (missingFormArt.length) {
+    fail(`form sprites missing from ${path.relative(PROJECT_ROOT, spriteDir)} — run 'npm run extract:sprites' first: ${missingFormArt.slice(0, 10).join(', ')}${missingFormArt.length > 10 ? ` (+${missingFormArt.length - 10} more)` : ''}`);
+  }
+  console.error(`note: form sprites — ${referencedOwn.size} of ${formManifest.counts.own} own entries are roster-referenced; all ${referencedOwn.size} ship <formEntryId>.png (verified on disk)`);
+
   return { records, counts: { total: records.length, shared: sharedCount, exOnly: records.length - sharedCount, vanillaOnly, exEntries: exEntryCount, noDex: exNoDexMap.size, synthesized: exSynthesized.length } };
 }
 
@@ -2245,6 +2317,7 @@ function extract(repo) {
 
 function buildDoc({ records, counts }) {
   const spriteExCount = records.filter((r) => r.spriteEx).length;
+  const formSpriteCount = records.flatMap((r) => r.forms ?? []).filter((f) => f && f.sprite).length;
   return {
     meta: {
       id: 'pokedex',
@@ -2299,6 +2372,10 @@ function buildDoc({ records, counts }) {
         list: [
           'a record\'s art is <id>.png (128×128 RGBA)',
           `spriteEx — ${spriteExCount} species also ship <id>-ex.png, used under Expansion`,
+          `structured forms that own their art carry form.sprite = <formEntryId> — their art ships as <formEntryId>.png (${formSpriteCount} forms), through the same composite pipeline`,
+          'palette-swap forms composite the base bitmap with the form palette (Arceus plates, Silvally, Genesect, Alcremie, Minior, …)',
+          'base-identical forms and the one ternary-macro form (Silvally (Fairy)) use the base art',
+          'the custom forms without their own art fall back to the base sprite',
           'produced by the dev-only sprite extractor from each build\'s front art',
         ],
         source: 'scripts/extract/sprites.mjs (site data); site/assets/pokemon/ (site data)',
