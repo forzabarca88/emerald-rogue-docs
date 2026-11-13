@@ -319,7 +319,7 @@
 
     /* ---- open / close ------------------------------------------------------- */
 
-    /** Park the panel just below the sticky header (one row at ≥820px, two rows below). */
+    /** Park the panel just below the sticky header (two rows at every width — issue #90; the height still varies at the 820px breakpoint with the brand font-size, which is why the code measures `header.offsetHeight` live). */
     function setPaletteTop() {
       var header = document.getElementById('site-header');
       var top = (header ? header.offsetHeight : 60) + HEADER_GAP_PX;

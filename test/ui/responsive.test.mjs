@@ -30,10 +30,12 @@
  *        regression guard); the toggle is visible and clickable;
  *      - 821px (fit threshold): the ten-link nav fits without any
  *        hidden horizontal scroll at the narrowest width the contract
- *        covers — checked on config.html (the worst case: the longest
- *        nav label, "Configuration", is the active link there, and the
- *        labels are data-driven from data/site.json `pages`) with the
- *        full two-row contract, plus the same guard on index.html;
+ *        covers — the no-invisible-scroll guard runs on all 11 pages,
+ *        with the full two-row contract on the worst-case + best-case
+ *        pair (config.html: "Configuration" is the longest nav label
+ *        and the active-link bonus lands on the active page's own
+ *        label, so its row is the widest; index.html: "Home", the
+ *        shortest);
  *      - 360px: the nav drops to a full-width second row (strictly below
  *        the brand), brand + toggle remain on row 1, and the header
  *        itself does not overflow horizontally (row 2 may scroll — the
@@ -331,7 +333,7 @@ test('header at 1280×800: two rows (issue #90) — brand + toggle on row 1, the
   }
 });
 
-test('header at 821×800 (the fit threshold): the ten-link nav fits without any hidden horizontal scroll, checked on the worst-case page (issue #90)', async (t) => {
+test('header at 821×800 (the fit threshold): the ten-link nav fits without any hidden horizontal scroll on all 11 pages, with the full two-row contract on the worst-case + best-case pair (issue #90)', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   // 821px is the narrowest width the DESIGN.md §4 contract covers (the
   // two-row layout starts at 821px): the ten-link row's natural width is
@@ -341,68 +343,83 @@ test('header at 821×800 (the fit threshold): the ten-link nav fits without any 
   // gap. The guard checks the threshold itself; the rest of this suite
   // stays at the canonical 1280/360 viewports.
   //
-  // WHY config.html: the no-invisible-scroll guard must run on the
-  // worst-case page. The nav labels are data-driven (data/site.json
-  // `pages`), and "Configuration" is the longest label — so on
-  // config.html the active-link bonus (font-weight 500 → 600 + the ▶
-  // ::before marker) lands on the longest label and the row's natural
-  // width is the widest of all ten pages (the C1 measurement table:
-  // 792px on config.html, narrower on every other page). It subsumes
-  // the other pages: if a site.json label ever grows, the guard fails
-  // here while an index.html check (active label "Home" — the shortest)
-  // would keep passing, masking the issue #90 failure mode. The
-  // two-row contract assertions are page-independent (CSS-only layout),
-  // so they run on both pages; index.html stays as the best-case second
-  // data point.
-  const pages = [
-    { file: 'config.html', ctx: 'config.html (worst case — the longest active label)' },
-    { file: 'index.html', ctx: 'index.html (best case — the shortest active label)' },
-  ];
-  for (const { file, ctx } of pages) {
-    const { page, errors, close } = await openPage({ path: file, width: 821, height: 800 });
+  // Coverage at the threshold: the no-invisible-scroll guard runs on
+  // EVERY page — the same PAGES list the all-pages overflow loops use
+  // (nav.js's header is identical on every page, and 404's static header
+  // carries the nav too) — while the full two-row contract runs on the
+  // worst-case + best-case pair. The worst case is config.html:
+  // "Configuration" is the longest nav label AND the active-link bonus
+  // (font-weight 500 → 600 + the ▶ ::before marker) lands on the ACTIVE
+  // page's own label, so its row's natural width is the widest of all
+  // pages (the C1 measurement table: 792px on config.html, narrower on
+  // every other page); the best case is index.html ("Home" — the
+  // shortest active label). Because the bonus rides on the active
+  // page's own label, if another data/site.json label ever grew past
+  // "Configuration" the widest row would move to that page's own render
+  // — which the all-pages guard below still covers, so the guard can
+  // never be masked by a moved worst case.
+  for (const spec of PAGES) {
+    // the two-row contract assertions are page-independent (CSS-only
+    // layout), so they run on the pair; the scroll guard runs everywhere
+    const full = spec.stem === 'config' || spec.stem === 'index';
+    const ctx =
+      spec.stem === 'config'
+        ? 'config.html (worst case — the longest active label)'
+        : spec.stem === 'index'
+          ? 'index.html (best case — the shortest active label)'
+          : spec.file;
+    const { page, errors, close } = await openPage({ path: spec.file, width: 821, height: 800 });
     try {
-      assert.deepEqual(errors, [], `${file}: unexpected page errors: ${errors.join('; ')}`);
+      assert.deepEqual(errors, [], `${spec.file}: unexpected page errors: ${errors.join('; ')}`);
       const f = await page.evaluate(headerFacts);
-      for (const name of ['brandTop', 'navTop', 'toggleTop']) {
-        assert.ok(typeof f[name] === 'number', `${ctx}: missing header item for ${name} (nav.js markup changed?)`);
+      if (full) {
+        for (const name of ['brandTop', 'navTop', 'toggleTop']) {
+          assert.ok(typeof f[name] === 'number', `${ctx}: missing header item for ${name} (nav.js markup changed?)`);
+        }
+        // DESIGN.md §4 (issue #90): the header is two rows at EVERY width —
+        // the nav sits strictly below both row-1 items, which remain on one
+        // row together (the toggle's margin-left: auto keeps it rightmost)
+        assert.ok(
+          f.navTop > f.brandTop,
+          `${ctx}: the nav (offsetTop ${f.navTop}) must be on the second row, below the brand (offsetTop ${f.brandTop}); DESIGN.md §4`
+        );
+        assert.ok(
+          f.navTop > f.toggleTop,
+          `${ctx}: the nav (offsetTop ${f.navTop}) must be on the second row, below the toggle (offsetTop ${f.toggleTop}); DESIGN.md §4`
+        );
+        assert.ok(
+          Math.abs(f.brandTop - f.toggleTop) <= SAME_ROW_PX,
+          `${ctx}: brand (offsetTop ${f.brandTop}) and toggle (offsetTop ${f.toggleTop}) must share row 1 (within ${SAME_ROW_PX}px); DESIGN.md §4`
+        );
+        // …and it is a FULL-WIDTH row: .site-nav is `flex: 1 1 100%` on the
+        // wrapped row, so its rendered width equals the header row's content
+        // width (container minus gutter)
+        assert.ok(
+          f.navWidth !== null && f.rowContentWidth !== null && Math.abs(f.navWidth - f.rowContentWidth) <= 2,
+          `${ctx}: the second-row nav must span the full content width (nav ${f.navWidth}px vs row content ${f.rowContentWidth}px); DESIGN.md §4`
+        );
       }
-      // DESIGN.md §4 (issue #90): the header is two rows at EVERY width —
-      // the nav sits strictly below both row-1 items, which remain on one
-      // row together (the toggle's margin-left: auto keeps it rightmost)
+      // the issue #90 regression guard (EVERY page): the ten links must
+      // not sit in an invisible horizontal scroll region — the nav's
+      // content fits its rendered width (the old one-row layout clipped
+      // the last links behind the hidden scrollbar). At 821px this is
+      // the tight case: only the 821–839px padding band keeps it true.
       assert.ok(
-        f.navTop > f.brandTop,
-        `${ctx}: the nav (offsetTop ${f.navTop}) must be on the second row, below the brand (offsetTop ${f.brandTop}); DESIGN.md §4`
+        f.navScrollWidth !== null && f.navClientWidth !== null,
+        `${ctx}: missing .site-nav scroll geometry (nav.js markup changed?)`
       );
-      assert.ok(
-        f.navTop > f.toggleTop,
-        `${ctx}: the nav (offsetTop ${f.navTop}) must be on the second row, below the toggle (offsetTop ${f.toggleTop}); DESIGN.md §4`
-      );
-      assert.ok(
-        Math.abs(f.brandTop - f.toggleTop) <= SAME_ROW_PX,
-        `${ctx}: brand (offsetTop ${f.brandTop}) and toggle (offsetTop ${f.toggleTop}) must share row 1 (within ${SAME_ROW_PX}px); DESIGN.md §4`
-      );
-      // …and it is a FULL-WIDTH row: .site-nav is `flex: 1 1 100%` on the
-      // wrapped row, so its rendered width equals the header row's content
-      // width (container minus gutter)
-      assert.ok(
-        f.navWidth !== null && f.rowContentWidth !== null && Math.abs(f.navWidth - f.rowContentWidth) <= 2,
-        `${ctx}: the second-row nav must span the full content width (nav ${f.navWidth}px vs row content ${f.rowContentWidth}px); DESIGN.md §4`
-      );
-      // the issue #90 regression guard: the ten links must not sit in an
-      // invisible horizontal scroll region — the nav's content fits its
-      // rendered width (the old one-row layout clipped the last links
-      // behind the hidden scrollbar). At 821px this is the tight case:
-      // only the 821–839px padding band keeps it true.
       assert.ok(
         f.navScrollWidth <= f.navClientWidth + 1,
         `821px ${ctx}: the nav scrolls horizontally (scrollWidth ${f.navScrollWidth}px > clientWidth ${f.navClientWidth}px) — the ten links must fit without scrolling; issue #90`
       );
-      // explicit header overflow check (the page-level rule covers the
-      // document, but the header is the element §9 calls out)
-      assert.ok(
-        f.headerScrollWidth <= f.innerWidth,
-        `821px ${ctx}: the header overflows horizontally (header.scrollWidth ${f.headerScrollWidth}px > ${f.innerWidth}px viewport); DESIGN.md §9`
-      );
+      if (full) {
+        // explicit header overflow check (the page-level rule covers the
+        // document, but the header is the element §9 calls out)
+        assert.ok(
+          f.headerScrollWidth <= f.innerWidth,
+          `821px ${ctx}: the header overflows horizontally (header.scrollWidth ${f.headerScrollWidth}px > ${f.innerWidth}px viewport); DESIGN.md §9`
+        );
+      }
     } finally {
       await close();
     }

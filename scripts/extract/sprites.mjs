@@ -18,6 +18,8 @@
  *       front.png + normal.pal                          (253 species)
  *       anim_front.png (first 64×64 frame) + normal.pal (773 species)
  *
+ *   The canonical candidate list is `BASE_CANDIDATES` in `./sprite-forms.mjs` (the single source both extractors use) — this prose is a summary, not the truth.
+ *
  * FORM SPRITES (purely additive — the base-species loop above is untouched):
  * for every Expansion species-table entry that is NOT a base species (its id
  * does not name a top-level `graphics/pokemon/` directory), the shared
