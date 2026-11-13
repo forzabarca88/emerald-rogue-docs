@@ -646,6 +646,18 @@ function titleIfUpper(s) {
   return s.split(' ').map((w) => (w === w.toUpperCase() && /[A-Z]/.test(w) ? w.charAt(0) + w.slice(1).toLowerCase() : w)).join(' ');
 }
 
+/** UPPERCASE Vanilla item names → Title case for display, with the acronym
+ *  guard: a ≤2-char all-caps word stays uppercase only when it OPENS the
+ *  name ("PP UP" → "PP Up", "X ATTACK" → "X Attack"). Mixed-case words
+ *  (the "POKé" ball) pass through untouched. */
+function titleItemName(s) {
+  return s.split(' ').map((w, i) => {
+    if (!(w === w.toUpperCase() && /[A-Z]/.test(w))) return w;
+    if (i === 0 && w.length <= 2) return w;
+    return w.charAt(0) + w.slice(1).toLowerCase();
+  }).join(' ');
+}
+
 function unescapeC(literal) {
   return literal.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
 }
@@ -916,9 +928,361 @@ function humanizeEvolution(method, param, param2, evoMethods, where, ctx) {
     case 'LEVEL_FAMILY_OF_FOUR': return { target, method: lv(' (family of four)') };
     case 'LEVEL_TWO_SEGMENT': return { target, method: lv() };
     case 'LEVEL_THREE_SEGMENT': return { target, method: lv() };
+    case 'LEVEL_30_NATURE': {
+      // EX-only (the Milcery rewrite in rogue_baked.c): the in-game string is
+      // "Reach {LV}30 as {STR_VAR_1}" — the exact wording, 30 hard-coded
+      const natureName = ctx.natureNames?.get(param);
+      if (!natureName) fail(`${where}: unknown nature value ${param}`);
+      return { target, method: `Reach 30 as ${natureName}` };
+    }
     default:
       fail(`${where}: unhumanized evolution method ${methodId}`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Port of the game's runtime evolution rewrite (src/rogue_baked.c)
+// ---------------------------------------------------------------------------
+//
+// The in-game Pokédex does NOT show the raw evolution table: every entry is
+// run through `Rogue_ModifyEvolution` (byte-identical in both branches —
+// the Vanilla/EX split is the #ifdef ROGUE_EXPANSION blocks inside it) which
+// rewrites method/param/target (friendship -> level 30, trade -> Link Cable
+// item, the Alola/Galar/Hisui artefacts, per-species overrides, ...).
+// `modifyEvolution` mirrors that function line-for-line so the site's evo
+// data matches what the game displays (issue #97).
+
+// Per-branch resolved EVO_* constants. The two branches assign DIFFERENT
+// numbers to several methods (EVO_LEVEL 4 in both, but e.g. EVO_ITEM 27 in
+// EX vs 7 in Vanilla), so the constants come from each branch's own
+// include/constants/pokemon.h, never shared.
+const makeEvoConsts = (branch, pp, where) => {
+  const v = (n) => pp.evalExpr(n, `${where} ${n}`);
+  const C = {
+    EVO_NONE: 0xfffe, // not a #define in Vanilla's header, but the same sentinel the rewrite writes
+    EVO_ITEM: v('EVO_ITEM'),
+    EVO_LEVEL: v('EVO_LEVEL'),
+    EVO_LEVEL_MALE: v('EVO_LEVEL_MALE'),
+    EVO_LEVEL_FEMALE: v('EVO_LEVEL_FEMALE'),
+    EVO_MOVE: v('EVO_MOVE'),
+    EVO_BEAUTY: v('EVO_BEAUTY'),
+    EVO_FRIENDSHIP: v('EVO_FRIENDSHIP'),
+    EVO_TRADE: v('EVO_TRADE'),
+    EVO_LEVEL_ITEM: v('EVO_LEVEL_ITEM'),
+    EVO_ITEM_HOLD_DAY: v('EVO_ITEM_HOLD_DAY'),
+    EVO_ITEM_HOLD_NIGHT: v('EVO_ITEM_HOLD_NIGHT'),
+    EVO_FRIENDSHIP_DAY: v('EVO_FRIENDSHIP_DAY'),
+    EVO_FRIENDSHIP_NIGHT: v('EVO_FRIENDSHIP_NIGHT'),
+    EVO_LEVEL_DAY: v('EVO_LEVEL_DAY'),
+    EVO_LEVEL_NIGHT: v('EVO_LEVEL_NIGHT'),
+    EVO_TRADE_ITEM: v('EVO_TRADE_ITEM'),
+  };
+  if (branch === 'ex') {
+    C.EVO_LEVEL_30_NATURE = v('EVO_LEVEL_30_NATURE');
+    C.EVO_MOVE_TYPE = v('EVO_MOVE_TYPE');
+    C.EVO_MOVE_TWO_SEGMENT = v('EVO_MOVE_TWO_SEGMENT');
+    C.EVO_MOVE_THREE_SEGMENT = v('EVO_MOVE_THREE_SEGMENT');
+    C.EVO_LEVEL_TWO_SEGMENT = v('EVO_LEVEL_TWO_SEGMENT');
+    C.EVO_LEVEL_THREE_SEGMENT = v('EVO_LEVEL_THREE_SEGMENT');
+    C.EVO_SPECIFIC_MON_IN_PARTY = v('EVO_SPECIFIC_MON_IN_PARTY');
+    C.EVO_CRITICAL_HITS = v('EVO_CRITICAL_HITS');
+    C.EVO_SCRIPT_TRIGGER_DMG = v('EVO_SCRIPT_TRIGGER_DMG');
+    C.EVO_WATER_SCROLL = v('EVO_WATER_SCROLL');
+    C.EVO_DARK_SCROLL = v('EVO_DARK_SCROLL');
+    C.EVO_TRADE_SPECIFIC_MON = v('EVO_TRADE_SPECIFIC_MON');
+    C.EVO_LEVEL_RAIN = v('EVO_LEVEL_RAIN');
+    C.EVO_LEVEL_DARK_TYPE_MON_IN_PARTY = v('EVO_LEVEL_DARK_TYPE_MON_IN_PARTY');
+    C.EVO_FRIENDSHIP_MOVE_TYPE = v('EVO_FRIENDSHIP_MOVE_TYPE');
+    C.EVO_SPECIFIC_MAP = v('EVO_SPECIFIC_MAP');
+    C.EVO_ITEM_NIGHT = v('EVO_ITEM_NIGHT');
+    C.EVO_ITEM_DAY = v('EVO_ITEM_DAY');
+    C.EVO_MAPSEC = v('EVO_MAPSEC');
+  }
+  return C;
+};
+
+/**
+ * Port of `Rogue_ModifyEvolution` (src/rogue_baked.c L377-704). Reads the
+ * raw { method, param, target } tuple at `evoIdx` for the species whose
+ * value is `speciesValue`, applies the per-species overrides, the
+ * Milcery block, the ModifyKnowMoveEvo profile check and the method
+ * switch, and returns the rewritten tuple (the raw one untouched).
+ *
+ * `ctx` is branch-scoped: the resolved EVO_* constants, the
+ * SPECIES_NONE value, species/item/nature value lookups,
+ * GET_BASE_SPECIES_ID for the Rockruff/Cosmoem time-of-day exception,
+ * and the species' level-up learnset profile (what ModifyKnowMoveEvo
+ * reads via Rogue_GetPokemonProfile).
+ *
+ * The run-scoped "invalid evolution" check (L497-504) needs live run
+ * state (Rogue_IsRunActive + Pokédex-variant membership) and can never
+ * fire in the documented out-of-run state — deliberately not ported.
+ */
+function modifyEvolution(branch, ctx, speciesValue, evoIdx, evo) {
+  const isEx = branch === 'ex';
+  const C = ctx.evoConsts;
+  const S = (tail) => ctx.species(tail);
+  const I = (tail) => ctx.item(tail);
+  const out = { method: evo.method, param: evo.param, target: evo.target };
+
+  // "Any species alterations." (L383-388)
+  if (speciesValue === S('AZURILL') && evoIdx === 0) {
+    out.method = C.EVO_LEVEL;
+    out.param = 10;
+  }
+
+  // #ifdef ROGUE_EXPANSION (L390-575)
+  if (isEx) {
+    // Yamask-Galarian: the level evolution to Ronogar
+    if (speciesValue === S('YAMASK_GALARIAN') && evoIdx === 0) {
+      out.method = C.EVO_LEVEL;
+      out.param = 34;
+    }
+    if (speciesValue === S('MELTAN') && evoIdx === 0) {
+      out.method = C.EVO_ITEM;
+      out.param = I('METAL_COAT');
+    }
+    if (speciesValue === S('SLIGGOO') && evoIdx === 0) {
+      out.method = C.EVO_LEVEL;
+    }
+    if ((speciesValue === S('SLIGGOO') || speciesValue === S('SLIGGOO_HISUIAN')) && evoIdx === 1) {
+      out.target = ctx.none;
+      out.method = C.EVO_NONE;
+    }
+    if (speciesValue === S('KUBFU') && (evoIdx === 1 || evoIdx === 3)) {
+      out.target = ctx.none;
+      out.method = C.EVO_NONE;
+    }
+    if (speciesValue === S('BASCULIN_WHITE_STRIPED')) {
+      // Basculin White evolves into Basculion based on gender
+      if (evoIdx === 0) {
+        out.target = S('BASCULEGION_MALE');
+        out.method = C.EVO_LEVEL_MALE;
+        out.param = 36;
+      } else if (evoIdx === 1) {
+        out.target = S('BASCULEGION_FEMALE');
+        out.method = C.EVO_LEVEL_FEMALE;
+        out.param = 36;
+      }
+    }
+    // Alolan evolutions
+    if (
+      (speciesValue === S('PIKACHU') && evoIdx === 1) ||
+      (speciesValue === S('EXEGGCUTE') && evoIdx === 1) ||
+      (speciesValue === S('CUBONE') && evoIdx === 1)
+    ) {
+      out.method = C.EVO_ITEM;
+      out.param = I('ALOLA_STONE');
+    }
+    // Galar evolutions
+    if (
+      (speciesValue === S('KOFFING') && evoIdx === 1) ||
+      (speciesValue === S('MIME_JR') && evoIdx === 1)
+    ) {
+      out.method = C.EVO_ITEM;
+      out.param = I('GALAR_STONE');
+    }
+    // Hisui evolutions
+    if (
+      (speciesValue === S('QUILAVA') && evoIdx === 1) ||
+      (speciesValue === S('DEWOTT') && evoIdx === 1) ||
+      (speciesValue === S('PETILIL') && evoIdx === 1) ||
+      (speciesValue === S('RUFFLET') && evoIdx === 1) ||
+      (speciesValue === S('GOOMY') && evoIdx === 1) ||
+      (speciesValue === S('BERGMITE') && evoIdx === 1) ||
+      (speciesValue === S('DARTRIX') && evoIdx === 1)
+    ) {
+      out.method = C.EVO_ITEM;
+      out.param = I('HISUI_STONE');
+    }
+    if (speciesValue === S('URSARING') && evoIdx === 0) {
+      out.method = C.EVO_ITEM;
+      out.param = I('PEAT_BLOCK');
+    }
+    if (speciesValue === S('URSARING') && evoIdx === 1) {
+      out.method = C.EVO_ITEM;
+      out.param = I('MOON_STONE');
+    }
+    if (speciesValue === S('BISHARP') && evoIdx === 0) {
+      out.method = C.EVO_ITEM;
+      out.param = I('LEADERS_CREST');
+    }
+    // Walk evolutions
+    if (speciesValue === S('PAWMO') && evoIdx === 0) {
+      out.method = C.EVO_LEVEL;
+      out.param = 20;
+    }
+    if (speciesValue === S('BRAMBLIN') && evoIdx === 0) {
+      out.method = C.EVO_LEVEL;
+      out.param = 20;
+    }
+    if (speciesValue === S('RELLOR') && evoIdx === 0) {
+      out.method = C.EVO_LEVEL;
+      out.param = 20;
+    }
+    if (speciesValue === S('GIMMIGHOUL') && evoIdx === 0) {
+      out.method = C.EVO_ITEM;
+      out.param = I('GIMMIGHOUL_COIN');
+    }
+  }
+
+  // (The ROGUE_IsRunActive "invalid evolution" check — see the header note.)
+
+  if (out.target !== ctx.none) {
+    if (isEx && speciesValue === S('MILCERY')) {
+      if (evoIdx === 0) {
+        // Default form for neutral natures
+        out.method = C.EVO_LEVEL;
+        out.target = S('ALCREMIE_STRAWBERRY');
+        out.param = 30;
+      } else {
+        const supportedForms = ['ALCREMIE_BERRY', 'ALCREMIE_LOVE', 'ALCREMIE_STAR', 'ALCREMIE_CLOVER', 'ALCREMIE_FLOWER', 'ALCREMIE_RIBBON'].map(S);
+        const supportedNatures = ['ADAMANT', 'LAX', 'MODEST', 'GENTLE', 'TIMID', 'JOLLY'].map((n) => ctx.nature(n));
+        if (evoIdx - 1 >= supportedNatures.length) {
+          out.method = C.EVO_NONE;
+          out.target = ctx.none;
+        } else {
+          out.method = C.EVO_LEVEL_30_NATURE;
+          out.target = supportedForms[evoIdx - 1];
+          out.param = supportedNatures[evoIdx - 1];
+        }
+      }
+    }
+
+    // ModifyKnowMoveEvo (L354-376): the species' level-up list (the
+    // "assume this was a tutor move" part — the profile's tutor list — is
+    // never used by any evolution, so only the level-up loop is ported),
+    // then the EVO_MOVE fallback.
+    const levelUp = ctx.profileLevelUp(speciesValue);
+    const knowMove = (fromMethod, toMethod) => {
+      if (out.method !== fromMethod) return;
+      if (levelUp) {
+        for (const [mv, lvl] of levelUp) {
+          if (mv === out.param) {
+            out.method = toMethod;
+            out.param = Math.max(38, lvl);
+            break;
+          }
+        }
+      }
+      if (out.method === fromMethod && fromMethod === C.EVO_MOVE) {
+        out.method = toMethod;
+        out.param = 30;
+      }
+    };
+    knowMove(C.EVO_MOVE, C.EVO_LEVEL);
+    if (isEx) {
+      knowMove(C.EVO_MOVE_TWO_SEGMENT, C.EVO_LEVEL_TWO_SEGMENT);
+      knowMove(C.EVO_MOVE_THREE_SEGMENT, C.EVO_LEVEL_THREE_SEGMENT);
+    }
+
+    // The method switch (L581-703) — ported as an if-chain; every C case
+    // has a distinct value in both branches, so the semantics match.
+    if (out.method === C.EVO_ITEM) {
+      if (isEx && out.param === ctx.item('LINKING_CORD')) {
+        // Already have a different evolution via the link cable
+        out.method = C.EVO_NONE;
+        out.target = ctx.none;
+      }
+    } else if (out.method === C.EVO_BEAUTY) {
+      if (isEx) {
+        // Uses the prism scale evolution
+        out.method = C.EVO_NONE;
+        out.target = ctx.none;
+      } else {
+        // Make it a level evolution
+        out.method = C.EVO_LEVEL;
+        out.param = 36;
+      }
+    } else if (out.method === C.EVO_FRIENDSHIP) {
+      out.method = C.EVO_LEVEL;
+      out.param = 30;
+    } else if (out.method === C.EVO_TRADE) {
+      out.method = C.EVO_ITEM;
+      out.param = I('LINK_CABLE');
+    } else if (out.method === C.EVO_LEVEL_ITEM || out.method === C.EVO_ITEM_HOLD_DAY || out.method === C.EVO_ITEM_HOLD_NIGHT) {
+      out.method = C.EVO_ITEM;
+    } else if (out.method === C.EVO_FRIENDSHIP_DAY) {
+      if (speciesValue === S('EEVEE')) {
+        out.method = C.EVO_ITEM;
+        out.param = I('SUN_STONE');
+      } else {
+        out.method = C.EVO_LEVEL;
+        out.param = 30;
+      }
+    } else if (out.method === C.EVO_FRIENDSHIP_NIGHT) {
+      if (speciesValue === S('EEVEE')) {
+        out.method = C.EVO_ITEM;
+        out.param = I('MOON_STONE');
+      } else {
+        out.method = C.EVO_LEVEL;
+        out.param = 30;
+      }
+    } else if (out.method === C.EVO_LEVEL_DAY || out.method === C.EVO_LEVEL_NIGHT) {
+      if (isEx) {
+        // Rockruff & Cosmoem are the only species that still have time-based evolutions
+        if (speciesValue !== ctx.baseSpecies('ROCKRUFF') && speciesValue !== ctx.baseSpecies('COSMOEM')) {
+          out.method = C.EVO_LEVEL;
+        }
+      } else {
+        out.method = C.EVO_LEVEL;
+      }
+    } else if (out.method === C.EVO_TRADE_ITEM) {
+      if (isEx) {
+        // These methods are no longer needed since Emerald Expansion has use-item by default
+        out.method = C.EVO_NONE;
+        out.target = ctx.none;
+      } else {
+        out.method = C.EVO_ITEM;
+      }
+    } else if (isEx) {
+      if (out.method === C.EVO_SPECIFIC_MON_IN_PARTY || out.method === C.EVO_CRITICAL_HITS || out.method === C.EVO_SCRIPT_TRIGGER_DMG) {
+        out.method = C.EVO_LEVEL;
+        out.param = 36;
+      } else if (out.method === C.EVO_WATER_SCROLL) {
+        out.method = C.EVO_ITEM;
+        out.param = I('WATER_STONE');
+      } else if (out.method === C.EVO_DARK_SCROLL) {
+        out.method = C.EVO_ITEM;
+        out.param = I('MOON_STONE');
+      } else if (out.method === C.EVO_TRADE_SPECIFIC_MON) {
+        out.method = C.EVO_ITEM;
+        out.param = I('LINK_CABLE');
+      } else if (out.method === C.EVO_LEVEL_RAIN || out.method === C.EVO_LEVEL_DARK_TYPE_MON_IN_PARTY) {
+        out.method = C.EVO_LEVEL;
+      } else if (out.method === C.EVO_FRIENDSHIP_MOVE_TYPE) {
+        out.method = C.EVO_MOVE_TYPE;
+      } else if (out.method === C.EVO_SPECIFIC_MAP || out.method === C.EVO_ITEM_NIGHT || out.method === C.EVO_ITEM_DAY) {
+        out.method = C.EVO_NONE;
+        out.target = ctx.none;
+      } else if (out.method === C.EVO_MAPSEC) {
+        out.method = C.EVO_NONE;
+        out.target = ctx.none;
+      }
+    }
+  }
+
+  return out;
+}
+
+/**
+ * The in-game evolution display list for one entry: run every raw tuple
+ * through modifyEvolution, drop the SPECIES_NONE targets and the 0xfffe
+ * sentinels (EVO_NONE — "not an actual evolution"), and cap at 8
+ * (GetEvolutionName only shows displayCount < 8).
+ */
+function buildEvoDisplayList(branch, ctx, speciesValue, rawList) {
+  // GetMaxEvolutionCount: the loop never runs on an empty table, so the
+  // per-species overrides can't fire for it either
+  if (rawList.length === 0) return [];
+  const survivors = [];
+  for (let i = 0; i < rawList.length; i++) {
+    const evo = modifyEvolution(branch, ctx, speciesValue, i, rawList[i]);
+    if (evo.target === ctx.none || evo.method === 0xfffe) continue;
+    survivors.push(evo);
+    if (survivors.length >= 8) break;
+  }
+  return survivors;
 }
 
 // ---------------------------------------------------------------------------
@@ -998,6 +1362,7 @@ function extract(repo) {
     'include/constants/region_map_sections.h',
     'include/constants/pokedex.h',
     'include/constants/rogue_pokedex.h',
+    'include/constants/rogue.h', // the ITEM_* rogue items the evolution rewrite names (Link Cable, the artefacts)
     'include/global.h', // COMPOUND_STRING, min/max & friends used by the species data
   ]) collectFor(exPp, f);
 
@@ -1014,6 +1379,7 @@ function extract(repo) {
     'include/constants/region_map_sections.h',
     'include/constants/pokedex.h',
     'include/constants/rogue_pokedex.h',
+    'include/constants/rogue.h', // ITEM_LINK_CABLE (the Vanilla trade-evo rewrite names it)
   ]) collectFor(vanPp, f);
 
   // Generic constant resolution: enums first, then object-like macros
@@ -1216,9 +1582,12 @@ function extract(repo) {
     return title;
   };
 
-  // value -> display name: the data file owns the display names, the
-  // constants file owns the values (evolution data references items by value)
-  const parseItemNames = (pp, raw, where) => {
+  // value -> display name: the data files own the display names, the
+  // constants files own the values (evolution data references items by
+  // value). The rogue items (src/data/rogue_items.h — the Link Cable and the
+  // Alola/Galar/Hisui artefacts the evolution rewrite names) live in a
+  // second table indexed by [ITEM_X - ITEM_ROGUE_ITEM_FIRST].
+  const parseItemNames = (pp, raw, rogueRaw, where) => {
     const byConst = new Map();
     const re = /\[ITEM_([A-Z0-9_]+)\]\s*=\s*\{([^}]*)\}/g;
     let m;
@@ -1226,22 +1595,68 @@ function extract(repo) {
       const nm = /\.name\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/.exec(m[2]);
       if (nm) byConst.set(`ITEM_${m[1]}`, unescapeC(nm[1]));
     }
-    const rawConsts = pp.provider.fetch('include/constants/items.h');
+    const rg = /\[ITEM_([A-Z0-9_]+)\s*-\s*ITEM_ROGUE_ITEM_FIRST\]\s*=\s*\{([\s\S]*?)\n    \},/g;
+    while ((m = rg.exec(rogueRaw))) {
+      const nm = /\.name\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/.exec(m[2]);
+      if (nm) byConst.set(`ITEM_${m[1]}`, unescapeC(nm[1]));
+    }
     const out = new Map();
-    for (const line of rawConsts.split('\n')) {
-      const cm = /^\s*#define\s+ITEM_([A-Z0-9_]+)\s+(.+?)\s*(\/\/.*)?$/.exec(line);
-      if (!cm) continue;
-      const display = byConst.get(`ITEM_${cm[1]}`);
-      if (display === undefined) continue; // aliases / helper constants
-      let value;
-      try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
-      if (!out.has(value)) out.set(value, display);
+    for (const file of ['include/constants/items.h', 'include/constants/rogue.h']) {
+      for (const line of pp.provider.fetch(file).split('\n')) {
+        const cm = /^\s*#define\s+ITEM_([A-Z0-9_]+)\s+(.+?)\s*(\/\/.*)?$/.exec(line);
+        if (!cm) continue;
+        const display = byConst.get(`ITEM_${cm[1]}`);
+        if (display === undefined) continue; // aliases / helper constants
+        let value;
+        try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
+        if (!out.has(value)) out.set(value, display);
+      }
     }
     if (out.size < 200) fail(`${where}: only ${out.size} named items resolved`);
     return out;
   };
-  const exItemNames = parseItemNames(exPp, exPp.process('src/data/items.h', 'output'), 'EX items.h');
-  const vanItemNames = parseItemNames(vanPp, vanPp.process('src/data/items.h', 'output'), 'vanilla items.h');
+  const exItemNames = parseItemNames(exPp, exPp.process('src/data/items.h', 'output'), exPp.process('src/data/rogue_items.h', 'output'), 'EX items.h');
+  // the Vanilla item tables are all-caps ("THUNDERSTONE") — Title case them
+  // for display (the EX tables are already Title case in source)
+  const vanItemNames = new Map(
+    [...parseItemNames(vanPp, vanPp.process('src/data/items.h', 'output'), vanPp.process('src/data/rogue_items.h', 'output'), 'vanilla items.h')].map(([v, n]) => [v, titleItemName(n)]),
+  );
+
+  // const-tail -> value for the items the evolution rewrite names
+  // (Rogue_ModifyEvolution rewrites methods to EVO_ITEM + these items)
+  const parseItemValues = (pp, where) => {
+    const out = new Map();
+    for (const file of ['include/constants/items.h', 'include/constants/rogue.h']) {
+      for (const line of pp.provider.fetch(file).split('\n')) {
+        const cm = /^\s*#define\s+ITEM_([A-Z0-9_]+)\s+(.+?)\s*(\/\/.*)?$/.exec(line);
+        if (!cm) continue;
+        let value;
+        try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
+        if (!out.has(cm[1])) out.set(cm[1], value);
+      }
+    }
+    return out;
+  };
+  const exItemValues = parseItemValues(exPp, 'EX item values');
+  const vanItemValues = parseItemValues(vanPp, 'vanilla item values');
+
+  // value -> nature display name (EX only — the EVO_LEVEL_30_NATURE rewrite
+  // is EX-only): the names own src/data/text/nature_names.h, the values the
+  // NATURE_* defines in include/constants/pokemon.h
+  const exNatureNames = (() => {
+    const raw = exPp.process('src/data/text/nature_names.h', 'output');
+    const bySymbol = new Map();
+    for (const m of raw.matchAll(/static const u8 (s[A-Za-z0-9]+NatureName)\[\]\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/g)) bySymbol.set(m[1], m[2]);
+    const out = new Map();
+    for (const m of raw.matchAll(/\[NATURE_([A-Z0-9_]+)\]\s*=\s*(s[A-Za-z0-9]+NatureName),/g)) {
+      const value = exPp.evalExpr(`NATURE_${m[1]}`, `nature name NATURE_${m[1]}`);
+      const name = bySymbol.get(m[2]);
+      if (name === undefined) fail(`nature_names.h: ${m[1]} points at undefined ${m[2]}`);
+      out.set(value, name);
+    }
+    if (out.size < 20) fail(`only ${out.size} nature names parsed from nature_names.h`);
+    return out;
+  })();
 
   const exMapNames = new Map();
   for (const [name, value] of collectPrefixed(exPp, 'MAP_', 'maps', (v, n) => v < 0x4000 && !n.startsWith('MAPSEC_'))) {
@@ -1373,6 +1788,7 @@ function extract(repo) {
     moveNames: exMoveByValue, itemNames: exItemNames,
     typeByValue, mapNames: exMapNames, mapsecNames: exMapsecNames,
     mapNone: resolveConst(exPp, 'MAP_NONE', 'MAP_NONE'), displayNames: new Map(),
+    natureNames: exNatureNames, // the EVO_LEVEL_30_NATURE humanizer lookup
   };
 
   const FLAG_FIELDS = ['isLegendary', 'isMythical', 'isUltraBeast', 'isParadoxForm', 'isMegaEvolution', 'isPrimalReversion', 'isUltraBurst', 'isGigantamax', 'isTeraForm', 'isAlolanForm', 'isGalarianForm', 'isHisuianForm', 'isPaldeanForm'];
@@ -1635,41 +2051,32 @@ function extract(repo) {
     return m;
   })();
 
-  // EX evolutions → { prev?, next? }
-  const exEvoBySpecies = new Map(); // id -> [ { target, method } ] in table order
-  for (const entry of exEntries.values()) {
-    const evos = [];
-    for (const block of entry.evoBlocks) {
-      const where = `EX evolution for ${entry.id}`;
+  // EX raw evolution tuples per entry (records AND dex-less forms — the
+  // forms run through the same runtime rewrite keyed by their own species
+  // value). The 0xfffe (EVO_NONE) slots are KEPT here: they occupy the
+  // indices the per-species overrides target; they only get filtered out
+  // later if they SURVIVE the rewrite. The post-rewrite display lists are
+  // computed after the learnset profiles are available (the
+  // ModifyKnowMoveEvo port reads the species' level-up list).
+  const parseEvoTuples = (pp, blocks, where, terminator) => {
+    const out = [];
+    for (const block of blocks) {
       const body = block.replace(/^\{/, '').replace(/\}$/, '').trim();
       const parts = body.split(',').map((s) => s.trim()).filter(Boolean);
       if (parts.length < 3) fail(`${where}: expected 3 evolution fields: ${body.slice(0, 60)}`);
-      const method = exPp.evalExpr(parts[0], where);
-      if (method === 0xfffe) continue; // EVO_NONE terminator
-      const h = humanizeEvolution(method, exPp.evalExpr(parts[1], where), exPp.evalExpr(parts[2], where), exEvoMethods, where, exCtx);
-      evos.push({ target: h.target, method: h.method });
+      const method = pp.evalExpr(parts[0], where);
+      if (method === terminator) continue; // the table's end marker (0xffff EX / 0 Vanilla)
+      out.push({ method, param: pp.evalExpr(parts[1], where), target: pp.evalExpr(parts[2], where) });
     }
-    exEvoBySpecies.set(entry.id, evos);
-  }
-  const exEvoPair = (selfId) => {
-    const evos = exEvoBySpecies.get(selfId) ?? [];
-    const next = evos.length > 0 ? { id: evos[0].target, method: evos[0].method } : undefined;
-    let prev;
-    for (const [sid, list] of exEvoBySpecies) {
-      if (sid === selfId) continue;
-      if (list.length > 0 && list[0].target === selfId) {
-        // prefer the first source in species value order (the "primary" pre-evolution)
-        prev = { id: sid, method: list[0].method };
-        break;
-      }
-    }
-    // pick the lowest-dexNum prev for determinism when several qualify
-    if (prev) {
-      const candidates = [...exEvoBySpecies.entries()].filter(([, list]) => list.length > 0 && list[0].target === selfId).sort((a, b) => exEntries.get(a[0]).dexNum - exEntries.get(b[0]).dexNum);
-      if (candidates.length > 1) prev = { id: candidates[0][0], method: candidates[0][1][0].method };
-    }
-    return next || prev ? { ...(next ? { next } : {}), ...(prev ? { prev } : {}) } : null;
+    return out;
   };
+  const exEvoRaw = new Map(); // entryId -> raw tuples, in table order
+  for (const entry of allExEntries) {
+    exEvoRaw.set(entry.id, parseEvoTuples(exPp, entry.evoBlocks, `EX evolution for ${entry.id}`, 0xffff));
+  }
+  // GetBaseEvolution's SPECIES_MELTAN case — the species table entry has no
+  // .evolutions at all; the game uses this fixed table instead
+  const meltanEvoRaw = [{ method: 0xfffe, param: 0, target: resolveConst(exPp, 'SPECIES_MELMETAL', 'EX SPECIES_MELMETAL') }];
 
   // ----- Vanilla species data --------------------------------------------------
   const vanBaseStats = (() => {
@@ -1740,7 +2147,16 @@ function extract(repo) {
     return m;
   })();
 
-  const vanEvolutions = (() => {
+  // Vanilla raw evolution tuples (the humanizing context is shared with the
+  // post-rewrite pass below; the rewrite runs before the display, same as
+  // in-game)
+  const vanEvoHumanizeCtx = {
+    byValue: vanSpecies.byValue, recordIdByValue: vanRecordIdByValue, moveNames: vanMoveByValue, itemNames: vanItemNames,
+    typeByValue, mapNames: vanMapNames, mapsecNames: vanMapsecNames,
+    mapNone: resolveConst(vanPp, 'MAP_NONE', 'MAP_NONE'),
+    displayNames: new Map([...vanSpeciesNames.entries()].map(([k, v]) => [k.replace(/^SPECIES_/, '').toLowerCase(), v])),
+  };
+  const vanEvoRaw = (() => {
     const raw = vanPp.process('src/data/pokemon/evolution.h', 'output');
     const out = new Map();
     const bm = /\[SPECIES_([A-Z0-9_]+)\]\s*=\s*/g;
@@ -1757,24 +2173,7 @@ function extract(repo) {
       }
       // drop the outer braces: the entry value is { {block}, {block}, … }
       const body = raw.slice(bm.lastIndex + 1, end);
-      const blocks = splitTopLevelBraces(body, `vanilla evolution [SPECIES_${m[1]}]`);
-      const evos = [];
-      for (const block of blocks) {
-        const where = `vanilla evolution for ${species}`;
-        const inner = block.replace(/^\{/, '').replace(/\}$/, '').trim();
-        const parts = inner.split(',').map((s) => s.trim()).filter(Boolean);
-        if (parts.length < 3) fail(`${where}: expected 3 evolution fields: ${inner.slice(0, 60)}`);
-        const method = vanPp.evalExpr(parts[0], where);
-        if (method === 0xfffe) continue;
-        const h = humanizeEvolution(method, vanPp.evalExpr(parts[1], where), vanPp.evalExpr(parts[2], where), vanEvoMethods, where, {
-          byValue: vanSpecies.byValue, recordIdByValue: vanRecordIdByValue, moveNames: vanMoveByValue, itemNames: vanItemNames,
-          typeByValue, mapNames: vanMapNames, mapsecNames: vanMapsecNames,
-          mapNone: resolveConst(vanPp, 'MAP_NONE', 'MAP_NONE'),
-          displayNames: new Map([...vanSpeciesNames.entries()].map(([k, v]) => [k.replace(/^SPECIES_/, '').toLowerCase(), v])),
-        });
-        evos.push({ target: h.target, method: h.method });
-      }
-      out.set(species, evos);
+      out.set(species, parseEvoTuples(vanPp, splitTopLevelBraces(body, `vanilla evolution [SPECIES_${m[1]}]`), `vanilla evolution for ${species}`, 0));
     }
     return out;
   })();
@@ -2014,16 +2413,118 @@ function extract(repo) {
 
   const statsOf = (s) => ({ hp: s.hp, atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe, total: s.hp + s.atk + s.def + s.spa + s.spd + s.spe });
 
-  const vanEvoPair = (selfId) => {
-    const evos = vanEvolutions.get(selfId) ?? [];
-    const next = evos.length > 0 ? { id: evos[0].target, method: evos[0].method } : undefined;
-    let prev;
-    const candidates = [...vanEvolutions.entries()].filter(([, list]) => list.length > 0 && list[0].target === selfId);
-    if (candidates.length > 0) {
-      candidates.sort((a, b) => (vanDexNum.get(a[0]) ?? 0) - (vanDexNum.get(b[0]) ?? 0));
-      prev = { id: candidates[0][0], method: candidates[0][1][0].method };
+  // ----- evolution rewrite (the port of Rogue_ModifyEvolution) ----------------
+  // Branch-scoped lookup contexts for the port. profileLevelUp is what
+  // ModifyKnowMoveEvo reads (Rogue_GetPokemonProfile — the level-up move
+  // list, resolved per species the same way the rest of the record resolves
+  // its profile: record id first, then the base id for form entries).
+  const exEvoCtx = {
+    evoConsts: makeEvoConsts('ex', exPp, 'EX evo constants'),
+    none: resolveConst(exPp, 'SPECIES_NONE', 'EX SPECIES_NONE'),
+    species: (tail) => exSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`EX evo: unknown species ${tail}`),
+    baseSpecies: (tail) => {
+      // GET_BASE_SPECIES_ID — the first member of the species' value group
+      // (all members share one value, so this is the group's value)
+      const v = exSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`EX evo: unknown species ${tail}`);
+      const group = exValueGroups.get(v);
+      if (!group || group.length === 0) fail(`EX evo: no value group for ${tail}`);
+      return v;
+    },
+    item: (tail) => exItemValues.get(tail) ?? fail(`EX evo: unknown item ${tail}`),
+    nature: (tail) => resolveConst(exPp, `NATURE_${tail}`, `EX nature ${tail}`),
+    profileLevelUp: (value) => {
+      const id = exCtx.recordIdByValue.get(value) ?? exCtx.byValue.get(value);
+      const entry = id ? exEntries.get(id) : null;
+      const pid = entry ? (profile('ex', entry.id) ? entry.id : entry.baseId) : null;
+      const p = pid ? profile('ex', pid) : null;
+      return p ? p.levelUp : null;
+    },
+  };
+  const vanEvoCtx = {
+    evoConsts: makeEvoConsts('vanilla', vanPp, 'vanilla evo constants'),
+    none: resolveConst(vanPp, 'SPECIES_NONE', 'vanilla SPECIES_NONE'),
+    species: (tail) => vanSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`vanilla evo: unknown species ${tail}`),
+    baseSpecies: (tail) => vanSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`vanilla evo: unknown species ${tail}`),
+    item: (tail) => vanItemValues.get(tail) ?? fail(`vanilla evo: unknown item ${tail}`),
+    nature: (tail) => resolveConst(vanPp, `NATURE_${tail}`, `vanilla nature ${tail}`),
+    profileLevelUp: (value) => {
+      const id = vanRecordIdByValue.get(value);
+      const p = id ? profile('vanilla', id) : null;
+      return p ? p.levelUp : null;
+    },
+  };
+
+  // The post-rewrite display lists, keyed by entry/record id: the
+  // { id, method, target } of every surviving branch (in table order, capped
+  // at 8 like the in-game display). `target` (the species value) is kept for
+  // the prev computation; it is dropped from the emitted shape.
+  const exEvoPost = (() => {
+    const out = new Map();
+    for (const entry of allExEntries) {
+      const raw = entry.id === 'meltan' ? meltanEvoRaw : (exEvoRaw.get(entry.id) ?? []);
+      const list = [];
+      for (const evo of buildEvoDisplayList('ex', exEvoCtx, entry.value, raw)) {
+        const h = humanizeEvolution(evo.method, evo.param, evo.target, exEvoMethods, `EX evolution for ${entry.id}`, exCtx);
+        if (!exEntries.has(h.target)) fail(`EX evolution for ${entry.id}: target ${h.target} is not a record`);
+        list.push({ id: h.target, method: h.method, target: evo.target });
+      }
+      out.set(entry.id, list);
     }
-    return next || prev ? { ...(next ? { next } : {}), ...(prev ? { prev } : {}) } : null;
+    return out;
+  })();
+  const vanEvoPost = (() => {
+    const out = new Map();
+    for (const [vanId, raw] of vanEvoRaw) {
+      const list = [];
+      for (const evo of buildEvoDisplayList('vanilla', vanEvoCtx, vanSpecies.idByValue.get(vanId), raw)) {
+        const h = humanizeEvolution(evo.method, evo.param, evo.target, vanEvoMethods, `vanilla evolution for ${vanId}`, vanEvoHumanizeCtx);
+        if (!vanBaseStats.has(h.target)) fail(`vanilla evolution for ${vanId}: target ${h.target} has no base stats`);
+        list.push({ id: h.target, method: h.method, target: evo.target });
+      }
+      out.set(vanId, list);
+    }
+    return out;
+  })();
+
+  // { prev?, evos? } for a record or form (issue #97 shape): evos = the
+  // post-rewrite branches, prev = the SMALLEST-dex-number record whose own
+  // post-rewrite list targets this species. Forms are matched by their own
+  // species value; records by id (a record's own value group includes its
+  // forms, so matching a record by value would false-positive on form
+  // tables).
+  const exEvoPair = (selfId, selfValue, selfIsForm) => {
+    const evos = exEvoPost.get(selfId) ?? [];
+    let prev;
+    let best = Infinity;
+    for (const [sid, list] of exEvoPost) {
+      if (sid === selfId || !exEntries.has(sid)) continue; // only records can be a prev
+      const hit = list.find((e) => (selfIsForm ? e.target === selfValue : e.id === selfId));
+      if (!hit) continue;
+      const dn = exEntries.get(sid).dexNum;
+      if (dn < best) { best = dn; prev = { id: sid, method: hit.method }; }
+    }
+    if (!prev && evos.length === 0) return null;
+    return {
+      ...(prev ? { prev } : {}),
+      ...(evos.length > 0 ? { evos: evos.map(({ id, method }) => ({ id, method })) } : {}),
+    };
+  };
+  const vanEvoPair = (vanId) => {
+    const evos = vanEvoPost.get(vanId) ?? [];
+    let prev;
+    let best = Infinity;
+    for (const [sid, list] of vanEvoPost) {
+      if (sid === vanId) continue;
+      const hit = list.find((e) => e.id === vanId);
+      if (!hit) continue;
+      const dn = vanDexNum.get(sid) ?? 0;
+      if (dn < best) { best = dn; prev = { id: sid, method: hit.method }; }
+    }
+    if (!prev && evos.length === 0) return null;
+    return {
+      ...(prev ? { prev } : {}),
+      ...(evos.length > 0 ? { evos: evos.map(({ id, method }) => ({ id, method })) } : {}),
+    };
   };
 
   const buildMoves = (profileSpeciesId, branch) => {
@@ -2095,6 +2596,10 @@ function extract(repo) {
     // sprite-forms rule; base-identical / ternary / no-entry forms fall
     // back to the base sprite and stay name-only)
     if (formManifest.classify(f).own) form.sprite = f;
+    // the form's own evolution branches — the runtime rewrite is keyed by
+    // the species value held, so a form runs through it with its own value
+    const fevo = exEvoPair(f, entry.value, true);
+    if (fevo) form.evo = fevo;
     return form;
   };
 
@@ -2147,7 +2652,7 @@ function extract(repo) {
     rec.baseExp = ex.baseExp;
     rec.description = ex.description;
 
-    const evo = exEvoPair(exId);
+    const evo = exEvoPair(exId, ex.value, false);
     if (evo) rec.evo = evo;
 
     const movesProfileId = profile('ex', exId) ? exId : exBaseId;
@@ -2216,7 +2721,10 @@ function extract(repo) {
       push('src/data/pokemon/base_stats.h @vanilla');
       push('src/data/pokemon/pokedex_entries.h @vanilla');
       push('src/data/pokemon/pokedex_text.h @vanilla');
-      if (rec.vanilla?.evo !== undefined) push('src/data/pokemon/evolution.h @vanilla');
+      if (rec.vanilla?.evo !== undefined) {
+        push('src/data/pokemon/evolution.h @vanilla');
+        push('src/rogue_baked.c @vanilla'); // the runtime rewrite the display shows
+      }
       if (rec.vanilla?.name !== undefined) push('src/data/text/species_names.h @vanilla');
       if (rec.vanilla?.moves !== undefined) push(`src/data/rogue/pokemon/vanilla/${vanId}/vanilla_profile.json @vanilla`);
       if (rec.vanilla?.dexVariants !== undefined) push('src/data/rogue_pokedex.h @vanilla');
@@ -2224,6 +2732,7 @@ function extract(repo) {
       if (rec.vanilla?.notes !== undefined) push('src/data/rogue_routes.h @vanilla');
     }
     push(`${ex.file} @origin/expansion`);
+    if (rec.evo) push('src/rogue_baked.c @origin/expansion'); // the runtime rewrite the display shows
     if (ex.namedTextFields.length > 0) push('src/data/pokemon/species_info.h @origin/expansion');
     if (rec.forms) {
       push('src/data/pokemon/form_species_tables.h @origin/expansion');
@@ -2233,6 +2742,7 @@ function extract(repo) {
       for (const f of formRosterOf(exId, movesProfileId)) {
         const fe = exEntries.get(f) ?? exNoDexMap.get(f);
         if (fe) push(`${fe.file} @origin/expansion`);
+        if (fe && exEvoPair(f, fe.value, true)) push('src/rogue_baked.c @origin/expansion');
         const art = formManifest.classify(f);
         if (art.own) {
           push(`${art.frontPath} @origin/expansion`);
@@ -2352,10 +2862,10 @@ function buildDoc({ records, counts }) {
           'forms are EX-only — the Vanilla overlay mirrors them as an empty list',
           'height/weight pre-formatted for display (dm/hg ÷ 10)',
           'description is null when a build has no Pokédex text (one case: Minior)',
-          'evo.next = first evolution, evo.prev = lowest-dex-number source',
+          'evo.evos = the branches the in-game Pokédex shows (the raw table rewritten by Rogue_ModifyEvolution — friendship evos become level 30, trades become Link Cable items, and per-species overrides rewrite the rest); evo.prev = the lowest-dex-number record whose evo.evos target this species',
           'X_MISC_INFO family stat blocks are expanded — values shown are final',
         ],
-        source: 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla',
+        source: 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/rogue_baked.c @vanilla; src/rogue_baked.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla',
       },
       {
         id: 'moves',

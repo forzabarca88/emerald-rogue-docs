@@ -546,41 +546,68 @@
     /**
      * The evolution line — prev / current / next. Each neighbor is a
      * hash link to its own detail (#rec-pokedex-<id>) with the mono
-     * method caption between it and the current species; a neighbor
-     * that does not exist in the active build (e.g. a Gen 4 pre-ev of
-     * a Vanilla species) renders as a plain, non-link cell instead of
-     * a dead link.
+     * method caption; a neighbor that does not exist in the active
+     * build (e.g. a Gen 4 pre-ev of a Vanilla species) renders as a
+     * plain, non-link cell instead of a dead link. The data shape
+     * (issue #97): { prev?: {id, method}, evos?: [{id, method}] } —
+     * the record's own cell renders once, then one .dex-evo__branch
+     * row per evo (method caption + target link), then the prev row
+     * when present (the pre-evo link + the method that leads to this
+     * species). evos are the branches the in-game Pokédex shows after
+     * the game's own rewrite pass, so a species can carry several
+     * (Eevee's eight) — and the same method can appear twice with
+     * different targets (Kubfu's two stones).
      */
+    function evoCellHtml(id) {
+      var rec = byId[id];
+      if (!rec) return '';
+      var name = ROGUE.esc(dexVariant(rec, 'name'));
+      var inBuild = rec.versions && rec.versions.indexOf(ROGUE.version) !== -1;
+      if (inBuild) {
+        return '<a class="dex-evo__cell dex-evo__link" href="#' + ROGUE.esc(ROGUE.recId('pokedex', id)) + '"><span class="dex-evo__name">' + name + '</span></a>';
+      }
+      return '<span class="dex-evo__cell dex-evo__cell--absent"><span class="dex-evo__name">' + name + '</span></span>';
+    }
+
+    /** One .dex-evo__branch row: the mono method caption and the target
+     *  cell (the evo direction puts the caption first; the prev row
+     *  puts the pre-evo cell first, the caption trailing it toward the
+     *  species the branch belongs to). */
+    function evoBranchHtml(evo, isPrev) {
+      var bits = [];
+      var caption = '';
+      if (evo && typeof evo.method === 'string') caption = '<span class="dex-evo__method">' + (isPrev ? ROGUE.esc(evo.method) + ' \u2192' : '\u2192 ' + ROGUE.esc(evo.method)) + '</span>';
+      var cell = evoCellHtml(evo.id);
+      if (isPrev) {
+        if (cell) bits.push(cell);
+        if (caption) bits.push(caption);
+      } else {
+        if (caption) bits.push(caption);
+        if (cell) bits.push(cell);
+      }
+      return '<div class="dex-evo__branch">' + bits.join('') + '</div>';
+    }
+
+    /** The branch rows for an evo value (used by the detail's
+     *  Evolutions field and the per-form evo lines). */
+    function evoRowsHtml(evo) {
+      var rows = [];
+      if (evo && Array.isArray(evo.evos)) {
+        evo.evos.forEach(function (e) {
+          if (e && e.id) rows.push(evoBranchHtml(e, false));
+        });
+      }
+      if (evo && evo.prev && evo.prev.id) rows.push(evoBranchHtml(evo.prev, true));
+      return rows.join('');
+    }
+
     function evoHtml(record) {
       var evo = dexVariant(record, 'evo');
       if (!evo || typeof evo !== 'object') return '';
-      var inBuild = function (id) {
-        var rec = byId[id];
-        return rec && rec.versions && rec.versions.indexOf(ROGUE.version) !== -1;
-      };
-      var cell = function (id) {
-        var rec = byId[id];
-        if (!rec) return '';
-        var name = ROGUE.esc(dexVariant(rec, 'name'));
-        if (inBuild(id)) {
-          return '<a class="dex-evo__cell dex-evo__link" href="#' + ROGUE.esc(ROGUE.recId('pokedex', id)) + '"><span class="dex-evo__name">' + name + '</span></a>';
-        }
-        return '<span class="dex-evo__cell dex-evo__cell--absent"><span class="dex-evo__name">' + name + '</span></span>';
-      };
-      var method = function (text) {
-        return '<span class="dex-evo__method">\u2192 ' + ROGUE.esc(text) + '</span>';
-      };
-      var parts = [];
-      if (evo.prev && evo.prev.id) {
-        parts.push(cell(evo.prev.id));
-        if (evo.prev.method) parts.push(method(evo.prev.method));
-      }
-      parts.push('<span class="dex-evo__cell dex-evo__cell--current"><span class="dex-evo__name">' + ROGUE.esc(dexVariant(record, 'name')) + '</span></span>');
-      if (evo.next && evo.next.id) {
-        if (evo.next.method) parts.push(method(evo.next.method));
-        parts.push(cell(evo.next.id));
-      }
-      return '<div class="dex-species__field"><span class="field-label">Evolutions</span><div class="dex-evo">' + parts.join('') + '</div></div>';
+      var rows = evoRowsHtml(evo);
+      if (!rows) return '';
+      var current = '<span class="dex-evo__cell dex-evo__cell--current"><span class="dex-evo__name">' + ROGUE.esc(dexVariant(record, 'name')) + '</span></span>';
+      return '<div class="dex-species__field"><span class="field-label">Evolutions</span><div class="dex-evo">' + current + rows + '</div></div>';
     }
 
     function movesHtml(moves) {
@@ -681,6 +708,13 @@
           '</div>';
       }
       if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
+      /* the form's own evolution branches (issue #97) — the runtime
+       * rewrite is keyed by the species value held, so a form like
+       * Basculin (White Striped) or Galarian Yamask carries branches
+       * of its own; the block's name is the implicit center, so only
+       * the branch rows render (no current cell) */
+      var formEvoRows = f && f.evo && typeof f.evo === 'object' ? evoRowsHtml(f.evo) : '';
+      if (formEvoRows) html += '<div class="dex-form__evo"><span class="field-label">Evolutions</span><div class="dex-evo">' + formEvoRows + '</div></div>';
       html += '</div>';
       return html;
     }
