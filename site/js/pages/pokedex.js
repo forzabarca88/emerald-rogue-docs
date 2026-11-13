@@ -984,8 +984,11 @@
     /**
      * The sticky browse bar's measurements (issue #86 — the JS wiring;
      * the pages.css rules read both variables): the #site-header's
-     * rendered height (one row ≥820px, two rows below), set on <main>
-     * as --dex-browse-top (the bar's sticky top offset), plus
+     * rendered height (the header is two rows at EVERY width — issue
+     * #90 — and its height is width-dependent only at ≤560px, the
+     * compact search-trigger/toggle set, which is why the bar
+     * re-measures on resize), set on <main> as --dex-browse-top (the
+     * bar's sticky top offset), plus
      * --dex-scroll-clear = header + the bar's rendered offsetHeight +
      * 16px — the scroll-margin-top the overview's sections (the
      * #dex-browse section + the four prose blocks) use so
@@ -1030,11 +1033,11 @@
       render();
     });
 
-    /* The header is two rows at every width (issue #90), but its
-     * rendered height still changes at the 820px breakpoint (the
-     * brand font-size) and so does the bar's own wrapping —
-     * re-measure (the search.js resize-listener pattern for
-     * --palette-top). */
+    /* The header is two rows at every width (issue #90) — its
+     * rendered height is width-dependent only at ≤560px (the compact
+     * search-trigger/toggle set) — and so is the bar's own wrapping
+     * (its toolbar wraps at narrow widths): re-measure both (the
+     * search.js resize-listener pattern for --palette-top). */
     window.addEventListener('resize', function () {
       setBrowseTop();
     });

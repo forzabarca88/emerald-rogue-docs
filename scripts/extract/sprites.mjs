@@ -18,6 +18,8 @@
  *       front.png + normal.pal                          (253 species)
  *       anim_front.png (first 64×64 frame) + normal.pal (773 species)
  *
+ *   The canonical candidate list is `BASE_CANDIDATES` in `./sprite-forms.mjs` (the single source both extractors use) — this prose is a summary, not the truth.
+ *
  * FORM SPRITES (purely additive — the base-species loop above is untouched):
  * for every Expansion species-table entry that is NOT a base species (its id
  * does not name a top-level `graphics/pokemon/` directory), the shared
@@ -82,7 +84,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
-import { formRosterDomain, formSpriteFile, formSpriteManifest } from './sprite-forms.mjs';
+import { BASE_CANDIDATES, NON_SPECIES_DIRS, formRosterDomain, formSpriteFile, formSpriteManifest } from './sprite-forms.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -421,22 +423,17 @@ function encodeRgbaPng(w, h, rgba, label) {
 // Per-branch source resolution
 // ---------------------------------------------------------------------------
 
-// First match wins; the fallbacks are the vanilla-only layouts (castform's
-// form-suffixed stills, unown's letter subdirectories).
-const CANDIDATES = [
-  { png: 'front.png', pal: 'normal.pal', name: 'front.png' },
-  { png: 'anim_front.png', pal: 'normal.pal', name: 'anim_front.png (frame 0)' },
-  { png: 'front_normal_form.png', pal: 'normal_normal_form.pal', name: 'front_normal_form.png (castform)' },
-  { png: 'a/front.png', pal: 'normal.pal', name: 'a/front.png (unown)' },
-];
-
-// Directories under graphics/pokemon/ that are not species records.
-const NON_SPECIES_DIRS = new Set(['icon_palettes', 'question_mark']);
+// The per-directory candidate order (first match wins; the fallbacks are
+// the vanilla-only layouts — castform's form-suffixed stills, unown's
+// letter subdirectories) and the non-species dir set both come from
+// ./sprite-forms.mjs (BASE_CANDIDATES / NON_SPECIES_DIRS) — the shared
+// form-sprite manifest resolves the base directories through the SAME
+// list, so the base pipeline below and the form pass can never drift.
 
 function resolveVanilla(id) {
   const base = path.join(repoPath, 'graphics', 'pokemon', id);
   if (!existsSync(base) || !statSync(base).isDirectory()) return null;
-  for (const c of CANDIDATES) {
+  for (const c of BASE_CANDIDATES) {
     const p = path.join(base, c.png);
     const l = path.join(base, c.pal);
     if (existsSync(p) && existsSync(l)) {
@@ -504,7 +501,7 @@ function loadExpansion({ filesBySpecies, treeFiles }, extraWanted) {
   }
   const resolve = (id) => {
     const files = filesBySpecies.get(id) ?? new Set();
-    for (const c of CANDIDATES) {
+    for (const c of BASE_CANDIDATES) {
       if (c.png.includes('/')) continue; // no subdirectory layouts exist on expansion
       if (!files.has(c.png) || !files.has(c.pal)) continue;
       const png = bySha.get(shaByPath.get(`graphics/pokemon/${id}/${c.png}`));
@@ -575,7 +572,12 @@ const formManifest = formSpriteManifest({
     ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
     git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
   ],
-  baseDirs: new Set([...vanillaDirs, ...expTree.ids].map((d) => d.toLowerCase())),
+  // only species art directories — the manifest's baseDirs contract
+  // (the icon-palette / placeholder dirs are not base directories; the
+  // union loop below skips them from per-species processing too)
+  baseDirs: new Set(
+    [...vanillaDirs, ...expTree.ids].map((d) => d.toLowerCase()).filter((d) => !NON_SPECIES_DIRS.has(d)),
+  ),
   exTreeFiles: expTree.treeFiles,
   label: 'sprites',
 });
@@ -617,7 +619,7 @@ for (const id of union) {
   }
   const v = resolveVanilla(id);
   const e = exp.ids.has(id) ? exp.resolve(id) : null;
-  if (!v && !e) fail(`no front art for species '${id}' (tried ${CANDIDATES.map((c) => c.png).join(', ')} on both branches) — new layout? update the extractor`);
+  if (!v && !e) fail(`no front art for species '${id}' (tried ${BASE_CANDIDATES.map((c) => c.png).join(', ')} on both branches) — new layout? update the extractor`);
 
   if (v) {
     const r = composite(v.png, v.pal, `vanilla/${id} (${v.candidate})`);

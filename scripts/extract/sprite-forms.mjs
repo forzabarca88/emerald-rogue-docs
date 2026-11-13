@@ -6,7 +6,10 @@
  *
  *   - scripts/extract/sprites.mjs  — composites + writes the own-art files
  *     through the exact same 64×64 / frame-0 / JASC 8→5→8 pipeline as the
- *     base species;
+ *     base species; it ALSO resolves every branch's base species
+ *     directory through this module's BASE_CANDIDATES (the single source
+ *     of the candidate order — it keeps no local mirror) and excludes
+ *     NON_SPECIES_DIRS from the manifest's baseDirs;
  *   - scripts/extract/pokedex.mjs  — sets `form.sprite = <formEntryId>` on
  *     every structured form that owns its art (a bare string — the file
  *     name without `.png`) and cites the form's resolved EX source files.
@@ -34,8 +37,9 @@
  *   3. An entry whose id names a top-level species art directory is a BASE
  *      entry. Every other entry is a FORM: its resolved (front, palette)
  *      pair is compared against its base directory's resolved pair (the
- *      base candidate order — front.png/normal.pal, then anim_front.png/
- *      normal.pal, then the vanilla-only castform/unown layouts). Equal →
+ *      shared BASE_CANDIDATES order — front.png/normal.pal first, then
+ *      anim_front.png/normal.pal, then the vanilla-only castform/unown
+ *      layouts). Equal →
  *      `base-identical` (no dedicated file: the base sprite already looks
  *      right); different → `own` (a dedicated `<formEntryId>.png`: the
  *      form's own front file — often the base bitmap with a form-specific
@@ -83,15 +87,27 @@ export const TERNARY_MACRO_FORMS = new Set(['silvally_fairy']);
 // entry-set consistency gate subtracts the same set.
 export const NON_SPECIES_ENTRIES = new Set(['none', 'egg']);
 
-// The base-directory candidate order — mirrors the extractor's CANDIDATES
-// (front.png first, then anim_front.png frame 0, then the vanilla-only
-// castform/unown layouts). First candidate present in BOTH the base dir and
-// the EX tree wins.
-const BASE_CANDIDATES = [
-  ['front.png', 'normal.pal'],
-  ['anim_front.png', 'normal.pal'],
-  ['front_normal_form.png', 'normal_normal_form.pal'],
-  ['a/front.png', 'normal.pal'],
+// Top-level graphics/pokemon/ directories that are NOT species art
+// directories (the shared icon palettes + the "???" placeholder art).
+// The manifest's baseDirs contract is "top-level SPECIES art
+// directories", so both extractors exclude these when they build it
+// (see the call sites); sprites.mjs additionally skips them in its
+// per-species union loop.
+export const NON_SPECIES_DIRS = new Set(['icon_palettes', 'question_mark']);
+
+// The base-candidate order — the single source of truth for "which
+// (front, palette) layout a species art directory uses": first candidate
+// present in BOTH the base dir and the EX tree wins. OWNED here and
+// consumed by both extractors — scripts/extract/sprites.mjs resolves
+// every branch's species directory through this SAME list (imported, no
+// local mirror), so the base pipeline and the form pass below can never
+// resolve a directory differently. `name` is sprites.mjs's per-candidate
+// report label (this module ignores it).
+export const BASE_CANDIDATES = [
+  { png: 'front.png', pal: 'normal.pal', name: 'front.png' },
+  { png: 'anim_front.png', pal: 'normal.pal', name: 'anim_front.png (frame 0)' },
+  { png: 'front_normal_form.png', pal: 'normal_normal_form.pal', name: 'front_normal_form.png (castform)' },
+  { png: 'a/front.png', pal: 'normal.pal', name: 'a/front.png (unown)' },
 ];
 
 // Flat output file name for a form entry that owns its art.
@@ -388,8 +404,9 @@ export function sliceEntries(text) {
  * @param {string} opts.pokemonH            RAW text of origin/expansion:src/data/graphics/pokemon.h
  * @param {string[]} opts.speciesTableTexts RAW text of the EX species-table headers
  *                                          (species_info/gen_1..9.h + species_info.h, in that order)
- * @param {Set<string>} opts.baseDirs       top-level species art directories (lowercase id) —
- *                                          the union of the vanilla working tree and the EX tree
+ * @param {Set<string>} opts.baseDirs       top-level SPECIES art directories (lowercase id) —
+ *                                          the union of the vanilla working tree and the EX
+ *                                          tree, with the shared NON_SPECIES_DIRS excluded
  * @param {Set<string>} opts.exTreeFiles    every file under origin/expansion graphics/pokemon/
  *                                          (paths relative to graphics/pokemon/)
  * @param {string} [opts.label]             prefix for error messages
@@ -440,9 +457,10 @@ export function formSpriteManifest({ pokemonH, speciesTableTexts, baseDirs, exTr
   }
   if (entries.size < 1500) die(`only ${entries.size} species entries parsed (expected ~1503) — species-table shape changed?`);
 
-  // base-directory candidate resolution (the extractor's CANDIDATES order)
+  // base-directory candidate resolution (the shared BASE_CANDIDATES order —
+  // the same list sprites.mjs resolves every branch's species dir through)
   const basePair = (dir) => {
-    for (const [png, pal] of BASE_CANDIDATES) {
+    for (const { png, pal } of BASE_CANDIDATES) {
       if (exTreeFiles.has(`${dir}/${png}`) && exTreeFiles.has(`${dir}/${pal}`)) return [`${dir}/${png}`, `${dir}/${pal}`];
     }
     return null;

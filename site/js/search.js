@@ -319,7 +319,7 @@
 
     /* ---- open / close ------------------------------------------------------- */
 
-    /** Park the panel just below the sticky header (one row at ≥820px, two rows below). */
+    /** Park the panel just below the sticky header (two rows at every width — issue #90; its rendered height is width-dependent only at ≤560px, the compact search-trigger/toggle set, so it is measured live via `header.offsetHeight` rather than hardcoded). */
     function setPaletteTop() {
       var header = document.getElementById('site-header');
       var top = (header ? header.offsetHeight : 60) + HEADER_GAP_PX;
