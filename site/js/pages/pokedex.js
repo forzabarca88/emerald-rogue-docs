@@ -54,12 +54,16 @@
  *      plain non-link cell), the three move groups (Level Up as
  *      "Name (Lv n)" chips — level 0 renders "(Evo)" per the moves
  *      prose — / TM & TR / Tutor), the structured forms section
- *      (issue #85 — one .dex-form block per form: the display-face
- *      name, the form’s type chips, its stat rows (the shared
- *      statRowsHtml in a .dex-stats box, BST row last), its
- *      abilities, its height/weight in the base meta’s mono
- *      treatment, its Pokédex text; a rogue-only custom mega with no
- *      species entry is a plain name row), the “Included in”
+ *      (issue #85 — one .dex-form block per form: the form’s sprite
+ *      (a .dex-form__sprite img — the form’s own <formEntryId>.png
+ *      via its `sprite` field, the base record’s sprite as the
+ *      fallback for the no-art forms, a bound onerror handler hides
+ *      it if it is ever missing), the display-face name, the form’s
+ *      type chips, its stat rows (the shared statRowsHtml in a
+ *      .dex-stats box, BST row last), its abilities, its
+ *      height/weight in the base meta’s mono treatment, its Pokédex
+ *      text; a name-only custom form with no species entry is a
+ *      plain sprite+name row), the “Included in”
  *      dex-variant chips (a single "All N variants" chip for the
  *      dexVariants: "all" shorthand, N from the settings.json
  *      range-pokedex-variant record's optionsByVersion length), the
@@ -194,6 +198,22 @@
     function spriteSrc(record) {
       var file = record.id + (ROGUE.version === 'ex' && record.spriteEx ? '-ex' : '') + '.png';
       return './assets/pokemon/' + file;
+    }
+
+    /**
+     * A structured form's sprite (issue #85): the form's own
+     * <formEntryId>.png when the data carries `form.sprite` (the
+     * extractor ships a dedicated file for every form that owns its
+     * art — the bare field is the file name without .png, mirroring
+     * how rec.sprite stores an id), else the BASE record's sprite:
+     * the no-art forms (the base-identical palette-swap forms and the
+     * rogue-only custom forms) fall back to it by design (the
+     * sprites-provenance prose block documents the convention).
+     */
+    function formSpriteSrc(form, record) {
+      return form && typeof form.sprite === 'string'
+        ? './assets/pokemon/' + form.sprite + '.png'
+        : spriteSrc(record);
     }
 
     /** Unique non-empty region values, in data order (routes.js pattern). */
@@ -534,18 +554,24 @@
     }
 
     /**
-     * One .dex-form block (issue #85): the display-face form name, the
-     * form's type chips (deduped the same way as the base types), its
-     * stat rows — the shared statRowsHtml() in the same .dex-stats box
-     * the base stats use, so the BST row is last — its abilities
-     * (the in-game triple repeat kept, like the base abilities), its
+     * One .dex-form block (issue #85): the form's sprite — a
+     * .dex-form__sprite img whose src is formSpriteSrc(form, record)
+     * (the form's own <formEntryId>.png, else the base record's
+     * sprite) — then the display-face form name, the form's type
+     * chips (deduped the same way as the base types), its stat rows —
+     * the shared statRowsHtml() in the same .dex-stats box the base
+     * stats use, so the BST row is last — its abilities (the in-game
+     * triple repeat kept, like the base abilities), its
      * height/weight in the base meta's mono treatment, and its
-     * Pokédex text. A rogue-only custom mega (a name with no species
-     * entry) renders as a plain name row — no empty stat block or
-     * chip rows.
+     * Pokédex text. A name-only form (a rogue-only custom form with
+     * no species entry and no per-form data) renders as a plain
+     * sprite+name row — the sprite is the base record's there — no
+     * empty stat block or chip rows. alt="" on the sprite: it is
+     * decorative, the form name is the adjacent text.
      */
-    function formHtml(f) {
+    function formHtml(f, record) {
       var name = f && typeof f.name === 'string' ? f.name : '';
+      var sprite = ROGUE.esc(formSpriteSrc(f, record));
       var types = [];
       (Array.isArray(f && f.types) ? f.types : []).forEach(function (t) {
         if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
@@ -556,12 +582,26 @@
       var weight = f && typeof f.weight === 'string' ? f.weight : '';
       var description = f && typeof f.description === 'string' ? f.description : '';
 
-      /* name-only form (no per-form data) — a plain name row */
+      /* name-only form (no per-form data) — a plain sprite+name row
+       * (the form has no art of its own, so the sprite is the base
+       * record's) */
       if (!types.length && !stats && !abilities.length && !height && !weight && !description) {
-        return '<div class="dex-form dex-form--plain"><h3 class="dex-form__name">' + ROGUE.esc(name) + '</h3></div>';
+        return (
+          '<div class="dex-form dex-form--plain">' +
+          '<img class="dex-form__sprite" src="' + sprite + '" width="128" height="128" alt="">' +
+          '<h3 class="dex-form__name">' +
+          ROGUE.esc(name) +
+          '</h3>' +
+          '</div>'
+        );
       }
 
-      var html = '<div class="dex-form"><h3 class="dex-form__name">' + ROGUE.esc(name) + '</h3>';
+      var html =
+        '<div class="dex-form">' +
+        '<img class="dex-form__sprite" src="' + sprite + '" width="128" height="128" alt="">' +
+        '<h3 class="dex-form__name">' +
+        ROGUE.esc(name) +
+        '</h3>';
       if (types.length) html += '<div class="chip-row">' + types.map(ROGUE.chip).join('') + '</div>';
       if (stats) html += '<div class="dex-stats">' + statRowsHtml(stats) + '</div>';
       if (abilities.length) html += '<div class="chip-row">' + abilities.map(ROGUE.chip).join('') + '</div>';
@@ -586,8 +626,16 @@
     }
 
     /** The Forms field: one .dex-form block per structured form (issue #85). */
-    function formsHtml(forms) {
-      return '<div class="dex-forms">' + forms.map(formHtml).join('') + '</div>';
+    function formsHtml(forms, record) {
+      return (
+        '<div class="dex-forms">' +
+        forms
+          .map(function (f) {
+            return formHtml(f, record);
+          })
+          .join('') +
+        '</div>'
+      );
     }
 
     /**
@@ -696,7 +744,7 @@
       );
       html += evoHtml(record);
       html += movesHtml(moves);
-      if (forms.length) html += fieldBlock('Forms', formsHtml(forms));
+      if (forms.length) html += fieldBlock('Forms', formsHtml(forms, record));
       html += fieldBlock(
         'Included in',
         variants === 'all'
@@ -747,6 +795,22 @@
       updateBrowse();
       if (selected) {
         var panel = document.getElementById(ROGUE.recId('pokedex', selected.id));
+        if (panel) {
+          /* the form-sprite fallback (DESIGN.md §6): the extractor
+           * gates every form file's presence, but a sprite that is
+           * ever missing hides itself (img.hidden) instead of
+           * breaking its row — the error event does not bubble, so
+           * the one delegated listener sits on the panel in the
+           * capture phase (a fresh panel exists per render) */
+          panel.addEventListener(
+            'error',
+            function (e) {
+              var t = e.target;
+              if (t && t.classList && t.classList.contains('dex-form__sprite')) t.hidden = true;
+            },
+            true
+          );
+        }
         if (panel) panel.scrollIntoView();
         mountViewer(selected);
       } else {
