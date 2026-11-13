@@ -920,7 +920,11 @@ test('pokedex.html: Enter on a SAME-page entry scrolls to the CARD — or the ov
         const el = document.getElementById('dex-overview');
         if (!el) return false;
         const r = el.getBoundingClientRect();
-        return r.top >= -1 && r.top <= window.innerHeight && window.scrollY < 200;
+        // the scroll must land AT the overview's top (scrollIntoView; the
+        // element carries no scroll-margin) — measured, not a hardcoded
+        // scrollY bound (issue #90 made the header two rows at every
+        // width, moving the overview's document position)
+        return r.top >= -1 && r.top <= 1;
       },
       null,
       { timeout: SETTLE_TIMEOUT_MS }

@@ -173,13 +173,17 @@ img {
   border-bottom: 2px solid var(--color-line);
 }
 
-/* One row above the 820px breakpoint: brand | scrollable nav | toggle.
-   The nav shrinks (and scrolls internally) instead of letting the toggle
-   wrap to a second line; wrapping only happens ≤820px (see below). */
+/* Two rows at EVERY width (issue #90 — the ten nav links must never sit
+   in an invisible horizontal scroll region): row 1 = brand + (JS-only)
+   search trigger + version toggle (the toggle's margin-left: auto
+   right-aligns it), row 2 = the full nav at full content width.
+   .site-nav's flex order + 100% basis puts it on row 2 even though it
+   precedes the search trigger/toggle in the js/nav.js DOM (and follows
+   the brand in the static no-JS shells, where row 1 is just the brand). */
 .site-header__inner {
   display: flex;
   align-items: center;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   gap: var(--space-2) var(--space-4);
   padding-block: 10px;
 }
@@ -216,11 +220,15 @@ img {
 .site-nav {
   display: flex;
   align-items: center;
-  flex: 1 1 auto; /* take the middle; shrink + scroll instead of wrapping */
+  flex: 1 1 100%; /* full content width on its own row (row 2) */
+  order: 3; /* after brand + search trigger + toggle even though it
+               precedes them in the DOM (js/nav.js) */
   gap: 2px;
   min-width: 0; /* allow the row to scroll instead of breaking the header */
-  overflow-x: auto;
+  overflow-x: auto; /* the ≤820px (360px) safety net — the ten links must
+                       fit without scrolling at content widths ≥821px */
   scrollbar-width: none;
+  padding-block: 2px;
 }
 
 .site-nav::-webkit-scrollbar {
@@ -414,20 +422,24 @@ img {
 /* --- Responsive ------------------------------------------------------------
    1024px (lg) · 820px (md) · 560px (sm) — see tokens.css + DESIGN.md §9. */
 
-@media (max-width: 820px) {
-  /* row 1: brand + toggle · row 2: scrollable nav */
-  .site-header__inner {
-    flex-wrap: wrap;
+/* 821–839px: the ten-link nav row's natural width (worst case 792px
+   with the "Configuration" active link, measured) is still a few px
+   wider than the full content width here (viewport − 2×gutter, 773–791px)
+   — tighten the links' horizontal padding 10px → 8px (40px total) so
+   the row fits without any horizontal scroll (issue #90). From 840px
+   up (content ≥ 792px) the full 10px padding holds. */
+@media (min-width: 821px) and (max-width: 839px) {
+  .site-nav__link {
+    padding-left: 8px;
+    padding-right: 8px;
   }
+}
 
+@media (max-width: 820px) {
+  /* the header already wraps at every width (see .site-header__inner /
+     .site-nav above, issue #90) — only the brand size is ≤820-specific */
   .site-brand {
     font-size: var(--text-base);
-  }
-
-  .site-nav {
-    order: 3;
-    flex: 1 1 100%;
-    padding-block: 2px;
   }
 }
 

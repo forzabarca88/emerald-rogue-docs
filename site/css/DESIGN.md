@@ -73,18 +73,27 @@ offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
 - `.container` / `.page` cap content at `--container` (1120px) with
   `--gutter` side padding (16px below 560px).
 - Header is **sticky**, 2px bottom border: brand (pixel face + 9px emerald
-  square) · `.site-nav` (scrollable row, active link = GBA menu-cursor `▶`
-  + emerald underline) · `.site-search-trigger` (icon-only search button,
-  opens the `.search-palette` overlay) · `.version-toggle` (right). The
-  static no-JS header baked into the shells carries only brand + nav (the
-  search trigger and version toggle are JS-only — omitted, never rendered
-  inert); `js/nav.js` replaces it wholesale when JS runs. Above 820px the
-  header is **always one row**: when brand + full nav + toggle don't fit,
-  the nav row shrinks and scrolls horizontally (scrollbar hidden) instead
-  of wrapping the toggle to a second row. Below 820px the nav wraps
-  to a full-width scrollable second row; brand + trigger + toggle stay on
-  row 1. This must never break at 360px — verify with a screenshot at that
-  width.
+  square) · `.site-nav` (active link = GBA menu-cursor `▶` + emerald
+  underline) · `.site-search-trigger` (icon-only search button, opens the
+  `.search-palette` overlay) · `.version-toggle` (right). The header is
+  **two rows at every width** (issue #90 — the ten nav links must never
+  sit in an invisible horizontal scroll region): row 1 = brand + (JS-only)
+  search trigger + version toggle (the toggle's `margin-left: auto`
+  right-aligns it); row 2 = the full ten-link nav at full content width
+  (`.site-nav` carries `order: 3; flex: 1 1 100%`, so it wraps to row 2
+  even though it precedes the trigger/toggle in the `js/nav.js` DOM). The
+  ten links must **not** horizontally scroll at any width ≥ 821px —
+  measured: the row's natural width is ≤ 792px ("Configuration" active),
+  which the full content width (viewport − 2×gutter) reaches from 840px
+  up, and the 821–839px band tightens the links' horizontal padding
+  10px → 8px to close the gap; below 820px row 2 keeps the
+  scrollable-nav allowance (`overflow-x: auto`, scrollbar hidden — the
+  360px safety net). The static no-JS header baked into the shells
+  carries only brand + nav (the search trigger and version toggle are
+  JS-only — omitted, never rendered inert) and lays out as brand row 1 +
+  nav row 2 under the same rules; `js/nav.js` replaces it wholesale when
+  JS runs. This must never break at 360px — verify with a screenshot at
+  that width.
 - Sections: `.section` owns vertical rhythm (`--space-6` padding-block);
   `.section__head > * + *` provides the 8px stack gap — **do not add your
   own margins between eyebrow/title/intro** (the `> *` margin reset is
@@ -219,7 +228,7 @@ Breakpoints (media queries can't read tokens — values live in
 | Width | Changes |
 | --- | --- |
 | ≤ 1024px | `.grid` naturally drops a column (auto-fill) |
-| ≤ 820px | header: brand + toggle on row 1, nav on full-width scrollable row 2; hero stats 2×2 |
+| ≤ 820px | hero stats 2×2 (the header is already two rows at every width — §4; only the brand font size drops to `--text-base` here) |
 | ≤ 560px | gutter 16px; brand 0.875rem (the 14px display-floor); compact header row (8px gaps, 28px search trigger, tighter toggle options) so brand + trigger + toggle fit one row at 360px; h1 2rem; grid 1 column |
 
 **Rule: the site must not break at 360px** (nav scrolls, tables scroll via
