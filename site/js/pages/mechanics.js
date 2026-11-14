@@ -300,23 +300,19 @@
 
       var html = '<h1>' + ROGUE.esc((pages.mechanics || {}).title || 'Mechanics') + '</h1>';
 
-      /* Anchor-chip nav across the six systems. */
-      var nav = [
-        { id: 'mech-charms', label: 'Charms & Curses' },
-        { id: 'mech-followmons', label: 'Followmons' },
-        { id: 'mech-gameshow', label: 'Game Show' },
-        { id: 'mech-timeofday', label: 'Time of Day' },
-        { id: 'mech-uniquemons', label: 'Unique mons' },
-        { id: 'mech-campaigns', label: 'Campaigns' }
-      ];
+      /* The section strip across the six systems (issue #98). */
       html +=
-        '<nav class="mech-chips" aria-label="Mechanic systems">' +
-        nav
-          .map(function (n) {
-            return '<a class="chip" href="#' + ROGUE.esc(n.id) + '">' + ROGUE.esc(n.label) + '</a>';
-          })
-          .join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          [
+            { id: 'mech-charms', label: 'Charms & Curses' },
+            { id: 'mech-followmons', label: 'Followmons' },
+            { id: 'mech-gameshow', label: 'Game Show' },
+            { id: 'mech-timeofday', label: 'Time of Day' },
+            { id: 'mech-uniquemons', label: 'Unique mons' },
+            { id: 'mech-campaigns', label: 'Campaigns' }
+          ],
+          'Mechanic systems'
+        );
 
       /* Charms & Curses: prose, then the two card columns. */
       var charms = files.charms;

@@ -328,20 +328,18 @@
         })
         .join('');
 
-      /* In-page section strip (anchor chips). */
-      var nav = [
-        { id: 'config-modes', label: 'Game modes' },
-        { id: 'config-difficulty', label: 'Difficulty' },
-        { id: 'config-toggles', label: 'Toggles' },
-        { id: 'config-ranges', label: 'Ranges' },
-        { id: 'config-campaigns', label: 'Easter eggs' }
-      ];
+      /* In-page section strip (issue #98). */
       html +=
-        '<nav class="config-chips" aria-label="Configuration sections">' +
-        nav.map(function (n) {
-          return '<a class="chip" href="#' + ROGUE.esc(n.id) + '">' + ROGUE.esc(n.label) + '</a>';
-        }).join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          [
+            { id: 'config-modes', label: 'Game modes' },
+            { id: 'config-difficulty', label: 'Difficulty' },
+            { id: 'config-toggles', label: 'Toggles' },
+            { id: 'config-ranges', label: 'Ranges' },
+            { id: 'config-campaigns', label: 'Easter eggs' }
+          ],
+          'Configuration sections'
+        );
 
       /* 1 — Game modes (data/game-modes.json). */
       var modeProse = (Array.isArray(modes.prose) ? modes.prose : []);

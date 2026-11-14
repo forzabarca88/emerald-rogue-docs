@@ -341,23 +341,19 @@
         })
       );
 
-      /* Anchor-chip nav across the page's sections. */
-      var nav = [
-        { id: 'hub-areas', label: 'Areas' },
-        { id: 'hub-upgrades', label: 'Upgrades' },
-        { id: 'hub-wander', label: 'Wander mons' },
-        { id: 'hub-time', label: 'Time & seasons' },
-        { id: 'hub-decor', label: 'Home decor' },
-        { id: 'hub-loop', label: 'In the loop' }
-      ];
+      /* The section strip across the page's sections (issue #98). */
       html +=
-        '<nav class="hub-chips" aria-label="Hub sections">' +
-        nav
-          .map(function (n) {
-            return '<a class="chip" href="#' + ROGUE.esc(n.id) + '">' + ROGUE.esc(n.label) + '</a>';
-          })
-          .join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          [
+            { id: 'hub-areas', label: 'Areas' },
+            { id: 'hub-upgrades', label: 'Upgrades' },
+            { id: 'hub-wander', label: 'Wander mons' },
+            { id: 'hub-time', label: 'Time & seasons' },
+            { id: 'hub-decor', label: 'Home decor' },
+            { id: 'hub-loop', label: 'In the loop' }
+          ],
+          'Hub sections'
+        );
 
       /* The 11 hub areas: the overview map above the cards. */
       var areas = ROGUE.filter(ROGUE.byCategory(records, 'hub-area'));

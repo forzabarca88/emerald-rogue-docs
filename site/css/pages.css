@@ -718,28 +718,6 @@
   display: none !important;
 }
 
-/* anchor-chip nav across the display groups (chip = anchor) */
-.page--quests .quest-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--quests .quest-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--quests .quest-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
-.page--quests .quest-chips__count {
-  color: var(--color-muted);
-}
-
 /* the search box is capped so it reads as a control, not a banner */
 .page--quests .quest-search {
   max-width: 440px;
@@ -822,24 +800,6 @@
    gap (issue #98) */
 .page--config .section[id] {
   scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
-}
-
-/* anchor-chip strip across the page's sections */
-.page--config .config-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--config .config-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--config .config-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* sub-headings inside a section (settings submenus, rule-assembly note) */
@@ -1148,24 +1108,6 @@
   display: none !important;
 }
 
-/* anchor-chip strip across the page's sections */
-.page--hub .hub-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--hub .hub-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--hub .hub-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
 /* area card meta — build-cost chip + the area code constant; long code
    constants are single unbroken tokens, so let them wrap and break
    anywhere instead of overflowing a 360px viewport */
@@ -1472,24 +1414,6 @@
   display: none !important;
 }
 
-/* anchor-chip strip across the page's sections */
-.page--safari .safari-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--safari .safari-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--safari .safari-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
 /* slot diagram — the 60-slot pool as two labelled blocks, one cell per
    slot (the counts are parsed from the data, so this is pure layout) */
 .page--safari .safari-slots {
@@ -1732,24 +1656,6 @@
 
 .page--routes [hidden] {
   display: none !important;
-}
-
-/* anchor-chip strip across the page's sections */
-.page--routes .routes-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--routes .routes-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--routes .routes-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* the chip row of terrains present in the table */
@@ -2852,24 +2758,6 @@
    gap (issue #98) */
 .page--mechanics .section[id] {
   scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
-}
-
-/* anchor-chip strip across the six systems */
-.page--mechanics .mech-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--mechanics .mech-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--mechanics .mech-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* prose subheadings inside a mechanic section */

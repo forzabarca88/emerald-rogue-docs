@@ -145,9 +145,9 @@ const PAGES = [
         why: `data/quests.json has 232 records and all 232 include version ${VERSION} (138 shared + 94 EX-only) → 232 cards (quests.js ROGUE.filter)`,
       },
       groupChips: {
-        sel: '.quest-chips a',
+        sel: '.section-nav a',
         expected: 9,
-        why: 'quests.js renders one anchor chip per display group (9 in data/quests.json)',
+        why: 'quests.js renders one anchor chip per display group (9 in data/quests.json) in the shared .section-nav strip (issue #98)',
       },
       emptyGroups: {
         sel: '.quest-group__empty',

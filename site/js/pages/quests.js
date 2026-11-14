@@ -199,18 +199,17 @@
         (groupsProse ? '<p>' + ROGUE.esc(groupsProse.text) + '</p>' : '') +
         '</div><div class="section__body quest-log">';
 
+      /* The section strip (issue #98): one chip per display group. The
+       * live counts key on the group id — the group headings' count
+       * spans carry the same [data-count] key, so bindSearch's one
+       * query updates both. */
       html +=
-        '<nav class="quest-chips" aria-label="Quest display groups">' +
-        groupedNow
-          .map(function (g) {
-            return (
-              '<a class="chip" href="#quest-' + ROGUE.esc(g.id) + '">' +
-              ROGUE.esc(g.title) +
-              ' <span class="quest-chips__count" data-count="' + ROGUE.esc(g.id) + '">' + g.items.length + '</span></a>'
-            );
-          })
-          .join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          groupedNow.map(function (g) {
+            return { id: g.id, anchor: 'quest-' + g.id, label: g.title, count: g.items.length };
+          }),
+          'Quest display groups'
+        );
 
       html +=
         '<div class="search quest-search"><input type="search" id="quest-search" placeholder="Search quests" aria-label="Search quests"></div>' +
@@ -281,8 +280,8 @@
           });
         });
 
-        /* keep the chip row in step with the groups */
-        document.querySelectorAll('.quest-chips a').forEach(function (a) {
+        /* keep the strip's chips in step with the groups */
+        document.querySelectorAll('.section-nav a').forEach(function (a) {
           var id = a.getAttribute('href').slice('#quest-'.length);
           var groupEl = document.querySelector('.quest-group[data-group="' + ROGUE.esc(id) + '"]');
           if (groupEl) a.hidden = groupEl.hidden;
