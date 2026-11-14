@@ -188,6 +188,45 @@
     return '<span class="chip">' + ROGUE.esc(text) + '</span>';
   };
 
+  /** The shared sticky in-page section strip (issue #98): one a.chip anchor
+   *  per item. `items` = [{id, label, count?, anchor?}] — each chip links to
+   *  `#<anchor>` (defaulting to `#<id>`), and a present `count` appends a mono
+   *  .section-nav__count span carrying data-count="<id>" (the quests page's
+   *  live count updates key on that attribute, which is why `id` is the
+   *  logical key while `anchor` may differ — the quest group divs are
+   *  id'd `quest-<group>`). `label` becomes the nav's aria-label. The
+   *  sticky/pinned styling is the contract .section-nav rule in
+   *  components.css — pages pass only their chips. */
+  ROGUE.sectionNav = function (items, label) {
+    if (!Array.isArray(items) || !items.length) return '';
+    return (
+      '<nav class="section-nav"' +
+      (label ? ' aria-label="' + ROGUE.esc(label) + '"' : '') +
+      '>' +
+      items
+        .map(function (item) {
+          var count =
+            item.count === undefined || item.count === null
+              ? ''
+              : ' <span class="section-nav__count" data-count="' +
+                ROGUE.esc(item.id) +
+                '">' +
+                ROGUE.esc(String(item.count)) +
+                '</span>';
+          return (
+            '<a class="chip" href="#' +
+            ROGUE.esc(item.anchor || item.id) +
+            '">' +
+            ROGUE.esc(item.label) +
+            count +
+            '</a>'
+          );
+        })
+        .join('') +
+      '</nav>'
+    );
+  };
+
   /** A short true sequence (3–5 steps) as a wrapping numbered step strip. */
   ROGUE.stepStrip = function (steps, label) {
     if (!Array.isArray(steps) || !steps.length) return '';

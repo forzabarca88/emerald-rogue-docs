@@ -238,9 +238,11 @@
   color: var(--color-muted);
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js — components.css .section-nav) + the pinned
+   .section-nav strip (49px) + a 16px gap (issue #98) */
 .page--gameplay .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* phase strip — in-page navigation through the loop */
@@ -541,9 +543,11 @@
   color: var(--color-muted);
 }
 
-/* anchor rows clear the sticky header (DESIGN.md §9) */
+/* anchor rows land BELOW the sticky header (the --site-header-h measured
+   by nav.js) + the pinned .section-nav strip (49px) + a 16px gap
+   (issue #98, DESIGN.md §9) */
 .page--versions .diff[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--versions .diffs {
@@ -697,14 +701,16 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header (114–118px tall; .quest-group
-   has no padding of its own, so it gets a little extra headroom) */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98); .quest-group has no padding of its own, so it gets
+   a little extra headroom */
 .page--quests .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--quests .quest-group {
-  scroll-margin-top: 128px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 81px);
 }
 
 /* explicit: hidden groups/cards drop out even with a display rule */
@@ -811,9 +817,11 @@
   color: var(--color-muted);
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--config .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* anchor-chip strip across the page's sections */
@@ -1129,9 +1137,11 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--hub .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--hub [hidden] {
@@ -1451,9 +1461,11 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--safari .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--safari [hidden] {
@@ -1711,9 +1723,11 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--routes .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--routes [hidden] {
@@ -2833,9 +2847,11 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--mechanics .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* anchor-chip strip across the six systems */
