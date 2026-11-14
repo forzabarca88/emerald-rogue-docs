@@ -64,6 +64,17 @@
  * diff-only `catalog.vanilla` overlay holds the entries that differ from the
  * Expansion values (the record-overlay convention; a vanilla rename is keyed
  * by the vanilla name so the vanilla learnsets still resolve).
+ *
+ * Top-level `typeChart` (issue #100): the per-build damage-multiplier table
+ * — the Expansion `sTypeEffectivenessTable[20][20]` (src/battle_util.c, a
+ * dense uq4_12 matrix whose one `#if B_STEEL_RESISTANCES >= GEN_6` guard
+ * resolves through the build config) and the Vanilla
+ * `gTypeEffectiveness[336]` (src/battle_main.c, a flat (attacker, defender,
+ * multiplier) triple list in which unlisted pairs default to neutral; the
+ * TYPE_FORESIGHT / TYPE_ENDTABLE rows are pseudo-type sentinels, not chart
+ * types). `types` runs in TYPE_* value order (the matrix axes); the
+ * diff-only `typeChart.vanilla` overlay ships only when the two tables
+ * genuinely differ on the shared axes (the record-overlay convention).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -798,6 +809,181 @@ function extract(repo) {
     vanTypeByValue.set(value, t);
   }
   if (!vanTypeByValue.has(vanPp.evalExpr('TYPE_DRAGON', 'vanilla TYPE_DRAGON'))) fail('vanilla TYPE_DRAGON missing');
+
+  // ----- Type effectiveness chart (issue #100) ----------------------------
+  // The per-build damage-multiplier tables the game uses to score attacks
+  // (the input of the dex's offensive-coverage / immunity metrics, see the
+  // "viability" prose block):
+  //   EX       src/battle_util.c's sTypeEffectivenessTable[20][20] — a dense
+  //            matrix of uq4_12; each cell is X(n.n) or ______ (the X(1.0)
+  //            shorthand). The one #if guard (B_STEEL_RESISTANCES >= GEN_6)
+  //            resolves through the build config (GEN_LATEST = GEN_9)
+  //            — in the shipped build Ghost and Dark do NOT resist Steel.
+  //   Vanilla  src/battle_main.c's gTypeEffectiveness[336] — a flat list of
+  //            (attacker, defender, multiplier) triples; UNLISTED pairs
+  //            default to neutral (x1). Multiplier codes: 20 = x2, 10 = x1,
+  //            5 = x0.5, 0 = x0. The TYPE_FORESIGHT / TYPE_ENDTABLE rows are
+  //            pseudo-type sentinels (0xFE / 0xFF), not chart types.
+
+  /**
+   * Resolve the #if/#else/#endif guards INSIDE a small source region with
+   * the branch preprocessor's constant resolution (the extractor slices
+   * table regions, not whole files, so the full-file #if walk is not
+   * needed).
+   */
+  function filterRegionGuards(region, pp, where) {
+    const out = [];
+    const stack = [];
+    for (const line of region.split('\n')) {
+      const t = line.trim();
+      let m = /^#\s*if\b\s*(.*)$/.exec(t);
+      if (m) {
+        const active = Boolean(pp.evalExpr(m[1], `${where} #if ${m[1]}`));
+        stack.push({ active, taken: active });
+        continue;
+      }
+      if ((m = /^#\s*else\b$/.exec(t))) {
+        const top = stack[stack.length - 1];
+        if (!top) fail(`${where}: #else without #if`);
+        if (top.elseSeen) fail(`${where}: duplicate #else`);
+        top.elseSeen = true;
+        top.active = !top.taken;
+        continue;
+      }
+      if ((m = /^#\s*endif\b$/.exec(t))) {
+        if (!stack.length) fail(`${where}: #endif without #if`);
+        stack.pop();
+        continue;
+      }
+      if (stack.every((f) => f.active)) out.push(line);
+    }
+    if (stack.length) fail(`${where}: unbalanced #if in the region`);
+    return out;
+  }
+
+  /** The source text from the line matching startRe through the table's `};` close. */
+  function sliceTableRegion(raw, startRe, where) {
+    const lines = raw.split('\n');
+    const start = lines.findIndex((l) => startRe.test(l));
+    if (start === -1) fail(`${where}: table not found`);
+    let end = -1;
+    for (let i = start; i < lines.length; i++) {
+      if (lines[i].trim() === '};') { end = i; break; }
+    }
+    if (end === -1) fail(`${where}: table closing brace not found`);
+    return lines.slice(start, end + 1).join('\n');
+  }
+
+  const CHART_VALUES = [0, 0.5, 1, 2]; // the game's multiplier set (both branches)
+
+  /** The branch's TYPE_* value order (0..n-1) as display names — the matrix axes. */
+  function typeAxisOrder(pp, byValue, where) {
+    const numTypes = resolveConst(pp, 'NUMBER_OF_MON_TYPES', where);
+    const types = [];
+    for (let i = 0; i < numTypes; i++) {
+      const t = byValue.get(i);
+      if (!t) fail(`${where}: no type name for value ${i}`);
+      types.push(t);
+    }
+    return types;
+  }
+
+  /** The EX dense 20x20 (uq4_12) table — one row per [TYPE_X] = { … }. */
+  function parseExTypeChart(pp, raw, where) {
+    const types = typeAxisOrder(pp, typeByValue, where);
+    const numTypes = types.length;
+    const region = sliceTableRegion(raw, /sTypeEffectivenessTable\[NUMBER_OF_MON_TYPES\]/, where);
+    const rows = new Map(); // TYPE_X const -> cell values
+    for (const line of filterRegionGuards(region, pp, where)) {
+      const t = line.trim();
+      if (!t || t.startsWith('#') || t.startsWith('//') || t.startsWith('/*') || t.startsWith('*') || t.startsWith('static') || t.startsWith('{') || t === '};') continue;
+      const m = /^\[TYPE_([A-Z0-9_]+)\]\s*=\s*\{([^}]*)\},?$/.exec(t);
+      if (!m) fail(`${where}: unrecognized table line: ${t.slice(0, 60)}`);
+      const name = `TYPE_${m[1]}`;
+      const value = resolveConst(pp, name, where);
+      if (value >= numTypes) fail(`${where}: ${name} = ${value} is not a chart type`);
+      if (rows.has(name)) fail(`${where}: duplicate row ${name}`);
+      const cells = m[2].split(',').map((s) => s.trim());
+      if (cells.length !== numTypes) fail(`${where}: row ${name} has ${cells.length} cells, expected ${numTypes}`);
+      rows.set(name, cells.map((c) => {
+        if (c === '______') return 1; // the #define ______ X(1.0) shorthand
+        const cm = /^X\(([0-9.]+)\)$/.exec(c);
+        if (!cm) fail(`${where}: unrecognized cell ${JSON.stringify(c)} in row ${name}`);
+        const v = Number(cm[1]);
+        if (!CHART_VALUES.includes(v)) fail(`${where}: multiplier ${v} outside the game's set ${CHART_VALUES}`);
+        return v;
+      }));
+    }
+    if (rows.size !== numTypes) fail(`${where}: ${rows.size} rows, expected ${numTypes}`);
+    const nameToRow = new Map(types.map((t, i) => [t, i]));
+    const mult = types.map(() => new Array(numTypes).fill(1));
+    for (const [name, cells] of rows) {
+      const row = nameToRow.get(typeNames.get(name));
+      if (row === undefined) fail(`${where}: row ${name} is not a chart type`);
+      mult[row] = cells;
+    }
+    return { types, mult };
+  }
+
+  /** The Vanilla flat (attacker, defender, multiplier) triple list — unlisted pairs neutral. */
+  function parseVanillaTypeChart(pp, raw, where) {
+    const types = typeAxisOrder(pp, vanTypeByValue, where);
+    const numTypes = types.length;
+    const region = sliceTableRegion(raw, /const u8 gTypeEffectiveness\[\d+\]\s*=/, where);
+    const declared = Number(/gTypeEffectiveness\[(\d+)\]/.exec(region)[1]);
+    if (declared % 3 !== 0) fail(`${where}: the table holds ${declared} elements, not whole triples`);
+    const multByName = {
+      TYPE_MUL_SUPER_EFFECTIVE: 2,
+      TYPE_MUL_NORMAL: 1,
+      TYPE_MUL_NOT_EFFECTIVE: 0.5,
+      TYPE_MUL_NO_EFFECT: 0,
+    };
+    const tokens = [];
+    for (const line of filterRegionGuards(region, pp, where)) {
+      tokens.push(...(line.match(/TYPE_[A-Z_]+/g) || []));
+    }
+    if (tokens.length !== declared) fail(`${where}: ${tokens.length} tokens, expected ${declared}`);
+    const nameToCol = new Map(types.map((t, i) => [t, i]));
+    const mult = types.map(() => new Array(numTypes).fill(1));
+    const sentinels = new Set();
+    for (let i = 0; i < tokens.length; i += 3) {
+      const a = tokens[i];
+      const d = tokens[i + 1];
+      const mult_ = multByName[tokens[i + 2]];
+      if (mult_ === undefined) fail(`${where}: unknown multiplier code ${tokens[i + 2]}`);
+      if (a === 'TYPE_FORESIGHT' || a === 'TYPE_ENDTABLE') {
+        if (a !== d || mult_ !== 0) fail(`${where}: unexpected sentinel row ${a}>${d}`);
+        sentinels.add(a);
+        continue; // pseudo-type sentinels (0xFE / 0xFF) — not chart types
+      }
+      const ai = nameToCol.get(typeNames.get(a));
+      const di = nameToCol.get(typeNames.get(d));
+      if (ai === undefined || di === undefined) fail(`${where}: ${a}/${d} is not a vanilla chart type`);
+      if (mult[ai][di] !== 1) fail(`${where}: duplicate pair ${a}>${d}`);
+      mult[ai][di] = mult_;
+    }
+    if (sentinels.size !== 2 || !sentinels.has('TYPE_FORESIGHT') || !sentinels.has('TYPE_ENDTABLE')) {
+      fail(`${where}: expected the TYPE_FORESIGHT + TYPE_ENDTABLE sentinel rows, found ${[...sentinels].join(', ') || 'none'}`);
+    }
+    return { types, mult };
+  }
+
+  const exTypeChart = parseExTypeChart(exPp, exProvider.fetch('src/battle_util.c'), 'EX typeChart');
+  const vanTypeChart = parseVanillaTypeChart(vanPp, vanillaProvider.fetch('src/battle_main.c'), 'vanilla typeChart');
+  // The vanilla overlay ships only when the vanilla table genuinely differs
+  // from the EX table on the shared axes (the record-overlay convention — a
+  // build that agrees never ships redundant data).
+  const exTypeValue = new Map(exTypeChart.types.map((t, i) => [t, i]));
+  const exOnVanillaAxes = vanTypeChart.types.map((t) => vanTypeChart.types.map((d) => exTypeChart.mult[exTypeValue.get(t)][exTypeValue.get(d)]));
+  const typeChart = {
+    types: exTypeChart.types,
+    mult: exTypeChart.mult,
+    source:
+      'src/battle_util.c @origin/expansion L1196-1230 (dense uq4_12 matrix; the B_STEEL_RESISTANCES = GEN_LATEST guard resolves to the Gen 6 rule, so Ghost and Dark do not resist Steel); src/battle_main.c @vanilla L329-443 (flat attacker-defender-multiplier triples; unlisted pairs are neutral by default)',
+  };
+  if (JSON.stringify(exOnVanillaAxes) !== JSON.stringify(vanTypeChart.mult)) {
+    typeChart.vanilla = { types: vanTypeChart.types, mult: vanTypeChart.mult };
+  }
 
   const eggGroupNames = new Map();
   const eggGroupByValue = new Map(); // EX values
@@ -2380,7 +2566,7 @@ function extract(repo) {
   }
   console.error(`note: form sprites — ${referencedOwn.size} of ${formManifest.counts.own} own entries are roster-referenced; all ${referencedOwn.size} ship <formEntryId>.png (verified on disk)`);
 
-  return { records, counts: { total: records.length, shared: sharedCount, exOnly: records.length - sharedCount, vanillaOnly, exEntries: exEntryCount, noDex: exNoDexMap.size, synthesized: exSynthesized.length }, catalog };
+  return { records, counts: { total: records.length, shared: sharedCount, exOnly: records.length - sharedCount, vanillaOnly, exEntries: exEntryCount, noDex: exNoDexMap.size, synthesized: exSynthesized.length }, catalog, typeChart };
 }
 
 // ---------------------------------------------------------------------------
@@ -2391,7 +2577,7 @@ function extract(repo) {
 // tables render: the EX values keyed by display name (moves: type / power /
 // accuracy / PP + the in-game description as `effect`; abilities: the
 // description) plus the diff-only `catalog.vanilla` overlay.
-function buildDoc({ records, counts, catalog }) {
+function buildDoc({ records, counts, catalog, typeChart }) {
   const spriteExCount = records.filter((r) => r.spriteEx).length;
   const formSpriteCount = records.flatMap((r) => r.forms ?? []).filter((f) => f && f.sprite).length;
   return {
@@ -2461,7 +2647,25 @@ function buildDoc({ records, counts, catalog }) {
         ],
         source: 'scripts/extract/sprites.mjs (site data); site/assets/pokemon/ (site data)',
       },
+      {
+        id: 'viability',
+        heading: 'Viability',
+        text: 'How a species holds up in a run, computed from this file alone — the typeChart, the records and the routes wild tables. Every formula below is exact, and the dex toolbar reads the same fields when it sorts or filters.',
+        list: [
+          'typeChart — the build\'s damage-multiplier table: EX is a dense 20×20 matrix (20 types, Mystery and Stellar included); Vanilla is a flat triple list that becomes an 18×18 matrix (an unlisted pair is neutral); every multiplier is ×0, ×0.5, ×1 or ×2',
+          'offensive coverage — for each defender type d: mult(d) = the product of chart[t][d] over the species\' types t; super coverage = the standard defender types with mult(d) ≥ 2 (a dual type can reach ×4 — Bug + Grass on Psychic)',
+          'immunity count — the standard defender types with mult(d) = 0; the standard defenders are the build\'s species types — 18 in EX (Fairy included), 17 in Vanilla (no Fairy) — since Mystery and Stellar are never defenders',
+          'role percentile — 100 × (species in the active dex strictly below the stat) ÷ (N − 1), N = the active dex size: physical = Atk, special = Sp. Atk, wall = HP + Def + Sp. Def, speed = Speed',
+          'wild exposure — the number of the 36 routes whose 3-type wild table shares a type with the species (per build: the six Fairy-swap routes read their Vanilla wild types)',
+          'economy — catch rate (3–255; higher is easier to pocket, legendaries sit at 3) and base EXP straight from the record (the Vanilla overlay holds the differing values)',
+          'movepool depth — the count of distinct move types across the species\' level-up/TM/tutor learnset, each move\'s type from the active build\'s catalog',
+          'the two charts differ on exactly two shared cells: Ghost and Dark keep their ×0.5 Steel resistance in Vanilla and lose it in EX (B_STEEL_RESISTANCES = GEN_LATEST)',
+        ],
+        source:
+          'src/battle_util.c @origin/expansion L1196-1230; src/battle_main.c @vanilla L329-443 (the metrics are computed from the site data at run time — typeChart, the records and data/routes.json)',
+      },
     ],
+    typeChart,
     catalog,
     records,
   };
@@ -2475,8 +2679,8 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const repo = path.resolve(args.repo);
   assertRepoSane(repo);
-  const { records, counts, catalog } = extract(repo);
-  const doc = buildDoc({ records, counts, catalog });
+  const { records, counts, catalog, typeChart } = extract(repo);
+  const doc = buildDoc({ records, counts, catalog, typeChart });
   const rendered = JSON.stringify(doc, null, 2) + '\n';
   const outPath = path.resolve(args.out);
   if (args.check) {

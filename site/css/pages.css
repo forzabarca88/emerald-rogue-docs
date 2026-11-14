@@ -2013,16 +2013,19 @@
    toolbar — an on-page .search filter + the region filter, selection
    surviving version re-renders, + the dex-variant .dex-variant__select
    (issue #92 — the in-game Pokédex-variant menu as a native <select>,
-   the active build's settings.json options, "All variants" default) —
-   the live #dex-count line and the .dex-pager between the count and the
-   grid), then the .dex-grid —
+   the active build's settings.json options, "All variants" default)
+   + the issue-#100 .dex-sort__select / .dex-type__select (the same
+   native-<select> pattern — sort key+direction, typeChart standard
+   types) — the live #dex-count line and the .dex-pager between the
+   count and the grid), then the .dex-grid —
    exactly data/site.json dex.pageSize (24 — the site's tile page; the
    in-game Overview draws 28) .dex-tile <a> links per page, each a lazy
    sprite
    (--tile-sprite-size, pixelated) with an onerror placeholder tile
-   (--placeholder) showing the dex number in mono — and the four prose
+   (--placeholder) showing the dex number in mono — and the prose
    blocks (issue #84 — short text + each block's `list` facts as a
-   .dex-facts list) below the grid. The #dex-species view (rendered only
+   .dex-facts list, incl. the issue-#100 "Viability" block) below the
+   grid. The #dex-species view (rendered only
    while a selection exists): the .dex-species panel, root id =
    ROGUE.recId('pokedex', record.id) — the #45 deep-link scheme — with
    the sprite box (.dex-viewer at --sprite-size — also the 3D viewer's
@@ -2175,17 +2178,23 @@
   color: var(--color-emerald);
 }
 
-/* The dex-variant select (issue #92): a native <select> is the only
-   360px-safe form for up to 37 options (chips would overflow), so the
-   in-game Pokédex-variant menu rides the toolbar's existing flex-wrap —
-   at narrow widths it takes its own line and the bar simply grows
-   taller, which the JS-measured sticky offsets (setBrowseTop) already
-   track, so no new breakpoint is needed. Tokens only: the line border,
-   surface background, --text-sm type and --radius-sm rounding; the
-   max-width caps the box (the longest option name elides inside the
-   native control, it never widens the bar). The global :focus-visible
-   outline applies; the border-color flip mirrors the .search input. */
-.page--pokedex .dex-variant__select {
+/* The browse-bar native selects: the dex-variant select (issue #92 —
+   the in-game Pokédex-variant menu; a native <select> is the only
+   360px-safe form for up to 37 options, chips would overflow) + the
+   issue-#100 sort (.dex-sort__select — one (asc|desc) pair per sort
+   key) and type (.dex-type__select — the active build's typeChart
+   standard types) selects, which ride the SAME pattern: the toolbar's
+   existing flex-wrap (at narrow widths each takes its own line and the
+   bar grows taller, which the JS-measured sticky offsets
+   (setBrowseTop) already track, so no new breakpoint is needed).
+   Tokens only: the line border, surface background, --text-sm type and
+   --radius-sm rounding; the max-width caps the box (the longest option
+   name elides inside the native control, it never widens the bar). The
+   global :focus-visible outline applies; the border-color flip mirrors
+   the .search input. */
+.page--pokedex .dex-variant__select,
+.page--pokedex .dex-sort__select,
+.page--pokedex .dex-type__select {
   max-width: 170px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-line);
@@ -2197,7 +2206,9 @@
   cursor: pointer;
 }
 
-.page--pokedex .dex-variant__select:focus-visible {
+.page--pokedex .dex-variant__select:focus-visible,
+.page--pokedex .dex-sort__select:focus-visible,
+.page--pokedex .dex-type__select:focus-visible {
   border-color: var(--color-emerald);
 }
 

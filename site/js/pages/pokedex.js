@@ -15,7 +15,12 @@
  *      range-pokedex-variant options from settings.json with an "All
  *      variants" default, filtering by the records' dexVariants
  *      membership and resetting to "all" on a version change that no
- *      longer offers the selection), the live
+ *      longer offers the selection + the issue-#100 sort and type
+ *      selects — #dex-sort, one (asc|desc) pair per key (Dex #, BST,
+ *      HP, Atk, Def, Sp. Atk, Sp. Def, Speed, Catch rate, Base EXP)
+ *      with a stable decorate-sort-undecorate, and #dex-type, the
+ *      active build's standard types from the top-level typeChart with
+ *      an "All types" default), the live
  *      #dex-count line ("<N> species · page <x> of <y>") and the
  *      .dex-pager (prev / next buttons + "page X of Y"), with the pager
  *      BETWEEN the count and the grid, so paging never requires
@@ -23,7 +28,7 @@
  *      position: sticky rule in pages.css reads --dex-browse-top on
  *      <main> (the header's rendered offsetHeight measured on load +
  *      resize — the search.js setPaletteTop pattern). The shared
- *      .section-nav strip (issue #98 — Grid + the four prose blocks)
+ *      .section-nav strip (issue #98 — Grid + the prose blocks)
  *      sits between the bar and the grid, pinned under the bar via the
  *      measured --dex-scroll-clear (header + the bar's offsetHeight +
  *      16px), and the overview sections' scroll clearance reads
@@ -36,12 +41,14 @@
  *      draws 28) .dex-tile
  *      <a> links per page, each a lazy-loaded sprite (onerror → the
  *      placeholder tile showing the dex number in mono) + the active
- *      version's #NNN. The four prose blocks (issue #84 — each
- *      renders its short 1–2 sentence `text` plus its `list` facts as
- *      a scannable .dex-facts list) sit BELOW the grid now — their
- *      ids stay intact, so the search palette's same-page Enter still
- *      scrolls to them. Any filter change (search or region) resets to
- *      page 1.
+ *      version's #NNN. The prose blocks (issue #84 — each renders its
+ *      short 1–2 sentence `text` plus its `list` facts as a
+ *      scannable .dex-facts list — including the issue-#100 "Viability"
+ *      block, whose fact list documents the metrics the analytics
+ *      visualisations (PR 4b) will compute) sit BELOW the grid now —
+ *      their ids stay intact, so the search palette's same-page Enter
+ *      still scrolls to them. Any filter change (search, region,
+ *      variant, type or sort) resets to page 1.
  *   2. the species detail view (#dex-species) — rendered only while a
  *      selection exists; the .dex-species panel's root carries
  *      id = ROGUE.recId('pokedex', record.id) (the issue-#45 deep-link
@@ -101,9 +108,10 @@
  * ROGUE.filter scopes the grid; an EX-only selection that cannot
  * resolve under Vanilla clears to the overview (and re-resolves, with
  * the detail back, if the toggle returns). The region selection, the
- * query and the variant survive re-renders, like routes.js / quests.js
- * (the variant resets to "all" when the new build's option list no
- * longer carries it).
+ * query, the variant and the sort survive re-renders, like
+ * routes.js / quests.js (the variant and the issue-#100 type filter
+ * reset to "all" when the new build's option list no longer carries
+ * the selection — e.g. Fairy under Vanilla).
  *
  * The on-page search filters the same lowercased haystack the
  * site-wide palette indexes — ROGUE.pokedexSearchText(record)
@@ -202,11 +210,18 @@
      * clamps itself when a version change shrinks the list; the
      * selection (a record id from the URL hash) persists so an
      * EX-only species that is hidden under Vanilla comes back with
-     * the detail when the toggle returns. */
+     * the detail when the toggle returns. The issue-#100 controls
+     * join the same state: `type` ("all" or a standard type from the
+     * top-level typeChart — the same reset rule as the variant) and
+     * `sort` (a "<key>-asc|desc" SORT_KEYS entry — version-independent,
+     * so it never resets; "dexnum-asc" is the data order, which keeps
+     * the default view byte-identical). */
     var state = {
       query: '',
       region: 'all',
       variant: 'all',
+      type: 'all',
+      sort: 'dexnum-asc',
       page: 1,
       selection: null
     };
@@ -330,27 +345,145 @@
       return false;
     }
 
+    /* The issue-#100 sort keys: [SORT_KEYS id, display label]. The stat
+     * keys (bst = stats.total, hp..spe) and catch/exp read through
+     * dexVariant(), so the Vanilla stats/catchRate/baseExp overlays are
+     * what the sort compares under Vanilla. "dexnum-asc" is the data
+     * order (records are already in national-dex order), so the default
+     * sort is the identity and the default view is byte-identical. */
+    var SORT_KEYS = [
+      ['dexnum', 'Dex #'],
+      ['bst', 'BST'],
+      ['hp', 'HP'],
+      ['atk', 'Atk'],
+      ['def', 'Def'],
+      ['spa', 'Sp. Atk'],
+      ['spd', 'Sp. Def'],
+      ['spe', 'Speed'],
+      ['catch', 'Catch rate'],
+      ['exp', 'Base EXP']
+    ];
+
+    /** A normalized "<key>-asc|desc" sort value (anything else → the default). */
+    function normSort(v) {
+      for (var i = 0; i < SORT_KEYS.length; i++) {
+        var k = SORT_KEYS[i][0];
+        if (v === k + '-asc' || v === k + '-desc') return v;
+      }
+      return 'dexnum-asc';
+    }
+
+    /** The version-scoped value of one sort key (null → sorts last). */
+    function sortValue(record, key) {
+      if (key === 'dexnum') return typeof record.dexNum === 'number' ? record.dexNum : null;
+      if (key === 'catch') {
+        var c = dexVariant(record, 'catchRate');
+        return typeof c === 'number' ? c : null;
+      }
+      if (key === 'exp') {
+        var e = dexVariant(record, 'baseExp');
+        return typeof e === 'number' ? e : null;
+      }
+      var s = dexVariant(record, 'stats');
+      if (!s) return null;
+      /* "bst" is the total stat (the record field is stats.total) */
+      var f = key === 'bst' ? 'total' : key;
+      return typeof s[f] === 'number' ? s[f] : null;
+    }
+
+    /**
+     * A STABLE decorate-sort-undecorate of the (already filtered) list:
+     * the original index breaks every tie (equal values keep their dex
+     * order), and nulls sort last in either direction — so every
+     * "key-dir" pair is deterministic.
+     */
+    function sortList(list) {
+      var parts = String(state.sort).split('-');
+      var key = 'dexnum';
+      for (var i = 0; i < SORT_KEYS.length; i++) {
+        if (SORT_KEYS[i][0] === parts[0]) key = SORT_KEYS[i][0];
+      }
+      var dir = parts[1] === 'desc' ? -1 : 1;
+      var indexed = [];
+      for (var j = 0; j < list.length; j++) indexed.push({ v: sortValue(list[j], key), i: j });
+      indexed.sort(function (a, b) {
+        if (a.v === null && b.v === null) return a.i - b.i;
+        if (a.v === null) return 1;
+        if (b.v === null) return -1;
+        if (a.v !== b.v) return dir === 1 ? (a.v < b.v ? -1 : 1) : a.v > b.v ? -1 : 1;
+        return a.i - b.i;
+      });
+      var out = [];
+      for (var k = 0; k < indexed.length; k++) out.push(list[indexed[k].i]);
+      return out;
+    }
+
+    /**
+     * The active build's type-filter options (issue #100): the
+     * top-level typeChart's type list for the active build (the
+     * diff-only `typeChart.vanilla` overlay under Vanilla, else the
+     * EX chart) minus the non-defenders (Mystery/Stellar — the
+     * IS_STANDARD_TYPE rule; they are chart rows, never species types).
+     * Falls back to the union of the species types actually in the dex
+     * (version-scoped) when the chart is absent or malformed, so the
+     * control degrades to "All types" + the real types, never to a
+     * dead select.
+     */
+    function typeOptions() {
+      var tc = null;
+      if (data.typeChart && typeof data.typeChart === 'object' && Array.isArray(data.typeChart.types)) {
+        tc = ROGUE.version === 'vanilla' && data.typeChart.vanilla && Array.isArray(data.typeChart.vanilla.types) ? data.typeChart.vanilla : data.typeChart;
+      }
+      var out = [];
+      if (tc) {
+        for (var i = 0; i < tc.types.length; i++) {
+          var t = tc.types[i];
+          if (typeof t === 'string' && t !== 'Mystery' && t !== 'Stellar' && out.indexOf(t) === -1) out.push(t);
+        }
+      }
+      if (out.length === 0) {
+        for (var j = 0; j < records.length; j++) {
+          var ts = dexVariant(records[j], 'types');
+          if (Array.isArray(ts)) {
+            for (var k = 0; k < ts.length; k++) {
+              var u = ts[k];
+              if (typeof u === 'string' && out.indexOf(u) === -1) out.push(u);
+            }
+          }
+        }
+        out.sort();
+      }
+      return out;
+    }
+
     /**
      * The active version's FULL record list in data order (= dex
      * order) — the base the browse grid derives its filtered list
-     * from (filteredList applies the region/query filters on top of
-     * it). The detail's prev/next neighbours (issue #86) come from
-     * this unfiltered list, so they always match what the grid shows
-     * for the active build.
+     * from (filteredList applies the region/variant/type/query filters
+     * and the sort on top of it). The detail's prev/next neighbours
+     * (issue #86) come from this unfiltered list, so they always match
+     * what the grid shows for the active build.
      */
     function orderedList() {
       return ROGUE.filter(records);
     }
 
-    /** The (version-scoped, region-, variant- and query-filtered) list, in data order. */
+    /** The (version-scoped, region-, variant-, type- and query-filtered) list, sorted per state.sort. */
     function filteredList() {
       var q = state.query.trim().toLowerCase();
-      return ROGUE.filter(records).filter(function (r) {
+      var list = ROGUE.filter(records).filter(function (r) {
         if (state.region !== 'all' && r.region !== state.region) return false;
         if (state.variant !== 'all' && !variantIncludes(r, state.variant)) return false;
+        if (state.type !== 'all') {
+          var ts = dexVariant(r, 'types');
+          if (!Array.isArray(ts) || ts.indexOf(state.type) === -1) return false;
+        }
         if (q && searchText[r.id].indexOf(q) === -1) return false;
         return true;
       });
+      /* the default sort is the data order (dex order) — skip the
+       * decorate pass entirely so the default view is byte-identical */
+      return state.sort === 'dexnum-asc' ? list : sortList(list);
     }
 
     /**
@@ -460,6 +593,38 @@
           .join('') +
         '</select>';
 
+      /* The sort + type selects (issue #100): the SAME native-<select>
+       * pattern as the variant select (170px max, tokens-only, the
+       * toolbar's flex-wrap absorbs them, setBrowseTop tracks any extra
+       * wrap line). The sort select carries one (asc|desc) pair per
+       * SORT_KEYS entry ("Dex # (asc)" is the default — the data
+       * order); the type select carries "All types" + the active
+       * build's standard types from the typeChart. The fresh markup's
+       * selected options come from state, and bindToolbar reads the
+       * value back (the select is authoritative). */
+      var sortSel =
+        '<select id="dex-sort" class="dex-sort__select" aria-label="Sort species">' +
+        SORT_KEYS
+          .map(function (k) {
+            return ['asc', 'desc']
+              .map(function (d) {
+                var value = k[0] + '-' + d;
+                return '<option value="' + value + '"' + (state.sort === value ? ' selected' : '') + '>' + k[1] + ' (' + d + ')</option>';
+              })
+              .join('');
+          })
+          .join('') +
+        '</select>';
+      var typeSel =
+        '<select id="dex-type" class="dex-type__select" aria-label="Filter species by type">' +
+        '<option value="all"' + (state.type === 'all' ? ' selected' : '') + '>All types</option>' +
+        typeOptions()
+          .map(function (t) {
+            return '<option value="' + ROGUE.esc(t) + '"' + (state.type === t ? ' selected' : '') + '>' + ROGUE.esc(t) + '</option>';
+          })
+          .join('') +
+        '</select>';
+
       /* The .dex-browse bar (issue #86): toolbar + count + pager in ONE
        * container — the pager sits between the count and the grid, so
        * paging never requires scrolling down. This is the sticky bar
@@ -470,7 +635,8 @@
        * the enclosing section's id is also "dex-browse" (ROGUE.section)
        * — a .dex-browse selector targets the bar only. */
 
-      /* The section strip (issue #98): Grid + the four prose blocks —
+      /* The section strip (issue #98): Grid + the prose blocks (five —
+       * the fourth is the issue-#100 "Viability" block) —
        * the shared .section-nav re-pinned under the sticky bar (the
        * pages.css .page--pokedex .section-nav rule sets its `top` to
        * the measured --dex-scroll-clear). It sits between the bar and
@@ -498,6 +664,8 @@
         filterBtns +
         '</div>' +
         variantSel +
+        sortSel +
+        typeSel +
         '</div>' +
         '<p class="dex-count" id="dex-count" role="status"></p>' +
         '<nav class="dex-pager" id="dex-pager" aria-label="Dex pages"></nav>' +
@@ -1058,9 +1226,11 @@
         empty.hidden = slice.length !== 0;
         empty.textContent = q
           ? 'No species match \u201C' + q + '\u201D.'
-          : state.variant !== 'all'
-            ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + ' under ' + state.variant + '.'
-            : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + '.';
+          : state.type !== 'all'
+            ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' ' + ROGUE.esc(state.type) + '-type species in ' + ROGUE.esc(state.region) + '.'
+            : state.variant !== 'all'
+              ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + ' under ' + state.variant + '.'
+              : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + '.';
       }
       count.textContent = list.length + ' species \u00B7 page ' + state.page + ' of ' + pages;
       pager.innerHTML = pagerInner(pages);
@@ -1097,10 +1267,10 @@
       });
     }
 
-    /* Listeners on the toolbar (search input, region buttons, variant
-     * select) — bound on the full render only; they keep the input alive
-     * by refreshing just the browse end state (updateBrowse), never
-     * re-rendering main. */
+    /* Listeners on the toolbar (search input, region buttons, the
+     * variant/sort/type selects) — bound on the full render only; they
+     * keep the input alive by refreshing just the browse end state
+     * (updateBrowse), never re-rendering main. */
     function bindToolbar() {
       var input = document.getElementById('dex-search');
       if (input) {
@@ -1127,6 +1297,30 @@
         state.variant = variant.value;
         variant.addEventListener('change', function () {
           state.variant = variant.value;
+          state.page = 1;
+          updateBrowse();
+        });
+      }
+      var sort = document.getElementById('dex-sort');
+      if (sort) {
+        /* same read-back rule as the variant select: the fresh markup's
+         * selected option comes from state.sort, and reading the value
+         * back (normalized) makes the select authoritative */
+        state.sort = normSort(sort.value);
+        sort.addEventListener('change', function () {
+          state.sort = normSort(sort.value);
+          state.page = 1;
+          updateBrowse();
+        });
+      }
+      var type = document.getElementById('dex-type');
+      if (type) {
+        /* "all" or one of the active build's typeChart options (the
+         * markup was built from typeOptions(), so an out-of-list value
+         * can only come from a stale DOM — it falls back to "all") */
+        state.type = type.value === 'all' || typeOptions().indexOf(type.value) !== -1 ? type.value : 'all';
+        type.addEventListener('change', function () {
+          state.type = type.value === 'all' || typeOptions().indexOf(type.value) !== -1 ? type.value : 'all';
           state.page = 1;
           updateBrowse();
         });
@@ -1208,12 +1402,17 @@
 
     /* Version changes re-render (the grid re-scopes, the sprites and
      * per-version fields flip, an EX-only selection clears to the
-     * overview); the query, region, variant and selection survive —
-     * except the variant when the new build's option list (per-build:
-     * 7 Vanilla / 37 EX) no longer offers the selection (e.g. the
-     * EX-only "Modern" under Vanilla), which resets to "all". */
+     * overview); the query, region, variant, sort and selection survive
+     * — the sort is version-independent (its keys read through
+     * dexVariant, so "bst-desc" under Vanilla sorts by the Vanilla
+     * stats) — except the variant and the issue-#100 type filter when
+     * the new build's option list (the variant's per-build options;
+     * the typeChart's per-build standard types) no longer offers the
+     * selection (e.g. the EX-only "Modern" variant or Fairy under
+     * Vanilla), which resets to "all". */
     ROGUE.onChange(function () {
       if (state.variant !== 'all' && variantOptions().indexOf(state.variant) === -1) state.variant = 'all';
+      if (state.type !== 'all' && typeOptions().indexOf(state.type) === -1) state.type = 'all';
       render();
     });
   });
