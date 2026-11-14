@@ -52,6 +52,18 @@
  *   - Forms inherit the base species' learnset in-game (the Pokédex resolves
  *     GET_BASE_SPECIES_ID before reading the profile), so form records carry
  *     the base profile's moves.
+ *
+ * Top-level `catalog` (issue #99): the move & ability reference behind the
+ * detail tables — per branch, keyed by display name. Moves: type/power/
+ * accuracy/PP (0 → null) from battle_moves.h (the EX ternary
+ * B_UPDATED_MOVE_DATA powers resolve through the preprocessor) + the in-game
+ * description from move_descriptions.h's pointer table (multi-line
+ * `_()`-concatenated literals, the BINDING_TURNS string macro spliced in,
+ * `MOVE_X - 1` indices; the placeholder moves carry no effect). Abilities:
+ * the description from abilities.h (direct `ABILITY_X` indices). The
+ * diff-only `catalog.vanilla` overlay holds the entries that differ from the
+ * Expansion values (the record-overlay convention; a vanilla rename is keyed
+ * by the vanilla name so the vanilla learnsets still resolve).
  */
 
 import { execFileSync } from 'node:child_process';
@@ -252,6 +264,222 @@ function splitTopLevelBraces(text, where) {
   }
   if (depth !== 0) fail(`${where}: unbalanced braces`);
   return blocks;
+}
+
+/**
+ * Collect the string-literal `#define NAME "literal"` directives that are
+ * active in a raw C source, mirroring the preprocessor's own
+ * #if/#ifdef/#ifndef/#elif/#else/#endif evaluation (the same `evalExpr`
+ * with `unresolvedZero`, so the toggles resolve exactly as in the build).
+ * A later `#undef` is ignored — the macros the FILE splices into its
+ * description literals are what matter (EX move_descriptions.h's
+ * BINDING_TURNS is defined at the top and #undef'd at the bottom).
+ */
+function parseStringMacroDefines(raw, pp, where) {
+  // join line continuations exactly like Preprocessor.process
+  const lines = [];
+  const rawLines = raw.split('\n');
+  for (let i = 0; i < rawLines.length; i++) {
+    let line = rawLines[i];
+    while (line.trimEnd().endsWith('\\') && i + 1 < rawLines.length) {
+      i++;
+      line = line.trimEnd().slice(0, -1) + ' ' + rawLines[i];
+    }
+    lines.push(line);
+  }
+  const stack = [];
+  const condActive = () => stack.every((f) => f.active);
+  const out = new Map();
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('#')) continue;
+    const dm = /^\s*#\s*(if|ifdef|ifndef|elif|else|endif|define|undef)\b\s*(.*)$/.exec(trimmed);
+    if (!dm) fail(`${where}: unsupported directive ${trimmed.slice(0, 60)}`);
+    const [, kind, rest] = dm;
+    if (kind === 'if' || kind === 'ifdef' || kind === 'ifndef') {
+      let value;
+      if (kind === 'ifdef') value = pp.defines.has(rest.trim()) ? 1 : 0;
+      else if (kind === 'ifndef') value = pp.defines.has(rest.trim()) ? 0 : 1;
+      else value = pp.evalExpr(rest, `${where} #${kind} ${rest.trim()}`, { unresolvedZero: true }) ? 1 : 0;
+      stack.push({ active: Boolean(value), taken: Boolean(value), hasElse: false });
+    } else if (kind === 'endif') {
+      if (!stack.length) fail(`${where}: #endif without #if`);
+      stack.pop();
+    } else if (kind === 'else' || kind === 'elif') {
+      const top = stack[stack.length - 1];
+      if (!top) fail(`${where}: #${kind} without #if`);
+      if (kind === 'else') {
+        if (top.hasElse) fail(`${where}: duplicate #else`);
+        top.hasElse = true;
+        top.active = !top.taken;
+      } else if (!top.taken && !top.hasElse) {
+        top.taken = pp.evalExpr(rest, `${where} #elif ${rest.trim()}`, { unresolvedZero: true }) ? true : false;
+        top.active = top.taken;
+      } else {
+        top.active = false;
+      }
+    } else if (kind === 'define' && condActive()) {
+      const md = /^([A-Za-z_][A-Za-z0-9_]*)\s+"((?:[^"\\]|\\.)*)"\s*$/.exec(rest);
+      if (md && !out.has(md[1])) out.set(md[1], unescapeC(md[2]));
+    }
+    // #undef: deliberately ignored (a macro defined earlier still splices in)
+  }
+  if (stack.length !== 0) fail(`${where}: unbalanced #if`);
+  return out;
+}
+
+/**
+ * Parse `static const u8 sXxxDescription[] = _("…" "…" | MACRO …)` text
+ * arrays (the move/ability descriptions): a run of string literals and
+ * object-like string macros (e.g. EX move_descriptions.h's BINDING_TURNS
+ * turn-count define) between `_(` and `);`, joined into one unescaped
+ * string. `stringDefines` is the map of string-macro name → literal text
+ * for identifiers that appear between the literals.
+ */
+function parseDescriptionArrays(active, stringDefines, where) {
+  const out = new Map();
+  const re = /static const u8 (s[A-Za-z0-9_]+Description)\[\]\s*=\s*_\(/g;
+  let m;
+  while ((m = re.exec(active))) {
+    const sym = m[1];
+    let i = m.index + m[0].length; // just past `_(`
+    const parts = [];
+    let closed = false;
+    while (i < active.length) {
+      while (i < active.length && /\s/.test(active[i])) i++;
+      if (i >= active.length) break;
+      const ch = active[i];
+      if (ch === '"') {
+        const lm = /^"((?:[^"\\]|\\.)*)"/.exec(active.slice(i));
+        if (!lm) fail(`${where} ${sym}: unterminated string literal`);
+        parts.push(unescapeC(lm[1]));
+        i += lm[0].length;
+      } else if (/[A-Za-z_]/.test(ch)) {
+        const im = /^[A-Za-z_][A-Za-z0-9_]*/.exec(active.slice(i));
+        const def = stringDefines.get(im[0]);
+        if (def === undefined) fail(`${where} ${sym}: unknown string macro ${im[0]}`);
+        parts.push(def);
+        i += im[0].length;
+      } else if (ch === ')') {
+        i++;
+        while (i < active.length && /\s/.test(active[i])) i++;
+        if (active[i] !== ';') fail(`${where} ${sym}: expected ";" after the description body`);
+        i++;
+        closed = true;
+        break;
+      } else {
+        fail(`${where} ${sym}: unexpected ${JSON.stringify(active.slice(i, i + 24))}`);
+      }
+    }
+    if (!closed) fail(`${where} ${sym}: unterminated description`);
+    if (out.has(sym)) fail(`${where} ${sym}: duplicate description array`);
+    out.set(sym, parts.join(''));
+    re.lastIndex = i;
+  }
+  return out;
+}
+
+/** Parse a `gXxxPointers[...] = { [EXPR] = sSym, … }` table into
+ *  Map<evaluated index, symbol> — the index is an expression
+ *  (the move tables index by `MOVE_X - 1`). */
+function parsePointerTable(active, arrayRe, pp, where) {
+  const m = arrayRe.exec(active);
+  if (!m) fail(`${where}: pointer table not found`);
+  const open = m.index + m[0].length - 1;
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < active.length; i++) {
+    if (active[i] === '{') depth++;
+    else if (active[i] === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  const body = active.slice(open + 1, end);
+  const out = new Map();
+  const re = /\[\s*([A-Za-z0-9_ ()|&<>+-]+?)\s*\]\s*=\s*(s[A-Za-z0-9_]+)\s*,/g;
+  let e;
+  while ((e = re.exec(body))) {
+    const expr = e[1];
+    let idx;
+    try {
+      idx = pp.evalExpr(expr, `${where} [${expr}]`);
+    } catch (error) {
+      fail(`${where}: cannot evaluate index ${expr}: ${String(error.message).split('\n')[0]}`);
+    }
+    if (out.has(idx)) fail(`${where}: duplicate index [${expr}]`);
+    out.set(idx, e[2]);
+  }
+  if (out.size < 50) fail(`${where}: only ${out.size} pointer entries parsed`);
+  return out;
+}
+
+/** Parse `gBattleMoves_Mainline[...]` into Map<move value, {type, power,
+ *  accuracy, pp}> — 0 → null, values resolved through the branch
+ *  preprocessor (EX carries the ternary B_UPDATED_MOVE_DATA powers). Only
+ *  the four documented fields are read; .effect/.split/.flags/.target/
+ *  .priority are deliberately ignored (issue #99). */
+function parseMoveStats(active, pp, typeByValue, where) {
+  const tm = /gBattleMoves_Mainline\[[^\]]*\]\s*=\s*\{/.exec(active);
+  if (!tm) fail(`${where}: gBattleMoves_Mainline table not found`);
+  const open = tm.index + tm[0].length - 1;
+  let depth = 0;
+  let end = open;
+  for (let i = open; i < active.length; i++) {
+    if (active[i] === '{') depth++;
+    else if (active[i] === '}') {
+      depth--;
+      if (depth === 0) {
+        end = i;
+        break;
+      }
+    }
+  }
+  const body = active.slice(open + 1, end);
+  const out = new Map();
+  const em = /\[MOVE_([A-Z0-9_]+)\]\s*=\s*\{/g;
+  let m;
+  while ((m = em.exec(body))) {
+    const constName = `MOVE_${m[1]}`;
+    const where_ = `${where} [${constName}]`;
+    const eOpen = m.index + m[0].length - 1;
+    let d = 0;
+    let eEnd = eOpen;
+    for (let i = eOpen; i < body.length; i++) {
+      if (body[i] === '{') d++;
+      else if (body[i] === '}') {
+        d--;
+        if (d === 0) {
+          eEnd = i;
+          break;
+        }
+      }
+    }
+    const fields = new Map();
+    for (const { field, value } of splitFields(body.slice(eOpen + 1, eEnd), where_)) fields.set(field, value);
+    for (const f of ['power', 'type', 'accuracy', 'pp']) if (!fields.has(f)) fail(`${where_}: missing .${f}`);
+    const type = typeByValue.get(pp.evalExpr(fields.get('type'), where_));
+    if (type === undefined) fail(`${where_}: unknown type ${fields.get('type')}`);
+    const num = (f) => {
+      const v = pp.evalExpr(fields.get(f), where_);
+      if (v === 0) return null;
+      if (!Number.isInteger(v)) fail(`${where_}: .${f} is not an integer`);
+      return v;
+    };
+    let value;
+    try {
+      value = pp.evalExpr(constName, where_);
+    } catch (error) {
+      fail(`${where_}: cannot evaluate ${constName}: ${String(error.message).split('\n')[0]}`);
+    }
+    if (out.has(value)) fail(`${where_}: duplicate move value ${value}`);
+    out.set(value, { type, power: num('power'), accuracy: num('accuracy'), pp: num('pp') });
+  }
+  if (out.size < 300) fail(`${where}: only ${out.size} move entries parsed`);
+  return out;
 }
 
 /** Parse `const u8 gXyz[] = _("…" "…")` text arrays; trailing ws trimmed. */
@@ -541,14 +769,29 @@ function extract(repo) {
   const typeByValue = new Map(); // EX value -> "Fire"
   const vanTypeByValue = new Map(); // vanilla value -> "Fire"
   // The EX table runs TYPE_0..19 (TYPE_NONE = 255 stays out). Vanilla's
-  // table stops at DRAGON = 15 (EX inserts MYSTERY, DARK and FAIRY earlier),
-  // so each branch keeps its own value map while sharing the name table.
-  for (const [name, value] of collectPrefixed(exPp, 'TYPE_', 'types', (v) => v < 200)) {
+  // table stops at DRAGON (EX inserts MYSTERY, DARK, FAIRY and STELLAR
+  // earlier), so each branch keeps its own value map while sharing the
+  // name table. The type constants are the plain integer #defines in
+  // include/constants/pokemon.h — restrict collection to exactly those
+  // names: unrelated TYPE_-prefixed macros (TYPE_NAME_LENGTH in
+  // constants/global.h, the TYPE_FINAL_TYPE_* aliases in
+  // constants/rogue.h) evaluate into the same value range and would
+  // clobber the value map (e.g. TYPE_NAME_LENGTH = 6 = TYPE_BUG).
+  const typeConstNames = (provider, where) => {
+    const names = new Set(
+      [...provider.fetch('include/constants/pokemon.h').matchAll(/^#define\s+(TYPE_[A-Z0-9_]+)\s+[0-9]+/gm)].map((m) => m[1])
+    );
+    if (!names.has('TYPE_NORMAL')) fail(`${where}: TYPE_* constants not found in include/constants/pokemon.h`);
+    return names;
+  };
+  const exTypeConsts = typeConstNames(exProvider, 'EX types');
+  const vanTypeConsts = typeConstNames(vanillaProvider, 'vanilla types');
+  for (const [name, value] of collectPrefixed(exPp, 'TYPE_', 'types', (v, n) => v < 200 && exTypeConsts.has(n))) {
     typeNames.set(name, titleCaseId(name.slice(5).toLowerCase()));
     typeByValue.set(value, titleCaseId(name.slice(5).toLowerCase()));
   }
-  if (!typeNames.has('TYPE_NORMAL')) fail('TYPE_* constants not found');
-  for (const [name, value] of collectPrefixed(vanPp, 'TYPE_', 'vanilla types', (v) => v < 200)) {
+  if (!typeNames.has('TYPE_NORMAL')) fail('TYPE_* constants not found in include/constants/pokemon.h');
+  for (const [name, value] of collectPrefixed(vanPp, 'TYPE_', 'vanilla types', (v, n) => v < 200 && vanTypeConsts.has(n))) {
     const t = titleCaseId(name.slice(5).toLowerCase());
     if (typeNames.has(name) && typeNames.get(name) !== t) fail(`vanilla type ${name} named ${typeNames.get(name)}, expected ${t}`);
     typeNames.set(name, t);
@@ -708,6 +951,153 @@ function extract(repo) {
     if (title === undefined) fail(`${where}: unknown ${label} ${clean}`);
     return title;
   };
+
+  // ----- move & ability catalog (issue #99) ----------------------------------
+  // The top-level `catalog` documents the move/ability data behind the
+  // detail tables, per branch, keyed by display name: each move's
+  // type/power/accuracy/pp (0 → null) from battle_moves.h, its in-game
+  // description (effect) from move_descriptions.h's pointer table (the
+  // placeholder moves carry none), and each ability's description from
+  // abilities.h. `catalog.vanilla` holds only the entries that differ from
+  // the Expansion values (the record-overlay convention), so the page
+  // resolves the active build as `catalog.vanilla.* ?? catalog.*`.
+  // The pointer tables index by `MOVE_X - 1` (MOVE_NONE is the ignored
+  // slot); the description texts are kept verbatim, including the GBA
+  // line-break \n.
+  const placeholderEffects = new Set(['', 'Placeholder move']); // → no effect text
+  const moveCatalogEntry = (stats, desc) => {
+    let effect = desc;
+    if (placeholderEffects.has(effect)) effect = null; // the placeholder moves
+    const entry = { type: stats.type, power: stats.power, accuracy: stats.accuracy, pp: stats.pp };
+    if (effect !== null) entry.effect = effect;
+    return entry;
+  };
+  // Entries that are SKIPPED (noted, never fails): the EX Dynamax Max Moves
+  // sit in gBattleMoves_Mainline beyond MOVES_COUNT — half of them without a
+  // gMoveNames slot (in-game unnameable) and none with a description
+  // (gMoveDescriptionPointers is [MOVES_COUNT - 1]); neither can ever reach
+  // a Pokédex learnset. A NAMED move inside MOVES_COUNT without a pointer
+  // is a real data bug and still fails.
+  const buildMoveCatalog = (pp, moveStats, moveDescs, movePointers, moveByValue, label) => {
+    const out = new Map(); // move value → entry
+    const skipped = [];
+    const movesCount = pp.evalExpr('MOVES_COUNT', label);
+    const seen = new Set();
+    for (const [value, stats] of moveStats) {
+      if (value === 0) continue; // the MOVE_NONE slot — not a learnable move
+      const name = moveByValue.get(value);
+      if (name === undefined) {
+        skipped.push(`${value}`);
+        continue;
+      }
+      if (seen.has(name)) fail(`${label}: two moves share the name ${name}`);
+      seen.add(name);
+      const sym = movePointers.get(value - 1);
+      if (sym === undefined) {
+        if (value < movesCount) fail(`${label}: no description pointer for ${name}`);
+        skipped.push(`${value} (${name} — beyond MOVES_COUNT, no in-game description)`);
+        continue;
+      }
+      const desc = moveDescs.get(sym);
+      if (desc === undefined) fail(`${label}: ${name} points at undefined ${sym}`);
+      out.set(value, moveCatalogEntry(stats, desc));
+    }
+    return { catalog: out, skipped };
+  };
+  const exMoveStats = parseMoveStats(exPp.process('src/data/battle_moves.h', 'output'), exPp, typeByValue, 'EX battle_moves.h');
+  const exMoveDescRaw = exPp.provider.fetch('src/data/text/move_descriptions.h');
+  const exMoveDescActive = exPp.process('src/data/text/move_descriptions.h', 'output');
+  // the string macros THIS file defines (the B_BINDING_TURNS gate's
+  // turn-count define — the file #undef's it at the bottom, so the shared
+  // preprocessor's final define map can't be diffed for it), spliced
+  // between the concatenated string literals
+  const exMoveDescStrings = parseStringMacroDefines(exMoveDescRaw, exPp, 'EX move_descriptions.h');
+  const { catalog: exMoveCatalog, skipped: exMoveSkipped } = buildMoveCatalog(
+    exPp,
+    exMoveStats,
+    parseDescriptionArrays(exMoveDescActive, exMoveDescStrings, 'EX move_descriptions.h'),
+    parsePointerTable(exMoveDescActive, /gMoveDescriptionPointers\[[^\]]*\]\s*=\s*\{/, exPp, 'EX move_descriptions.h'),
+    exMoveByValue,
+    'EX move catalog',
+  );
+  const vanMoveStats = parseMoveStats(vanPp.process('src/data/battle_moves.h', 'output'), vanPp, vanTypeByValue, 'vanilla battle_moves.h');
+  const vanMoveDescActive = vanPp.process('src/data/text/move_descriptions.h', 'output');
+  const { catalog: vanMoveCatalog, skipped: vanMoveSkipped } = buildMoveCatalog(
+    vanPp,
+    vanMoveStats,
+    parseDescriptionArrays(vanMoveDescActive, new Map(), 'vanilla move_descriptions.h'),
+    parsePointerTable(vanMoveDescActive, /gMoveDescriptionPointers\[[^\]]*\]\s*=\s*\{/, vanPp, 'vanilla move_descriptions.h'),
+    vanMoveByValue,
+    'vanilla move catalog',
+  );
+  const catalog = { moves: {}, abilities: {} };
+  // A display name shared by SEVERAL ability values (EX: "As One" ×2 —
+  // Glastrier/Spectrier, "Embody Aspect" ×4 — the Ogerpon forms) keeps all
+  // its in-game descriptions, joined in value order — the record side only
+  // carries the name, so the joined line is the faithful full answer.
+  const catalogAbilitiesOf = (pp, abilityActive, abilityByValue, label) => {
+    const descs = parseDescriptionArrays(abilityActive, new Map(), label);
+    const pointers = parsePointerTable(abilityActive, /gAbilityDescriptionPointers\[[^\]]*\]\s*=\s*\{/, pp, label);
+    const byName = new Map(); // name → [description, …] (pointer-table order = value order)
+    for (const [value, sym] of pointers) {
+      const name = abilityByValue.get(value);
+      if (name === undefined) continue; // ABILITY_NONE
+      const desc = descs.get(sym);
+      if (desc === undefined) fail(`${label}: ${name} points at undefined ${sym}`);
+      if (!byName.has(name)) byName.set(name, []);
+      byName.get(name).push(desc);
+    }
+    const out = {};
+    for (const [name, list] of byName) out[name] = list.join(' / ');
+    return out;
+  };
+  const exAbilityCatalog = catalogAbilitiesOf(exPp, exPp.process('src/data/text/abilities.h', 'output'), exAbilityByValue, 'EX abilities.h');
+  const vanAbilityActive = vanPp.process('src/data/text/abilities.h', 'output');
+  const vanAbilityDescs = parseDescriptionArrays(vanAbilityActive, new Map(), 'vanilla abilities.h');
+  const vanAbilityPointers = parsePointerTable(vanAbilityActive, /gAbilityDescriptionPointers\[[^\]]*\]\s*=\s*\{/, vanPp, 'vanilla abilities.h');
+
+  const sortKeys = (obj) => {
+    const out = {};
+    for (const k of Object.keys(obj).sort()) out[k] = obj[k]; // plain code-unit order — locale-independent
+    return out;
+  };
+  // moves: EX values under their EX names; the vanilla overlay carries only
+  // the entries that differ (a rename counts as a difference — the overlay
+  // is keyed by the VANILLA name, so the Vanilla learnsets still resolve)
+  const exMoveName = (value) => exMoveByValue.get(value);
+  for (const [value, entry] of exMoveCatalog) catalog.moves[exMoveName(value)] = entry;
+  const vanMoveDiff = {};
+  for (const [value, entry] of vanMoveCatalog) {
+    const vanName = vanMoveByValue.get(value);
+    if (vanName === undefined) fail(`vanilla move catalog: no display name for move ${value}`);
+    const exName = exMoveName(value);
+    const exEntry = exName !== undefined ? catalog.moves[exName] : undefined;
+    if (exName !== vanName || !exEntry || JSON.stringify(exEntry) !== JSON.stringify(entry)) vanMoveDiff[vanName] = entry;
+  }
+  // abilities: same diff convention (Overgrow's "GRASS" → "Grass" is one)
+  const vanAbilityDiff = {};
+  for (const [value, sym] of vanAbilityPointers) {
+    const name = vanAbilityByValue.get(value);
+    if (name === undefined) continue; // ABILITY_NONE
+    const desc = vanAbilityDescs.get(sym);
+    if (desc === undefined) fail(`vanilla abilities.h: ${name} points at undefined ${sym}`);
+    if (exAbilityCatalog[name] !== desc) vanAbilityDiff[name] = desc;
+  }
+  catalog.moves = sortKeys(catalog.moves);
+  catalog.abilities = sortKeys(exAbilityCatalog);
+  const catalogVanilla = {};
+  if (Object.keys(vanMoveDiff).length > 0) catalogVanilla.moves = sortKeys(vanMoveDiff);
+  if (Object.keys(vanAbilityDiff).length > 0) catalogVanilla.abilities = sortKeys(vanAbilityDiff);
+  if (Object.keys(catalogVanilla).length > 0) catalog.vanilla = catalogVanilla;
+  if (Object.keys(catalog.moves).length < 300 || Object.keys(catalog.abilities).length < 70) {
+    fail(`catalog too small (${Object.keys(catalog.moves)} moves, ${Object.keys(catalog.abilities)} abilities)`);
+  }
+  console.error(
+    `note: catalog — ${Object.keys(catalog.moves).length} moves + ${Object.keys(catalog.abilities).length} abilities (EX` +
+      `${exMoveSkipped.length ? `, ${exMoveSkipped.length} dynamax max moves skipped (${exMoveSkipped.slice(0, 2).join('; ')}…)` : ''}); vanilla overlay: ` +
+      `${Object.keys(catalogVanilla.moves ?? {}).length} moves, ${Object.keys(catalogVanilla.abilities ?? {}).length} abilities` +
+      `${vanMoveSkipped.length ? `; ${vanMoveSkipped.length} vanilla moves skipped` : ''}`,
+  );
 
   // value -> display name: the data files own the display names, the
   // constants files own the values (evolution data references items by
@@ -1990,14 +2380,18 @@ function extract(repo) {
   }
   console.error(`note: form sprites — ${referencedOwn.size} of ${formManifest.counts.own} own entries are roster-referenced; all ${referencedOwn.size} ship <formEntryId>.png (verified on disk)`);
 
-  return { records, counts: { total: records.length, shared: sharedCount, exOnly: records.length - sharedCount, vanillaOnly, exEntries: exEntryCount, noDex: exNoDexMap.size, synthesized: exSynthesized.length } };
+  return { records, counts: { total: records.length, shared: sharedCount, exOnly: records.length - sharedCount, vanillaOnly, exEntries: exEntryCount, noDex: exNoDexMap.size, synthesized: exSynthesized.length }, catalog };
 }
 
 // ---------------------------------------------------------------------------
-// Document envelope (meta + prose)
+// Document envelope (meta + prose + catalog)
 // ---------------------------------------------------------------------------
 
-function buildDoc({ records, counts }) {
+// `catalog` (issue #99) is the top-level move & ability reference the detail
+// tables render: the EX values keyed by display name (moves: type / power /
+// accuracy / PP + the in-game description as `effect`; abilities: the
+// description) plus the diff-only `catalog.vanilla` overlay.
+function buildDoc({ records, counts, catalog }) {
   const spriteExCount = records.filter((r) => r.spriteEx).length;
   const formSpriteCount = records.flatMap((r) => r.forms ?? []).filter((f) => f && f.sprite).length;
   return {
@@ -2044,8 +2438,13 @@ function buildDoc({ records, counts }) {
           "tm = the build's TM table (50) ∩ the species' levelUp/tutor moves",
           "forms share the base species' profile — the game resolves the base form first",
           'the base profile, not the trainer-revised one',
+          'catalog — the move & ability reference behind the detail tables: every move’s type / power / accuracy / PP and in-game description, plus each ability’s description, per build (the top-level values are the Expansion build’s; catalog.vanilla holds only the entries that differ under Vanilla)',
         ],
-        source: 'src/pokemon.c @vanilla; src/pokemon.c @origin/expansion; src/data/party_menu.h @vanilla; src/data/party_menu.h @origin/expansion',
+        source:
+          'src/pokemon.c @vanilla; src/pokemon.c @origin/expansion; src/data/party_menu.h @vanilla; src/data/party_menu.h @origin/expansion; '
+          + 'src/data/battle_moves.h @vanilla; src/data/battle_moves.h @origin/expansion; '
+          + 'src/data/text/move_descriptions.h @vanilla; src/data/text/move_descriptions.h @origin/expansion; '
+          + 'src/data/text/abilities.h @vanilla; src/data/text/abilities.h @origin/expansion',
       },
       {
         id: 'sprite-provenance',
@@ -2063,6 +2462,7 @@ function buildDoc({ records, counts }) {
         source: 'scripts/extract/sprites.mjs (site data); site/assets/pokemon/ (site data)',
       },
     ],
+    catalog,
     records,
   };
 }
@@ -2075,8 +2475,8 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const repo = path.resolve(args.repo);
   assertRepoSane(repo);
-  const { records, counts } = extract(repo);
-  const doc = buildDoc({ records, counts });
+  const { records, counts, catalog } = extract(repo);
+  const doc = buildDoc({ records, counts, catalog });
   const rendered = JSON.stringify(doc, null, 2) + '\n';
   const outPath = path.resolve(args.out);
   if (args.check) {

@@ -2111,9 +2111,16 @@
    full dex order, two-sided; the name span is the 360px ellipsis
    point), the stat bars (.dex-stat: label + track + emerald fill, width =
    value/255 capped, BST row last), the meta rows, the Pokédex text,
-   abilities, the .dex-evo line (neighbors as hash links with mono
-   method captions; --absent for a species the active build lacks), the
-   three move groups, the structured forms section (issue #85 —
+   the abilities (issue #99 — one .dex-ability block each: the
+   display-face name + the in-game description from the active
+   build's top-level catalog, catalog.vanilla under Vanilla; a
+   name-only block when the build's catalog has no entry, never a
+   fake dash), the .dex-evo line (neighbors as hash links with mono
+   method captions; --absent for a species the active build lacks),
+   the three move groups (issue #99 — the contract .table per group:
+   Move — name + the mono `Lv n` level tag, level 0 → `(Evo)` —,
+   the Type chip, the mono Pow/Acc/PP, the in-game effect), the
+   structured forms section (issue #85 —
    one .dex-form block per form: the form’s sprite (.dex-form__sprite
    at the tile token — its own <formEntryId>.png via the data’s
    form.sprite field, the base record’s sprite as the fallback for
@@ -2673,13 +2680,54 @@
   color: var(--color-muted);
 }
 
+/* the abilities field (issue #99): one .dex-ability block per ability —
+   the display-face name + the in-game description from the active
+   build's catalog (catalog.vanilla under Vanilla); a name-only block
+   when the build's catalog has no entry (never a fake dash). The
+   description wraps under the name at 360px (flex-wrap, baseline
+   aligned). */
+.page--pokedex .dex-ability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--space-2);
+  row-gap: 2px;
+  max-width: 70ch;
+}
+
+.page--pokedex .dex-ability + .dex-ability {
+  margin-top: var(--space-2);
+}
+
+.page--pokedex .dex-ability__name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  line-height: 1.2;
+  color: var(--color-ink);
+}
+
+.page--pokedex .dex-ability__desc {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+
+/* the three move groups (issue #99): one contract .table each (Move /
+   Type / Pow / Acc / PP / Effect) — the .table contract's own
+   overflow-x block-scroll keeps them 360px-safe; the group's label
+   sits above the table with the old chip-row's gap. An empty group
+   keeps its mono "—" marker. */
 .page--pokedex .dex-moves {
   display: grid;
   gap: var(--space-4);
 }
 
-.page--pokedex .dex-moves__group .chip-row {
-  margin-top: var(--space-2);
+.page--pokedex .dex-moves__group {
+  display: grid;
+  gap: var(--space-2);
 }
 
 .page--pokedex .dex-moves__none {

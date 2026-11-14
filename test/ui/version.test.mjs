@@ -52,7 +52,11 @@
  *                   Vanilla and reopens it on the EX round-trip; a
  *                   deep-linked charizard detail renders its structured
  *                   forms (issue #85) — one .dex-form block per form,
- *                   Mega Charizard X carrying its per-form BST 634.
+ *                   Mega Charizard X carrying its per-form BST 634 —
+ *                   plus its issue-#99 catalog detail: the Blaze
+ *                   .dex-ability block carrying its in-game description
+ *                   from the top-level catalog, and the Level Up move
+ *                   table's Ember row (mono `Lv 1` tag + Pow 40).
  *
  * Waiting is always on a version-specific DOM state (the re-render itself,
  * or the URL rewrite) — no arbitrary sleeps.
@@ -712,6 +716,28 @@ test('pokedex.html (EX): a deep-linked charizard detail renders its structured f
         megaX: [...panel.querySelectorAll('.dex-forms .dex-form')].find((f) =>
           (f.querySelector('.dex-form__name')?.textContent || '').includes('Mega Charizard X')
         )?.textContent ?? null,
+        /* issue #99 — the abilities field's .dex-ability blocks and the
+         * Level Up move table's Ember row (data/pokedex.json charizard
+         * abilities[0] + moves.levelUp + catalog.moves/catalog.abilities) */
+        blaze: (() => {
+          const el = [...panel.querySelectorAll('.dex-ability')].find((e) =>
+            (e.querySelector('.dex-ability__name')?.textContent || '').trim() === 'Blaze'
+          );
+          return el
+            ? {
+                name: el.querySelector('.dex-ability__name')?.textContent.trim() ?? null,
+                desc: el.querySelector('.dex-ability__desc')?.textContent ?? null
+              }
+            : null;
+        })(),
+        ember: (() => {
+          const row = [...panel.querySelectorAll('.dex-moves__group .table tbody tr')].find((tr) =>
+            (tr.querySelector('td')?.textContent || '').trim().startsWith('Ember')
+          );
+          if (!row) return null;
+          const cells = [...row.querySelectorAll('td')].map((c) => c.textContent.trim());
+          return { move: cells[0], pow: cells[2], acc: cells[3], pp: cells[4], type: cells[1] };
+        })(),
       };
     });
     assert.ok(facts, 'the deep link renders the .dex-species detail panel');
@@ -729,6 +755,21 @@ test('pokedex.html (EX): a deep-linked charizard detail renders its structured f
       facts.megaX.includes('634'),
       "Mega Charizard X's per-form stat rows render its BST 634 end-to-end (extractor → data/pokedex.json → pokedex.js statRowsHtml)"
     );
+
+    /* issue #99 — the catalog-backed detail (data/pokedex.json charizard +
+     * catalog, pokedex.js abilitiesHtml/moveRowHtml) */
+    assert.ok(facts.blaze, 'the abilities field renders a Blaze .dex-ability block');
+    assert.equal(
+      facts.blaze.desc,
+      'Ups Fire moves in a pinch.',
+      "the Blaze block carries its in-game description from the active build's catalog (catalog.abilities, EX)"
+    );
+    assert.ok(facts.ember, 'the Level Up move table carries an Ember row');
+    assert.equal(facts.ember.move, 'Ember Lv 1', 'the Ember row shows the move name + the mono Lv 1 tag (moves.levelUp)');
+    assert.equal(facts.ember.type, 'Fire', 'the Ember row shows its catalog type as a chip (catalog.moves.Ember.type)');
+    assert.equal(facts.ember.pow, '40', 'the Ember row shows its catalog power (catalog.moves.Ember.power)');
+    assert.equal(facts.ember.acc, '100', 'the Ember row shows its catalog accuracy');
+    assert.equal(facts.ember.pp, '25', 'the Ember row shows its catalog PP');
   } finally {
     await close();
   }
