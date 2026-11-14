@@ -43,9 +43,9 @@
  *   safari.html   — a version-identical page: stable counts, only the
  *                   Legends Cave roster note flips (data/safari.json).
  *   pokedex.html  — the lazy data/pokedex.json dex: the #dex-count line
- *                   flips "1025 species · page 1 of 37" (EX: all 1025
- *                   records) → "386 species · page 1 of 14" (Vanilla:
- *                   the 386 shared records), 28 .dex-tile tiles in both
+ *                   flips "1025 species · page 1 of 43" (EX: all 1025
+ *                   records) → "386 species · page 1 of 17" (Vanilla:
+ *                   the 386 shared records), 24 .dex-tile tiles in both
  *                   (data/site.json dex.pageSize); an EX-only selection
  *                   (turtwig, deep-link #rec-pokedex-turtwig) closes the
  *                   .dex-species detail back to the overview under
@@ -615,14 +615,14 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
     await assertToggle(page, 'ex', 'pokedex.html (default)');
 
-    // EX initial state: 28 tiles (data/site.json dex.pageSize) and the
+    // EX initial state: 24 tiles (data/site.json dex.pageSize) and the
     // count line over all 1025 EX records (386 shared + 639 EX-only);
     // no selection at load → no detail panel
-    assert.equal(await page.locator('.dex-tile').count(), 28, 'data/site.json dex.pageSize = 28 → 28 .dex-tile links on page 1 (pokedex.js)');
+    assert.equal(await page.locator('.dex-tile').count(), 24, 'data/site.json dex.pageSize = 24 → 24 .dex-tile links on page 1 (pokedex.js)');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '1025 species · page 1 of 37',
-      'data/pokedex.json: all 1025 records include ex → 1025 species; ceil(1025 / 28) = 37 pages (pokedex.js updateBrowse)'
+      '1025 species · page 1 of 43',
+      'data/pokedex.json: all 1025 records include ex → 1025 species; ceil(1025 / 24) = 43 pages (pokedex.js updateBrowse)'
     );
     assert.equal(await page.locator('.dex-species').count(), 0, 'no #rec-pokedex-<id> hash at load → the .dex-species detail panel is not rendered');
 
@@ -647,21 +647,21 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and
 
     // EX → Vanilla: turtwig does not exist in Vanilla → the selection
     // clears to the overview, and the count line re-scopes to the 386
-    // shared records (ceil(386 / 28) = 14 pages)
+    // shared records (ceil(386 / 24) = 17 pages)
     await clickToggle(
       page,
       'vanilla',
       () =>
-        (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 14' &&
+        (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 17' &&
         document.querySelector('.dex-species') === null,
       'pokedex.html (EX→Vanilla)'
     );
     await assertToggle(page, 'vanilla', 'pokedex.html (after click)');
-    assert.equal(await page.locator('.dex-tile').count(), 28, 'data/pokedex.json: the 386 Vanilla records still fill the first page → 28 tiles (pokedex.js)');
+    assert.equal(await page.locator('.dex-tile').count(), 24, 'data/pokedex.json: the 386 Vanilla records still fill the first page → 24 tiles (pokedex.js)');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '386 species · page 1 of 14',
-      'data/pokedex.json: only the 386 shared records include vanilla → 386 species, ceil(386 / 28) = 14 pages'
+      '386 species · page 1 of 17',
+      'data/pokedex.json: only the 386 shared records include vanilla → 386 species, ceil(386 / 24) = 17 pages'
     );
     assert.equal(
       await page.locator('.dex-species').count(),
@@ -681,7 +681,7 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and
     assert.equal(await page.locator('.dex-species').count(), 1, 'the retained EX-only selection re-resolves under EX → the detail panel reopens');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '1025 species · page 1 of 37',
+      '1025 species · page 1 of 43',
       'the round-trip restores the full 1025-record EX count line'
     );
   } finally {

@@ -15,6 +15,14 @@
  * nav.js only emits it — search.js binds the click and owns the overlay.
  * Its aria-label comes from the data/site.json `search` block's `label`
  * field (defensive fallback to "Search the site" when it is absent).
+ *
+ * After the header is replaced, nav.js also publishes the header's
+ * measured rendered height on <html> as --site-header-h (at load + on
+ * resize) — the sticky .section-nav strips' top offset (components.css)
+ * and the base of the adopting pages' anchor scroll-margins (pages.css);
+ * the header's height is width-dependent (two rows at every width —
+ * issue #90 — with the ≤560px compact set), so it is measured, never
+ * hardcoded.
  */
 (function () {
   'use strict';
@@ -118,6 +126,21 @@
       '</div>';
   }
 
+  /** Publish the sticky header's rendered height on <html> as
+   *  --site-header-h — the .section-nav strips' sticky top offset
+   *  (components.css) and the base of the pages' anchor
+   *  scroll-margins. The header is two rows at EVERY width (issue
+   *  #90) and its height is width-dependent only at ≤560px (the
+   *  compact search-trigger/toggle set), so it is measured live —
+   *  never hardcoded — and re-measured on resize. The search.js
+   *  setPaletteTop pattern (measure on load, re-measure on resize),
+   *  with this file's own element + variable name. */
+  function measureHeaderHeight() {
+    var header = document.getElementById('site-header');
+    if (!header) return;
+    document.documentElement.style.setProperty('--site-header-h', header.offsetHeight + 'px');
+  }
+
   function init() {
     var site = siteOrEmpty();
     if (!site) {
@@ -126,6 +149,8 @@
     }
     buildHeader(site);
     buildFooter(site);
+    measureHeaderHeight();
+    window.addEventListener('resize', measureHeaderHeight);
     ROGUE.onChange(syncToggle);
   }
 

@@ -158,6 +158,22 @@
       .join('');
     html += '</nav>';
 
+    /* The section strip (issue #98): one chip per section — below the
+     * decorative .loop phase strip, which stays above it. */
+    html +=
+      ROGUE.sectionNav(
+        [
+          { id: 'gp-hub', label: 'Hub' },
+          { id: 'gp-run', label: 'Run' },
+          { id: 'gp-placement', label: 'Placement' },
+          { id: 'gp-rooms', label: 'Room types' },
+          { id: 'gp-boss', label: 'Boss ladder' },
+          { id: 'gp-post-run', label: 'Post-run' },
+          { id: 'gp-return', label: 'Back to the hub' }
+        ],
+        'Gameplay sections'
+      );
+
     /* Phase 1 — the hub. */
     var hubIntro = ROGUE.proseById(hub, 'what-the-hub-is');
     if (hubIntro) {

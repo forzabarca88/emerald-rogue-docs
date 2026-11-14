@@ -40,7 +40,7 @@
  *     no-mock setup as test/search.test.mjs), because the on-page filter
  *     indexes that exact string;
  *   - the two project-wide pinned count lines ("1025 species · page 1 of
- *     37" EX / "386 species · page 1 of 14" Vanilla) are asserted as
+ *     43" EX / "386 species · page 1 of 17" Vanilla) are asserted as
  *     literals (they are pinned by smoke/version suites) and cross-checked
  *     against the data-derived value at load.
  *
@@ -51,7 +51,7 @@
  *      pinned full EX line.
  *   2. #92 default state — the select renders "All variants" first then
  *      the EX options verbatim (38 total), value "all", the pinned full
- *      EX count line, 28 .dex-tile tiles, and the 10 .dex-filter__btn
+ *      EX count line, 24 .dex-tile tiles, and the 10 .dex-filter__btn
  *      region buttons untouched (the select is not one of them).
  *   3. #92 membership — selecting the EX-only "Modern" option updates the
  *      count line to the data-derived membership (derived from
@@ -116,8 +116,8 @@ const countLine = (n) => n + ' species · page 1 of ' + Math.max(1, Math.ceil(n 
  * load so a drifted extraction fails HERE, not as a stale literal. */
 const FULL_EX_LINE = countLine(exRecords.length);
 const FULL_VANILLA_LINE = countLine(vanillaRecords.length);
-assert.equal(FULL_EX_LINE, '1025 species · page 1 of 37', 'data/pokedex.json: the pinned EX full count line drifted — update the pinned literal');
-assert.equal(FULL_VANILLA_LINE, '386 species · page 1 of 14', 'data/pokedex.json: the pinned Vanilla full count line drifted — update the pinned literal');
+assert.equal(FULL_EX_LINE, '1025 species · page 1 of 43', 'data/pokedex.json: the pinned EX full count line drifted — update the pinned literal');
+assert.equal(FULL_VANILLA_LINE, '386 species · page 1 of 17', 'data/pokedex.json: the pinned Vanilla full count line drifted — update the pinned literal');
 
 /* #91 fixture: a region with a non-trivial EX count (the issue's own
  * example), derived from the data; the chip labels derive from the same

@@ -243,6 +243,66 @@
   gap: 6px;
 }
 
+/* --- Section nav (the in-page section strip) ------------------------------
+   The shared sticky chip strip that navigates WITHIN a page (issue #98):
+   one a.chip anchor per page section, emitted by ROGUE.sectionNav
+   (site/js/render.js). It pins under the sticky site header while the
+   page scrolls, so the sections are one click away at any scroll
+   position. The top offset reads --site-header-h — the #site-header's
+   measured rendered height, published on <html> by site/js/nav.js at
+   load + resize (the header is two rows at EVERY width — issue #90 —
+   and its height is width-dependent only at ≤560px, the compact
+   search-trigger/toggle set, so it is measured, never hardcoded); the
+   118px fallback (the measured ≥561px height) applies only before the
+   first measurement. Solid --color-bg + the 1px line hairline +
+   space-3/space-2 padding = the same treatment as the pokedex
+   .dex-browse bar (which pages.css re-pins under via its own `top`
+   override). z-index 10: above the page content, below the sticky
+   site header (--z-header: 20) and the search palette. At ≤560px the
+   strip is ONE line that scrolls horizontally (no wrap, hidden
+   scrollbar) so it never grows tall at 360px (DESIGN.md §9). */
+
+.section-nav {
+  position: sticky;
+  top: var(--site-header-h, 118px);
+  z-index: 10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: var(--space-3) 0 var(--space-2);
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-line);
+  margin-bottom: var(--space-4);
+}
+
+.section-nav a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+
+.section-nav a:hover {
+  color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
+/* the optional per-chip live count (e.g. the quests' per-group counts —
+   the same [data-count] key the group headings' spans carry) */
+.section-nav__count {
+  color: var(--color-muted);
+}
+
+@media (max-width: 560px) {
+  .section-nav {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none; /* single line, no visible scrollbar (DESIGN.md §9) */
+  }
+
+  .section-nav::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* --- Field label ------------------------------------------------------------
    Small mono uppercase label set above a field inside a card (quest
    Trigger / Requirements / Rewards; config forced toggles / options).

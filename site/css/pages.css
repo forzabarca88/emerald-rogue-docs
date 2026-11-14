@@ -238,9 +238,11 @@
   color: var(--color-muted);
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js — components.css .section-nav) + the pinned
+   .section-nav strip (49px) + a 16px gap (issue #98) */
 .page--gameplay .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* phase strip — in-page navigation through the loop */
@@ -541,9 +543,11 @@
   color: var(--color-muted);
 }
 
-/* anchor rows clear the sticky header (DESIGN.md §9) */
+/* anchor rows land BELOW the sticky header (the --site-header-h measured
+   by nav.js) + the pinned .section-nav strip (49px) + a 16px gap
+   (issue #98, DESIGN.md §9) */
 .page--versions .diff[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--versions .diffs {
@@ -697,41 +701,21 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header (114–118px tall; .quest-group
-   has no padding of its own, so it gets a little extra headroom) */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98); .quest-group has no padding of its own, so it gets
+   a little extra headroom */
 .page--quests .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--quests .quest-group {
-  scroll-margin-top: 128px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 81px);
 }
 
 /* explicit: hidden groups/cards drop out even with a display rule */
 .page--quests [hidden] {
   display: none !important;
-}
-
-/* anchor-chip nav across the display groups (chip = anchor) */
-.page--quests .quest-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--quests .quest-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--quests .quest-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
-}
-
-.page--quests .quest-chips__count {
-  color: var(--color-muted);
 }
 
 /* the search box is capped so it reads as a control, not a banner */
@@ -811,27 +795,11 @@
   color: var(--color-muted);
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--config .section[id] {
-  scroll-margin-top: 112px;
-}
-
-/* anchor-chip strip across the page's sections */
-.page--config .config-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--config .config-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--config .config-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* sub-headings inside a section (settings submenus, rule-assembly note) */
@@ -1129,31 +1097,15 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--hub .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--hub [hidden] {
   display: none !important;
-}
-
-/* anchor-chip strip across the page's sections */
-.page--hub .hub-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--hub .hub-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--hub .hub-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* area card meta — build-cost chip + the area code constant; long code
@@ -1451,31 +1403,15 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--safari .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--safari [hidden] {
   display: none !important;
-}
-
-/* anchor-chip strip across the page's sections */
-.page--safari .safari-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--safari .safari-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--safari .safari-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* slot diagram — the 60-slot pool as two labelled blocks, one cell per
@@ -1711,31 +1647,15 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--routes .section[id] {
-  scroll-margin-top: 112px;
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 .page--routes [hidden] {
   display: none !important;
-}
-
-/* anchor-chip strip across the page's sections */
-.page--routes .routes-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--routes .routes-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--routes .routes-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
 }
 
 /* the chip row of terrains present in the table */
@@ -2096,8 +2016,9 @@
    the active build's settings.json options, "All variants" default) —
    the live #dex-count line and the .dex-pager between the count and the
    grid), then the .dex-grid —
-   exactly data/site.json dex.pageSize (28, the in-game Overview's tile
-   page) .dex-tile <a> links per page, each a lazy sprite
+   exactly data/site.json dex.pageSize (24 — the site's tile page; the
+   in-game Overview draws 28) .dex-tile <a> links per page, each a lazy
+   sprite
    (--tile-sprite-size, pixelated) with an onerror placeholder tile
    (--placeholder) showing the dex number in mono — and the four prose
    blocks (issue #84 — short text + each block's `list` facts as a
@@ -2149,16 +2070,18 @@
 
 /* Deep-link / search-Enter targets. The overview's sections (the
    #dex-browse section + the four prose blocks below the grid) must
-   land BELOW the sticky header PLUS the sticky .dex-browse bar: the
-   bar's height is viewport-dependent (the region chips wrap to extra
-   rows at 360px), so it is measured in js/pages/pokedex.js
-   (setBrowseTop) and published on <main> as --dex-scroll-clear
-   (header height + the bar's offsetHeight + a 16px margin) — never
-   hardcoded here; the 320px fallback only applies before the first
-   measurement. #dex-species keeps the header-only 112px: the detail
-   REPLACES the overview, so the bar is hidden while it is open. */
+   land BELOW the sticky header PLUS the sticky .dex-browse bar PLUS
+   the sticky .section-nav strip (issue #98): the bar's and strip's
+   heights are viewport-dependent (the region chips wrap to extra rows
+   at 360px), so they are measured in js/pages/pokedex.js
+   (setBrowseTop) and published on <main> as --dex-section-clear
+   (header + the bar's offsetHeight + the strip's offsetHeight + a
+   16px margin) — never hardcoded here; the 360px fallback only
+   applies before the first measurement. #dex-species keeps the
+   header-only 112px: the detail REPLACES the overview, so the bar and
+   the strip are hidden while it is open. */
 .page--pokedex #dex-overview .section[id] {
-  scroll-margin-top: var(--dex-scroll-clear, 320px);
+  scroll-margin-top: var(--dex-section-clear, 360px);
 }
 
 .page--pokedex #dex-species {
@@ -2191,11 +2114,12 @@
    the grid begin. The top offset (--dex-browse-top, the header's
    rendered height — two rows at every width (issue #90),
    width-dependent only at ≤560px (the compact search-trigger/toggle
-   set)) and the
-   deep-link scroll clearance (--dex-scroll-clear, header + this bar's
-   measured offsetHeight + 16px — see the scroll-margin rule above)
-   are both measured on load + resize in js/pages/pokedex.js
-   (setBrowseTop).
+   set)), --dex-scroll-clear (header + this bar's measured
+   offsetHeight + 16px — the .section-nav strip's sticky top, see
+   its rule below) and the deep-link scroll clearance
+   (--dex-section-clear, that value + the strip's offsetHeight — see
+   the scroll-margin rule above) are all measured on load + resize in
+   js/pages/pokedex.js (setBrowseTop).
    The bar's OWN height is not fixed here — at 360px the 10 region
    chips wrap to extra rows — only its top is measured; the solid
    page-background token keeps the grid tiles from showing through
@@ -2211,6 +2135,17 @@
   padding: var(--space-3) 0 var(--space-2);
   border-bottom: 1px solid var(--color-line);
   margin-bottom: var(--space-4);
+}
+
+/* The section strip (issue #98) pinned UNDER the sticky browse bar:
+   its `top` overrides the contract rule's --site-header-h with the
+   measured --dex-scroll-clear (header + bar + 16px — setBrowseTop).
+   It sits between the bar and the grid inside the #dex-browse section,
+   so it pins while the grid pages, releases with the section when the
+   prose blocks begin, and hides with the overview when a detail is
+   open. */
+.page--pokedex .section-nav {
+  top: var(--dex-scroll-clear, 320px);
 }
 
 .page--pokedex .dex-toolbar {
@@ -2275,7 +2210,7 @@
 
 .page--pokedex .dex-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 152px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
   gap: var(--space-3);
 }
 
@@ -2833,27 +2768,11 @@
   overflow-wrap: anywhere;
 }
 
-/* anchor targets clear the sticky header */
+/* anchor targets land BELOW the sticky header (the --site-header-h
+   measured by nav.js) + the pinned .section-nav strip (49px) + a 16px
+   gap (issue #98) */
 .page--mechanics .section[id] {
-  scroll-margin-top: 112px;
-}
-
-/* anchor-chip strip across the six systems */
-.page--mechanics .mech-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: var(--space-4);
-}
-
-.page--mechanics .mech-chips a {
-  color: var(--color-ink);
-  text-decoration: none;
-}
-
-.page--mechanics .mech-chips a:hover {
-  color: var(--color-emerald);
-  border-color: var(--color-emerald);
+  scroll-margin-top: calc(var(--site-header-h, 118px) + 65px);
 }
 
 /* prose subheadings inside a mechanic section */

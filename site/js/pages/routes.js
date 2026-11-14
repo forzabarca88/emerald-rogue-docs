@@ -419,22 +419,18 @@
       var naming = ROGUE.proseById(data, 'naming-scheme');
       if (naming) html += ROGUE.section('routes-naming', 'Naming scheme', naming.heading, null, ROGUE.paragraphs(naming.text));
 
-      /* Anchor-chip nav. */
-      var nav = [
-        { id: 'routes-naming', label: 'Naming' },
-        { id: 'routes-types', label: 'Types' },
-        { id: 'routes-subtypes', label: 'Sub-types' },
-        { id: 'routes-table', label: 'The ' + records.length + ' routes' },
-        { id: 'routes-path', label: 'On the path' }
-      ];
+      /* The section strip (issue #98). */
       html +=
-        '<nav class="routes-chips" aria-label="Routes sections">' +
-        nav
-          .map(function (n) {
-            return '<a class="chip" href="#' + ROGUE.esc(n.id) + '">' + ROGUE.esc(n.label) + '</a>';
-          })
-          .join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          [
+            { id: 'routes-naming', label: 'Naming' },
+            { id: 'routes-types', label: 'Types' },
+            { id: 'routes-subtypes', label: 'Sub-types' },
+            { id: 'routes-table', label: 'The ' + records.length + ' routes' },
+            { id: 'routes-path', label: 'On the path' }
+          ],
+          'Routes sections'
+        );
 
       /* Terrain taxonomy + the terrains present in the table. */
       var tax = ROGUE.proseById(data, 'type-taxonomy');

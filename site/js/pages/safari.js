@@ -201,22 +201,18 @@
       var intro = ROGUE.proseById(data, 'where-it-fits');
       if (intro) html += ROGUE.section('safari-intro', 'The hub', intro.heading, null, ROGUE.paragraphs(intro.text));
 
-      /* Anchor-chip nav. */
-      var nav = [
-        { id: 'safari-pool', label: 'The pool' },
-        { id: 'safari-entry', label: 'How mons enter' },
-        { id: 'safari-priority', label: 'Priority & eviction' },
-        { id: 'safari-legends', label: 'Legends Cave' },
-        { id: 'safari-sign', label: 'View & dismiss' }
-      ];
+      /* The section strip (issue #98). */
       html +=
-        '<nav class="safari-chips" aria-label="Safari Zone sections">' +
-        nav
-          .map(function (n) {
-            return '<a class="chip" href="#' + ROGUE.esc(n.id) + '">' + ROGUE.esc(n.label) + '</a>';
-          })
-          .join('') +
-        '</nav>';
+        ROGUE.sectionNav(
+          [
+            { id: 'safari-pool', label: 'The pool' },
+            { id: 'safari-entry', label: 'How mons enter' },
+            { id: 'safari-priority', label: 'Priority & eviction' },
+            { id: 'safari-legends', label: 'Legends Cave' },
+            { id: 'safari-sign', label: 'View & dismiss' }
+          ],
+          'Safari Zone sections'
+        );
 
       /* The 60-slot pool: diagram + cited layout card. */
       var poolProse = ROGUE.proseById(data, 'the-pool');

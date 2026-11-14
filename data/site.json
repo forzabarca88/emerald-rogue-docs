@@ -88,8 +88,8 @@
     }
   },
   "dex": {
-    "_comment": "Pokedex page (site/pokedex.html): the in-game Overview page's tile size — the single source the on-page pager renders from (read via ROGUE.site().dex.pageSize by site/js/pages/pokedex.js).",
-    "pageSize": 28
+    "_comment": "Pokedex page (site/pokedex.html): the site's tile-page size — the single source the on-page pager renders from (read via ROGUE.site().dex.pageSize by site/js/pages/pokedex.js). The in-game Overview draws 28 tiles a page; the site draws 24 (six-up columns with the larger 80px sprites — issue #98), so this is the site's page, not the in-game one.",
+    "pageSize": 24
   },
   "search": {
     "_comment": "Site-wide search palette (site/js/search-index.js + search.js, and the nav.js header trigger): the trigger's accessible label, the input placeholder, the keyboard hint, the open shortcut key, the result cap read by ROGUE.searchQuery, and the overflow suffix the count line appends when the query's pre-cap total exceeds the rows shown ({n} = the hidden count).",
