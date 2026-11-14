@@ -133,6 +133,48 @@
  * context accumulates under repeated toggles/deep links. The static
  * <img> stays in the box as the no-WebGL / texture-failure fallback
  * (no layout shift either way).
+ *
+ * The issue-#100 analytics visualisations (PR 4b) — two hand-rolled
+ * inline-SVG charts (ES5 string-built, viewBox + width:100%, STATIC —
+ * no animation or transitions, trivially reduced-motion-safe), both
+ * event-delegated (a couple of listeners on the chart container, data-
+ * attributes read off the event target — never one listener per
+ * element), both tokens-only (DESIGN.md §6 documents the ramps):
+ *   A. the stat radar (.dex-radar) under the detail's stat bars: a
+ *      6-axis spider (hp/atk/def/spa/spd/spe, normalized to 255 like
+ *      the bars), the selected species' polygon in --color-emerald
+ *      (solid token fill + fill-opacity, no rgba), the compare
+ *      species' polygon in --color-gold when the native compare
+ *      select (default "None", the active version's full dex) picks
+ *      one; ONE delegated pointerover listener on the container reads
+ *      data-axis off the 6 wide invisible hit sectors (pointer-events:
+ *      all — hover AND touch tap at 360px) and writes the mono
+ *      caption "<stat>: <value>[ vs <compare value>]" (values
+ *      version-scoped through dexVariant()); the caption shows the
+ *      last axis read (a tap must persist — no pointerleave clearing).
+ *   B. the type matchup heatmap (.dex-typechart) — a new overview
+ *      section AFTER the prose blocks (the 7th .section-nav chip):
+ *      an N×N grid of the ACTIVE version's standard types (EX 18 / 
+ *      Vanilla 17, derived from the top-level typeChart at render
+ *      time, never hardcoded), attacker rows × defender columns, cells
+ *      binned by the chart's four values {0, 0.5, 1, 2} into the
+ *      four-token dark→light ramp (×0 --color-surface, ×0.5
+ *      --color-raised, ×1 --color-line, ×2 --color-muted). Two
+ *      delegated listeners on the SVG: pointerover/tap a cell → the
+ *      mono caption "<att> → <def>: ×<value>"; a pointerover on a
+ *      defender column header previews the column caption ("<def>: 
+ *      ×2: … · ×0: …") and a click pins/unpins it (gold band + the
+ *      caption persist). The species select (default "None", the
+ *      active dex) highlights the species' own type rows (emerald
+ *      bands) and computes the viability prose's coverage metric as
+ *      TWO mono lines using the dual-type PRODUCT rule (mult(d) =
+ *      ∏ chart[t][d] over the species' types): "hits
+ *      super-effective: n/N" (defenders with product ≥ 2) and
+ *      "at-or-below-neutral: n/N" (product ≤ 1), N = the active
+ *      build's standard-type count. A column pin and a species
+ *      selection are mutually exclusive. At ≤560px the wrapper
+ *      block-scrolls horizontally (min-width 480px — the .table
+ *      pattern) so the page never overflows.
  */
 (function () {
   'use strict';
@@ -223,7 +265,17 @@
       type: 'all',
       sort: 'dexnum-asc',
       page: 1,
-      selection: null
+      selection: null,
+      /* The issue-#100 visualisation selections (PR 4b): the radar's
+       * compare species (a record id) and the typechart's species
+       * highlight (a record id) + pinned defender column (a type
+       * name). All three survive re-renders like the filters above,
+       * and all three reset when the active build no longer offers
+       * the selection (an EX-only record under Vanilla, a Fairy
+       * column under Vanilla) — the variant/type-filter reset rule. */
+      radarCompare: null,
+      tcSpecies: null,
+      tcCol: null
     };
 
     /* The lowercased on-page search haystack per record, precomputed
@@ -419,6 +471,23 @@
     }
 
     /**
+     * The ACTIVE build's typeChart object ({types, mult}): the
+     * diff-only `typeChart.vanilla` overlay under Vanilla, else the
+     * EX chart — null when the data lacks a usable chart. Every
+     * chart read in this page goes through here (the heatmap, the
+     * coverage metric, the filter options), so the version scoping
+     * has exactly one source.
+     */
+    function activeTypeChart() {
+      var tc = data.typeChart;
+      if (!tc || typeof tc !== 'object' || !Array.isArray(tc.types) || !Array.isArray(tc.mult)) return null;
+      if (ROGUE.version === 'vanilla' && tc.vanilla && Array.isArray(tc.vanilla.types) && Array.isArray(tc.vanilla.mult)) {
+        return tc.vanilla;
+      }
+      return tc;
+    }
+
+    /**
      * The active build's type-filter options (issue #100): the
      * top-level typeChart's type list for the active build (the
      * diff-only `typeChart.vanilla` overlay under Vanilla, else the
@@ -430,10 +499,7 @@
      * dead select.
      */
     function typeOptions() {
-      var tc = null;
-      if (data.typeChart && typeof data.typeChart === 'object' && Array.isArray(data.typeChart.types)) {
-        tc = ROGUE.version === 'vanilla' && data.typeChart.vanilla && Array.isArray(data.typeChart.vanilla.types) ? data.typeChart.vanilla : data.typeChart;
-      }
+      var tc = activeTypeChart();
       var out = [];
       if (tc) {
         for (var i = 0; i < tc.types.length; i++) {
@@ -636,7 +702,9 @@
        * — a .dex-browse selector targets the bar only. */
 
       /* The section strip (issue #98): Grid + the prose blocks (five —
-       * the fourth is the issue-#100 "Viability" block) —
+       * the fourth is the issue-#100 "Viability" block) + the issue-#100
+       * PR-4b "Type matchups" heatmap (the 7th chip — the new overview
+       * section AFTER the prose blocks) —
        * the shared .section-nav re-pinned under the sticky bar (the
        * pages.css .page--pokedex .section-nav rule sets its `top` to
        * the measured --dex-scroll-clear). It sits between the bar and
@@ -644,11 +712,13 @@
        * when the section ends, and hides with the overview when a
        * species detail is open. */
       var sectionNav = ROGUE.sectionNav(
-        [{ id: 'dex-browse', label: 'Grid' }].concat(
-          (Array.isArray(data.prose) ? data.prose : []).map(function (block) {
-            return { id: block.id, label: block.heading };
-          })
-        ),
+        [{ id: 'dex-browse', label: 'Grid' }]
+          .concat(
+            (Array.isArray(data.prose) ? data.prose : []).map(function (block) {
+              return { id: block.id, label: block.heading };
+            })
+          )
+          .concat([{ id: 'dex-typechart', label: 'Type matchups' }]),
         'Pokedex overview sections'
       );
 
@@ -674,6 +744,605 @@
         '<div class="dex-grid" id="dex-grid"></div>' +
         '<p class="dex-empty" id="dex-empty" hidden></p>'
       );
+    }
+
+    /* --- issue-#100 visualisation A: the stat radar (detail) ----------------
+     * Geometry: a 300×300 viewBox, center (150,150), axis radius 96
+     * (the 255 max — the stat bars' own value/255 normalization), axis
+     * labels at radius 114, the 6 hit sectors out to radius 126 (they
+     * tile the full 360° in 60° wedges, so every point of the chart is
+     * tappable). The six axes in STAT_ROWS order minus the BST row:
+     * hp top, then clockwise atk / def / spd / spe / spa. */
+    var RADAR_AXES = [
+      ['hp', 'HP'],
+      ['atk', 'ATK'],
+      ['def', 'DEF'],
+      ['spa', 'SP.A'],
+      ['spd', 'SP.D'],
+      ['spe', 'SPE']
+    ];
+    var RADAR_GEOM = { size: 300, cx: 150, cy: 150, r: 96, labelR: 114, hitR: 126, max: 255 };
+
+    /** A radar vertex for axis i at stat value v (clamped to 0…255). */
+    function radarPoint(i, v) {
+      var n = Number(v);
+      if (!Number.isFinite(n) || n < 0) n = 0;
+      if (n > RADAR_GEOM.max) n = RADAR_GEOM.max;
+      var a = ((-90 + i * 60) * Math.PI) / 180;
+      var r = (n / RADAR_GEOM.max) * RADAR_GEOM.r;
+      return (RADAR_GEOM.cx + r * Math.cos(a)).toFixed(1) + ',' + (RADAR_GEOM.cy + r * Math.sin(a)).toFixed(1);
+    }
+
+    /** The polygon `points` string for one species' six stats. */
+    function radarPolyPoints(stats) {
+      return RADAR_AXES.map(function (ax, i) {
+        return radarPoint(i, stats ? stats[ax[0]] : 0);
+      }).join(' ');
+    }
+
+    /** A ring-guide / axis-line endpoint at fraction f of the radius. */
+    function radarGeomPoint(i, f) {
+      var a = ((-90 + i * 60) * Math.PI) / 180;
+      var r = f * RADAR_GEOM.r;
+      return (RADAR_GEOM.cx + r * Math.cos(a)).toFixed(1) + ',' + (RADAR_GEOM.cy + r * Math.sin(a)).toFixed(1);
+    }
+
+    /** The hexagonal ring at fraction f of the radius (f = k/4). */
+    function radarRingPoints(f) {
+      var pts = [];
+      for (var i = 0; i < 6; i++) pts.push(radarGeomPoint(i, f));
+      return pts.join(' ');
+    }
+
+    /**
+     * The wide invisible hit sector for axis i: a 60° wedge from the
+     * center out to hitR (the wedge midpoints every 15° — the wedge
+     * edges are shared by adjacent sectors, so the six tile the full
+     * circle with no gap or overlap). fill:none + pointer-events:all
+     * in CSS makes it the tappable target without painting anything.
+     */
+    function radarSectorPoints(i) {
+      var pts = [RADAR_GEOM.cx + ',' + RADAR_GEOM.cy];
+      for (var d = -30; d <= 30; d += 15) {
+        var a = ((-90 + i * 60 + d) * Math.PI) / 180;
+        pts.push(
+          (RADAR_GEOM.cx + RADAR_GEOM.hitR * Math.cos(a)).toFixed(1) + ',' +
+          (RADAR_GEOM.cy + RADAR_GEOM.hitR * Math.sin(a)).toFixed(1)
+        );
+      }
+      return pts.join(' ');
+    }
+
+    /**
+     * The radar's static SVG (string-built): the 4 ring guides
+     * (25/50/75/100% of 255), the 6 axis lines, the mono axis labels +
+     * the "255" tick on the outer ring, the species polygon
+     * (--color-emerald, solid token fill + fill-opacity), the compare
+     * polygon (--color-gold) when present, the vertex dots, and the 6
+     * invisible hit sectors LAST (topmost — they take the pointers).
+     */
+    function radarSvg(record, compare) {
+      var g = RADAR_GEOM;
+      var s = '<svg class="dex-radar__svg" viewBox="0 0 ' + g.size + ' ' + g.size + '" role="img" aria-label="Base stat radar">';
+      var k;
+      for (k = 1; k <= 4; k++) {
+        s += '<polygon class="dex-radar__ring" points="' + radarRingPoints(k / 4) + '"/>';
+      }
+      for (var i = 0; i < 6; i++) {
+        var p = radarGeomPoint(i, 1).split(',');
+        s += '<line class="dex-radar__axis" x1="' + g.cx + '" y1="' + g.cy + '" x2="' + p[0] + '" y2="' + p[1] + '"/>';
+      }
+      for (i = 0; i < 6; i++) {
+        var a = ((-90 + i * 60) * Math.PI) / 180;
+        var lx = (g.cx + g.labelR * Math.cos(a)).toFixed(1);
+        var ly = (g.cy + g.labelR * Math.sin(a) + 3.5).toFixed(1);
+        s += '<text class="dex-radar__label" x="' + lx + '" y="' + ly + '" text-anchor="middle">' + RADAR_AXES[i][1] + '</text>';
+      }
+      s += '<text class="dex-radar__tick" x="' + (g.cx + 5) + '" y="' + (g.cy - g.r + 12) + '">255</text>';
+      var stats = dexVariant(record, 'stats') || {};
+      s += '<polygon class="dex-radar__poly dex-radar__poly--main" points="' + radarPolyPoints(stats) + '"/>';
+      if (compare) {
+        var cstats = dexVariant(compare, 'stats') || {};
+        s += '<polygon class="dex-radar__poly dex-radar__poly--compare" points="' + radarPolyPoints(cstats) + '"/>';
+      }
+      for (i = 0; i < 6; i++) {
+        var m = radarPoint(i, stats ? stats[RADAR_AXES[i][0]] : 0).split(',');
+        s += '<circle class="dex-radar__dot dex-radar__dot--main" cx="' + m[0] + '" cy="' + m[1] + '" r="3"/>';
+      }
+      if (compare) {
+        for (i = 0; i < 6; i++) {
+          var cstats2 = dexVariant(compare, 'stats') || {};
+          var c = radarPoint(i, cstats2 ? cstats2[RADAR_AXES[i][0]] : 0).split(',');
+          s += '<circle class="dex-radar__dot dex-radar__dot--compare" cx="' + c[0] + '" cy="' + c[1] + '" r="2.5"/>';
+        }
+      }
+      for (i = 0; i < 6; i++) {
+        s += '<polygon class="dex-radar__hit" data-axis="' + RADAR_AXES[i][0] + '" points="' + radarSectorPoints(i) + '"/>';
+      }
+      s += '</svg>';
+      return s;
+    }
+
+    /**
+     * The mono caption for one radar axis: "<stat>: <value>" or
+     * "<stat>: <value> vs <compare value>" when a compare is active —
+     * both values version-scoped through dexVariant().
+     */
+    function radarCaptionText(record, axisKey) {
+      var idx = -1;
+      for (var i = 0; i < RADAR_AXES.length; i++) {
+        if (RADAR_AXES[i][0] === axisKey) idx = i;
+      }
+      if (idx === -1) return '';
+      var stats = dexVariant(record, 'stats') || {};
+      var v = Number(stats[axisKey]);
+      if (!Number.isFinite(v) || v < 0) v = 0;
+      var text = RADAR_AXES[idx][1] + ': ' + v;
+      var compare = compareRecord();
+      if (compare) {
+        var cstats = dexVariant(compare, 'stats') || {};
+        var cv = Number(cstats[axisKey]);
+        if (!Number.isFinite(cv) || cv < 0) cv = 0;
+        text += ' vs ' + cv;
+      }
+      return text;
+    }
+
+    /** The compare record for the current selection, or null. */
+    function compareRecord() {
+      var rec = state.radarCompare ? byId[state.radarCompare] : null;
+      if (!rec || !rec.versions || rec.versions.indexOf(ROGUE.version) === -1) return null;
+      return rec;
+    }
+
+    /**
+     * The radar field (rendered under the detail's stat bars): the
+     * native compare select (default "None" — the active version's
+     * full dex as options, data-derived), the SVG stage, the swatch
+     * legend (the selected species + the compare when present) and
+     * the mono caption (the last axis read — a tap must persist, so
+     * nothing clears it). The whole block is re-swapped in place when
+     * the compare changes (bindRadar's container listener survives —
+     * it sits on the container, not the inner markup).
+     */
+    function radarInner(record) {
+      var compare = compareRecord();
+      var options = orderedList()
+        .map(function (r) {
+          return '<option value="' + ROGUE.esc(r.id) + '"' + (compare && compare.id === r.id ? ' selected' : '') + '>' + ROGUE.esc(dexVariant(r, 'name')) + '</option>';
+        })
+        .join('');
+      return (
+        '<div class="dex-radar__controls">' +
+        '<select id="dex-radar-compare" class="dex-radar__compare" aria-label="Compare the stat radar with a species">' +
+        '<option value="">None</option>' +
+        options +
+        '</select>' +
+        '</div>' +
+        '<div class="dex-radar__stage">' + radarSvg(record, compare) + '</div>' +
+        '<div class="dex-radar__legend">' +
+        '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--main"></span>' + ROGUE.esc(dexVariant(record, 'name')) + '</span>' +
+        (compare ? '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--compare"></span>' + ROGUE.esc(dexVariant(compare, 'name')) + '</span>' : '') +
+        '</div>' +
+        '<p class="dex-radar__caption" id="dex-radar-caption">Hover or tap an axis for its value.</p>'
+      );
+    }
+
+    function radarHtml(record) {
+      return fieldBlock('Stat profile', '<div class="dex-radar" id="dex-radar">' + radarInner(record) + '</div>');
+    }
+
+    /**
+     * The radar's ONE delegated listener (pointerover on the .dex-radar
+     * container — data-axis read off the target: the six invisible hit
+     * sectors are the only children carrying it). pointerover fires for
+     * BOTH pointer hover and touch tap (a touch dispatches pointerover
+     * on touch-down), so hover and tap share one code path; the caption
+     * it writes is the last axis read and is never auto-cleared (a tap
+     * must persist — there is deliberately no pointerleave handler). Then
+     * re-swaps the inner markup so the select shows the current compare
+     * selection.
+     */
+    function bindRadar(record) {
+      var radar = document.getElementById('dex-radar');
+      if (!radar) return;
+      radar.addEventListener('pointerover', function (e) {
+        var t = e.target;
+        if (!t || !t.getAttribute) return;
+        var axis = t.getAttribute('data-axis');
+        if (!axis) return;
+        var cap = document.getElementById('dex-radar-caption');
+        if (cap) cap.textContent = radarCaptionText(record, axis);
+      });
+      renderRadar(record);
+    }
+
+    /**
+     * Re-swaps the radar's inner markup (compare change) and re-binds
+     * the select (the container-level pointerover listener, bound once
+     * per full render, survives the innerHTML swap).
+     */
+    function renderRadar(record) {
+      var radar = document.getElementById('dex-radar');
+      if (!radar) return;
+      radar.innerHTML = radarInner(record);
+      var select = document.getElementById('dex-radar-compare');
+      if (select) {
+        select.addEventListener('change', function () {
+          state.radarCompare = select.value || null;
+          renderRadar(record);
+        });
+      }
+    }
+
+    /* --- issue-#100 visualisation B: the type matchup heatmap (overview) ---- */
+
+    /* The typechart's unambiguous 3–4 letter axis abbreviations (the
+     * full names stay in the captions and legend — these only label
+     * the tight SVG gutters). A type missing from the map renders its
+     * full name, never a broken label. */
+    var TYPE_ABBR = {
+      Normal: 'Nor',
+      Fighting: 'Fig',
+      Flying: 'Fly',
+      Poison: 'Pos',
+      Ground: 'Gnd',
+      Rock: 'Roc',
+      Bug: 'Bug',
+      Ghost: 'Gho',
+      Steel: 'Ste',
+      Fire: 'Fire',
+      Water: 'Wat',
+      Grass: 'Gra',
+      Electric: 'Ele',
+      Psychic: 'Psy',
+      Ice: 'Ice',
+      Dragon: 'Dra',
+      Dark: 'Dark',
+      Fairy: 'Fair',
+      Mystery: '??',
+      Stellar: 'Stel'
+    };
+
+    function typeAbbr(t) {
+      return typeof TYPE_ABBR[t] === 'string' ? TYPE_ABBR[t] : t;
+    }
+
+    /* The cell geometry: 24-unit cells, a 52-unit left gutter for the
+     * row labels and a 44-unit top gutter for the -45°-rotated column
+     * labels. N comes from typeOptions() (EX 18 / Vanilla 17) — the
+     * grid is derived, never hardcoded. */
+    var TC_GEOM = { cell: 24, left: 52, top: 44, pad: 8 };
+
+    /** The bin class suffix for a multiplier (0→i0, 0.5→i1, 1→i2, 2→i3). */
+    function tcBin(m) {
+      if (m <= 0.25) return 0;
+      if (m <= 0.75) return 1;
+      if (m <= 1.5) return 2;
+      return 3;
+    }
+
+    /**
+     * The typechart's static SVG (string-built): the N×N cells
+     * (binned fills, data-at/data-def/data-mult for the delegation),
+     * the row labels (abbreviated, right-aligned), the rotated column
+     * labels (each with an invisible tappable hit rect above its
+     * column), and the hidden highlight bands — one emerald row band
+     * per type, one gold column band per type (visibility toggled by
+     * the species select / column pin). The bands sit topmost with
+     * pointer-events:none so they never steal a cell's pointer.
+     */
+    function typechartSvg(types) {
+      var tc = activeTypeChart();
+      if (!tc) {
+        return '<svg class="dex-typechart__grid" viewBox="0 0 480 480" role="img" aria-label="Type matchup chart (no chart data)"></svg>';
+      }
+      var N = types.length;
+      var g = TC_GEOM;
+      var w = g.left + N * g.cell + g.pad;
+      var h = g.top + N * g.cell + g.pad;
+      var s = '<svg class="dex-typechart__grid" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Type matchup chart: rows attack, columns defend">';
+      var a, d;
+      for (a = 0; a < N; a++) {
+        var atk = types[a];
+        var atkI = tc.types.indexOf(atk);
+        for (d = 0; d < N; d++) {
+          var def = types[d];
+          var defI = tc.types.indexOf(def);
+          var m = atkI !== -1 && defI !== -1 ? tc.mult[atkI][defI] : 1;
+          s +=
+            '<rect class="dex-typechart__cell dex-typechart__cell--i' +
+            tcBin(m) +
+            '" data-at="' +
+            ROGUE.esc(atk) +
+            '" data-def="' +
+            ROGUE.esc(def) +
+            '" data-mult="' +
+            m +
+            '" x="' +
+            (g.left + d * g.cell) +
+            '" y="' +
+            (g.top + a * g.cell) +
+            '" width="' +
+            g.cell +
+            '" height="' +
+            g.cell +
+            '"/>';
+        }
+      }
+      for (a = 0; a < N; a++) {
+        s +=
+          '<text class="dex-typechart__label dex-typechart__label--row" data-row="' +
+          ROGUE.esc(types[a]) +
+          '" x="' +
+          (g.left - 6) +
+          '" y="' +
+          (g.top + a * g.cell + g.cell / 2 + 3.5) +
+          '" text-anchor="end">' +
+          ROGUE.esc(typeAbbr(types[a])) +
+          '</text>';
+      }
+      for (d = 0; d < N; d++) {
+        var hx = g.left + d * g.cell + g.cell - 3;
+        var hy = g.top - 5;
+        s +=
+          '<rect class="dex-typechart__hit" data-col="' +
+          ROGUE.esc(types[d]) +
+          '" x="' +
+          (g.left + d * g.cell - 4) +
+          '" y="0" width="' +
+          (g.cell + 8) +
+          '" height="' +
+          (g.top - 8) +
+          '"/>';
+        s +=
+          '<text class="dex-typechart__label dex-typechart__label--col" data-col="' +
+          ROGUE.esc(types[d]) +
+          '" x="' +
+          hx +
+          '" y="' +
+          hy +
+          '" text-anchor="start" transform="rotate(-45 ' +
+          hx +
+          ' ' +
+          hy +
+          ')">' +
+          ROGUE.esc(typeAbbr(types[d])) +
+          '</text>';
+      }
+      for (a = 0; a < N; a++) {
+        s +=
+          '<rect class="dex-typechart__band dex-typechart__band--row" data-row="' +
+          ROGUE.esc(types[a]) +
+          '" x="' +
+          g.left +
+          '" y="' +
+          (g.top + a * g.cell) +
+          '" width="' +
+          N * g.cell +
+          '" height="' +
+          g.cell +
+          '"/>';
+      }
+      for (d = 0; d < N; d++) {
+        s +=
+          '<rect class="dex-typechart__band dex-typechart__band--col" data-col="' +
+          ROGUE.esc(types[d]) +
+          '" x="' +
+          (g.left + d * g.cell) +
+          '" y="' +
+          g.top +
+          '" width="' +
+          g.cell +
+          '" height="' +
+          N * g.cell +
+          '"/>';
+      }
+      s += '</svg>';
+      return s;
+    }
+
+    /**
+     * The viability prose's offensive coverage for one record: for
+     * every standard defender type d, mult(d) = the PRODUCT of
+     * chart[t][d] over the species' (version-scoped, deduped) types —
+     * a dual type can reach ×4 — then: super = the defenders with
+     * product ≥ 2, atOrBelow = the defenders with product ≤ 1, N =
+     * the active build's standard-type count.
+     */
+    function coverageOf(record) {
+      var tc = activeTypeChart();
+      var std = typeOptions();
+      if (!tc) return { sup: 0, atOrBelow: 0, N: std.length };
+      var types = [];
+      (Array.isArray(dexVariant(record, 'types')) ? dexVariant(record, 'types') : []).forEach(function (t) {
+        if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
+      });
+      var sup = 0;
+      var atOrBelow = 0;
+      std.forEach(function (def) {
+        var defI = tc.types.indexOf(def);
+        var prod = 1;
+        types.forEach(function (t) {
+          var atkI = tc.types.indexOf(t);
+          if (atkI !== -1 && defI !== -1) prod *= tc.mult[atkI][defI];
+        });
+        if (prod >= 2) sup++;
+        if (prod <= 1) atOrBelow++;
+      });
+      return { sup: sup, atOrBelow: atOrBelow, N: std.length };
+    }
+
+    /** The cell caption: "<att> → <def>: ×<value>" (the data's exact multiplier). */
+    function tcCellCaption(atk, def, m) {
+      return atk + ' \u2192 ' + def + ': \u00D7' + String(m);
+    }
+
+    /**
+     * The column caption: "<def>: ×2: <super-effective attackers> ·
+     * ×0: <immunities>" — both lists in the chart's type order, an
+     * em-dash when a side is empty.
+     */
+    function tcColumnCaption(col) {
+      var tc = activeTypeChart();
+      if (!tc) return col;
+      var colI = tc.types.indexOf(col);
+      var sup = [];
+      var imm = [];
+      tc.types.forEach(function (t, i) {
+        if (t === 'Mystery' || t === 'Stellar' || colI === -1) return;
+        var m = tc.mult[i][colI];
+        if (m === 2) sup.push(t);
+        if (m === 0) imm.push(t);
+      });
+      return col + ': \u00D72: ' + (sup.join(', ') || '\u2014') + ' \u00B7 \u00D70: ' + (imm.join(', ') || '\u2014');
+    }
+
+    /** The typechart section — the new overview section AFTER the
+     *  prose blocks (the 7th .section-nav chip): the species select,
+     *  the block-scrolling SVG, the token-ramp legend, the mono
+     *  caption and the two coverage lines (hidden until a species is
+     *  picked). */
+    function typechartSection() {
+      var sel =
+        '<select id="dex-typechart-species" class="dex-typechart__species" aria-label="Highlight a species\'s type rows">' +
+        '<option value="">None</option>' +
+        orderedList()
+          .map(function (r) {
+            return '<option value="' + ROGUE.esc(r.id) + '"' + (state.tcSpecies === r.id ? ' selected' : '') + '>' + ROGUE.esc(dexVariant(r, 'name')) + '</option>';
+          })
+          .join('') +
+        '</select>';
+      var legend =
+        [
+          ['0', 'immune'],
+          ['0.5', 'resisted'],
+          ['1', 'neutral'],
+          ['2', 'super-effective']
+        ]
+          .map(function (b) {
+            return '<span class="dex-typechart__key"><span class="dex-typechart__swatch dex-typechart__swatch--i' + tcBin(Number(b[0])) + '"></span>\u00D7' + b[0] + ' ' + b[1] + '</span>';
+          })
+          .join('');
+      return (
+        '<section class="section" id="dex-typechart">' +
+        '<div class="section__head"><h2>Type matchups</h2></div>' +
+        '<div class="section__body">' +
+        '<div class="dex-typechart">' +
+        '<div class="dex-typechart__controls"><span class="field-label">Species</span>' + sel + '</div>' +
+        '<div class="dex-typechart__scroll">' + typechartSvg(typeOptions()) + '</div>' +
+        '<div class="dex-typechart__legend">' + legend + '</div>' +
+        '<p class="dex-typechart__caption" id="dex-typechart-caption">Hover or tap a cell \u00B7 click a defender column to pin it.</p>' +
+        '<div class="dex-typechart__coverage" id="dex-typechart-coverage" hidden></div>' +
+        '</div>' +
+        '</div>' +
+        '</section>'
+      );
+    }
+
+    /**
+     * Applies the typechart's persisted state (the pinned column /
+     * the species row highlight + the two coverage lines) to the
+     * current DOM — called after every full render (fresh markup)
+     * and after every interaction. A column pin and a species
+     * selection are mutually exclusive (each clears the other).
+     */
+    function applyTypechart() {
+      var section = document.getElementById('dex-typechart');
+      if (!section) return;
+      var coverage = section.querySelector('.dex-typechart__coverage');
+      var on = function (el, cls) {
+        el.classList.add(cls);
+      };
+      section.querySelectorAll('.dex-typechart__band--on').forEach(function (el) {
+        el.classList.remove('dex-typechart__band--on');
+      });
+      section.querySelectorAll('.dex-typechart__label--on').forEach(function (el) {
+        el.classList.remove('dex-typechart__label--on');
+      });
+      if (state.tcCol) {
+        var colSel = '.dex-typechart__band--col[data-col="' + state.tcCol + '"], .dex-typechart__label--col[data-col="' + state.tcCol + '"]';
+        section.querySelectorAll(colSel).forEach(function (el) {
+          on(el, el.classList.contains('dex-typechart__band') ? 'dex-typechart__band--on' : 'dex-typechart__label--on');
+        });
+      }
+      if (state.tcSpecies && byId[state.tcSpecies]) {
+        var rec = byId[state.tcSpecies];
+        var types = [];
+        (Array.isArray(dexVariant(rec, 'types')) ? dexVariant(rec, 'types') : []).forEach(function (t) {
+          if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
+        });
+        types.forEach(function (t) {
+          section
+            .querySelectorAll('.dex-typechart__band--row[data-row="' + t + '"], .dex-typechart__label--row[data-row="' + t + '"]')
+            .forEach(function (el) {
+              on(el, el.classList.contains('dex-typechart__band') ? 'dex-typechart__band--on' : 'dex-typechart__label--on');
+            });
+        });
+        var cov = coverageOf(rec);
+        if (coverage) {
+          coverage.innerHTML =
+            '<p class="dex-typechart__line">hits super-effective: ' + cov.sup + '/' + cov.N + '</p>' +
+            '<p class="dex-typechart__line">at-or-below-neutral: ' + cov.atOrBelow + '/' + cov.N + '</p>';
+          coverage.hidden = false;
+        }
+      } else if (coverage) {
+        coverage.innerHTML = '';
+        coverage.hidden = true;
+      }
+    }
+
+    /**
+     * The typechart's two delegated listeners (on the SVG — the
+     * target's data-attributes carry everything; 324 cell listeners
+     * is out) + the species select. pointerover covers BOTH pointer
+     * hover and touch tap (a touch dispatches pointerover on
+     * touch-down); the caption shows the last read and is never
+     * auto-cleared (a tap must persist — no pointerleave handler).
+     * The click listener is the column pin (a click distinguishes a
+     * deliberate selection from a hover pass-through).
+     */
+    function bindTypechart() {
+      var section = document.getElementById('dex-typechart');
+      if (!section) return;
+      var svg = section.querySelector('.dex-typechart__grid');
+      var caption = document.getElementById('dex-typechart-caption');
+      var select = document.getElementById('dex-typechart-species');
+      if (select) {
+        select.addEventListener('change', function () {
+          state.tcSpecies = select.value || null;
+          state.tcCol = null; /* mutually exclusive with the column pin */
+          applyTypechart();
+          if (caption) caption.textContent = 'Hover or tap a cell \u00B7 click a defender column to pin it.';
+        });
+      }
+      if (svg) {
+        svg.addEventListener('pointerover', function (e) {
+          var t = e.target;
+          if (!t || !t.getAttribute || !caption) return;
+          var mult = t.getAttribute('data-mult');
+          if (mult !== null) {
+            caption.textContent = tcCellCaption(t.getAttribute('data-at'), t.getAttribute('data-def'), Number(mult));
+          } else {
+            var col = t.getAttribute('data-col');
+            if (col !== null) caption.textContent = tcColumnCaption(col);
+          }
+        });
+        svg.addEventListener('click', function (e) {
+          var t = e.target;
+          if (!t || !t.getAttribute) return;
+          var col = t.getAttribute('data-col');
+          if (col === null) return;
+          state.tcCol = state.tcCol === col ? null : col;
+          if (state.tcCol) {
+            state.tcSpecies = null; /* mutually exclusive */
+            if (select) select.value = '';
+          }
+          applyTypechart();
+          if (caption) caption.textContent = state.tcCol ? tcColumnCaption(state.tcCol) : 'Hover or tap a cell \u00B7 click a defender column to pin it.';
+        });
+      }
+      applyTypechart();
     }
 
     /* --- the 3D species viewer (issue #79) ----------------------------------
@@ -1121,6 +1790,10 @@
 
       html += '<div class="dex-species__body">';
       html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>');
+      /* the issue-#100 stat radar (PR 4b) — under the stat bars, per
+       * the plan: the 6-axis spider of this entry's (version-scoped)
+       * stats, with the native compare select (default "None") */
+      html += radarHtml(record);
       html += fieldBlock('Details', '<div class="dex-meta">' + metaHtml(record) + '</div>');
       if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
       html += fieldBlock('Abilities', abilitiesHtml(abilities));
@@ -1166,11 +1839,20 @@
        * same-page Enter still scrolls to them). */
       html += browseSection();
       html += (Array.isArray(data.prose) ? data.prose : []).map(proseBlockHtml).join('');
+      /* the issue-#100 type matchup heatmap (PR 4b) — the new overview
+       * section AFTER the prose blocks (the 7th .section-nav chip) */
+      html += typechartSection();
       html += '</div>';
       if (selected) html += speciesSection(selected);
 
       main.innerHTML = html;
       bindToolbar();
+      /* The issue-#100 visualisations (PR 4b): the typechart renders
+       * with the overview on every render (hidden — but present —
+       * while the detail is open, so its bindings run regardless);
+       * the radar exists only while a detail is open. */
+      bindTypechart();
+      if (selected) bindRadar(selected);
       /* The browse end state stays fresh even while the detail is open
        * (the overview is hidden, not unrendered) — returning to it shows
        * the current count line and grid page immediately. */
@@ -1413,6 +2095,13 @@
     ROGUE.onChange(function () {
       if (state.variant !== 'all' && variantOptions().indexOf(state.variant) === -1) state.variant = 'all';
       if (state.type !== 'all' && typeOptions().indexOf(state.type) === -1) state.type = 'all';
+      /* the issue-#100 visualisation selections (PR 4b) reset by the
+       * same rule as the filters: an EX-only compare/species record
+       * under Vanilla, or a pinned column (e.g. Fairy) the new build's
+       * chart lacks */
+      if (state.radarCompare && (!byId[state.radarCompare] || byId[state.radarCompare].versions.indexOf(ROGUE.version) === -1)) state.radarCompare = null;
+      if (state.tcSpecies && (!byId[state.tcSpecies] || byId[state.tcSpecies].versions.indexOf(ROGUE.version) === -1)) state.tcSpecies = null;
+      if (state.tcCol !== null && typeOptions().indexOf(state.tcCol) === -1) state.tcCol = null;
       render();
     });
   });
