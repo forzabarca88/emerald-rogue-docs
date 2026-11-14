@@ -123,7 +123,12 @@
   /**
    * Records → table markup.
    * @param {Array} records data records
-   * @param {Array<{key: string, label: string}>} columns table columns
+   * @param {Array<{key: string, label: string, html?: boolean}>} columns
+   *   table columns; a column flagged `html: true` takes the record's
+   *   field value as pre-escaped HTML (the caller owns the escaping) —
+   *   every other column is escaped as usual. The Pokedex move tables
+   *   (pages/pokedex.js, issue #99) use it for the Move/Type/Pow/Acc/
+   *   PP cells; their Effect column stays plain.
    */
   ROGUE.table = function (records, columns) {
     if (!Array.isArray(columns) || columns.length === 0) return '';
@@ -140,7 +145,8 @@
           columns
             .map(function (c) {
               var v = r ? r[c.key] : '';
-              return '<td>' + ROGUE.esc(typeof v === 'string' ? v : v === null || v === undefined ? '' : JSON.stringify(v)) + '</td>';
+              var text = typeof v === 'string' ? v : v === null || v === undefined ? '' : JSON.stringify(v);
+              return '<td>' + (c.html ? text : ROGUE.esc(text)) + '</td>';
             })
             .join('') +
           '</tr>'

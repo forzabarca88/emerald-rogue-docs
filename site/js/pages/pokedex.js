@@ -52,13 +52,20 @@
  *      at a list end renders as an empty slot), the
  *      seven stat rows with value bars (width = value/255 capped, BST
  *      row last), the meta rows (catch rate / height / weight / gender
- *      / egg groups / base EXP), the Pokédex text, the abilities, the
- *      .dex-evo evolution line (prev / current / next — the neighbors
- *      are hash links with mono method captions, the "easy to navigate"
- *      requirement; a target missing from the active build renders as a
- *      plain non-link cell), the three move groups (Level Up as
- *      "Name (Lv n)" chips — level 0 renders "(Evo)" per the moves
- *      prose — / TM & TR / Tutor), the structured forms section
+ *      / egg groups / base EXP), the Pokédex text, the abilities
+ *      (issue #99 — one .dex-ability block each: the display-face name +
+ *      the in-game description from the top-level catalog, resolved per
+ *      active version (catalog.vanilla under Vanilla); name-only when the
+ *      build's catalog has no entry — the catalog details are visible
+ *      but NOT indexed by the site search, the documented #99
+ *      trade-off), the .dex-evo evolution line (prev / current / next —
+ *      the neighbors are hash links with mono method captions, the
+ *      "easy to navigate" requirement; a target missing from the active
+ *      build renders as a plain non-link cell), the three move groups
+ *      (issue #99 — one contract .table each: Move — name + the mono
+ *      `Lv n` level tag (Level Up only; level 0 → `(Evo)`) —, the Type
+ *      chip, the mono Pow / Acc / PP, the in-game effect; cells the
+ *      active build's catalog lacks render "—"), the structured forms section
  *      (issue #85 — one .dex-form block per form: the form’s sprite
  *      (a .dex-form__sprite img — the form’s own <formEntryId>.png
  *      via its `sprite` field, the base record’s sprite as the
@@ -147,6 +154,35 @@
     records.forEach(function (r) {
       if (r && r.id) byId[r.id] = r;
     });
+
+    /* The top-level `catalog` (issue #99): the move & ability reference
+     * behind the detail tables — the Expansion values keyed by display
+     * name, `catalog.vanilla` the diff-only Vanilla overlay. A missing
+     * entry renders name-only (abilities) or "—" cells (move tables) —
+     * never a fabricated stat or description. NOTE: the catalog details
+     * are VISIBLE but not indexed by the site search (the issue-#99
+     * trade-off — ROGUE.pokedexSearchText is unchanged; folding them
+     * into the haystack is a flagged proposal for a later batch). */
+    var catalog = data.catalog && typeof data.catalog === 'object' ? data.catalog : null;
+    var catalogVanilla = catalog && catalog.vanilla && typeof catalog.vanilla === 'object' ? catalog.vanilla : null;
+
+    /** The active build's move entry (type/power/accuracy/pp/effect). */
+    function moveEntry(name) {
+      if (!catalog) return null;
+      if (ROGUE.version === 'vanilla' && catalogVanilla && catalogVanilla.moves && catalogVanilla.moves[name]) {
+        return catalogVanilla.moves[name];
+      }
+      return catalog.moves && catalog.moves[name] ? catalog.moves[name] : null;
+    }
+
+    /** The active build's ability description (null when uncatalogued). */
+    function abilityDesc(name) {
+      if (!catalog) return null;
+      if (ROGUE.version === 'vanilla' && catalogVanilla && catalogVanilla.abilities && typeof catalogVanilla.abilities[name] === 'string') {
+        return catalogVanilla.abilities[name];
+      }
+      return catalog.abilities && typeof catalog.abilities[name] === 'string' ? catalog.abilities[name] : null;
+    }
 
     /* The tile-page size — data/site.json dex.pageSize is the single
      * source (the in-game Overview's 28-tile page); 28 is only a
@@ -619,28 +655,83 @@
       return '<div class="dex-species__field"><span class="field-label">Evolutions</span><div class="dex-evo">' + current + rows + '</div></div>';
     }
 
+    /* The abilities field (issue #99): one .dex-ability block per
+     * ability — the display-face name + the in-game description from the
+     * active build's catalog (catalog.vanilla under Vanilla); an ability
+     * with no catalog entry renders its name only, never a fake "—". */
+    function abilitiesHtml(abilities) {
+      if (!abilities.length) return '<span class="dex-moves__none">\u2014</span>';
+      return (
+        abilities
+          .map(function (a) {
+            var desc = abilityDesc(a);
+            return (
+              '<div class="dex-ability">' +
+              '<span class="dex-ability__name">' + ROGUE.esc(a) + '</span>' +
+              (desc ? '<span class="dex-ability__desc">' + ROGUE.esc(desc) + '</span>' : '') +
+              '</div>'
+            );
+          })
+          .join('')
+      );
+    }
+
+    /* The three move groups (issue #99): one contract .table per group —
+     * Move / Type / Pow / Acc / PP / Effect. Each row carries the active
+     * build's catalog entry (moveEntry — catalog.vanilla under Vanilla);
+     * cells the catalog lacks render "—", never a fabricated stat. The
+     * Move cell's mono level tag is the Level Up group's `Lv n` (level 0 →
+     * `(Evo)` per the moves prose); Type is a .chip; Pow/Acc/PP are mono
+     * <code> values. The html-flagged columns are pre-escaped here. */
+    var MOVE_COLUMNS = [
+      { key: 'move', label: 'Move', html: true },
+      { key: 'type', label: 'Type', html: true },
+      { key: 'pow', label: 'Pow', html: true },
+      { key: 'acc', label: 'Acc', html: true },
+      { key: 'pp', label: 'PP', html: true },
+      { key: 'effect', label: 'Effect' }
+    ];
+    function moveRowHtml(name, level) {
+      var entry = moveEntry(name);
+      var levelTag = level === null ? '' : level > 0 ? '<code>Lv ' + level + '</code>' : '<code>(Evo)</code>';
+      var num = function (v) {
+        return typeof v === 'number' ? '<code>' + v + '</code>' : '\u2014';
+      };
+      return {
+        move: ROGUE.esc(name) + (levelTag ? ' ' + levelTag : ''),
+        type: entry && entry.type ? ROGUE.chip(entry.type) : '\u2014',
+        pow: num(entry ? entry.power : null),
+        acc: num(entry ? entry.accuracy : null),
+        pp: num(entry ? entry.pp : null),
+        effect: entry && entry.effect ? entry.effect : '\u2014'
+      };
+    }
     function movesHtml(moves) {
-      var levelUp = (Array.isArray(moves && moves.levelUp) ? moves.levelUp : [])
-        .map(function (p) {
-          var name = Array.isArray(p) ? p[0] : p;
-          var level = Array.isArray(p) ? p[1] : null;
-          /* level 0 marks moves learned on evolving (the moves prose) */
-          var label = typeof level === 'number' && level > 0 ? name + ' (Lv ' + level + ')' : name + ' (Evo)';
-          return ROGUE.chip(label);
-        })
-        .join('');
-      var groups = [
-        ['Level Up', levelUp],
-        ['TM &amp; TR', (Array.isArray(moves && moves.tm) ? moves.tm : []).map(ROGUE.chip).join('')],
-        ['Tutor', (Array.isArray(moves && moves.tutor) ? moves.tutor : []).map(ROGUE.chip).join('')]
-      ];
+      var m = moves && typeof moves === 'object' ? moves : {};
+      var levelUpRows = (Array.isArray(m.levelUp) ? m.levelUp : []).map(function (p) {
+        var name = Array.isArray(p) ? p[0] : p;
+        /* level 0 marks moves learned on evolving (the moves prose) */
+        var level = Array.isArray(p) && typeof p[1] === 'number' ? p[1] : 0;
+        return moveRowHtml(name, level);
+      });
+      var groupTable = function (rows) {
+        return rows.length ? ROGUE.table(rows, MOVE_COLUMNS) : '<span class="dex-moves__none">\u2014</span>';
+      };
       return (
         '<div class="dex-moves">' +
-        groups
-          .map(function (g) {
-            return '<div class="dex-moves__group"><span class="field-label">' + g[0] + '</span>' + (g[1] ? '<div class="chip-row">' + g[1] + '</div>' : '<span class="dex-moves__none">\u2014</span>') + '</div>';
-          })
-          .join('') +
+        '<div class="dex-moves__group"><span class="field-label">Level Up</span>' +
+        groupTable(levelUpRows) +
+        '</div>' +
+        '<div class="dex-moves__group"><span class="field-label">TM &amp; TR</span>' +
+        groupTable((Array.isArray(m.tm) ? m.tm : []).map(function (n) {
+          return moveRowHtml(n, null);
+        })) +
+        '</div>' +
+        '<div class="dex-moves__group"><span class="field-label">Tutor</span>' +
+        groupTable((Array.isArray(m.tutor) ? m.tutor : []).map(function (n) {
+          return moveRowHtml(n, null);
+        })) +
+        '</div>' +
         '</div>'
       );
     }
@@ -700,7 +791,7 @@
         '</h3>';
       if (types.length) html += '<div class="chip-row">' + types.map(ROGUE.chip).join('') + '</div>';
       if (stats) html += '<div class="dex-stats">' + statRowsHtml(stats) + '</div>';
-      if (abilities.length) html += '<div class="chip-row">' + abilities.map(ROGUE.chip).join('') + '</div>';
+      if (abilities.length) html += abilitiesHtml(abilities);
       if (height || weight) {
         html +=
           '<div class="dex-form__meta">' +
@@ -841,10 +932,7 @@
       html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>');
       html += fieldBlock('Details', '<div class="dex-meta">' + metaHtml(record) + '</div>');
       if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
-      html += fieldBlock(
-        'Abilities',
-        abilities.length ? '<div class="chip-row">' + abilities.map(ROGUE.chip).join('') + '</div>' : '<span class="dex-moves__none">\u2014</span>'
-      );
+      html += fieldBlock('Abilities', abilitiesHtml(abilities));
       html += evoHtml(record);
       html += movesHtml(moves);
       if (forms.length) html += fieldBlock('Forms', formsHtml(forms, record));
