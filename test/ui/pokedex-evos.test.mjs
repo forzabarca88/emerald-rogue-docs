@@ -14,10 +14,15 @@
  *     Vanilla overlay: 5 rows (no Sylveon, the one-word Thunderstone);
  * (3) Vanilla Golbat: the friendship rewrite's result — a
  *     "Level up at 30" branch to Crobat with the Zubat prev row;
- * (4) forms with their own branches: the Basculin (White Striped) form
- *     block carries the 2 gender branches and the Galarian Yamask form
- *     block its single level-34 Runerigus row (data/pokedex.json
- *     form.evo — the rewrite is keyed by the species value held).
+ * (4) Quilava: the two Typhlosion branches — the level-36 record and the
+ *     Hisui artefact branch showing the form name ("Hisuian Typhlosion
+ *     (Hisuian)") beside the plain record name;
+ * (5) Runerigus: the form-sourced prev row shows the Galarian Yamask
+ *     form name; (6) forms with their own branches: the Basculin (White
+ *     Striped) form block carries the 2 gender branches and the Galarian
+ *     Yamask form block its single level-34 Runerigus row
+ *     (data/pokedex.json form.evo — the rewrite is keyed by the species
+ *     value held).
  *
  * Every expected row count / method literal is derived from the
  * committed data/pokedex.json at load, not hardcoded.
@@ -68,6 +73,11 @@ const BASCULIN_WHITE_ROWS = BASCULIN_WHITE.evo.evos.length; // 2 — the gender 
 const BASCULIN_WHITE_METHODS = BASCULIN_WHITE.evo.evos.map((e) => e.method);
 const YAMASK_GALAR = (byId.get('yamask').forms ?? []).find((f) => f.name === 'Galarian Yamask (Galarian)');
 const YAMASK_GALAR_METHODS = YAMASK_GALAR.evo.evos.map((e) => e.method); // the level-34 Runerigus
+const QUILAVA = byId.get('quilava');
+const QUILAVA_EX = evoOf(QUILAVA, 'ex');
+const QUILAVA_EX_ROWS = branchCount(QUILAVA_EX); // 3 — the 2 typhlosion branches + the cyndaquil prev
+const QUILAVA_FORM = (QUILAVA_EX.evos ?? []).find((e) => e.form)?.form; // the Hisui artefact branch's form name
+const RUNERIGUS_PREV = byId.get('runerigus').evo?.prev ?? null; // the Galarian Yamask form-sourced prev
 
 /* --- shared helpers (all page-context functions must be self-contained) ---- */
 
@@ -186,6 +196,47 @@ test('pokedex.html (vanilla): Golbat’s detail shows the friendship rewrite as 
       assert.ok(facts.rowTexts.some((txt) => txt.includes(method)), `the "${method}" branch caption (data/pokedex.json golbat.vanilla.evo)`);
     }
     assert.ok(facts.rowTexts.some((txt) => txt.includes(byId.get('zubat').name)), 'the prev row links Zubat');
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html (EX): Quilava’s detail shows both Typhlosion branches — the level-36 record and the Hisuian form name', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.equal(QUILAVA_FORM, 'Hisuian Typhlosion (Hisuian)', 'sanity: the derived form name (data/pokedex.json quilava.evo)');
+    await openSpecies(page, 'quilava', QUILAVA_EX_ROWS);
+    const facts = await page.evaluate(evoFacts);
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    assert.equal(facts.rows, QUILAVA_EX_ROWS, 'the two typhlosion branches + the cyndaquil prev row');
+    assert.ok(
+      facts.rowTexts.some((txt) => txt.includes(QUILAVA_FORM)),
+      `the Hisui artefact branch shows the form name “${QUILAVA_FORM}” (data/pokedex.json quilava.evo form)`,
+    );
+    assert.ok(
+      facts.rowTexts.some((txt) => txt.includes(byId.get('typhlosion').name) && !txt.includes(QUILAVA_FORM)),
+      'the level-36 branch shows the plain record name beside it',
+    );
+    assert.ok(facts.rowTexts.some((txt) => txt.includes(byId.get('cyndaquil').name)), 'the prev row links Cyndaquil');
+  } finally {
+    await close();
+  }
+});
+
+test('pokedex.html (EX): Runerigus’ prev row shows the Galarian Yamask form name (the form-sourced pre-evolution)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.equal(RUNERIGUS_PREV?.form, 'Galarian Yamask (Galarian)', 'sanity: the derived prev form name (data/pokedex.json runerigus.evo.prev)');
+    await openSpecies(page, 'runerigus', 1); // evos none + the single prev row
+    const facts = await page.evaluate(evoFacts);
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    assert.equal(facts.rows, 1, 'the single prev row');
+    assert.ok(
+      facts.rowTexts.some((txt) => txt.includes(RUNERIGUS_PREV.form) && txt.includes(RUNERIGUS_PREV.method)),
+      `the prev row shows “${RUNERIGUS_PREV.form}” with its “${RUNERIGUS_PREV.method}” method (data/pokedex.json runerigus.evo.prev)`,
+    );
   } finally {
     await close();
   }

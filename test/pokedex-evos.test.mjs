@@ -6,13 +6,20 @@
  * `Rogue_ModifyEvolution` rewrite (src/rogue_baked.c — byte-identical in
  * both branches, the #ifdef ROGUE_EXPANSION split resolved per branch).
  * The emitted shape per record / vanilla-overlay / form:
- *   { prev?: { id, method }, evos?: [ { id, method }, … ] }
+ *   { prev?: { id, method, form? }, evos?: [ { id, method, form? }, … ] }
  * - `evos` = the surviving post-rewrite branches (SPECIES_NONE targets and
  *   the surviving 0xFFFE EVO_NONE sentinels dropped, capped at 8 like the
  *   in-game display);
  * - `prev` = the smallest-dex-number record (same build) whose own post-
  *   rewrite list targets this species (records by id, forms by their own
- *   species value — which resolves to the form's base record id);
+ *   species value — which resolves to the form's base record id); when the
+ *   claiming source is itself a form (Galarian Yamask → Runerigus) the
+ *   entry carries `form` — the source form's display name;
+ * - `form` (both directions) names the branch target's / prev source's
+ *   form — exactly the base record's own `forms` entry — whenever the
+ *   in-game name shown for that species value differs from the record's
+ *   name (Quilava's Hisuian Typhlosion, Espurr's Meowstic (Female)); a
+ *   branch at the target record's own value never carries it;
  * - both keys are omitted when absent.
  *
  * Plain file reads of the committed data — no mocks, no build.
@@ -52,7 +59,7 @@ const expectFormEvos = (rec, formName, id, methods, ctx) => {
 
 /* --- 1. shape contract (every evo value in the file) ----------------------- */
 
-test('every evo value (records, vanilla overlays, forms) carries only prev/evos of {id, method}, ≤8 evos, existing targets', () => {
+test('every evo value (records, vanilla overlays, forms) carries only prev/evos of {id, method, form?}, ≤8 evos, existing targets', () => {
   const problems = [];
   const check = (evo, where) => {
     if (evo === null) return; // explicit "this build has no evo" (vanilla overlay)
@@ -61,25 +68,31 @@ test('every evo value (records, vanilla overlays, forms) carries only prev/evos 
     for (const key of Object.keys(evo)) {
       if (key !== 'prev' && key !== 'evos') problems.push(`${where}: unexpected key "${key}"`);
     }
+    const checkEntry = (e, label) => {
+      if (!e || typeof e !== 'object') return problems.push(`${where}: ${label} is not an object`);
+      const keys = Object.keys(e).sort().join(',');
+      if (!['id,method', 'form,id,method'].includes(keys)) problems.push(`${where}: ${label} keys [${keys}]`);
+      if (!byId.has(e.id)) problems.push(`${where}: ${label} target "${e.id}" is not a record`);
+      if (typeof e.method !== 'string' || !e.method) problems.push(`${where}: ${label} ${e.id} has no method text`);
+      if (e.form !== undefined) {
+        if (typeof e.form !== 'string' || !e.form) problems.push(`${where}: ${label} ${e.id} has an empty form name`);
+        else {
+          const names = (byId.get(e.id)?.forms ?? []).map((f) => f.name);
+          if (!names.includes(e.form)) problems.push(`${where}: ${label} form "${e.form}" is not a forms entry of ${e.id}`);
+        }
+      }
+    };
     if (evo.evos !== undefined) {
       if (!Array.isArray(evo.evos)) return problems.push(`${where}: evos is not an array`);
       if (evo.evos.length > 8) problems.push(`${where}: ${evo.evos.length} evos exceed the 8-branch display cap`);
       if (evo.evos.length === 0) problems.push(`${where}: empty evos array (the key must be omitted)`);
       for (const e of evo.evos) {
-        const keys = Object.keys(e).sort().join(',');
-        if (keys !== 'id,method') problems.push(`${where}: evo entry keys [${keys}]`);
-        if (!byId.has(e.id)) problems.push(`${where}: evo target "${e.id}" is not a record`);
-        if (typeof e.method !== 'string' || !e.method) problems.push(`${where}: evo target ${e.id} has no method text`);
+        checkEntry(e, 'evo');
         // a target id MAY repeat with different methods (Kubfu's two
         // stones, Milcery's seven cream forms) — each branch is its own row
       }
     }
-    if (evo.prev !== undefined) {
-      const keys = Object.keys(evo.prev).sort().join(',');
-      if (keys !== 'id,method') problems.push(`${where}: prev keys [${keys}]`);
-      if (!byId.has(evo.prev.id)) problems.push(`${where}: prev "${evo.prev.id}" is not a record`);
-      if (typeof evo.prev.method !== 'string' || !evo.prev.method) problems.push(`${where}: prev has no method text`);
-    }
+    if (evo.prev !== undefined) checkEntry(evo.prev, 'prev');
     if (evo.evos === undefined && evo.prev === undefined) problems.push(`${where}: empty evo object (should be absent)`);
   };
   for (const rec of dex.records) {
@@ -90,6 +103,40 @@ test('every evo value (records, vanilla overlays, forms) carries only prev/evos 
   assert.deepEqual(problems, [], problems.join('\n'));
 });
 
+/* --- 1b. the form-name invariant (both directions, per build) ------------- */
+
+test('the Vanilla build never carries a form name (its evolution tables know no forms)', () => {
+  const problems = [];
+  const check = (evo, where, version) => {
+    if (!evo || typeof evo !== 'object') return;
+    for (const e of [...(evo.evos ?? []), ...(evo.prev ? [evo.prev] : [])]) {
+      if (e.form !== undefined && version === 'vanilla')
+        problems.push(`${where}: the Vanilla build carries a form name ("${e.form}")`);
+    }
+  };
+  for (const rec of dex.records) {
+    check(rec.evo, `record ${rec.id}`, 'ex');
+    if (rec.vanilla && typeof rec.vanilla === 'object') check(rec.vanilla.evo, `record ${rec.id} vanilla`, 'vanilla');
+    for (const f of rec.forms ?? []) check(f.evo, `record ${rec.id} form ${f.name}`, 'ex');
+  }
+  assert.deepEqual(problems, [], problems.join('\n'));
+});
+
+test('the evolution-referenced forms join their base record’s forms array (the minimal roster gains)', () => {
+  const expectForm = (recId, formName) => {
+    const rec = byId.get(recId);
+    assert.ok((rec.forms ?? []).some((f) => f.name === formName), `${recId} forms include "${formName}"`);
+  };
+  expectForm('meowth', 'Alolan Meowth (Alolan)');
+  expectForm('meowth', 'Galarian Meowth (Galarian)');
+  expectForm('raichu', 'Alolan Raichu (Alolan)');
+  expectForm('meowstic', 'Meowstic (Female)');
+  expectForm('toxtricity', 'Toxtricity (Low Key)');
+  expectForm('urshifu', 'Urshifu (Rapid Strike Style)');
+  expectForm('slowbro', 'Galarian Slowbro (Galarian)');
+  expectForm('darmanitan', 'Galarian Darmanitan (Standard Mode)');
+});
+
 /* --- 2. prev consistency (the emitted invariant, per build) ---------------- */
 
 test('every prev is a record whose own post-rewrite list targets this species (both builds)', () => {
@@ -98,11 +145,14 @@ test('every prev is a record whose own post-rewrite list targets this species (b
     if (!evo || !evo.prev) return;
     const src = byId.get(evo.prev.id);
     if (!src) return;
-    const srcEvo = evoOf(src, version);
+    // a prev whose source is itself a form (prev.form) is claimed by the
+    // form's own evo list, not the base record's (Galarian Yamask → Runerigus)
+    const srcForm = evo.prev.form ? (src.forms ?? []).find((f) => f.name === evo.prev.form) ?? null : null;
+    const srcEvo = srcForm?.evo ?? evoOf(src, version);
     // a form under record R is matched by its own value, which the source
     // list emits as R's record id; a record matches its own id
     const targetsSelf = (srcEvo?.evos ?? []).some((e) => e.id === selfBaseId);
-    if (!targetsSelf) problems.push(`${version}: ${evo.prev.id} claims to be the prev of ${selfId} but its ${version} list does not target it`);
+    if (!targetsSelf) problems.push(`${version}: ${evo.prev.id}${evo.prev.form ? ` (${evo.prev.form})` : ''} claims to be the prev of ${selfId} but its list does not target it`);
   };
   for (const rec of dex.records) {
     for (const version of ['ex', 'vanilla']) {
@@ -155,9 +205,16 @@ test('milcery: 7 EX branches (level 30 default + the 6 nature forms; the 2 overf
     rec,
     'ex',
     'alcremie',
-    ['Level up at 30', 'Reach 30 as Adamant', 'Reach 30 as Lax', 'Reach 30 as Modest', 'Reach 30 as Gentle', 'Reach 30 as Timid', 'Reach 30 as Jolly'],
+    ['Level up at 30', 'Reach Lv.30 as Adamant', 'Reach Lv.30 as Lax', 'Reach Lv.30 as Modest', 'Reach Lv.30 as Gentle', 'Reach Lv.30 as Timid', 'Reach Lv.30 as Jolly'],
     'milcery ex',
   );
+  // the in-game nature wording (gText_PokedexEvoLevel30Nature: "Reach {LV}30 as {STR_VAR_1}")
+  assert.ok(!JSON.stringify(rec.evo).includes('Reach 30 as'), 'the mangled "Reach 30 as" wording is gone');
+  // each nature branch names its cream form; the plain level-30 branch the record itself
+  const branches = rec.evo.evos;
+  assert.equal(branches[0].form, undefined, 'the level-30 branch targets the alcremie record itself');
+  const creamForms = branches.slice(1).map((b) => b.form);
+  assert.deepEqual(creamForms, ['Alcremie (Berry)', 'Alcremie (Love)', 'Alcremie (Star)', 'Alcremie (Clover)', 'Alcremie (Flower)', 'Alcremie (Ribbon)'], 'the 6 nature branches name the 6 cream forms');
 });
 
 test('kubfu: both scrolls survive (Moon + Water stone); the 2 NONE rewrites drop', () => {
@@ -170,10 +227,48 @@ test('meltan: the synthetic GetBaseEvolution table → 1 branch (Metal Coat)', (
   expectEvos(rec, 'ex', 'melmetal', ['Use Metal Coat'], 'meltan ex');
 });
 
-test('bisharp: Kingambit via the Leader’s Crest; prev pawniard at 52', () => {
+test('bisharp: Kingambit via the Leader’s Crest (the corrected EX item name); prev pawniard at 52', () => {
   const rec = byId.get('bisharp');
-  expectEvos(rec, 'ex', 'kingambit', ["Use Leader'sCrest"], 'bisharp ex');
+  expectEvos(rec, 'ex', 'kingambit', ["Use Leader's Crest"], 'bisharp ex');
   expectPrev(rec, 'ex', 'pawniard', 'Level up at 52', 'bisharp ex');
+});
+
+test('form-targeted branches carry the target form’s display name (Quilava, Pikachu, Kubfu, Espurr)', () => {
+  const quilava = byId.get('quilava');
+  const hisui = (evoOf(quilava, 'ex').evos ?? []).find((e) => e.method === 'Use Hisui Artefact');
+  assert.deepEqual(hisui, { id: 'typhlosion', method: 'Use Hisui Artefact', form: 'Hisuian Typhlosion (Hisuian)' }, 'quilava ex: the Hisui artefact branch names Hisuian Typhlosion');
+  const plain = (evoOf(quilava, 'ex').evos ?? []).find((e) => e.method === 'Level up at 36');
+  assert.equal(plain.form, undefined, 'quilava ex: the level-36 branch is the record itself (no form)');
+
+  const pikachu = byId.get('pikachu');
+  const alola = (evoOf(pikachu, 'ex').evos ?? []).find((e) => e.method === 'Use Alola Artefact');
+  assert.deepEqual(alola, { id: 'raichu', method: 'Use Alola Artefact', form: 'Alolan Raichu (Alolan)' }, 'pikachu ex: the Alola artefact branch names Alolan Raichu');
+
+  const kubfu = byId.get('kubfu');
+  const rapid = (evoOf(kubfu, 'ex').evos ?? []).find((e) => e.method === 'Use Water Stone');
+  assert.deepEqual(rapid, { id: 'urshifu', method: 'Use Water Stone', form: 'Urshifu (Rapid Strike Style)' }, 'kubfu ex: the Water stone branch names the Rapid Strike form');
+  const single = (evoOf(kubfu, 'ex').evos ?? []).find((e) => e.method === 'Use Moon Stone');
+  assert.equal(single.form, undefined, 'kubfu ex: the Moon stone branch is the urshifu record itself (no form)');
+
+  const espurr = byId.get('espurr');
+  assert.deepEqual(
+    evoOf(espurr, 'ex').evos,
+    [
+      { id: 'meowstic', method: 'Level up at 25 (male)' },
+      { id: 'meowstic', method: 'Level up at 25 (female)', form: 'Meowstic (Female)' },
+    ],
+    'espurr ex: both gender branches survive — only the female names its form (the male is the record value)',
+  );
+});
+
+test('form-sourced prevs name their source form (Runerigus, Perrserker, Basculegion)', () => {
+  const expectFormPrev = (recId, prev, ctx) => {
+    const rec = byId.get(recId);
+    assert.deepEqual(evoOf(rec, 'ex').prev, prev, `${ctx}: ${recId} ex prev`);
+  };
+  expectFormPrev('runerigus', { id: 'yamask', method: 'Level up at 34', form: 'Galarian Yamask (Galarian)' }, 'runerigus');
+  expectFormPrev('perrserker', { id: 'meowth', method: 'Level up at 28', form: 'Galarian Meowth (Galarian)' }, 'perrserker');
+  expectFormPrev('basculegion', { id: 'basculin', method: 'Level up at 36 (male)', form: 'Basculin (White Striped)' }, 'basculegion');
 });
 
 test('pikachu: the Alola artefact branch in EX only; the vanilla Thunderstone stays one word', () => {

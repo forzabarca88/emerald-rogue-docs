@@ -52,7 +52,7 @@
       "list": [
         "a record's art is <id>.png (128×128 RGBA)",
         "spriteEx — 385 species also ship <id>-ex.png, used under Expansion",
-        "structured forms that own their art carry form.sprite = <formEntryId> — their art ships as <formEntryId>.png (413 forms), through the same composite pipeline",
+        "structured forms that own their art carry form.sprite = <formEntryId> — their art ships as <formEntryId>.png (421 forms), through the same composite pipeline",
         "palette-swap forms composite the base bitmap with the form palette (Arceus plates, Silvally, Genesect, Alcremie, Minior, …)",
         "base-identical forms and the one ternary-macro form (Silvally (Fairy)) use the base art",
         "the custom forms without their own art fall back to the base sprite",
@@ -5347,7 +5347,8 @@
             "evos": [
               {
                 "id": "raticate",
-                "method": "Level up at 20"
+                "method": "Level up at 20",
+                "form": "Alolan Raticate (Alolan)"
               }
             ]
           }
@@ -5689,7 +5690,14 @@
           "height": "0.7 m",
           "weight": "25.5 kg",
           "description": "It forms a group of Rattata, which it \nassumes command of. Each group\nhas its own territory, and disputes\nover food happen often.",
-          "sprite": "raticate_alolan"
+          "sprite": "raticate_alolan",
+          "evo": {
+            "prev": {
+              "id": "rattata",
+              "method": "Level up at 20",
+              "form": "Alolan Rattata (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -7135,7 +7143,8 @@
           },
           {
             "id": "raichu",
-            "method": "Use Alola Artefact"
+            "method": "Use Alola Artefact",
+            "form": "Alolan Raichu (Alolan)"
           }
         ]
       },
@@ -7734,6 +7743,35 @@
           "weight": "30.0 kg",
           "description": "If it stores too much electricity, its\nbehavior turns aggressive. To avoid this,\nit occasionally discharges excess energy\nand calms itself down.",
           "sprite": "raichu_mega_y"
+        },
+        {
+          "name": "Alolan Raichu (Alolan)",
+          "types": [
+            "Electric",
+            "Psychic"
+          ],
+          "stats": {
+            "hp": 60,
+            "atk": 85,
+            "def": 50,
+            "spa": 95,
+            "spd": 85,
+            "spe": 110,
+            "total": 485
+          },
+          "abilities": [
+            "Surge Surfer"
+          ],
+          "height": "0.7 m",
+          "weight": "21.0 kg",
+          "description": "It uses psychokinesis to control\nelectricity. It focuses psychic energy\ninto its tail and rides it like it's surfing.\nAnother name for this Pokémon is 'hodad'.",
+          "sprite": "raichu_alolan",
+          "evo": {
+            "prev": {
+              "id": "pikachu",
+              "method": "Use Alola Artefact"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -7894,7 +7932,7 @@
         ],
         "forms": []
       },
-      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/pokemon/evolution.h @vanilla; src/rogue_baked.c @vanilla; src/data/rogue/pokemon/vanilla/raichu/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/raichu/mega_x/front.png @origin/expansion; graphics/pokemon/raichu/mega_y/front.png @origin/expansion; src/data/rogue/pokemon/expansion/raichu/expansion_profile.json @origin/expansion; graphics/pokemon/raichu/front.png @vanilla; graphics/pokemon/raichu/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/pokemon/evolution.h @vanilla; src/rogue_baked.c @vanilla; src/data/rogue/pokemon/vanilla/raichu/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/raichu/mega_x/front.png @origin/expansion; graphics/pokemon/raichu/mega_y/front.png @origin/expansion; graphics/pokemon/raichu/alolan/front.png @origin/expansion; src/data/rogue/pokemon/expansion/raichu/expansion_profile.json @origin/expansion; graphics/pokemon/raichu/front.png @vanilla; graphics/pokemon/raichu/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "sandshrew",
@@ -8107,7 +8145,8 @@
             "evos": [
               {
                 "id": "sandslash",
-                "method": "Use Ice Stone"
+                "method": "Use Ice Stone",
+                "form": "Alolan Sandslash (Alolan)"
               }
             ]
           }
@@ -8484,7 +8523,14 @@
           "height": "1.2 m",
           "weight": "55.0 kg",
           "description": "It uses large, hooked claws to cut a path\nthrough deep snow as it runs.\nOn snowy mountains, this Sandslash\nis faster than any other Pokémon.",
-          "sprite": "sandslash_alolan"
+          "sprite": "sandslash_alolan",
+          "evo": {
+            "prev": {
+              "id": "sandshrew",
+              "method": "Use Ice Stone",
+              "form": "Alolan Sandshrew (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -11601,7 +11647,8 @@
             "evos": [
               {
                 "id": "ninetales",
-                "method": "Use Ice Stone"
+                "method": "Use Ice Stone",
+                "form": "Alolan Ninetales (Alolan)"
               }
             ]
           }
@@ -11905,7 +11952,14 @@
           "height": "1.1 m",
           "weight": "19.9 kg",
           "description": "While it will guide travelers who get lost\non a snowy mountain down to the\nmountain's base, it won't forgive anyone\nwho harms nature.",
-          "sprite": "ninetales_alolan"
+          "sprite": "ninetales_alolan",
+          "evo": {
+            "prev": {
+              "id": "vulpix",
+              "method": "Use Ice Stone",
+              "form": "Alolan Vulpix (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -15717,7 +15771,8 @@
             "evos": [
               {
                 "id": "dugtrio",
-                "method": "Level up at 26"
+                "method": "Level up at 26",
+                "form": "Alolan Dugtrio (Alolan)"
               }
             ]
           }
@@ -16056,7 +16111,14 @@
           "height": "0.7 m",
           "weight": "66.6 kg",
           "description": "Their beautiful, metallic whiskers create\na sort of protective helmet on\nheir heads, and they also function\nas highly precise sensors.",
-          "sprite": "dugtrio_alolan"
+          "sprite": "dugtrio_alolan",
+          "evo": {
+            "prev": {
+              "id": "diglett",
+              "method": "Level up at 26",
+              "form": "Alolan Diglett (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -16412,6 +16474,71 @@
           "weight": "0.0 kg",
           "description": "The pattern that has appeared on\nits giant coin is thought to be the\nkey to unlocking the secrets of the\nDynamax phenomenon.",
           "sprite": "meowth_gigantamax"
+        },
+        {
+          "name": "Alolan Meowth (Alolan)",
+          "types": [
+            "Dark"
+          ],
+          "stats": {
+            "hp": 40,
+            "atk": 35,
+            "def": 35,
+            "spa": 50,
+            "spd": 40,
+            "spe": 90,
+            "total": 290
+          },
+          "abilities": [
+            "Pickup",
+            "Technician",
+            "Rattled"
+          ],
+          "height": "0.4 m",
+          "weight": "4.2 kg",
+          "description": "It's accustomed to luxury because it used\nto live with Alolan royalty. Highly smart\nand proud, it's famously difficult to\nhandle, but that also makes it popular.",
+          "sprite": "meowth_alolan",
+          "evo": {
+            "evos": [
+              {
+                "id": "persian",
+                "method": "Level up at 30",
+                "form": "Alolan Persian (Alolan)"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Galarian Meowth (Galarian)",
+          "types": [
+            "Steel"
+          ],
+          "stats": {
+            "hp": 50,
+            "atk": 65,
+            "def": 55,
+            "spa": 40,
+            "spd": 40,
+            "spe": 40,
+            "total": 290
+          },
+          "abilities": [
+            "Pickup",
+            "Tough Claws",
+            "Unnerve"
+          ],
+          "height": "0.4 m",
+          "weight": "7.5 kg",
+          "description": "Living with a savage, seafaring people has\nhardened its body so much that parts of it\nturned to iron. Darker coins are harder\nand garner more respect among Meowth.",
+          "sprite": "meowth_galarian",
+          "evo": {
+            "evos": [
+              {
+                "id": "perrserker",
+                "method": "Level up at 28"
+              }
+            ]
+          }
         }
       ],
       "dexVariants": [
@@ -16572,7 +16699,7 @@
         ],
         "forms": []
       },
-      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/rogue/pokemon/vanilla/meowth/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/meowth/gigantamax/front.png @origin/expansion; src/data/rogue/pokemon/expansion/meowth/expansion_profile.json @origin/expansion; graphics/pokemon/meowth/front.png @vanilla; graphics/pokemon/meowth/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/rogue/pokemon/vanilla/meowth/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/meowth/gigantamax/front.png @origin/expansion; graphics/pokemon/meowth/alolan/front.png @origin/expansion; graphics/pokemon/meowth/galarian/front.png @origin/expansion; src/data/rogue/pokemon/expansion/meowth/expansion_profile.json @origin/expansion; graphics/pokemon/meowth/front.png @vanilla; graphics/pokemon/meowth/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "persian",
@@ -16776,7 +16903,14 @@
           "height": "1.1 m",
           "weight": "33.0 kg",
           "description": "It looks down on everyone other than\nitself. In contrast to its lovely face, it\nis so brutal that it tortures its weakened\nprey rather than finishing them off.",
-          "sprite": "persian_alolan"
+          "sprite": "persian_alolan",
+          "evo": {
+            "prev": {
+              "id": "meowth",
+              "method": "Level up at 30",
+              "form": "Alolan Meowth (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -18558,7 +18692,8 @@
             "evos": [
               {
                 "id": "arcanine",
-                "method": "Use Fire Stone"
+                "method": "Use Fire Stone",
+                "form": "Hisuian Arcanine (Hisuian)"
               }
             ]
           }
@@ -18920,7 +19055,14 @@
           "height": "2.0 m",
           "weight": "168.0 kg",
           "description": "Snaps at its foes with fangs cloaked in\nblazing flame. Despite its bulk, it deftly\nfeints every which way, leading opponents\non a deceptively merry chase.",
-          "sprite": "arcanine_hisuian"
+          "sprite": "arcanine_hisuian",
+          "evo": {
+            "prev": {
+              "id": "growlithe",
+              "method": "Use Fire Stone",
+              "form": "Hisuian Growlithe (Hisuian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -23733,7 +23875,8 @@
             "evos": [
               {
                 "id": "graveler",
-                "method": "Level up at 25"
+                "method": "Level up at 25",
+                "form": "Alolan Graveler (Alolan)"
               }
             ]
           }
@@ -24099,10 +24242,16 @@
           "description": "When two Graveler smash each other over\ndravite, their favorite food, they cause\nflashes of light and booming noises.\nPeople call them “fireworks of the earth.”",
           "sprite": "graveler_alolan",
           "evo": {
+            "prev": {
+              "id": "geodude",
+              "method": "Level up at 25",
+              "form": "Alolan Geodude (Alolan)"
+            },
             "evos": [
               {
                 "id": "golem",
-                "method": "Use Link Cable"
+                "method": "Use Link Cable",
+                "form": "Alolan Golem (Alolan)"
               }
             ]
           }
@@ -24463,7 +24612,14 @@
           "height": "1.7 m",
           "weight": "316.0 kg",
           "description": "It fires rocks charged with electricity.\nEven if the rock isn't fired that\naccurately, just grazing an opponent\nwill cause numbness and fainting.",
-          "sprite": "golem_alolan"
+          "sprite": "golem_alolan",
+          "evo": {
+            "prev": {
+              "id": "graveler",
+              "method": "Use Link Cable",
+              "form": "Alolan Graveler (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -24819,7 +24975,8 @@
             "evos": [
               {
                 "id": "rapidash",
-                "method": "Level up at 40"
+                "method": "Level up at 40",
+                "form": "Galarian Rapidash (Galarian)"
               }
             ]
           }
@@ -25157,7 +25314,14 @@
           "height": "1.7 m",
           "weight": "80.0 kg",
           "description": "Little can stand up to its psycho cut.\nUnleashed from this Pokémon's horn,\nthe move will punch a hole right\nthrough a thick metal sheet.",
-          "sprite": "rapidash_galarian"
+          "sprite": "rapidash_galarian",
+          "evo": {
+            "prev": {
+              "id": "ponyta",
+              "method": "Level up at 40",
+              "form": "Galarian Ponyta (Galarian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -25530,11 +25694,13 @@
             "evos": [
               {
                 "id": "slowbro",
-                "method": "Use GalaricaCuff"
+                "method": "Use GalaricaCuff",
+                "form": "Galarian Slowbro (Galarian)"
               },
               {
                 "id": "slowking",
-                "method": "Use GalrcaWreath"
+                "method": "Use GalrcaWreath",
+                "form": "Galarian Slowking (Galarian)"
               }
             ]
           }
@@ -25942,6 +26108,38 @@
           "weight": "120.0 kg",
           "description": "When bathed in the energy of Mega\nEvolution, Shellder converts into\nimpregnable armor. There is virtually no\nchange in Slowpoke.",
           "sprite": "slowbro_mega"
+        },
+        {
+          "name": "Galarian Slowbro (Galarian)",
+          "types": [
+            "Poison",
+            "Psychic"
+          ],
+          "stats": {
+            "hp": 95,
+            "atk": 100,
+            "def": 95,
+            "spa": 100,
+            "spd": 70,
+            "spe": 30,
+            "total": 490
+          },
+          "abilities": [
+            "Quick Draw",
+            "Own Tempo",
+            "Regenerator"
+          ],
+          "height": "1.6 m",
+          "weight": "70.5 kg",
+          "description": "A Shellder bite set off a chemical reaction\nwith the spices inside Slowbro's body,\ncausing Slowbro to become a\nPoison-type Pokémon.",
+          "sprite": "slowbro_galarian",
+          "evo": {
+            "prev": {
+              "id": "slowpoke",
+              "method": "Use GalaricaCuff",
+              "form": "Galarian Slowpoke (Galarian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -26129,7 +26327,7 @@
         ],
         "forms": []
       },
-      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/rogue/pokemon/vanilla/slowbro/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/slowbro/mega/front.png @origin/expansion; src/data/rogue/pokemon/expansion/slowbro/expansion_profile.json @origin/expansion; graphics/pokemon/slowbro/front.png @vanilla; graphics/pokemon/slowbro/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/base_stats.h @vanilla; src/data/pokemon/pokedex_entries.h @vanilla; src/data/pokemon/pokedex_text.h @vanilla; src/data/rogue/pokemon/vanilla/slowbro/vanilla_profile.json @vanilla; src/data/rogue_pokedex.h @vanilla; src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/slowbro/mega/front.png @origin/expansion; graphics/pokemon/slowbro/galarian/front.png @origin/expansion; src/data/rogue/pokemon/expansion/slowbro/expansion_profile.json @origin/expansion; graphics/pokemon/slowbro/front.png @vanilla; graphics/pokemon/slowbro/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "magnemite",
@@ -28510,7 +28708,8 @@
             "evos": [
               {
                 "id": "muk",
-                "method": "Level up at 38"
+                "method": "Level up at 38",
+                "form": "Alolan Muk (Alolan)"
               }
             ]
           }
@@ -28883,7 +29082,14 @@
           "height": "1.0 m",
           "weight": "52.0 kg",
           "description": "While it's unexpectedly quiet and friendly,\nif it's not fed any trash for a while,,\nit will smash its Trainer's furnishings,\nand eat up the fragments.",
-          "sprite": "muk_alolan"
+          "sprite": "muk_alolan",
+          "evo": {
+            "prev": {
+              "id": "grimer",
+              "method": "Level up at 38",
+              "form": "Alolan Grimer (Alolan)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -32585,7 +32791,8 @@
             "evos": [
               {
                 "id": "electrode",
-                "method": "Use Leaf Stone"
+                "method": "Use Leaf Stone",
+                "form": "Hisuian Electrode (Hisuian)"
               }
             ]
           }
@@ -32916,7 +33123,14 @@
           "height": "1.2 m",
           "weight": "71.0 kg",
           "description": "The tissue on the surface of its body is\nsimilar in composition to an Apricorn.\nWhen irritated, it lets loose an electric\ncurrent equal to 20 lightning bolts.",
-          "sprite": "electrode_hisuian"
+          "sprite": "electrode_hisuian",
+          "evo": {
+            "prev": {
+              "id": "voltorb",
+              "method": "Use Leaf Stone",
+              "form": "Hisuian Voltorb (Hisuian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -33112,7 +33326,8 @@
           },
           {
             "id": "exeggutor",
-            "method": "Use Alola Artefact"
+            "method": "Use Alola Artefact",
+            "form": "Alolan Exeggutor (Alolan)"
           }
         ]
       },
@@ -33787,7 +34002,8 @@
           },
           {
             "id": "marowak",
-            "method": "Use Alola Artefact"
+            "method": "Use Alola Artefact",
+            "form": "Alolan Marowak (Alolan)"
           }
         ]
       },
@@ -35568,7 +35784,8 @@
           },
           {
             "id": "weezing",
-            "method": "Use Galar Artefact"
+            "method": "Use Galar Artefact",
+            "form": "Galarian Weezing (Galarian)"
           }
         ]
       },
@@ -51721,7 +51938,8 @@
           },
           {
             "id": "typhlosion",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Typhlosion (Hisuian)"
           }
         ]
       },
@@ -65791,7 +66009,14 @@
           "height": "1.8 m",
           "weight": "79.5 kg",
           "description": "A combination of toxins and the shock of\nevolving has increased Shellder's\nintelligence to the point that Shellder\nnow controls Slowking.",
-          "sprite": "slowking_galarian"
+          "sprite": "slowking_galarian",
+          "evo": {
+            "prev": {
+              "id": "slowpoke",
+              "method": "Use GalrcaWreath",
+              "form": "Galarian Slowpoke (Galarian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -68196,7 +68421,8 @@
           },
           {
             "id": "dudunsparce",
-            "method": "Level up knowing Hyper Drill (three-segment form)"
+            "method": "Level up knowing Hyper Drill (three-segment form)",
+            "form": "Dudunsprce (Three Segment)"
           }
         ]
       },
@@ -72194,7 +72420,8 @@
           },
           {
             "id": "ursaluna",
-            "method": "Use Moon Stone"
+            "method": "Use Moon Stone",
+            "form": "Ursaluna (Bloodmoon)"
           }
         ]
       },
@@ -87332,7 +87559,8 @@
             "evos": [
               {
                 "id": "linoone",
-                "method": "Level up at 20"
+                "method": "Level up at 20",
+                "form": "Galarian Linoone (Galarian)"
               }
             ]
           }
@@ -87694,6 +87922,11 @@
           "description": "This very aggressive Pokémon will\nrecklessly challenge opponents stronger\nthan itself. It uses its long tongue to\ntaunt them to then tackle forcefully.",
           "sprite": "linoone_galarian",
           "evo": {
+            "prev": {
+              "id": "zigzagoon",
+              "method": "Level up at 20",
+              "form": "Galarian Zigzagoon (Galarian)"
+            },
             "evos": [
               {
                 "id": "obstagoon",
@@ -131393,7 +131626,8 @@
             "evos": [
               {
                 "id": "wormadam",
-                "method": "Level up at 20 (female)"
+                "method": "Level up at 20 (female)",
+                "form": "Wormadam (Sandy Cloak)"
               },
               {
                 "id": "mothim",
@@ -131428,7 +131662,8 @@
             "evos": [
               {
                 "id": "wormadam",
-                "method": "Level up at 20 (female)"
+                "method": "Level up at 20 (female)",
+                "form": "Wormadam (Trash Cloak)"
               },
               {
                 "id": "mothim",
@@ -131669,7 +131904,14 @@
           "height": "0.5 m",
           "weight": "6.5 kg",
           "description": "Its earthen skin is reasonably hard, it has\nno problem repelling a Starly's pecking.\nIt is said that a Wormadam that evolves\non a cold day will have a thicker cloak.",
-          "sprite": "wormadam_sandy_cloak"
+          "sprite": "wormadam_sandy_cloak",
+          "evo": {
+            "prev": {
+              "id": "burmy",
+              "method": "Level up at 20 (female)",
+              "form": "Burmy (Sandy Cloak)"
+            }
+          }
         },
         {
           "name": "Wormadam (Trash Cloak)",
@@ -131693,7 +131935,14 @@
           "height": "0.5 m",
           "weight": "6.5 kg",
           "description": "Its body, composed of refuse, blends in to\nthe scenery enough to be inconspicuous.\nThis seems to be the perfect way for it to\nevade the detection of predators.",
-          "sprite": "wormadam_trash_cloak"
+          "sprite": "wormadam_trash_cloak",
+          "evo": {
+            "prev": {
+              "id": "burmy",
+              "method": "Level up at 20 (female)",
+              "form": "Burmy (Trash Cloak)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -133257,7 +133506,8 @@
             "evos": [
               {
                 "id": "gastrodon",
-                "method": "Level up at 30"
+                "method": "Level up at 30",
+                "form": "Gastrodon (East Sea)"
               }
             ]
           }
@@ -133466,7 +133716,14 @@
           "height": "0.9 m",
           "weight": "29.9 kg",
           "description": "Found more often on land than in the sea.\nThey normally live in rocky seashores, but\nwhen cloudy or rainy, they can sometimes\nbe found on mountains, far from the sea.",
-          "sprite": "gastrodon_east_sea"
+          "sprite": "gastrodon_east_sea",
+          "evo": {
+            "prev": {
+              "id": "shellos",
+              "method": "Level up at 30",
+              "form": "Shellos (East Sea)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -136432,7 +136689,8 @@
           },
           {
             "id": "mr_mime",
-            "method": "Use Galar Artefact"
+            "method": "Use Galar Artefact",
+            "form": "Galarian Mr. Mime (Galarian)"
           }
         ]
       },
@@ -149623,7 +149881,8 @@
           },
           {
             "id": "samurott",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Samurott (Hisuian)"
           }
         ]
       },
@@ -157716,7 +157975,8 @@
           },
           {
             "id": "lilligant",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Lilligant (Hisuian)"
           }
         ]
       },
@@ -158296,7 +158556,8 @@
               },
               {
                 "id": "basculegion",
-                "method": "Level up at 36 (female)"
+                "method": "Level up at 36 (female)",
+                "form": "Bsculegion (Female)"
               }
             ]
           }
@@ -159127,7 +159388,8 @@
             "evos": [
               {
                 "id": "darmanitan",
-                "method": "Use Ice Stone"
+                "method": "Use Ice Stone",
+                "form": "Galarian Darmanitan (Standard Mode)"
               }
             ]
           }
@@ -159353,6 +159615,36 @@
           "weight": "92.9 kg",
           "description": "When wounded, it stops moving. It\ngoes as still as stone to meditate,\nsharpening its mind and spirit.",
           "sprite": "darmanitan_zen_mode"
+        },
+        {
+          "name": "Galarian Darmanitan (Standard Mode)",
+          "types": [
+            "Ice"
+          ],
+          "stats": {
+            "hp": 105,
+            "atk": 140,
+            "def": 55,
+            "spa": 30,
+            "spd": 55,
+            "spe": 95,
+            "total": 480
+          },
+          "abilities": [
+            "Gorilla Tactics",
+            "Zen Mode"
+          ],
+          "height": "1.7 m",
+          "weight": "120.0 kg",
+          "description": "On days when blizzards blow\nthrough, it comes down to where people\nlive. It stashes food in the snowball on\nits head, taking it home for later.",
+          "sprite": "darmanitan_galarian_standard_mode",
+          "evo": {
+            "prev": {
+              "id": "darumaka",
+              "method": "Use Ice Stone",
+              "form": "Galarian Darumaka (Galarian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -159373,7 +159665,7 @@
         "Ride",
         "Climb"
       ],
-      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/darmanitan/zen_mode/anim_front.png @origin/expansion; src/data/rogue/pokemon/expansion/darmanitan/expansion_profile.json @origin/expansion; graphics/pokemon/darmanitan/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/darmanitan/zen_mode/anim_front.png @origin/expansion; graphics/pokemon/darmanitan/galarian/front.png @origin/expansion; src/data/rogue/pokemon/expansion/darmanitan/expansion_profile.json @origin/expansion; graphics/pokemon/darmanitan/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "maractus",
@@ -162302,7 +162594,8 @@
             "evos": [
               {
                 "id": "zoroark",
-                "method": "Level up at 30"
+                "method": "Level up at 30",
+                "form": "Hisuian Zoroark (Hisuian)"
               }
             ]
           }
@@ -162529,7 +162822,14 @@
           "height": "1.6 m",
           "weight": "73.0 kg",
           "description": "Heedless of its own safety,\nZoroark attacks its nemeses with a bitter\nenergy so intense, it lacerates\nZoroark's own body.",
-          "sprite": "zoroark_hisuian"
+          "sprite": "zoroark_hisuian",
+          "evo": {
+            "prev": {
+              "id": "zorua",
+              "method": "Level up at 30",
+              "form": "Hisuian Zorua (Hisuian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -165048,7 +165348,8 @@
             "evos": [
               {
                 "id": "sawsbuck",
-                "method": "Level up at 34"
+                "method": "Level up at 34",
+                "form": "Sawsbuck (Summer)"
               }
             ]
           }
@@ -165081,7 +165382,8 @@
             "evos": [
               {
                 "id": "sawsbuck",
-                "method": "Level up at 34"
+                "method": "Level up at 34",
+                "form": "Sawsbuck (Autumn)"
               }
             ]
           }
@@ -165114,7 +165416,8 @@
             "evos": [
               {
                 "id": "sawsbuck",
-                "method": "Level up at 34"
+                "method": "Level up at 34",
+                "form": "Sawsbuck (Winter)"
               }
             ]
           }
@@ -165321,7 +165624,14 @@
           "height": "1.9 m",
           "weight": "92.5 kg",
           "description": "The thicker and larger the\nbranches and leaves on its antlers, the\nmore majestic the Sawsbuck is thought\nto be.",
-          "sprite": "sawsbuck_summer"
+          "sprite": "sawsbuck_summer",
+          "evo": {
+            "prev": {
+              "id": "deerling",
+              "method": "Level up at 34",
+              "form": "Deerling (Summer)"
+            }
+          }
         },
         {
           "name": "Sawsbuck (Autumn)",
@@ -165346,7 +165656,14 @@
           "height": "1.9 m",
           "weight": "92.5 kg",
           "description": "Sawsbuck in their Autumn Form are\nknown for having very short\ntempers. The males fight each other\nincessantly.",
-          "sprite": "sawsbuck_autumn"
+          "sprite": "sawsbuck_autumn",
+          "evo": {
+            "prev": {
+              "id": "deerling",
+              "method": "Level up at 34",
+              "form": "Deerling (Autumn)"
+            }
+          }
         },
         {
           "name": "Sawsbuck (Winter)",
@@ -165371,7 +165688,14 @@
           "height": "1.9 m",
           "weight": "92.5 kg",
           "description": "Though there are many enthusiasts\nfor Sawsbuck as a species, this\nseasonal form in particular is not\nvery popular.",
-          "sprite": "sawsbuck_winter"
+          "sprite": "sawsbuck_winter",
+          "evo": {
+            "prev": {
+              "id": "deerling",
+              "method": "Level up at 34",
+              "form": "Deerling (Winter)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -172396,7 +172720,7 @@
         "evos": [
           {
             "id": "kingambit",
-            "method": "Use Leader'sCrest"
+            "method": "Use Leader's Crest"
           }
         ]
       },
@@ -172773,7 +173097,8 @@
           },
           {
             "id": "braviary",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Braviary (Hisuian)"
           }
         ]
       },
@@ -181554,7 +181879,8 @@
             "evos": [
               {
                 "id": "floette",
-                "method": "Level up at 19"
+                "method": "Level up at 19",
+                "form": "Floette (Yellow Flower)"
               }
             ]
           }
@@ -181585,7 +181911,8 @@
             "evos": [
               {
                 "id": "floette",
-                "method": "Level up at 19"
+                "method": "Level up at 19",
+                "form": "Floette (Orange Flower)"
               }
             ]
           }
@@ -181616,7 +181943,8 @@
             "evos": [
               {
                 "id": "floette",
-                "method": "Level up at 19"
+                "method": "Level up at 19",
+                "form": "Floette (Blue Flower)"
               }
             ]
           }
@@ -181647,7 +181975,8 @@
             "evos": [
               {
                 "id": "floette",
-                "method": "Level up at 19"
+                "method": "Level up at 19",
+                "form": "Floette (White Flower)"
               }
             ]
           }
@@ -181847,10 +182176,16 @@
           "description": "This Pokémon can draw forth the\npower hidden within yellow flowers.\nThis power then becomes the moves\nFloette uses to protect itself.",
           "sprite": "floette_yellow_flower",
           "evo": {
+            "prev": {
+              "id": "flabebe",
+              "method": "Level up at 19",
+              "form": "Flabébé (Yellow Flower)"
+            },
             "evos": [
               {
                 "id": "florges",
-                "method": "Use Shiny Stone"
+                "method": "Use Shiny Stone",
+                "form": "Florges (Yellow Flower)"
               }
             ]
           }
@@ -181878,10 +182213,16 @@
           "description": "This Pokémon can draw forth the\nmost power when in sync with orange\nflowers, compared to flowers of other\ncolors.",
           "sprite": "floette_orange_flower",
           "evo": {
+            "prev": {
+              "id": "flabebe",
+              "method": "Level up at 19",
+              "form": "Flabébé (Orange Flower)"
+            },
             "evos": [
               {
                 "id": "florges",
-                "method": "Use Shiny Stone"
+                "method": "Use Shiny Stone",
+                "form": "Florges (Orange Flower)"
               }
             ]
           }
@@ -181909,10 +182250,16 @@
           "description": "Whenever this Pokémon finds\nflowering plants that are withering, it\nwill bring them back to its territory\nand care for them.",
           "sprite": "floette_blue_flower",
           "evo": {
+            "prev": {
+              "id": "flabebe",
+              "method": "Level up at 19",
+              "form": "Flabébé (Blue Flower)"
+            },
             "evos": [
               {
                 "id": "florges",
-                "method": "Use Shiny Stone"
+                "method": "Use Shiny Stone",
+                "form": "Florges (Blue Flower)"
               }
             ]
           }
@@ -181940,10 +182287,16 @@
           "description": "If it finds someone messing up a\nflower bed, it will attack them\nwithout mercy. This Floette takes\nparticularly good care of white flowers.",
           "sprite": "floette_white_flower",
           "evo": {
+            "prev": {
+              "id": "flabebe",
+              "method": "Level up at 19",
+              "form": "Flabébé (White Flower)"
+            },
             "evos": [
               {
                 "id": "florges",
-                "method": "Use Shiny Stone"
+                "method": "Use Shiny Stone",
+                "form": "Florges (White Flower)"
               }
             ]
           }
@@ -182131,7 +182484,14 @@
           "height": "1.1 m",
           "weight": "10.0 kg",
           "description": "This Pokémon battles by drawing\nforth the power of yellow flowers. It\nruthlessly punishes anyone who\ntramples on flowering plants.",
-          "sprite": "florges_yellow_flower"
+          "sprite": "florges_yellow_flower",
+          "evo": {
+            "prev": {
+              "id": "floette",
+              "method": "Use Shiny Stone",
+              "form": "Floette (Yellow Flower)"
+            }
+          }
         },
         {
           "name": "Florges (Orange Flower)",
@@ -182154,7 +182514,14 @@
           "height": "1.1 m",
           "weight": "10.0 kg",
           "description": "In times long past, castle\ngovernors would lovingly raise Florges to\ncare for their castles' exquisite\ngardens.",
-          "sprite": "florges_orange_flower"
+          "sprite": "florges_orange_flower",
+          "evo": {
+            "prev": {
+              "id": "floette",
+              "method": "Use Shiny Stone",
+              "form": "Floette (Orange Flower)"
+            }
+          }
         },
         {
           "name": "Florges (Blue Flower)",
@@ -182177,7 +182544,14 @@
           "height": "1.1 m",
           "weight": "10.0 kg",
           "description": "Blue pigments were tremendously\nexpensive in the past, so paintings\nof blue Florges are highly valuable.",
-          "sprite": "florges_blue_flower"
+          "sprite": "florges_blue_flower",
+          "evo": {
+            "prev": {
+              "id": "floette",
+              "method": "Use Shiny Stone",
+              "form": "Floette (Blue Flower)"
+            }
+          }
         },
         {
           "name": "Florges (White Flower)",
@@ -182200,7 +182574,14 @@
           "height": "1.1 m",
           "weight": "10.0 kg",
           "description": "A flower garden made by a white-\nflowered Florges will be beautifully\ndecorated with flowering plants of\nmany different colors.",
-          "sprite": "florges_white_flower"
+          "sprite": "florges_white_flower",
+          "evo": {
+            "prev": {
+              "id": "floette",
+              "method": "Use Shiny Stone",
+              "form": "Floette (White Flower)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -183394,7 +183775,8 @@
           },
           {
             "id": "meowstic",
-            "method": "Level up at 25 (female)"
+            "method": "Level up at 25 (female)",
+            "form": "Meowstic (Female)"
           }
         ]
       },
@@ -183722,6 +184104,36 @@
           "weight": "8.5 kg",
           "description": "The defensive instinct of the\nmales is strong. It's when they're\nprotecting themselves or their partners\nthat they unleash their full power.",
           "sprite": "meowstic_male_mega"
+        },
+        {
+          "name": "Meowstic (Female)",
+          "types": [
+            "Psychic"
+          ],
+          "stats": {
+            "hp": 74,
+            "atk": 48,
+            "def": 76,
+            "spa": 83,
+            "spd": 81,
+            "spe": 104,
+            "total": 466
+          },
+          "abilities": [
+            "Keen Eye",
+            "Infiltrator",
+            "Competitive"
+          ],
+          "height": "0.6 m",
+          "weight": "8.5 kg",
+          "description": "Females are a bit more selfish and\naggressive than males. If they\ndon't get what they want, they will\ntorment you with their psychic abilities.",
+          "sprite": "meowstic_female",
+          "evo": {
+            "prev": {
+              "id": "espurr",
+              "method": "Level up at 25 (female)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -183738,7 +184150,7 @@
         "Legends (Z-A)",
         "Legends (Z-A + DLC)"
       ],
-      "source": "src/data/pokemon/species_info/gen_6.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/meowstic/mega/front.png @origin/expansion; src/data/rogue/pokemon/expansion/meowstic/expansion_profile.json @origin/expansion; graphics/pokemon/meowstic/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_6.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/meowstic/mega/front.png @origin/expansion; graphics/pokemon/meowstic/female/anim_front.png @origin/expansion; src/data/rogue/pokemon/expansion/meowstic/expansion_profile.json @origin/expansion; graphics/pokemon/meowstic/anim_front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "honedge",
@@ -188494,7 +188906,8 @@
           },
           {
             "id": "sliggoo",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Sliggoo (Hisuian)"
           }
         ]
       },
@@ -188792,7 +189205,8 @@
             "evos": [
               {
                 "id": "goodra",
-                "method": "Level up at 50"
+                "method": "Level up at 50",
+                "form": "Hisuian Goodra (Hisuian)"
               }
             ]
           }
@@ -189026,7 +189440,14 @@
           "height": "1.7 m",
           "weight": "334.1 kg",
           "description": "It loathes solitude and is\nextremely clingy-it will fume and run riot if\nthose dearest to it ever leave its\nside.",
-          "sprite": "goodra_hisuian"
+          "sprite": "goodra_hisuian",
+          "evo": {
+            "prev": {
+              "id": "sliggoo",
+              "method": "Level up at 50",
+              "form": "Hisuian Sliggoo (Hisuian)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -189812,7 +190233,8 @@
             "evos": [
               {
                 "id": "gourgeist",
-                "method": "Use Link Cable"
+                "method": "Use Link Cable",
+                "form": "Gourgeist (Small)"
               }
             ]
           }
@@ -189845,7 +190267,8 @@
             "evos": [
               {
                 "id": "gourgeist",
-                "method": "Use Link Cable"
+                "method": "Use Link Cable",
+                "form": "Gourgeist (Large)"
               }
             ]
           }
@@ -189878,7 +190301,8 @@
             "evos": [
               {
                 "id": "gourgeist",
-                "method": "Use Link Cable"
+                "method": "Use Link Cable",
+                "form": "Gourgeist (Super)"
               }
             ]
           }
@@ -190095,7 +190519,14 @@
           "height": "0.7 m",
           "weight": "9.5 kg",
           "description": "A small-sized Pumpkaboo evolves\ninto a small-sized Gourgeist. Its\nbodily proportions also get passed on\nto its descendants.",
-          "sprite": "gourgeist_small"
+          "sprite": "gourgeist_small",
+          "evo": {
+            "prev": {
+              "id": "pumpkaboo",
+              "method": "Use Link Cable",
+              "form": "Pumpkaboo (Small)"
+            }
+          }
         },
         {
           "name": "Gourgeist (Large)",
@@ -190120,7 +190551,14 @@
           "height": "1.1 m",
           "weight": "14.0 kg",
           "description": "A large-sized Pumpkaboo evolves\ninto a large-sized Gourgeist. Its\nbodily proportions also get passed on\nto its descendants.",
-          "sprite": "gourgeist_large"
+          "sprite": "gourgeist_large",
+          "evo": {
+            "prev": {
+              "id": "pumpkaboo",
+              "method": "Use Link Cable",
+              "form": "Pumpkaboo (Large)"
+            }
+          }
         },
         {
           "name": "Gourgeist (Super)",
@@ -190145,7 +190583,14 @@
           "height": "1.7 m",
           "weight": "39.0 kg",
           "description": "A supersized Pumpkaboo evolves\ninto a supersized Gourgeist. Its\nbodily proportions also get passed on to\nits descendants.",
-          "sprite": "gourgeist_super"
+          "sprite": "gourgeist_super",
+          "evo": {
+            "prev": {
+              "id": "pumpkaboo",
+              "method": "Use Link Cable",
+              "form": "Pumpkaboo (Super)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -190209,7 +190654,8 @@
           },
           {
             "id": "avalugg",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Avalugg (Hisuian)"
           }
         ]
       },
@@ -192474,7 +192920,8 @@
           },
           {
             "id": "decidueye",
-            "method": "Use Hisui Artefact"
+            "method": "Use Hisui Artefact",
+            "form": "Hisuian Decidueye (Hisuian)"
           }
         ]
       },
@@ -196280,7 +196727,8 @@
           },
           {
             "id": "lycanroc",
-            "method": "Level up at 25 (night)"
+            "method": "Level up at 25 (night)",
+            "form": "Lycanroc (Midnight)"
           }
         ]
       },
@@ -196424,7 +196872,8 @@
             "evos": [
               {
                 "id": "lycanroc",
-                "method": "Level up at 25 (dusk)"
+                "method": "Level up at 25 (dusk)",
+                "form": "Lycanroc (Dusk)"
               }
             ]
           }
@@ -196706,7 +197155,14 @@
           "height": "0.8 m",
           "weight": "25.0 kg",
           "description": "These Pokémon have both calm and\nferocious qualities. It's said that\nthis form of Lycanroc is the most\ntroublesome to raise.",
-          "sprite": "lycanroc_dusk"
+          "sprite": "lycanroc_dusk",
+          "evo": {
+            "prev": {
+              "id": "rockruff",
+              "method": "Level up at 25 (dusk)",
+              "form": "Rockruff (Own Tempo)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -214605,7 +215061,8 @@
           },
           {
             "id": "toxtricity",
-            "method": "Level up at 30 with a low-key nature"
+            "method": "Level up at 30 with a low-key nature",
+            "form": "Toxtricity (Low Key)"
           }
         ]
       },
@@ -214897,6 +215354,37 @@
           "weight": "0.0 kg",
           "description": "Out of control after its own\npoison penetrated its brain, it tears\nacross the land in a rampage,\ncontaminating the earth with toxic sweat.",
           "sprite": "toxtricity_amped_gigantamax"
+        },
+        {
+          "name": "Toxtricity (Low Key)",
+          "types": [
+            "Electric",
+            "Poison"
+          ],
+          "stats": {
+            "hp": 75,
+            "atk": 98,
+            "def": 70,
+            "spa": 114,
+            "spd": 70,
+            "spe": 75,
+            "total": 502
+          },
+          "abilities": [
+            "Punk Rock",
+            "Minus",
+            "Technician"
+          ],
+          "height": "1.6 m",
+          "weight": "40.0 kg",
+          "description": "Capable of generating 15,000 volts\nof electricity, this Pokémon looks\ndown on all that would challenge it.",
+          "sprite": "toxtricity_low_key",
+          "evo": {
+            "prev": {
+              "id": "toxel",
+              "method": "Level up at 30 with a low-key nature"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -214908,7 +215396,7 @@
         "National (Gen. 9)",
         "Legends (Z-A + DLC)"
       ],
-      "source": "src/data/pokemon/species_info/gen_8.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/toxtricity/gigantamax/front.png @origin/expansion; src/data/rogue/pokemon/expansion/toxtricity/expansion_profile.json @origin/expansion; graphics/pokemon/toxtricity/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_8.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/toxtricity/gigantamax/front.png @origin/expansion; graphics/pokemon/toxtricity/low_key/front.png @origin/expansion; src/data/rogue/pokemon/expansion/toxtricity/expansion_profile.json @origin/expansion; graphics/pokemon/toxtricity/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "sizzlipede",
@@ -215713,7 +216201,8 @@
             "evos": [
               {
                 "id": "polteageist",
-                "method": "Use Chipped Pot"
+                "method": "Use Chipped Pot",
+                "form": "Polteageis (Antique)"
               }
             ]
           }
@@ -215907,7 +216396,14 @@
           ],
           "height": "0.2 m",
           "weight": "0.4 kg",
-          "description": "Trainers Polteageist trusts will be\nallowed to experience its\ndistinctive flavor and aroma firsthand by\nsampling just a tiny bit of its tea."
+          "description": "Trainers Polteageist trusts will be\nallowed to experience its\ndistinctive flavor and aroma firsthand by\nsampling just a tiny bit of its tea.",
+          "evo": {
+            "prev": {
+              "id": "sinistea",
+              "method": "Use Chipped Pot",
+              "form": "Sinistea (Antique)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -217043,6 +217539,13 @@
       ],
       "baseExp": 260,
       "description": "Its voice is staggering in volume.\nObstagoon has a tendency to take on a\nthreatening posture and shout--this move\nis known as Obstruct.",
+      "evo": {
+        "prev": {
+          "id": "linoone",
+          "method": "Level up at 35",
+          "form": "Galarian Linoone (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -217227,7 +217730,7 @@
         "Ride",
         "Climb"
       ],
-      "source": "src/data/pokemon/species_info/gen_3.h @origin/expansion; src/data/rogue/pokemon/expansion/obstagoon/expansion_profile.json @origin/expansion; graphics/pokemon/obstagoon/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_3.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/obstagoon/expansion_profile.json @origin/expansion; graphics/pokemon/obstagoon/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "perrserker",
@@ -217264,6 +217767,13 @@
       ],
       "baseExp": 154,
       "description": "What appears to be an iron helmet is\nactually hardened hair. This Pokémon\nlives for the thrill of battle.",
+      "evo": {
+        "prev": {
+          "id": "meowth",
+          "method": "Level up at 28",
+          "form": "Galarian Meowth (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -217417,7 +217927,7 @@
         "National (Gen. 9)",
         "Legends (Z-A + DLC)"
       ],
-      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/data/rogue/pokemon/expansion/perrserker/expansion_profile.json @origin/expansion; graphics/pokemon/perrserker/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/perrserker/expansion_profile.json @origin/expansion; graphics/pokemon/perrserker/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "cursola",
@@ -217454,6 +217964,13 @@
       ],
       "baseExp": 179,
       "description": "Its shell is overflowing with its\nheightened otherworldly energy. The\nectoplasm serves as protection for this\nPokémon's core spirit.",
+      "evo": {
+        "prev": {
+          "id": "corsola",
+          "method": "Level up at 38",
+          "form": "Galarian Corsola (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -217598,7 +218115,7 @@
         "National (Gen. 8)",
         "National (Gen. 9)"
       ],
-      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/data/rogue/pokemon/expansion/cursola/expansion_profile.json @origin/expansion; graphics/pokemon/cursola/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/cursola/expansion_profile.json @origin/expansion; graphics/pokemon/cursola/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "sirfetchd",
@@ -217635,6 +218152,13 @@
       ],
       "baseExp": 177,
       "description": "Only Farfetch'd that have survived many\nbattles can attain this evolution. When\nthis Pokémon's leek withers, it will\nretire from combat.",
+      "evo": {
+        "prev": {
+          "id": "farfetchd",
+          "method": "Level up at 36",
+          "form": "Galarian Farfetch'd (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -217760,7 +218284,7 @@
         "National (Gen. 9)",
         "Legends (Z-A + DLC)"
       ],
-      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/data/rogue/pokemon/expansion/sirfetchd/expansion_profile.json @origin/expansion; graphics/pokemon/sirfetchd/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/sirfetchd/expansion_profile.json @origin/expansion; graphics/pokemon/sirfetchd/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "mr_rime",
@@ -217798,6 +218322,13 @@
       ],
       "baseExp": 182,
       "description": "It's highly skilled at tap-dancing. It\nwaves its cane of ice in time with its\ngraceful movements.",
+      "evo": {
+        "prev": {
+          "id": "mr_mime",
+          "method": "Level up at 42",
+          "form": "Galarian Mr. Mime (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -218023,7 +218554,7 @@
         "National (Gen. 9)",
         "Legends (Z-A + DLC)"
       ],
-      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/data/rogue/pokemon/expansion/mr_rime/expansion_profile.json @origin/expansion; graphics/pokemon/mr_rime/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_1.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/mr_rime/expansion_profile.json @origin/expansion; graphics/pokemon/mr_rime/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "runerigus",
@@ -218060,6 +218591,13 @@
       ],
       "baseExp": 169,
       "description": "A powerful curse was woven into an ancient\npainting. After absorbing the spirit of\na Yamask, the painting began to move.",
+      "evo": {
+        "prev": {
+          "id": "yamask",
+          "method": "Level up at 34",
+          "form": "Galarian Yamask (Galarian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -218223,7 +218761,7 @@
         "Ride",
         "Fly"
       ],
-      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/data/rogue/pokemon/expansion/runerigus/expansion_profile.json @origin/expansion; graphics/pokemon/runerigus/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/runerigus/expansion_profile.json @origin/expansion; graphics/pokemon/runerigus/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "milcery",
@@ -218268,27 +218806,33 @@
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Adamant"
+            "method": "Reach Lv.30 as Adamant",
+            "form": "Alcremie (Berry)"
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Lax"
+            "method": "Reach Lv.30 as Lax",
+            "form": "Alcremie (Love)"
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Modest"
+            "method": "Reach Lv.30 as Modest",
+            "form": "Alcremie (Star)"
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Gentle"
+            "method": "Reach Lv.30 as Gentle",
+            "form": "Alcremie (Clover)"
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Timid"
+            "method": "Reach Lv.30 as Timid",
+            "form": "Alcremie (Flower)"
           },
           {
             "id": "alcremie",
-            "method": "Reach 30 as Jolly"
+            "method": "Reach Lv.30 as Jolly",
+            "form": "Alcremie (Ribbon)"
           }
         ]
       },
@@ -223438,7 +223982,8 @@
           },
           {
             "id": "urshifu",
-            "method": "Use Water Stone"
+            "method": "Use Water Stone",
+            "form": "Urshifu (Rapid Strike Style)"
           }
         ]
       },
@@ -223763,6 +224308,35 @@
           "weight": "0.0 kg",
           "description": "People call it the embodiment of\nrage. It's said that this Pokémon's\nterrifying expression and shout will\nrid the world of malevolence.",
           "sprite": "urshifu_single_strike_style_gigantamax"
+        },
+        {
+          "name": "Urshifu (Rapid Strike Style)",
+          "types": [
+            "Fighting",
+            "Water"
+          ],
+          "stats": {
+            "hp": 100,
+            "atk": 130,
+            "def": 100,
+            "spa": 63,
+            "spd": 60,
+            "spe": 97,
+            "total": 550
+          },
+          "abilities": [
+            "Unseen Fist"
+          ],
+          "height": "1.9 m",
+          "weight": "105.0 kg",
+          "description": "This form of Urshifu is a strong\nbeliever in defeating foes by raining\nmany blows down on them. Its\nstrikes are nonstop, flowing like a river.",
+          "sprite": "urshifu_rapid_strike_style",
+          "evo": {
+            "prev": {
+              "id": "kubfu",
+              "method": "Use Water Stone"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -223778,7 +224352,7 @@
       "notes": [
         "Spawns only as a legendary encounter"
       ],
-      "source": "src/data/pokemon/species_info/gen_8.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/urshifu/single_strike_style_gigantamax/front.png @origin/expansion; src/data/rogue/pokemon/expansion/urshifu/expansion_profile.json @origin/expansion; graphics/pokemon/urshifu/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/rogue_routes.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_8.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/urshifu/single_strike_style_gigantamax/front.png @origin/expansion; graphics/pokemon/urshifu/rapid_strike_style/front.png @origin/expansion; src/data/rogue/pokemon/expansion/urshifu/expansion_profile.json @origin/expansion; graphics/pokemon/urshifu/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/rogue_routes.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "zarude",
@@ -225487,6 +226061,13 @@
       ],
       "baseExp": 265,
       "description": "Clads itself in the souls of comrades that\nperished before fulfilling their goals of\njourneying upstream. No other species in\nall Hisui's rivers is Basculegion's equal.",
+      "evo": {
+        "prev": {
+          "id": "basculin",
+          "method": "Level up at 36 (male)",
+          "form": "Basculin (White Striped)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -225642,7 +226223,14 @@
           ],
           "height": "3.0 m",
           "weight": "110.0 kg",
-          "description": "Clads itself in the souls of comrades that\nperished before fulfilling their goals of\njourneying upstream. No other species in\nall Hisui's rivers is Basculegion's equal."
+          "description": "Clads itself in the souls of comrades that\nperished before fulfilling their goals of\njourneying upstream. No other species in\nall Hisui's rivers is Basculegion's equal.",
+          "evo": {
+            "prev": {
+              "id": "basculin",
+              "method": "Level up at 36 (male)",
+              "form": "Basculin (White Striped)"
+            }
+          }
         },
         {
           "name": "Bsculegion (Female)",
@@ -225667,7 +226255,14 @@
           "height": "3.0 m",
           "weight": "110.0 kg",
           "description": "The souls of its comrades cloak its\nbody and propel it effortlessly\nthrough even raging rapids.",
-          "sprite": "basculegion_female"
+          "sprite": "basculegion_female",
+          "evo": {
+            "prev": {
+              "id": "basculin",
+              "method": "Level up at 36 (female)",
+              "form": "Basculin (White Striped)"
+            }
+          }
         }
       ],
       "dexVariants": [
@@ -225682,7 +226277,7 @@
         "Ride",
         "Surf"
       ],
-      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/basculegion/female/front.png @origin/expansion; src/data/rogue/pokemon/expansion/basculegion/expansion_profile.json @origin/expansion; graphics/pokemon/basculegion/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_5.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/pokemon/form_species_tables.h @origin/expansion; graphics/pokemon/basculegion/female/front.png @origin/expansion; src/data/rogue/pokemon/expansion/basculegion/expansion_profile.json @origin/expansion; graphics/pokemon/basculegion/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "sneasler",
@@ -225720,6 +226315,13 @@
       ],
       "baseExp": 102,
       "description": "Because of its wicked poison and daunting\nphysical prowess, no other species could\nhope to best it on frozen highlands. It\nprefers solitude and doesn't form packs.",
+      "evo": {
+        "prev": {
+          "id": "sneasel",
+          "method": "Use Razor Claw",
+          "form": "Hisuian Sneasel (Hisuian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -225870,7 +226472,7 @@
         "Ride",
         "Climb"
       ],
-      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/data/rogue/pokemon/expansion/sneasler/expansion_profile.json @origin/expansion; graphics/pokemon/sneasler/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/sneasler/expansion_profile.json @origin/expansion; graphics/pokemon/sneasler/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "overqwil",
@@ -225908,6 +226510,13 @@
       ],
       "baseExp": 179,
       "description": "Its lancelike spikes and savage\ntemperament have earned it the\nnickname “Sea Fiend”.\nIt slurps up poison to nourish itself.",
+      "evo": {
+        "prev": {
+          "id": "qwilfish",
+          "method": "Level up at 30",
+          "form": "Hisuian Qwilfish (Hisuian)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -226054,7 +226663,7 @@
         "Ride",
         "Surf"
       ],
-      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/data/rogue/pokemon/expansion/overqwil/expansion_profile.json @origin/expansion; graphics/pokemon/overqwil/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/overqwil/expansion_profile.json @origin/expansion; graphics/pokemon/overqwil/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "enamorus",
@@ -227856,7 +228465,8 @@
           },
           {
             "id": "oinkologne",
-            "method": "Level up at 18 (female)"
+            "method": "Level up at 18 (female)",
+            "form": "Oinkologne (Female)"
           }
         ]
       },
@@ -229406,7 +230016,8 @@
         "evos": [
           {
             "id": "maushold",
-            "method": "Level up at 25 (family of four)"
+            "method": "Level up at 25 (family of four)",
+            "form": "Maushold (Family Of Four)"
           },
           {
             "id": "maushold",
@@ -239031,6 +239642,13 @@
       ],
       "baseExp": 151,
       "description": "When attacked, this Pokémon will\nretaliate by sticking thick spines out\nfrom its body. It's a risky move\nthat puts everything on the line.",
+      "evo": {
+        "prev": {
+          "id": "wooper",
+          "method": "Level up at 20",
+          "form": "Paldean Wooper (Paldean)"
+        }
+      },
       "moves": {
         "levelUp": [
           [
@@ -239167,7 +239785,7 @@
         "Ride",
         "Surf"
       ],
-      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/data/rogue/pokemon/expansion/clodsire/expansion_profile.json @origin/expansion; graphics/pokemon/clodsire/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
+      "source": "src/data/pokemon/species_info/gen_2.h @origin/expansion; src/rogue_baked.c @origin/expansion; src/data/rogue/pokemon/expansion/clodsire/expansion_profile.json @origin/expansion; graphics/pokemon/clodsire/front.png @origin/expansion; src/data/rogue_pokedex.h @origin/expansion; src/data/rogue_ridemon_infos.h @origin/expansion; src/data/party_menu.h @origin/expansion"
     },
     {
       "id": "farigiraf",
@@ -239689,7 +240307,7 @@
       "evo": {
         "prev": {
           "id": "bisharp",
-          "method": "Use Leader'sCrest"
+          "method": "Use Leader's Crest"
         }
       },
       "moves": {
@@ -242507,7 +243125,7 @@
         "evos": [
           {
             "id": "gholdengo",
-            "method": "Use GimighoulCoin"
+            "method": "Use Gimighoul Coin"
           }
         ]
       },
@@ -242572,7 +243190,7 @@
             "evos": [
               {
                 "id": "gholdengo",
-                "method": "Use GimighoulCoin"
+                "method": "Use Gimighoul Coin"
               }
             ]
           }
@@ -242645,7 +243263,7 @@
       "evo": {
         "prev": {
           "id": "gimmighoul",
-          "method": "Use GimighoulCoin"
+          "method": "Use Gimighoul Coin"
         }
       },
       "moves": {
@@ -244951,7 +245569,8 @@
             "evos": [
               {
                 "id": "sinistcha",
-                "method": "Use MstrpceTeacup"
+                "method": "Use MstrpceTeacup",
+                "form": "Sinistcha (Masterpiece)"
               }
             ]
           }
@@ -245160,7 +245779,14 @@
           ],
           "height": "0.2 m",
           "weight": "2.2 kg",
-          "description": "The more stirring it does with the\ntea whisk on its head, the more\nenergy it builds up. It does this to\nprepare for battle."
+          "description": "The more stirring it does with the\ntea whisk on its head, the more\nenergy it builds up. It does this to\nprepare for battle.",
+          "evo": {
+            "prev": {
+              "id": "poltchageist",
+              "method": "Use MstrpceTeacup",
+              "form": "Ptchageist (Artisan)"
+            }
+          }
         }
       ],
       "dexVariants": [

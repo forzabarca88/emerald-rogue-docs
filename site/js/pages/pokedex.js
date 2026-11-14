@@ -549,19 +549,25 @@
      * method caption; a neighbor that does not exist in the active
      * build (e.g. a Gen 4 pre-ev of a Vanilla species) renders as a
      * plain, non-link cell instead of a dead link. The data shape
-     * (issue #97): { prev?: {id, method}, evos?: [{id, method}] } —
-     * the record's own cell renders once, then one .dex-evo__branch
-     * row per evo (method caption + target link), then the prev row
-     * when present (the pre-evo link + the method that leads to this
-     * species). evos are the branches the in-game Pokédex shows after
-     * the game's own rewrite pass, so a species can carry several
-     * (Eevee's eight) — and the same method can appear twice with
-     * different targets (Kubfu's two stones).
+     * (issue #97): { prev?: {id, method, form?}, evos?: [{id, method,
+     * form?}] } — the record's own cell renders once, then one
+     * .dex-evo__branch row per evo (method caption + target link), then
+     * the prev row when present (the pre-evo link + the method that
+     * leads to this species). evos are the branches the in-game
+     * Pokédex shows after the game's own rewrite pass, so a species can
+     * carry several (Eevee's eight) — and the same method can appear
+     * twice with different targets (Kubfu's two stones). `form` names
+     * the target's form (Quilava's Hisuian Typhlosion, Galarian Yamask
+     * as Runerigus' pre-ev) — the cell shows the form name, the link
+     * still lands on the target record.
      */
-    function evoCellHtml(id) {
+    function evoCellHtml(id, formName) {
       var rec = byId[id];
       if (!rec) return '';
-      var name = ROGUE.esc(dexVariant(rec, 'name'));
+      // a form-targeted branch (issue #97) shows the form's display name —
+      // exactly the target record's forms entry — while the deep link still
+      // lands on the target record itself
+      var name = formName || ROGUE.esc(dexVariant(rec, 'name'));
       var inBuild = rec.versions && rec.versions.indexOf(ROGUE.version) !== -1;
       if (inBuild) {
         return '<a class="dex-evo__cell dex-evo__link" href="#' + ROGUE.esc(ROGUE.recId('pokedex', id)) + '"><span class="dex-evo__name">' + name + '</span></a>';
@@ -572,12 +578,15 @@
     /** One .dex-evo__branch row: the mono method caption and the target
      *  cell (the evo direction puts the caption first; the prev row
      *  puts the pre-evo cell first, the caption trailing it toward the
-     *  species the branch belongs to). */
+     *  species the branch belongs to). When the branch's entry carries a
+     *  form (issue #97 — Hisuian Typhlosion, Basculegion (Male), ...),
+     *  the cell shows that form's name instead of the record's. */
     function evoBranchHtml(evo, isPrev) {
       var bits = [];
       var caption = '';
       if (evo && typeof evo.method === 'string') caption = '<span class="dex-evo__method">' + (isPrev ? ROGUE.esc(evo.method) + ' \u2192' : '\u2192 ' + ROGUE.esc(evo.method)) + '</span>';
-      var cell = evoCellHtml(evo.id);
+      var formName = evo && typeof evo.form === 'string' ? ROGUE.esc(evo.form) : '';
+      var cell = evoCellHtml(evo.id, formName);
       if (isPrev) {
         if (cell) bits.push(cell);
         if (caption) bits.push(caption);

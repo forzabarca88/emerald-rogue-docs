@@ -84,7 +84,8 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 import { deflateSync, inflateSync } from 'node:zlib';
-import { BASE_CANDIDATES, NON_SPECIES_DIRS, formRosterDomain, formSpriteFile, formSpriteManifest } from './sprite-forms.mjs';
+import { exEvoRosters } from './evolutions.mjs';
+import { BASE_CANDIDATES, NON_SPECIES_DIRS, addExtraRosters, formRosterDomain, formSpriteFile, formSpriteManifest } from './sprite-forms.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -515,9 +516,11 @@ function loadExpansion({ filesBySpecies, treeFiles }, extraWanted) {
   return { resolve, blob };
 }
 
-// Phase 3: the parsed expansion-profile Species lists (one batched
-// cat-file) — inputs to the shared form-roster rule (which form ids a
-// record's `forms` list carries).
+// Phase 3: the parsed expansion-profile Species lists + level-up moves
+// (one batched cat-file) — the Species lists feed the shared form-roster
+// rule (which form ids a record's `forms` list carries), and the level-up
+// moves feed the evolution port's ModifyKnowMoveEvo check (method labels
+// only — never targets or survival, which evoLinks consumes).
 function expansionProfiles() {
   const tree = git('ls-tree', '-r', 'origin/expansion', '--', 'src/data/rogue/pokemon/expansion');
   const files = [];
@@ -528,9 +531,10 @@ function expansionProfiles() {
     files.push(line.slice(tab + 1));
     shas.push(line.slice(0, tab).split(' ')[2]);
   }
-  if (shas.length === 0) return new Map();
+  if (shas.length === 0) return { species: new Map(), levelUp: new Map() };
   const batch = gitBytes(['cat-file', '--batch'], shas.join('\n') + '\n');
-  const out = new Map();
+  const species = new Map();
+  const levelUp = new Map();
   let off = 0;
   for (const file of files) {
     const nl = batch.indexOf(0x0a, off);
@@ -544,11 +548,13 @@ function expansionProfiles() {
     const sp = (data.Species ?? []).map((s) => s.slice('SPECIES_'.length).toLowerCase());
     if (sp.length > 0) {
       const id = file.replace(/^src\/data\/rogue\/pokemon\/expansion\//, '').replace(/\/expansion_profile\.json$/, '');
-      out.set(id, sp);
+      species.set(id, sp);
+      levelUp.set(id, (data.LevelUpMoves ?? []).map((mv) => [mv.Move, mv.Level]));
     }
   }
-  return out;
+  return { species, levelUp };
 }
+
 
 // ---------------------------------------------------------------------------
 // Main
@@ -563,15 +569,19 @@ const vanillaDirs = readdirSync(path.join(repoPath, 'graphics', 'pokemon'))
   .filter((d) => statSync(path.join(repoPath, 'graphics', 'pokemon', d)).isDirectory())
   .sort();
 
+// The parsed expansion species tables — the nine gen files are the
+// pokedex extractor's entry domain (1505 initializers); species_info.h
+// adds the egg/placeholder entries the manifest and rosters classify but
+// the records never use. All consumers share these exact texts.
+const exGenTableTexts = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`));
+const exSpeciesTableTexts = [...exGenTableTexts, git('show', 'origin/expansion:src/data/pokemon/species_info.h')];
+
 // Form-sprite manifest (shared with the pokedex extractor — the single
 // source of the form→art rule). Needs the RAW headers: the species
 // initializers are macro calls whose #define lives in the same headers.
 const formManifest = formSpriteManifest({
   pokemonH: git('show', 'origin/expansion:src/data/graphics/pokemon.h'),
-  speciesTableTexts: [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
-    git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
-  ],
+  speciesTableTexts: exSpeciesTableTexts,
   // only species art directories — the manifest's baseDirs contract
   // (the icon-palette / placeholder dirs are not base directories; the
   // union loop below skips them from per-species processing too)
@@ -587,19 +597,35 @@ const exp = { ids: expTree.ids, ...loadExpansion(expTree, new Set(formWanted)) }
 // Form rosters (shared rule with the pokedex extractor): an own form ships
 // art only when a record's `forms` list can reference it. Same raw headers
 // as the manifest above.
-const formRosters = formRosterDomain({
+const profiles = expansionProfiles();
+const baseRosters = formRosterDomain({
   pokedexH: git('show', 'origin/expansion:include/constants/pokedex.h'),
-  speciesTableTexts: [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
-    git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
-  ],
+  speciesTableTexts: exSpeciesTableTexts,
   formTableTexts: [
     git('show', 'origin/expansion:src/data/pokemon/form_species_tables.h'),
     git('show', 'origin/expansion:src/data/pokemon/form_change_tables.h'),
   ],
-  profiles: expansionProfiles(),
+  profiles: profiles.species,
   label: 'sprites',
 });
+
+// Plus the evo-referenced forms (the shared evoLinks pass — the identical
+// refs pokedex.mjs applies to the same base rosters, so the two
+// extractors' form lists can never drift and pokedex.mjs's missing-form-art
+// gate enforces that every referenced own form has its file on disk).
+const evoRefRosters = exEvoRosters({
+  provider: {
+    fetch: (f) => git(`show`, `origin/expansion:${f}`),
+    has: (f) => spawnSync('git', ['-C', repoPath, 'cat-file', '-e', `origin/expansion:${f}`], { stdio: 'ignore' }).status === 0,
+  },
+  genTableTexts: exGenTableTexts,
+  baseDomain: baseRosters,
+  profiles,
+});
+for (const [rec, extra] of evoRefRosters) {
+  console.log(`evo-referenced forms: ${rec} += ${extra.join(', ')}`);
+}
+const formRosters = addExtraRosters(baseRosters, evoRefRosters);
 
 const union = [...new Set([...vanillaDirs, ...exp.ids])].sort();
 const skipped = [];
