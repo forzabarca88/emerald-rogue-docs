@@ -2194,7 +2194,9 @@
    the .search input. */
 .page--pokedex .dex-variant__select,
 .page--pokedex .dex-sort__select,
-.page--pokedex .dex-type__select {
+.page--pokedex .dex-type__select,
+.page--pokedex .dex-radar__compare,
+.page--pokedex .dex-typechart__species {
   max-width: 170px;
   padding: var(--space-1) var(--space-2);
   border: 1px solid var(--color-line);
@@ -2208,7 +2210,9 @@
 
 .page--pokedex .dex-variant__select:focus-visible,
 .page--pokedex .dex-sort__select:focus-visible,
-.page--pokedex .dex-type__select:focus-visible {
+.page--pokedex .dex-type__select:focus-visible,
+.page--pokedex .dex-radar__compare:focus-visible,
+.page--pokedex .dex-typechart__species:focus-visible {
   border-color: var(--color-emerald);
 }
 
@@ -2752,6 +2756,304 @@
   padding-left: 1.2em;
   list-style: disc;
   color: var(--color-ink);
+}
+
+/* --- issue-#100 visualisation A: the stat radar (detail, under the
+   |  stat bars) -------------------------------------------------------
+   |  A hand-rolled inline-SVG spider chart (js/pages/pokedex.js builds
+   |  the string; the viewBox scales it to the 420px cap). Tokens only:
+   |    - the species polygon: SOLID --color-emerald fill + the
+   |      fill-opacity presentation attribute (the site's no-rgba-
+   |      literals rule — DESIGN.md §10);
+   |    - the compare polygon: --color-gold — the contrasting accent
+   |      (emerald vs amber reads unambiguously on the dark surface);
+   |    - the guides (4 rings + 6 axes): --color-line; the mono axis
+   |      labels + the "255" tick: --color-muted (SVG text sizes are
+   |      viewBox units — 10 units ≈ 14px at the 420px cap, ≈9px at
+   |      360px, both legible);
+   |    - the six hit sectors paint nothing (fill: none +
+   |      pointer-events: all) — they are pointer targets, not visual
+   |      elements (hover AND touch tap, one delegated listener).
+   |  No motion: the SVG is static — no animation, no transitions — so
+   |  reduced-motion users see exactly what everyone else sees. The
+   |  mono caption carries the last axis read (a tap must persist, so
+   |  nothing clears it). */
+.page--pokedex .dex-radar {
+  max-width: 420px;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.page--pokedex .dex-radar__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.page--pokedex .dex-radar__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.page--pokedex .dex-radar__ring,
+.page--pokedex .dex-radar__axis {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: 1;
+}
+
+.page--pokedex .dex-radar__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-muted);
+}
+
+.page--pokedex .dex-radar__tick {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  fill: var(--color-muted);
+}
+
+.page--pokedex .dex-radar__poly--main {
+  fill: var(--color-emerald);
+  fill-opacity: 0.3;
+  stroke: var(--color-emerald);
+  stroke-width: 2;
+}
+
+.page--pokedex .dex-radar__poly--compare {
+  fill: var(--color-gold);
+  fill-opacity: 0.25;
+  stroke: var(--color-gold);
+  stroke-width: 2;
+}
+
+.page--pokedex .dex-radar__dot--main {
+  fill: var(--color-emerald);
+}
+
+.page--pokedex .dex-radar__dot--compare {
+  fill: var(--color-gold);
+}
+
+/* the pointer targets — paint nothing, so they never cover the polygons */
+.page--pokedex .dex-radar__hit {
+  fill: none;
+  pointer-events: all;
+  cursor: crosshair;
+}
+
+.page--pokedex .dex-radar__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.page--pokedex .dex-radar__key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-radar__swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: none;
+}
+
+.page--pokedex .dex-radar__swatch--main {
+  background: var(--color-emerald);
+}
+
+.page--pokedex .dex-radar__swatch--compare {
+  background: var(--color-gold);
+}
+
+.page--pokedex .dex-radar__caption {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+}
+
+/* --- issue-#100 visualisation B: the type matchup heatmap (the new
+   |  overview section AFTER the prose blocks) ------------------------
+   |  A hand-rolled inline-SVG N×N grid (N = the active build's standard
+   |  type count — EX 18 / Vanilla 17, derived from the top-level
+   |  typeChart at render time, never hardcoded). The token ramp —
+   |  dark→light over four NEUTRAL tokens (documented in DESIGN.md §6;
+   |  no new colors): ×0 immune --color-surface (near-invisible — an
+   |  immunity is the absence of a hit), ×0.5 resisted --color-raised,
+   |  ×1 neutral --color-line, ×2 super-effective --color-muted (the
+   |  brightest neutral — a super-effective hit must stand out). A
+   |  single-hue green ramp keeps the grid reading as a data surface;
+   |  the two accents stay reserved for the interactive highlights
+   |  (the emerald species-row bands, the gold pinned-column band).
+   |  360px: the wrapper block-scrolls horizontally (min-width 480px —
+   |  the .table pattern) so the page never overflows. The SVG is
+   |  static (no motion); interaction is class toggles + the caption
+   |  text, behind two delegated listeners on the SVG. */
+.page--pokedex .dex-typechart {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.page--pokedex .dex-typechart__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.page--pokedex .dex-typechart__scroll {
+  overflow-x: auto;
+}
+
+.page--pokedex .dex-typechart__grid {
+  display: block;
+  width: 100%;
+  min-width: 480px;
+  max-width: 720px;
+  height: auto;
+}
+
+.page--pokedex .dex-typechart__cell {
+  stroke: var(--color-bg);
+  stroke-width: 1;
+}
+
+.page--pokedex .dex-typechart__cell--i0 {
+  fill: var(--color-surface);
+}
+
+.page--pokedex .dex-typechart__cell--i1 {
+  fill: var(--color-raised);
+}
+
+.page--pokedex .dex-typechart__cell--i2 {
+  fill: var(--color-line);
+}
+
+.page--pokedex .dex-typechart__cell--i3 {
+  fill: var(--color-muted);
+}
+
+.page--pokedex .dex-typechart__label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  fill: var(--color-muted);
+  pointer-events: none;
+}
+
+/* the column-header labels are interactive (hover/click pin) — they
+   carry data-col just like their invisible hit rects */
+.page--pokedex .dex-typechart__label--col {
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.page--pokedex .dex-typechart__label--row.dex-typechart__label--on {
+  fill: var(--color-emerald);
+}
+
+.page--pokedex .dex-typechart__label--col.dex-typechart__label--on {
+  fill: var(--color-gold);
+}
+
+/* the invisible column-header hit zones (a tap target taller than the
+   rotated text alone) */
+.page--pokedex .dex-typechart__hit {
+  fill: none;
+  pointer-events: all;
+  cursor: pointer;
+}
+
+.page--pokedex .dex-typechart__band {
+  fill: none;
+  stroke-width: 2;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.page--pokedex .dex-typechart__band--row {
+  stroke: var(--color-emerald);
+}
+
+.page--pokedex .dex-typechart__band--col {
+  stroke: var(--color-gold);
+}
+
+.page--pokedex .dex-typechart__band--on {
+  visibility: visible;
+}
+
+.page--pokedex .dex-typechart__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+.page--pokedex .dex-typechart__key {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-typechart__swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1px solid var(--color-line);
+  flex: none;
+}
+
+/* the legend swatches mirror the four cell bins (the line border keeps
+   the dark bins legible on the section background) */
+.page--pokedex .dex-typechart__swatch--i0 {
+  background: var(--color-surface);
+}
+
+.page--pokedex .dex-typechart__swatch--i1 {
+  background: var(--color-raised);
+}
+
+.page--pokedex .dex-typechart__swatch--i2 {
+  background: var(--color-line);
+}
+
+.page--pokedex .dex-typechart__swatch--i3 {
+  background: var(--color-muted);
+}
+
+.page--pokedex .dex-typechart__caption {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ink);
+}
+
+/* the two coverage lines (the viability prose's metric, computed for
+   the selected species) — mono, the same treatment as .dex-count */
+.page--pokedex .dex-typechart__coverage {
+  display: grid;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}
+
+.page--pokedex .dex-typechart__line {
+  margin: 0;
 }
 
 /* --- mechanics -----------------------------------------------------------------------

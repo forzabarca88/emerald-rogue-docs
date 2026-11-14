@@ -18,8 +18,9 @@
  *   1. (1280px) the strip exists with the expected chip count —
  *      data-derived where the page derives it (versions = distinct
  *      difference categories, quests = the display groups, pokedex =
- *      Grid + the four prose blocks) and pinned to the page's own
- *      section list otherwise — and clicking the FIRST chip updates
+ *      Grid + the prose blocks + the issue-#100 "Type matchups" heatmap
+ *      section) and pinned to the page's own section list otherwise —
+ *      and clicking the FIRST chip updates
  *      the hash, keeps the page alive (a window sentinel survives —
  *      no full reload) and lands its target BELOW the strip (the
  *      measured scroll-margin clears header + strip + gap)
@@ -94,7 +95,9 @@ const PAGES = [
   { path: 'routes.html', chips: 5, firstHref: '#routes-naming' },
   {
     path: 'pokedex.html',
-    chips: 1 + pokedexData.prose.length,
+    /* Grid + the prose blocks + the issue-#100 PR-4b "Type matchups"
+     * heatmap section (the 7th chip) */
+    chips: 2 + pokedexData.prose.length,
     firstHref: '#dex-browse',
   },
   { path: 'mechanics.html', chips: 6, firstHref: '#mech-charms' },
