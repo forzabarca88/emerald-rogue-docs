@@ -33,7 +33,8 @@
  *      all) while the detail itself renders;
  *   e. 360px (DESIGN.md §9) — the charizard detail's forms section
  *      causes no horizontal overflow and every form sprite renders at
- *      the tile token (3rem of the 1rem root = 48px).
+ *      the --tile-sprite-size token (5rem = 80px at time of writing —
+ *      read from the computed style, never hardcoded).
  */
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
@@ -257,19 +258,27 @@ test('charizard at 360px: the forms section never overflows horizontally', async
     await waitForFormSprites(page);
 
     // ASSERT — no horizontal overflow anywhere in the document, and
-    // every form sprite renders at the tile token (3rem of the 1rem
-    // root font-size = 48px, square)
+    // every form sprite renders at the tile token (the computed
+    // --tile-sprite-size value, square — never hardcoded)
     const facts = await page.evaluate(() => ({
       scrollWidth: document.documentElement.scrollWidth,
       bodyScrollWidth: document.body.scrollWidth,
+      // custom properties resolve to their RAW value ("5rem"), so
+      // convert against the root font size to px
+      token: (() => {
+        const raw = getComputedStyle(document.documentElement).getPropertyValue('--tile-sprite-size').trim();
+        const rem = parseFloat(raw);
+        return raw.endsWith('rem') ? rem * parseFloat(getComputedStyle(document.documentElement).fontSize) : rem;
+      })(),
       sprites: [...document.querySelectorAll('#dex-species img.dex-form__sprite')].map((i) => [i.offsetWidth, i.offsetHeight]),
     }));
     assert.ok(facts.scrollWidth <= 360, `horizontal overflow at 360px (documentElement.scrollWidth ${facts.scrollWidth})`);
     assert.ok(facts.bodyScrollWidth <= 360, `horizontal overflow at 360px (body.scrollWidth ${facts.bodyScrollWidth})`);
+    assert.ok(Number.isFinite(facts.token) && facts.token > 0, 'the --tile-sprite-size token is missing');
     assert.ok(facts.sprites.length > 0, 'no form sprites rendered');
     for (const [w, h] of facts.sprites) {
-      assert.equal(w, 48, `form sprite width ${w} ≠ the tile token (48px)`);
-      assert.equal(h, 48, `form sprite height ${h} ≠ the tile token (48px)`);
+      assert.equal(w, facts.token, `form sprite width ${w} ≠ the tile token (${facts.token}px)`);
+      assert.equal(h, facts.token, `form sprite height ${h} ≠ the tile token (${facts.token}px)`);
     }
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
