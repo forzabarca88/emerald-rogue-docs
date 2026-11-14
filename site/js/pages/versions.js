@@ -171,6 +171,18 @@
     /* Intro prose (data/versions.json). */
     html += ROGUE.proseSections(data.prose);
 
+    /* The section strip (issue #98): one chip per difference category
+     * (first-appearance order), anchoring to the category's first row's
+     * deep link (the at-a-glance overview strip below does the same
+     * anchor with its version-scoped counts). */
+    html +=
+      ROGUE.sectionNav(
+        categories.map(function (cat) {
+          return { id: cat, anchor: ROGUE.recId('versions', firstRecordOf[cat].id), label: cat };
+        }),
+        'Difference categories'
+      );
+
     var rows = records.map(row).join('');
 
     /* The master list of differences (overview strip above the rows). */

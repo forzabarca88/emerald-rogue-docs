@@ -2069,16 +2069,18 @@
 
 /* Deep-link / search-Enter targets. The overview's sections (the
    #dex-browse section + the four prose blocks below the grid) must
-   land BELOW the sticky header PLUS the sticky .dex-browse bar: the
-   bar's height is viewport-dependent (the region chips wrap to extra
-   rows at 360px), so it is measured in js/pages/pokedex.js
-   (setBrowseTop) and published on <main> as --dex-scroll-clear
-   (header height + the bar's offsetHeight + a 16px margin) — never
-   hardcoded here; the 320px fallback only applies before the first
-   measurement. #dex-species keeps the header-only 112px: the detail
-   REPLACES the overview, so the bar is hidden while it is open. */
+   land BELOW the sticky header PLUS the sticky .dex-browse bar PLUS
+   the sticky .section-nav strip (issue #98): the bar's and strip's
+   heights are viewport-dependent (the region chips wrap to extra rows
+   at 360px), so they are measured in js/pages/pokedex.js
+   (setBrowseTop) and published on <main> as --dex-section-clear
+   (header + the bar's offsetHeight + the strip's offsetHeight + a
+   16px margin) — never hardcoded here; the 360px fallback only
+   applies before the first measurement. #dex-species keeps the
+   header-only 112px: the detail REPLACES the overview, so the bar and
+   the strip are hidden while it is open. */
 .page--pokedex #dex-overview .section[id] {
-  scroll-margin-top: var(--dex-scroll-clear, 320px);
+  scroll-margin-top: var(--dex-section-clear, 360px);
 }
 
 .page--pokedex #dex-species {
@@ -2111,11 +2113,12 @@
    the grid begin. The top offset (--dex-browse-top, the header's
    rendered height — two rows at every width (issue #90),
    width-dependent only at ≤560px (the compact search-trigger/toggle
-   set)) and the
-   deep-link scroll clearance (--dex-scroll-clear, header + this bar's
-   measured offsetHeight + 16px — see the scroll-margin rule above)
-   are both measured on load + resize in js/pages/pokedex.js
-   (setBrowseTop).
+   set)), --dex-scroll-clear (header + this bar's measured
+   offsetHeight + 16px — the .section-nav strip's sticky top, see
+   its rule below) and the deep-link scroll clearance
+   (--dex-section-clear, that value + the strip's offsetHeight — see
+   the scroll-margin rule above) are all measured on load + resize in
+   js/pages/pokedex.js (setBrowseTop).
    The bar's OWN height is not fixed here — at 360px the 10 region
    chips wrap to extra rows — only its top is measured; the solid
    page-background token keeps the grid tiles from showing through
@@ -2131,6 +2134,17 @@
   padding: var(--space-3) 0 var(--space-2);
   border-bottom: 1px solid var(--color-line);
   margin-bottom: var(--space-4);
+}
+
+/* The section strip (issue #98) pinned UNDER the sticky browse bar:
+   its `top` overrides the contract rule's --site-header-h with the
+   measured --dex-scroll-clear (header + bar + 16px — setBrowseTop).
+   It sits between the bar and the grid inside the #dex-browse section,
+   so it pins while the grid pages, releases with the section when the
+   prose blocks begin, and hides with the overview when a detail is
+   open. */
+.page--pokedex .section-nav {
+  top: var(--dex-scroll-clear, 320px);
 }
 
 .page--pokedex .dex-toolbar {

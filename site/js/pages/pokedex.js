@@ -22,12 +22,16 @@
  *      scrolling down. The bar sticks under the site header: the
  *      position: sticky rule in pages.css reads --dex-browse-top on
  *      <main> (the header's rendered offsetHeight measured on load +
- *      resize — the search.js setPaletteTop pattern), and the overview
- *      sections' scroll clearance reads --dex-scroll-clear (header +
- *      the bar's measured offsetHeight + 16px, also setBrowseTop — the
- *      bar's height varies with the viewport, the region chips wrap at
- *      360px, so it is measured, never hardcoded). The .dex-grid
- *      follows the bar: exactly site.json
+ *      resize — the search.js setPaletteTop pattern). The shared
+ *      .section-nav strip (issue #98 — Grid + the four prose blocks)
+ *      sits between the bar and the grid, pinned under the bar via the
+ *      measured --dex-scroll-clear (header + the bar's offsetHeight +
+ *      16px), and the overview sections' scroll clearance reads
+ *      --dex-section-clear (that value + the strip's offsetHeight,
+ *      also setBrowseTop — the bar's height varies with the viewport,
+ *      the region chips wrap at 360px, so it is measured, never
+ *      hardcoded). The .dex-grid
+ *      follows the strip: exactly site.json
  *      dex.pageSize (28 — the in-game Overview's tile page) .dex-tile
  *      <a> links per page, each a lazy-loaded sprite (onerror → the
  *      placeholder tile showing the dex number in mono) + the active
@@ -464,6 +468,23 @@
        * DESIGN.md §6). Note the container's CLASS is .dex-browse while
        * the enclosing section's id is also "dex-browse" (ROGUE.section)
        * — a .dex-browse selector targets the bar only. */
+
+      /* The section strip (issue #98): Grid + the four prose blocks —
+       * the shared .section-nav re-pinned under the sticky bar (the
+       * pages.css .page--pokedex .section-nav rule sets its `top` to
+       * the measured --dex-scroll-clear). It sits between the bar and
+       * the grid, inside this section, so it pins while paging, releases
+       * when the section ends, and hides with the overview when a
+       * species detail is open. */
+      var sectionNav = ROGUE.sectionNav(
+        [{ id: 'dex-browse', label: 'Grid' }].concat(
+          (Array.isArray(data.prose) ? data.prose : []).map(function (block) {
+            return { id: block.id, label: block.heading };
+          })
+        ),
+        'Pokedex overview sections'
+      );
+
       return ROGUE.section(
         'dex-browse',
         'Overview',
@@ -480,6 +501,7 @@
         '<p class="dex-count" id="dex-count" role="status"></p>' +
         '<nav class="dex-pager" id="dex-pager" aria-label="Dex pages"></nav>' +
         '</div>' +
+        sectionNav +
         '<div class="dex-grid" id="dex-grid"></div>' +
         '<p class="dex-empty" id="dex-empty" hidden></p>'
       );
@@ -1121,10 +1143,14 @@
      * re-measures on resize), set on <main> as --dex-browse-top (the
      * bar's sticky top offset), plus
      * --dex-scroll-clear = header + the bar's rendered offsetHeight +
-     * 16px — the scroll-margin-top the overview's sections (the
-     * #dex-browse section + the four prose blocks) use so
-     * hash-navigated targets land BELOW the sticky header AND the
-     * sticky bar. The bar's height varies with the viewport (the 10
+     * 16px — the sticky offset the .section-nav strip (issue #98)
+     * pins at, just under the bar; plus
+     * --dex-section-clear = header + the bar + the strip's rendered
+     * offsetHeight + 16px — the scroll-margin-top the overview's
+     * sections (the #dex-browse section + the four prose blocks) use
+     * so hash-navigated targets land BELOW the sticky header AND the
+     * sticky bar AND the strip. The bar's height varies with the
+     * viewport (the 10
      * region chips wrap to extra rows at 360px), so it is measured
      * here, never hardcoded in CSS. The search.js setPaletteTop
      * pattern exactly — measure on load, re-measure on resize (and on
@@ -1151,6 +1177,12 @@
       var bar = document.querySelector('#dex-overview .dex-browse');
       if (bar && bar.offsetParent !== null) {
         main.style.setProperty('--dex-scroll-clear', (top + bar.offsetHeight + 16) + 'px');
+        /* the strip sits inside the #dex-browse section (between the bar
+         * and the grid), so it is visible exactly when the bar is */
+        var strip = document.querySelector('#dex-overview .section-nav');
+        if (strip && strip.offsetParent !== null) {
+          main.style.setProperty('--dex-section-clear', (top + bar.offsetHeight + strip.offsetHeight + 16) + 'px');
+        }
       }
     }
 
