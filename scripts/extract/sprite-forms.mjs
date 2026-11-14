@@ -578,6 +578,7 @@ export function formSpriteManifest({ pokemonH, speciesTableTexts, baseDirs, exTr
  *   formTables: Map<string, string[]>,
  *   rosters: Map<string, string[]>, // record id → its form ids
  *   referenced: Set<string>,        // the union of every roster
+ *   dexValue: Map<string, number>   // record id → national dex number
  * }
  */
 export function formRosterDomain({ pokedexH, speciesTableTexts, formTableTexts, profiles, label = 'form-rosters' }) {
@@ -681,5 +682,30 @@ export function formRosterDomain({ pokedexH, speciesTableTexts, formTableTexts, 
     for (const f of roster) referenced.add(f);
   }
 
-  return { records, synthesized, donorOf, entryFormTable, formTables, rosters, referenced };
+  return { records, synthesized, donorOf, entryFormTable, formTables, rosters, referenced, dexValue };
+}
+
+/**
+ * Merge the evo-driven roster additions (evolutions.mjs's `evoLinks` `refs`)
+ * into a `formRosterDomain` result: the affected records' rosters gain the
+ * extra form ids after the base roster (the same union the pokedex
+ * extractor applies as evoRosterOf, so both extractors' form lists — and
+ * hence the shipped <formEntryId>.png set — can never drift), and
+ * `referenced` grows accordingly. Pure: the input domain is not mutated.
+ *
+ * @param {object} domain        a formRosterDomain() result (before merging)
+ * @param {Map<string, string[]>} extraRosters  record id → extra form ids
+ * @returns the merged domain (same shape as formRosterDomain() output)
+ */
+export function addExtraRosters(domain, extraRosters) {
+  const rosters = new Map(domain.rosters);
+  const referenced = new Set(domain.referenced);
+  for (const [rec, extra] of extraRosters) {
+    if (!domain.rosters.has(rec)) throw new Error(`addExtraRosters: unknown record ${rec}`);
+    const base = rosters.get(rec);
+    const merged = [...base, ...extra.filter((f) => !base.includes(f))];
+    rosters.set(rec, merged);
+    for (const f of merged) referenced.add(f);
+  }
+  return { ...domain, rosters, referenced };
 }

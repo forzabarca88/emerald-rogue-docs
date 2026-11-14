@@ -27,9 +27,11 @@
  *     committed data/pokedex.json form.sprite set == the on-disk
  *     form-PNG set (base pipeline files classified out via the vanilla
  *     working tree's top-level dirs — egg.png & co. excluded properly)
- *     == the EX ground truth's roster-referenced own forms
- *     (formSpriteManifest ∩ formRosterDomain — the rule both extractors
- *     gate on).
+ *     == the EX ground truth's own forms referenced by some record's form
+ *     roster (formSpriteManifest ∩ formRosterDomain) or by an EX
+ *     evolution branch/prev (the shared exEvoRosters evoLinks pass — the
+ *     identical additions both extractors ship, so its referenced forms
+ *     get their <formEntryId>.png files too).
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -38,6 +40,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { formRosterDomain, formSpriteFile, formSpriteManifest } from '../scripts/extract/sprite-forms.mjs';
+import { exEvoRosters } from '../scripts/extract/evolutions.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoDir = path.join(root, 'references', 'pokeemerald-rogue');
@@ -73,8 +76,10 @@ function guard(t) {
 
 let ctx = null;
 
-/** The parsed expansion-profile Species lists (one batched cat-file — the
- * same loader the sprites extractor uses; needed by formRosterDomain). */
+/** The parsed expansion-profile Species + LevelUpMoves lists (one batched
+ * cat-file — the same loader the sprites extractor uses; the species map
+ * feeds formRosterDomain, the level-up map the shared exEvoRosters evo
+ * port's ModifyKnowMoveEvo profile check). */
 function expansionProfiles() {
   const tree = git('ls-tree', '-r', 'origin/expansion', '--', 'src/data/rogue/pokemon/expansion');
   const files = [];
@@ -85,11 +90,12 @@ function expansionProfiles() {
     files.push(line.slice(tab + 1));
     shas.push(line.slice(0, tab).split(' ')[2]);
   }
-  if (shas.length === 0) return new Map();
+  if (shas.length === 0) return { species: new Map(), levelUp: new Map() };
   const r = spawnSync('git', ['-C', repoDir, 'cat-file', '--batch'], { input: shas.join('\n') + '\n', maxBuffer: 512 * 1024 * 1024 });
   if (r.status !== 0) throw new Error('git cat-file --batch (profiles) failed: ' + r.stderr.trim());
   const batch = r.stdout;
-  const out = new Map();
+  const species = new Map();
+  const levelUp = new Map();
   let off = 0;
   for (const file of files) {
     const nl = batch.indexOf(0x0a, off);
@@ -107,10 +113,11 @@ function expansionProfiles() {
     const sp = (data.Species ?? []).map((s) => s.slice('SPECIES_'.length).toLowerCase());
     if (sp.length > 0) {
       const id = file.replace(/^src\/data\/rogue\/pokemon\/expansion\//, '').replace(/\/expansion_profile\.json$/, '');
-      out.set(id, sp);
+      species.set(id, sp);
+      levelUp.set(id, (data.LevelUpMoves ?? []).map((mv) => [mv.Move, mv.Level]));
     }
   }
-  return out;
+  return { species, levelUp };
 }
 
 function load() {
@@ -122,10 +129,12 @@ function load() {
   const vanillaBaseDirs = new Set(
     readdirSync(path.join(repoDir, 'graphics', 'pokemon')).filter((d) => statSync(path.join(repoDir, 'graphics', 'pokemon', d)).isDirectory())
   );
-  const speciesTableTexts = [
-    ...[1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`)),
-    git('show', 'origin/expansion:src/data/pokemon/species_info.h'),
-  ];
+  // the nine gen files are the pokedex extractor's entry domain (and the
+  // shared exEvoRosters' genTableTexts); species_info.h adds the
+  // egg/placeholder entries the manifest and rosters classify but the
+  // records never use
+  const genTableTexts = [1, 2, 3, 4, 5, 6, 7, 8, 9].map((g) => git(`show`, `origin/expansion:src/data/pokemon/species_info/gen_${g}.h`));
+  const speciesTableTexts = [...genTableTexts, git('show', 'origin/expansion:src/data/pokemon/species_info.h')];
   const manifest = formSpriteManifest({
     pokemonH: git('show', 'origin/expansion:src/data/graphics/pokemon.h'),
     speciesTableTexts,
@@ -133,6 +142,7 @@ function load() {
     exTreeFiles: treeFiles,
     label: 'test',
   });
+  const profiles = expansionProfiles();
   const rosters = formRosterDomain({
     pokedexH: git('show', 'origin/expansion:include/constants/pokedex.h'),
     speciesTableTexts,
@@ -140,10 +150,10 @@ function load() {
       git('show', 'origin/expansion:src/data/pokemon/form_species_tables.h'),
       git('show', 'origin/expansion:src/data/pokemon/form_change_tables.h'),
     ],
-    profiles: expansionProfiles(),
+    profiles: profiles.species,
     label: 'test',
   });
-  ctx = { manifest, rosters, treeFiles, vanillaBaseDirs };
+  ctx = { manifest, rosters, treeFiles, vanillaBaseDirs, genTableTexts, profiles };
   return ctx;
 }
 
@@ -221,9 +231,9 @@ test('spot checks: the worked examples resolve to their EX source files', (t) =>
   }
 });
 
-test('committed data form.sprite set == on-disk form-PNG set == roster-referenced own forms', (t) => {
+test('committed data form.sprite set == on-disk form-PNG set == roster- or evo-referenced own forms', (t) => {
   if (guard(t)) return;
-  const { manifest, rosters, vanillaBaseDirs } = load();
+  const { manifest, rosters, vanillaBaseDirs, genTableTexts, profiles } = load();
 
   // ARRANGE — the committed data's form.sprite set
   const dex = JSON.parse(readFileSync(path.join(root, 'data', 'pokedex.json'), 'utf8'));
@@ -244,14 +254,22 @@ test('committed data form.sprite set == on-disk form-PNG set == roster-reference
     .map((f) => f.slice(0, -'.png'.length))
     .filter((stem) => !recordIds.has(stem) && !(stem.endsWith('-ex') && recordIds.has(stem.slice(0, -3))) && !vanillaBaseDirs.has(stem));
 
-  // the EX ground truth: own forms that some record's form roster references
+  // the EX ground truth: own forms that some record's form roster
+  // references, or that an EX evolution branch/prev references (the shared
+  // exEvoRosters evoLinks pass — the identical additions sprites.mjs
+  // ships, re-derived here from the game source)
+  const provider = {
+    fetch: (f) => git(`show`, `origin/expansion:${f}`),
+    has: (f) => spawnSync('git', ['-C', repoDir, 'cat-file', '-e', `origin/expansion:${f}`], { stdio: 'ignore' }).status === 0,
+  };
+  const evoExtra = new Set([...exEvoRosters({ provider, genTableTexts, baseDomain: rosters, profiles }).values()].flat());
   const ownReferenced = new Set(
-    [...manifest.forms.keys()].filter((id) => manifest.forms.get(id).cls === 'own' && rosters.referenced.has(id))
+    [...manifest.forms.keys()].filter((id) => manifest.forms.get(id).cls === 'own' && (rosters.referenced.has(id) || evoExtra.has(id)))
   );
 
   // ASSERT — the three sets are one set (data ↔ assets ↔ game truth)
   assert.deepEqual([...dataSpriteIds].sort(), diskStems.sort(), 'data form.sprite set ≠ on-disk form-PNG set');
-  assert.deepEqual([...dataSpriteIds].sort(), [...ownReferenced].sort(), 'data form.sprite set ≠ roster-referenced own forms');
+  assert.deepEqual([...dataSpriteIds].sort(), [...ownReferenced].sort(), 'data form.sprite set ≠ roster- or evo-referenced own forms');
   assert.equal(dataSpriteIds.size, [...ownReferenced].length, 'the committed set size drifts from the ground truth');
   for (const id of dataSpriteIds) {
     assert.ok(existsSync(path.join(assetDir, formSpriteFile(id))), `missing ${formSpriteFile(id)}`);

@@ -57,6 +57,8 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import { Preprocessor, seedDefines, collectEnums, resolveConst } from './preprocessor.mjs';
+import { makeEvoConsts, buildEvoDisplayList, parseEvoTuples, evoLinks, parseItemValues, EX_BUILD_SEEDS, VAN_BUILD_SEEDS, EX_CONSTANT_HEADERS } from './evolutions.mjs';
 import process from 'node:process';
 import { NON_SPECIES_DIRS, formSpriteManifest, parseSpriteTables } from './sprite-forms.mjs';
 import { fileURLToPath } from 'node:url';
@@ -127,506 +129,6 @@ function makeFileProvider(read, exists) {
 }
 
 // ---------------------------------------------------------------------------
-// Miniature C preprocessor
-// ---------------------------------------------------------------------------
-//
-// Handles: line continuations, // and /* */ comments (string-literal aware),
-// #if / #ifdef / #ifndef / #elif / #else / #endif with integer-expression
-// evaluation, #define (object-like values evaluated; function-like bodies kept
-// verbatim for inlining), #undef, #error, #warning, and #include "..."
-// resolved against the configured roots plus the including file's directory.
-// Every other directive is rejected — each file this extractor touches uses
-// only the above.
-//
-// A Preprocessor owns one shared `defines` map and one shared `enums` map;
-// each file is preprocessed at most once per mode. 'output' mode returns the
-// active source text (directives removed, includes inlined); 'defines' mode
-// only updates the maps.
-
-class Preprocessor {
-  constructor({ provider, defines, enums, includeRoots, label }) {
-    this.provider = provider;
-    this.defines = defines; // Map name -> { params, body } (params null for object-like)
-    this.enums = enums; // Map name -> int
-    this.includeRoots = includeRoots;
-    this.label = label;
-    this.processed = new Set(); // "mode:file" keys
-    this.defCache = new Map(); // name -> int
-    this.defInProgress = new Set();
-    this.outputCache = new Map(); // "mode:file" -> output text (a file walked again, e.g. through an including header, returns the same text)
-  }
-
-  /** Lazily evaluate an object-like macro body (cycle-safe). */
-  evalDefine(name, where) {
-    if (this.defCache.has(name)) return this.defCache.get(name);
-    const def = this.defines.get(name);
-    if (!def || def.params) fail(`${where}: ${name} is not an object-like macro`);
-    if (this.defInProgress.has(name)) fail(`${where}: macro cycle involving ${name}`);
-    this.defInProgress.add(name);
-    let value;
-    try {
-      value = def.body.trim() === '' ? 1 : this.evalExpr(def.body, `${where} (via ${name})`);
-    } finally {
-      this.defInProgress.delete(name);
-    }
-    this.defCache.set(name, value);
-    return value;
-  }
-
-  /** Evaluate an integer expression; unknown identifiers fail loudly. */
-  evalExpr(expr, where, opts = {}) {
-    // In a #if condition the C preprocessor replaces identifiers left
-    // undefined by macro expansion with 0; data expressions keep failing.
-    const unresolvedZero = opts.unresolvedZero === true;
-    const toks = tokenizeExpression(expr);
-    let pos = 0;
-    const peek = () => toks[pos];
-    const next = () => toks[pos++];
-    const accept = (v) => (peek() && peek().v === v ? (next(), true) : false);
-
-    let pPrimary, pMul, pAdd, pShift, pRel, pEq, pBitAnd, pBitXor, pBitOr, pLogicAnd, pLogicOr, pTernary;
-    pTernary = () => {
-      const cond = pLogicOr();
-      if (accept('?')) {
-        const t = pTernary();
-        if (!accept(':')) throw new Error(`missing ":" in ternary in ${where}`);
-        const f = pTernary();
-        return cond ? t : f;
-      }
-      return cond;
-    };
-    pLogicOr = () => {
-      let l = pLogicAnd();
-      let used = false;
-      // no JS short-circuit: the right side must always be consumed
-      while (peek() && peek().t === 'op' && peek().v === '||') { next(); const r = pLogicAnd(); l = l ? 1 : r; used = true; }
-      return used ? (l ? 1 : 0) : l; // C: || yields 0/1; a bare operand keeps its value
-    };
-    pLogicAnd = () => {
-      let l = pBitOr();
-      let used = false;
-      while (peek() && peek().t === 'op' && peek().v === '&&') { next(); const r = pBitOr(); l = l ? r : 0; used = true; }
-      return used ? (l ? 1 : 0) : l;
-    };
-    pBitOr = () => {
-      let l = pBitXor();
-      while (peek() && peek().t === 'op' && peek().v === '|') { next(); l = l | pBitXor(); }
-      return l;
-    };
-    pBitXor = () => {
-      let l = pBitAnd();
-      while (peek() && peek().t === 'op' && peek().v === '^') { next(); l = l ^ pBitAnd(); }
-      return l;
-    };
-    pBitAnd = () => {
-      let l = pEq();
-      while (peek() && peek().t === 'op' && peek().v === '&') { next(); l = l & pEq(); }
-      return l;
-    };
-    pEq = () => {
-      let l = pRel();
-      for (;;) {
-        const tk = peek();
-        if (tk && tk.t === 'op' && (tk.v === '==' || tk.v === '!=')) {
-          next();
-          const r = pRel();
-          l = tk.v === '==' ? (l === r ? 1 : 0) : (l !== r ? 1 : 0);
-        } else break;
-      }
-      return l;
-    };
-    pRel = () => {
-      let l = pShift();
-      for (;;) {
-        const tk = peek();
-        if (tk && tk.t === 'op' && ['<', '>', '<=', '>='].includes(tk.v)) {
-          next();
-          const r = pShift();
-          l = tk.v === '<' ? (l < r ? 1 : 0) : tk.v === '>' ? (l > r ? 1 : 0) : tk.v === '<=' ? (l <= r ? 1 : 0) : (l >= r ? 1 : 0);
-        } else break;
-      }
-      return l;
-    };
-    pShift = () => {
-      let l = pAdd();
-      for (;;) {
-        const tk = peek();
-        if (tk && tk.t === 'op' && (tk.v === '<<' || tk.v === '>>')) {
-          next();
-          const r = pAdd();
-          l = tk.v === '<<' ? l << r : l >> r;
-        } else break;
-      }
-      return l;
-    };
-    pAdd = () => {
-      let l = pMul();
-      for (;;) {
-        const tk = peek();
-        if (tk && tk.t === 'op' && (tk.v === '+' || tk.v === '-')) {
-          next();
-          const r = pMul();
-          l = tk.v === '+' ? l + r : l - r;
-        } else break;
-      }
-      return l;
-    };
-    pMul = () => {
-      let l = pPrimary();
-      for (;;) {
-        const tk = peek();
-        if (tk && tk.t === 'op' && (tk.v === '*' || tk.v === '/')) {
-          next();
-          const r = pPrimary();
-          l = tk.v === '*' ? l * r : Math.trunc(l / r);
-        } else break;
-      }
-      return l;
-    };
-    pPrimary = () => {
-      const tk = next();
-      if (!tk) throw new Error(`unexpected end of expression in ${where}`);
-      if (tk.t === 'num') return tk.v;
-      if (tk.t === 'op') {
-        if (tk.v === '!') return pPrimary() ? 0 : 1;
-        if (tk.v === '-') return -pPrimary();
-        if (tk.v === '+') return pPrimary();
-        if (tk.v === '(') {
-          const v = pTernary();
-          if (!accept(')')) throw new Error(`missing ")" in ${where}`);
-          return v;
-        }
-      }
-      if (tk.t === 'id') {
-        if (tk.v === 'TRUE') return 1;
-        if (tk.v === 'FALSE') return 0;
-        if (tk.v === 'defined') {
-          if (!accept('(')) throw new Error(`defined( without paren in ${where}`);
-          const id = next();
-          if (!id || id.t !== 'id') throw new Error(`bad defined() argument in ${where}`);
-          if (!accept(')')) throw new Error(`missing ) after defined() in ${where}`);
-          return this.defines.has(id.v) || this.enums.has(id.v) ? 1 : 0;
-        }
-        if (tk.v === 'min' || tk.v === 'max') {
-          const a = pTernary();
-          if (accept(',')) {
-            const b = pTernary();
-            return tk.v === 'min' ? Math.min(a, b) : Math.max(a, b);
-          }
-          return a;
-        }
-        const def = this.defines.get(tk.v);
-        if (def) {
-          if (def.params) throw new Error(`function-like macro ${tk.v} used as object-like in ${where}`);
-          if (def.body.includes('{') || def.body.includes(';')) fail(`${where}: macro ${tk.v} has a non-constant body and cannot appear in an expression`);
-          return this.evalDefine(tk.v, where);
-        }
-        if (this.enums.has(tk.v)) return this.enums.get(tk.v);
-        if (unresolvedZero) return 0;
-        throw new Error(`unresolved identifier ${tk.v} in ${where}`);
-      }
-      throw new Error(`unexpected token ${JSON.stringify(tk)} in ${where}`);
-    };
-
-    const result = pTernary();
-    if (pos !== toks.length) throw new Error(`leftover tokens ${JSON.stringify(toks.slice(pos))} in ${where}`);
-    return result;
-  }
-
-  /** Preprocess one file (recursing into includes); at most once per mode. */
-  process(file, mode, depth = 0) {
-    if (depth > 64) fail(`${this.label}: include depth exceeded at ${file}`);
-    const key = `${mode}:${file}`;
-    if (this.processed.has(key)) return this.outputCache.get(key) ?? '';
-    this.processed.add(key);
-
-    const text = this.provider.fetch(file);
-    // join line continuations
-    const rawLines = text.split('\n');
-    const lines = [];
-    for (let i = 0; i < rawLines.length; i++) {
-      let line = rawLines[i];
-      while (line.trimEnd().endsWith('\\') && i + 1 < rawLines.length) {
-        i++;
-        line = line.trimEnd().slice(0, -1) + ' ' + rawLines[i];
-      }
-      lines.push(line);
-    }
-
-    const out = [];
-    const stack = [];
-    const condActive = () => stack.every((f) => f.active);
-
-    let blockComment = false;
-    for (const rawLine of lines) {
-      let line = '';
-      let inString = false;
-      for (let i = 0; i < rawLine.length; i++) {
-        const ch = rawLine[i];
-        if (inString) {
-          line += ch;
-          if (ch === '\\' && i + 1 < rawLine.length) { line += rawLine[++i]; continue; }
-          if (ch === '"') inString = false;
-          continue;
-        }
-        if (ch === '"') { inString = true; line += ch; continue; }
-        if (blockComment) {
-          if (ch === '*' && rawLine[i + 1] === '/') { blockComment = false; i++; }
-          continue;
-        }
-        if (ch === '/' && rawLine[i + 1] === '/') break;
-        if (ch === '/' && rawLine[i + 1] === '*') { blockComment = true; i++; continue; }
-        line += ch;
-      }
-      const trimmed = line.trim();
-      if (!trimmed.startsWith('#')) {
-        if (mode === 'output' && condActive()) out.push(line);
-        continue;
-      }
-      const dm = /^\s*#\s*(if|ifdef|ifndef|elif|else|endif|define|undef|include|error|warning)\b\s*(.*)$/.exec(trimmed);
-      if (!dm) fail(`${this.label}: unrecognized directive in ${file}: ${trimmed.slice(0, 60)}`);
-      const [, kind, rest] = dm;
-      const flow = ['if', 'ifdef', 'ifndef', 'elif', 'else', 'endif'].includes(kind);
-      if (!flow && !condActive()) continue; // inactive non-flow directive: ignored
-
-      if (['if', 'ifdef', 'ifndef', 'elif', 'else'].includes(kind)) {
-        const top = stack[stack.length - 1];
-        if (kind === 'if' || kind === 'ifdef' || kind === 'ifndef') {
-          let value;
-          if (kind === 'ifdef') value = (this.defines.has(rest.trim()) || this.enums.has(rest.trim())) ? 1 : 0;
-          else if (kind === 'ifndef') value = (this.defines.has(rest.trim()) || this.enums.has(rest.trim())) ? 0 : 1;
-          else value = this.evalExpr(rest, `${file} #${kind} ${rest.trim()}`, { unresolvedZero: true }) ? 1 : 0;
-          stack.push({ active: Boolean(value), taken: Boolean(value), hasElse: false });
-        } else if (!top) {
-          fail(`${this.label}: #${kind} without #if in ${file}`);
-        } else if (kind === 'else') {
-          if (top.hasElse) fail(`${this.label}: duplicate #else in ${file}`);
-          top.hasElse = true;
-          top.active = !top.taken;
-        } else {
-          // #elif
-          if (!top.taken && !top.hasElse) {
-            const value = this.evalExpr(rest, `${file} #elif ${rest.trim()}`, { unresolvedZero: true }) ? 1 : 0;
-            top.taken = Boolean(value);
-            top.active = Boolean(value);
-          } else {
-            top.active = false;
-          }
-        }
-        continue;
-      }
-      if (kind === 'endif') {
-        if (!stack.length) fail(`${this.label}: #endif without #if in ${file}`);
-        stack.pop();
-        continue;
-      }
-      if (kind === 'define') {
-        const md = /^([A-Za-z_][A-Za-z0-9_]*)(\(([^)]*)\))?\s*(.*)$/.exec(rest);
-        if (!md) fail(`${this.label}: bad #define in ${file}: ${rest.slice(0, 60)}`);
-        const [, name, , paramList, body] = md;
-        if (paramList !== undefined) {
-          const params = paramList.split(',').map((p) => p.trim()).filter(Boolean);
-          this.defines.set(name, { params, body: body.trim() });
-        } else {
-          // Object-like: keep the body and evaluate lazily on first use in an
-          // expression (type aliases like `#define RAND_TYPE u32` are never
-          // evaluated and cost nothing). Bodies that are struct fragments
-          // (the X_MISC_INFO blocks, OLD_UNOWN_BASE_STATS) are marked raw so
-          // inlineMacros pastes them in verbatim.
-          const bodyTrim = body.trim();
-          // A raw (paste-in) body is either a struct fragment (carries a
-          // designated-initializer field, `.field =`) or a braced list (the
-          // X_FAMILY_TYPES macros). Constant expression bodies are neither.
-          const isRaw = bodyTrim.includes('{') || /(^|[^A-Za-z0-9_.])\.[A-Za-z_]\w*\s*=/.test(bodyTrim);
-          this.defines.set(name, { params: null, body: bodyTrim, raw: isRaw });
-        }
-        continue;
-      }
-      if (kind === 'undef') {
-        this.defines.delete(rest.trim());
-        continue;
-      }
-      if (kind === 'include') {
-        if (rest.startsWith('<') && rest.endsWith('>')) {
-          // System headers (<string.h> & co): compiler-provided, never game
-          // code — nothing the species data needs comes from them.
-          if (mode === 'output' && condActive()) out.push('');
-          continue;
-        }
-        const im = /^"([^"]+)"$/.exec(rest);
-        if (!im) fail(`${this.label}: unsupported #include form in ${file}: ${rest}`);
-        const target = im[1];
-        const candidates = [
-          ...this.includeRoots.map((root) => path.posix.join(root, target)),
-          path.posix.normalize(path.posix.join(path.posix.dirname(file), target)),
-        ];
-        const resolved = candidates.find((c) => this.provider.has(c));
-        if (!resolved) {
-          // generated/*.h are build-time artifacts (e.g. the quest const
-          // table) pulled in by the include chain; the extractor never reads
-          // their contents, so they stub out as empty.
-          if (/^generated\/|\/generated\//.test(target)) {
-            if (mode === 'output' && condActive()) out.push('');
-            continue;
-          }
-          fail(`${this.label}: cannot resolve #include "${target}" (from ${file})`);
-        }
-        const included = this.process(resolved, 'output', depth + 1);
-        if (mode === 'output' && condActive()) out.push(included);
-        continue;
-      }
-      if (kind === 'warning') continue;
-      fail(`${this.label}: #error in ${file}: ${rest}`);
-    }
-    if (stack.length !== 0) fail(`${this.label}: unbalanced #if in ${file}`);
-    if (blockComment) fail(`${this.label}: unterminated block comment in ${file}`);
-    const result = mode === 'output' ? out.join('\n') : '';
-    this.outputCache.set(key, result);
-    return result;
-  }
-
-  /**
-   * Inline macro definitions into an entry body: function-like `NAME(args)`
-   * calls expand with their arguments; object-like defines that carry a raw
-   * body (the family X_MISC_INFO blocks) are pasted in; evaluated constant
-   * defines are left in place for evalExpr.
-   */
-  /**
-   * @param {number} budget total expansions left for this entry; each
-   * replacement re-scans the whole text (budget - 1), so a genuine macro
-   * cycle burns the budget down and fails instead of looping forever.
-   */
-  // String-valued macros: their argument IS the data (a pokedex description
-  // or a string literal), so expanding them would erase the text. The text
-  // resolvers parse their raw argument instead.
-  static stringMacros = new Set(['POKEDEX_DESC_STRING', 'COMPOUND_STRING']);
-
-  inlineMacros(text, where, budget = 400) {
-    if (budget <= 0) fail(`${where}: macro expansion did not settle`);
-    const re = /\b([A-Z][A-Z0-9_]*?)(?!\w)/g;
-    let m;
-    while ((m = re.exec(text))) {
-      const def = this.defines.get(m[1]);
-      if (!def) continue;
-      if (Preprocessor.stringMacros.has(m[1])) continue;
-      let j = m.index + m[1].length;
-      while (j < text.length && /\s/.test(text[j])) j++;
-      let replacement;
-      let consumeTo;
-      if (def.params) {
-        if (text[j] !== '(') continue; // bare token, not a call
-        let k = j + 1;
-        let argStart = k;
-        const args = [];
-        let paren = 1;
-        while (k < text.length && paren > 0) {
-          if (text[k] === '(') paren++;
-          else if (text[k] === ')') paren--;
-          else if (text[k] === ',' && paren === 1) { args.push(text.slice(argStart, k).trim()); argStart = k + 1; }
-          if (paren > 0) k++;
-        }
-        if (paren !== 0) fail(`${where}: unbalanced macro arguments for ${m[1]}`);
-        args.push(text.slice(argStart, k).trim());
-        if (args.length !== def.params.length) continue; // variadic: leave as-is
-        replacement = this.expandBody(def.body, def.params, args, where);
-        consumeTo = k + 1;
-      } else {
-        if (!def.raw) continue; // constant define: left in place for evalExpr
-        replacement = def.body;
-        consumeTo = m.index + m[1].length;
-      }
-      const out = text.slice(0, m.index) + replacement + text.slice(consumeTo);
-      return this.inlineMacros(out, where, budget - 1);
-    }
-    return text;
-  }
-
-  expandBody(body, params, args, where) {
-    let out = body;
-    params.forEach((p, i) => {
-      out = out.replace(new RegExp(`\\b${p}\\b`, 'g'), args[i] ?? '');
-    });
-    // C token pasting (##): splice the adjacent word tokens together.
-    // Pasted names (gAlcremieVanillaCreamPokedexText, gfx symbols) are data,
-    // so pasting must happen after substitution; chains (a##b##c) iterate.
-    let prev;
-    do {
-      prev = out;
-      out = out.replace(/([A-Za-z0-9_]+)\s*##\s*([A-Za-z0-9_]+)/g, '$1$2');
-    } while (out !== prev);
-    if (out.includes('##')) fail(`${where}: unresolvable ## paste in macro body`);
-    return out;
-  }
-}
-
-function tokenizeExpression(expr) {
-  const toks = [];
-  let i = 0;
-  while (i < expr.length) {
-    const ch = expr[i];
-    if (/\s/.test(ch)) { i++; continue; }
-    if (/[0-9]/.test(ch)) {
-      let j = i;
-      if (expr[j] === '0' && (expr[j + 1] === 'x' || expr[j + 1] === 'X')) {
-        j += 2;
-        while (j < expr.length && /[0-9a-fA-F]/.test(expr[j])) j++;
-        toks.push({ t: 'num', v: parseInt(expr.slice(i, j), 16) });
-      } else {
-        while (j < expr.length && /[0-9]/.test(expr[j])) j++;
-        if (expr[j] === '.' && j + 1 < expr.length && /[0-9]/.test(expr[j + 1])) {
-          j++;
-          while (j < expr.length && /[0-9]/.test(expr[j])) j++;
-          toks.push({ t: 'num', v: parseFloat(expr.slice(i, j)) });
-        } else {
-          toks.push({ t: 'num', v: parseInt(expr.slice(i, j), 10) });
-        }
-      }
-      i = j;
-      continue;
-    }
-    if (/[A-Za-z_]/.test(ch)) {
-      let j = i;
-      while (j < expr.length && /[A-Za-z0-9_]/.test(expr[j])) j++;
-      toks.push({ t: 'id', v: expr.slice(i, j) });
-      i = j;
-      continue;
-    }
-    const two = expr.slice(i, i + 2);
-    if (['&&', '||', '<<', '>>', '<=', '>=', '==', '!='].includes(two)) { toks.push({ t: 'op', v: two }); i += 2; continue; }
-    if ('+-*/<>&|^!?:()'.includes(ch)) { toks.push({ t: 'op', v: ch }); i++; continue; }
-    throw new Error(`bad char ${JSON.stringify(ch)} in expression ${JSON.stringify(expr)}`);
-  }
-  return toks;
-}
-
-/** Collect enum constants (`enum { A, B = 3, C }`) from raw header text. */
-function collectEnums(text, where, enums) {
-  const re = /\benum\s*(?:[A-Za-z_]\w*\s*)?\{([^{}]*)\}/g;
-  let m;
-  while ((m = re.exec(text))) {
-    let value = 0;
-    const stripped = m[1].replace(/\/\*[^]*?\*\//g, '').replace(/\/\/.*$/gm, '');
-    for (const part of stripped.split(',')) {
-      const item = part.trim();
-      if (!item) continue;
-      const em = /^([A-Za-z_][A-Za-z0-9_]*)(?:\s*=\s*([A-Za-z0-9_+\- ]+))?$/.exec(item);
-      if (!em) fail(`${where}: unrecognized enum member ${JSON.stringify(item)}`);
-      if (em[2] !== undefined) {
-        const simplified = em[2].trim().replace(/[A-Za-z_][A-Za-z0-9_]*/g, (id) => {
-          if (!enums.has(id)) fail(`${where}: enum initializer references unknown ${id}`);
-          return String(enums.get(id));
-        });
-        value = parseInt(simplified, 10);
-        if (Number.isNaN(value)) fail(`${where}: bad enum initializer for ${em[1]}`);
-      }
-      enums.set(em[1], value);
-      value++;
-    }
-  }
-  return enums;
-}
-
-// ---------------------------------------------------------------------------
 // Small parsing helpers
 // ---------------------------------------------------------------------------
 
@@ -644,6 +146,18 @@ function titleCaseId(id) {
 /** UPPERCASE game strings → Title case for display (Vanilla name tables). */
 function titleIfUpper(s) {
   return s.split(' ').map((w) => (w === w.toUpperCase() && /[A-Z]/.test(w) ? w.charAt(0) + w.slice(1).toLowerCase() : w)).join(' ');
+}
+
+/** UPPERCASE Vanilla item names → Title case for display, with the acronym
+ *  guard: a ≤2-char all-caps word stays uppercase only when it OPENS the
+ *  name ("PP UP" → "PP Up", "X ATTACK" → "X Attack"). Mixed-case words
+ *  (the "POKé" ball) pass through untouched. */
+function titleItemName(s) {
+  return s.split(' ').map((w, i) => {
+    if (!(w === w.toUpperCase() && /[A-Z]/.test(w))) return w;
+    if (i === 0 && w.length <= 2) return w;
+    return w.charAt(0) + w.slice(1).toLowerCase();
+  }).join(' ');
 }
 
 function unescapeC(literal) {
@@ -916,10 +430,28 @@ function humanizeEvolution(method, param, param2, evoMethods, where, ctx) {
     case 'LEVEL_FAMILY_OF_FOUR': return { target, method: lv(' (family of four)') };
     case 'LEVEL_TWO_SEGMENT': return { target, method: lv() };
     case 'LEVEL_THREE_SEGMENT': return { target, method: lv() };
+    case 'LEVEL_30_NATURE': {
+      // EX-only (the Milcery rewrite in rogue_baked.c): the in-game string
+      // (src/strings.c gText_PokedexEvoLevel30Nature) is
+      // "Reach {LV}30 as {STR_VAR_1}" — {LV} renders "Lv." in the GBA text
+      // system (cf. gText_LvVar1 "{LV}{STR_VAR_1}"), 30 hard-coded
+      const natureName = ctx.natureNames?.get(param);
+      if (!natureName) fail(`${where}: unknown nature value ${param}`);
+      return { target, method: `Reach Lv.30 as ${natureName}` };
+    }
     default:
       fail(`${where}: unhumanized evolution method ${methodId}`);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Port of the game's runtime evolution rewrite (src/rogue_baked.c)
+// ---------------------------------------------------------------------------
+//
+// `makeEvoConsts`, `modifyEvolution`, `buildEvoDisplayList` and
+// `parseEvoTuples` live in ./evolutions.mjs (shared with the sprite
+// extractor, which runs the same port to derive the evolution
+// references for the form-sprite roster — evoLinks).
 
 // ---------------------------------------------------------------------------
 // Main extraction
@@ -949,26 +481,12 @@ function extract(repo) {
   // ----- preprocessor state ---------------------------------------------------
   // The build's command-line defines (Makefile CPPFLAGS for the default
   // release build), applied before any header is read.
-  const buildDefines = (seeds) => {
-    const map = new Map();
-    for (const [name, value] of seeds) map.set(name, { params: null, body: String(value) });
-    return map;
-  };
-
-  const exDefines = buildDefines([
-    ['MODERN', 1],
-    ['TESTING', 0],
-    ['ROGUE_EXPANSION', 1],
-    ['ROGUE_RELEASE', 1],
-  ]);
+  const exDefines = seedDefines(EX_BUILD_SEEDS);
   const exEnums = new Map();
   // include roots mirror the build's `-iquote include -iquote gflib`.
   const exPp = new Preprocessor({ provider: exProvider, defines: exDefines, enums: exEnums, includeRoots: ['include', 'src', 'gflib'], label: 'expansion' });
 
-  const vanDefines = buildDefines([
-    ['MODERN', 1],
-    ['ROGUE_RELEASE', 1],
-  ]);
+  const vanDefines = seedDefines(VAN_BUILD_SEEDS);
   const vanEnums = new Map();
   const vanPp = new Preprocessor({ provider: vanillaProvider, defines: vanDefines, enums: vanEnums, includeRoots: ['include', 'src', 'gflib'], label: 'vanilla' });
 
@@ -981,25 +499,7 @@ function extract(repo) {
   };
 
   // Expansion config + constants (the real build's P_*/B_* toggles)
-  for (const f of [
-    'include/config.h',
-    'include/config/pokemon.h',
-    'include/config/species_enabled.h',
-    'include/config/battle.h',
-    'include/config/item.h',
-    'include/config/overworld.h',
-    'include/constants/battle.h',
-    'include/constants/pokemon.h',
-    'include/constants/species.h',
-    'include/constants/abilities.h',
-    'include/constants/moves.h',
-    'include/constants/items.h',
-    'include/constants/maps.h',
-    'include/constants/region_map_sections.h',
-    'include/constants/pokedex.h',
-    'include/constants/rogue_pokedex.h',
-    'include/global.h', // COMPOUND_STRING, min/max & friends used by the species data
-  ]) collectFor(exPp, f);
+  for (const f of EX_CONSTANT_HEADERS) collectFor(exPp, f);
 
   // Vanilla constants (no ROGUE_EXPANSION)
   for (const f of [
@@ -1014,18 +514,11 @@ function extract(repo) {
     'include/constants/region_map_sections.h',
     'include/constants/pokedex.h',
     'include/constants/rogue_pokedex.h',
+    'include/constants/rogue.h', // ITEM_LINK_CABLE (the Vanilla trade-evo rewrite names it)
   ]) collectFor(vanPp, f);
 
-  // Generic constant resolution: enums first, then object-like macros
-  // (the game expresses most constant tables as #defines).
-  const resolveConst = (pp, name, where) => {
-    if (pp.enums.has(name)) return pp.enums.get(name);
-    const def = pp.defines.get(name);
-    if (!def) fail(`${where}: unresolved constant ${name}`);
-    if (def.params) fail(`${where}: ${name} is a function-like macro`);
-    if (def.body.includes('{') || def.body.includes(';')) fail(`${where}: ${name} has a non-constant body`);
-    return pp.evalDefine(name, where);
-  };
+  // (resolveConst — enums first, then object-like macros — is shared via
+  // preprocessor.mjs)
   const collectPrefixed = (pp, prefix, where, filter) => {
     const out = new Map();
     for (const name of new Set([...pp.enums.keys(), ...pp.defines.keys()])) {
@@ -1153,7 +646,7 @@ function extract(repo) {
   // PP with just the toggle (plus TRUE/FALSE for the #if) is self-contained.
   const exPpFullMoveNames = new Preprocessor({
     provider: exProvider,
-    defines: buildDefines([
+    defines: seedDefines([
       ['B_EXPANDED_MOVE_NAMES', 1],
       ['TRUE', 1],
       ['FALSE', 0],
@@ -1216,9 +709,12 @@ function extract(repo) {
     return title;
   };
 
-  // value -> display name: the data file owns the display names, the
-  // constants file owns the values (evolution data references items by value)
-  const parseItemNames = (pp, raw, where) => {
+  // value -> display name: the data files own the display names, the
+  // constants files own the values (evolution data references items by
+  // value). The rogue items (src/data/rogue_items.h — the Link Cable and the
+  // Alola/Galar/Hisui artefacts the evolution rewrite names) live in a
+  // second table indexed by [ITEM_X - ITEM_ROGUE_ITEM_FIRST].
+  const parseItemNames = (pp, raw, rogueRaw, where, corrections = new Map()) => {
     const byConst = new Map();
     const re = /\[ITEM_([A-Z0-9_]+)\]\s*=\s*\{([^}]*)\}/g;
     let m;
@@ -1226,22 +722,64 @@ function extract(repo) {
       const nm = /\.name\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/.exec(m[2]);
       if (nm) byConst.set(`ITEM_${m[1]}`, unescapeC(nm[1]));
     }
-    const rawConsts = pp.provider.fetch('include/constants/items.h');
+    const rg = /\[ITEM_([A-Z0-9_]+)\s*-\s*ITEM_ROGUE_ITEM_FIRST\]\s*=\s*\{([\s\S]*?)\n    \},/g;
+    while ((m = rg.exec(rogueRaw))) {
+      const nm = /\.name\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/.exec(m[2]);
+      if (nm) byConst.set(`ITEM_${m[1]}`, unescapeC(nm[1]));
+    }
     const out = new Map();
-    for (const line of rawConsts.split('\n')) {
-      const cm = /^\s*#define\s+ITEM_([A-Z0-9_]+)\s+(.+?)\s*(\/\/.*)?$/.exec(line);
-      if (!cm) continue;
-      const display = byConst.get(`ITEM_${cm[1]}`);
-      if (display === undefined) continue; // aliases / helper constants
-      let value;
-      try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
-      if (!out.has(value)) out.set(value, display);
+    for (const file of ['include/constants/items.h', 'include/constants/rogue.h']) {
+      for (const line of pp.provider.fetch(file).split('\n')) {
+        const cm = /^\s*#define\s+ITEM_([A-Z0-9_]+)\s+(.+?)\s*(\/\/.*)?$/.exec(line);
+        if (!cm) continue;
+        const display = corrections.get(`ITEM_${cm[1]}`) ?? byConst.get(`ITEM_${cm[1]}`);
+        if (display === undefined) continue; // aliases / helper constants
+        let value;
+        try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
+        if (!out.has(value)) out.set(value, display);
+      }
     }
     if (out.size < 200) fail(`${where}: only ${out.size} named items resolved`);
     return out;
   };
-  const exItemNames = parseItemNames(exPp, exPp.process('src/data/items.h', 'output'), 'EX items.h');
-  const vanItemNames = parseItemNames(vanPp, vanPp.process('src/data/items.h', 'output'), 'vanilla items.h');
+  // The EX table (src/data/items.h @origin/expansion) enters two item
+  // names without their space ("GimighoulCoin" L10066, "Leader'sCrest"
+  // L10076 at the baseline — upstream typos; the in-game pokedex shows
+  // them verbatim). The site documents the intended display names; every
+  // other EX name passes through byte-identical (no case transform).
+  const exItemNameCorrections = new Map([
+    ['ITEM_GIMMIGHOUL_COIN', 'Gimighoul Coin'],
+    ['ITEM_LEADERS_CREST', "Leader's Crest"],
+  ]);
+  const exItemNames = parseItemNames(exPp, exPp.process('src/data/items.h', 'output'), exPp.process('src/data/rogue_items.h', 'output'), 'EX items.h', exItemNameCorrections);
+  // the Vanilla item tables are all-caps ("THUNDERSTONE") — Title case them
+  // for display (the EX tables are already Title case in source)
+  const vanItemNames = new Map(
+    [...parseItemNames(vanPp, vanPp.process('src/data/items.h', 'output'), vanPp.process('src/data/rogue_items.h', 'output'), 'vanilla items.h')].map(([v, n]) => [v, titleItemName(n)]),
+  );
+
+  // (parseItemValues — ITEM_ const-tail -> value for the items the evolution
+  // rewrite names — is shared via evolutions.mjs)
+  const exItemValues = parseItemValues(exPp, 'EX item values');
+  const vanItemValues = parseItemValues(vanPp, 'vanilla item values');
+
+  // value -> nature display name (EX only — the EVO_LEVEL_30_NATURE rewrite
+  // is EX-only): the names own src/data/text/nature_names.h, the values the
+  // NATURE_* defines in include/constants/pokemon.h
+  const exNatureNames = (() => {
+    const raw = exPp.process('src/data/text/nature_names.h', 'output');
+    const bySymbol = new Map();
+    for (const m of raw.matchAll(/static const u8 (s[A-Za-z0-9]+NatureName)\[\]\s*=\s*_\("((?:[^"\\]|\\.)*)"\)/g)) bySymbol.set(m[1], m[2]);
+    const out = new Map();
+    for (const m of raw.matchAll(/\[NATURE_([A-Z0-9_]+)\]\s*=\s*(s[A-Za-z0-9]+NatureName),/g)) {
+      const value = exPp.evalExpr(`NATURE_${m[1]}`, `nature name NATURE_${m[1]}`);
+      const name = bySymbol.get(m[2]);
+      if (name === undefined) fail(`nature_names.h: ${m[1]} points at undefined ${m[2]}`);
+      out.set(value, name);
+    }
+    if (out.size < 20) fail(`only ${out.size} nature names parsed from nature_names.h`);
+    return out;
+  })();
 
   const exMapNames = new Map();
   for (const [name, value] of collectPrefixed(exPp, 'MAP_', 'maps', (v, n) => v < 0x4000 && !n.startsWith('MAPSEC_'))) {
@@ -1373,6 +911,7 @@ function extract(repo) {
     moveNames: exMoveByValue, itemNames: exItemNames,
     typeByValue, mapNames: exMapNames, mapsecNames: exMapsecNames,
     mapNone: resolveConst(exPp, 'MAP_NONE', 'MAP_NONE'), displayNames: new Map(),
+    natureNames: exNatureNames, // the EVO_LEVEL_30_NATURE humanizer lookup
   };
 
   const FLAG_FIELDS = ['isLegendary', 'isMythical', 'isUltraBeast', 'isParadoxForm', 'isMegaEvolution', 'isPrimalReversion', 'isUltraBurst', 'isGigantamax', 'isTeraForm', 'isAlolanForm', 'isGalarianForm', 'isHisuianForm', 'isPaldeanForm'];
@@ -1635,41 +1174,20 @@ function extract(repo) {
     return m;
   })();
 
-  // EX evolutions → { prev?, next? }
-  const exEvoBySpecies = new Map(); // id -> [ { target, method } ] in table order
-  for (const entry of exEntries.values()) {
-    const evos = [];
-    for (const block of entry.evoBlocks) {
-      const where = `EX evolution for ${entry.id}`;
-      const body = block.replace(/^\{/, '').replace(/\}$/, '').trim();
-      const parts = body.split(',').map((s) => s.trim()).filter(Boolean);
-      if (parts.length < 3) fail(`${where}: expected 3 evolution fields: ${body.slice(0, 60)}`);
-      const method = exPp.evalExpr(parts[0], where);
-      if (method === 0xfffe) continue; // EVO_NONE terminator
-      const h = humanizeEvolution(method, exPp.evalExpr(parts[1], where), exPp.evalExpr(parts[2], where), exEvoMethods, where, exCtx);
-      evos.push({ target: h.target, method: h.method });
-    }
-    exEvoBySpecies.set(entry.id, evos);
+  // EX raw evolution tuples per entry (records AND dex-less forms — the
+  // forms run through the same runtime rewrite keyed by their own species
+  // value). The 0xfffe (EVO_NONE) slots are KEPT here: they occupy the
+  // indices the per-species overrides target; they only get filtered out
+  // later if they SURVIVE the rewrite. The post-rewrite display lists are
+  // computed after the learnset profiles are available (the
+  // ModifyKnowMoveEvo port reads the species' level-up list).
+  const exEvoRaw = new Map(); // entryId -> raw tuples, in table order
+  for (const entry of allExEntries) {
+    exEvoRaw.set(entry.id, parseEvoTuples(exPp, entry.evoBlocks, `EX evolution for ${entry.id}`, 0xffff));
   }
-  const exEvoPair = (selfId) => {
-    const evos = exEvoBySpecies.get(selfId) ?? [];
-    const next = evos.length > 0 ? { id: evos[0].target, method: evos[0].method } : undefined;
-    let prev;
-    for (const [sid, list] of exEvoBySpecies) {
-      if (sid === selfId) continue;
-      if (list.length > 0 && list[0].target === selfId) {
-        // prefer the first source in species value order (the "primary" pre-evolution)
-        prev = { id: sid, method: list[0].method };
-        break;
-      }
-    }
-    // pick the lowest-dexNum prev for determinism when several qualify
-    if (prev) {
-      const candidates = [...exEvoBySpecies.entries()].filter(([, list]) => list.length > 0 && list[0].target === selfId).sort((a, b) => exEntries.get(a[0]).dexNum - exEntries.get(b[0]).dexNum);
-      if (candidates.length > 1) prev = { id: candidates[0][0], method: candidates[0][1][0].method };
-    }
-    return next || prev ? { ...(next ? { next } : {}), ...(prev ? { prev } : {}) } : null;
-  };
+  // GetBaseEvolution's SPECIES_MELTAN case — the species table entry has no
+  // .evolutions at all; the game uses this fixed table instead
+  const meltanEvoRaw = [{ method: 0xfffe, param: 0, target: resolveConst(exPp, 'SPECIES_MELMETAL', 'EX SPECIES_MELMETAL') }];
 
   // ----- Vanilla species data --------------------------------------------------
   const vanBaseStats = (() => {
@@ -1740,7 +1258,16 @@ function extract(repo) {
     return m;
   })();
 
-  const vanEvolutions = (() => {
+  // Vanilla raw evolution tuples (the humanizing context is shared with the
+  // post-rewrite pass below; the rewrite runs before the display, same as
+  // in-game)
+  const vanEvoHumanizeCtx = {
+    byValue: vanSpecies.byValue, recordIdByValue: vanRecordIdByValue, moveNames: vanMoveByValue, itemNames: vanItemNames,
+    typeByValue, mapNames: vanMapNames, mapsecNames: vanMapsecNames,
+    mapNone: resolveConst(vanPp, 'MAP_NONE', 'MAP_NONE'),
+    displayNames: new Map([...vanSpeciesNames.entries()].map(([k, v]) => [k.replace(/^SPECIES_/, '').toLowerCase(), v])),
+  };
+  const vanEvoRaw = (() => {
     const raw = vanPp.process('src/data/pokemon/evolution.h', 'output');
     const out = new Map();
     const bm = /\[SPECIES_([A-Z0-9_]+)\]\s*=\s*/g;
@@ -1757,24 +1284,7 @@ function extract(repo) {
       }
       // drop the outer braces: the entry value is { {block}, {block}, … }
       const body = raw.slice(bm.lastIndex + 1, end);
-      const blocks = splitTopLevelBraces(body, `vanilla evolution [SPECIES_${m[1]}]`);
-      const evos = [];
-      for (const block of blocks) {
-        const where = `vanilla evolution for ${species}`;
-        const inner = block.replace(/^\{/, '').replace(/\}$/, '').trim();
-        const parts = inner.split(',').map((s) => s.trim()).filter(Boolean);
-        if (parts.length < 3) fail(`${where}: expected 3 evolution fields: ${inner.slice(0, 60)}`);
-        const method = vanPp.evalExpr(parts[0], where);
-        if (method === 0xfffe) continue;
-        const h = humanizeEvolution(method, vanPp.evalExpr(parts[1], where), vanPp.evalExpr(parts[2], where), vanEvoMethods, where, {
-          byValue: vanSpecies.byValue, recordIdByValue: vanRecordIdByValue, moveNames: vanMoveByValue, itemNames: vanItemNames,
-          typeByValue, mapNames: vanMapNames, mapsecNames: vanMapsecNames,
-          mapNone: resolveConst(vanPp, 'MAP_NONE', 'MAP_NONE'),
-          displayNames: new Map([...vanSpeciesNames.entries()].map(([k, v]) => [k.replace(/^SPECIES_/, '').toLowerCase(), v])),
-        });
-        evos.push({ target: h.target, method: h.method });
-      }
-      out.set(species, evos);
+      out.set(species, parseEvoTuples(vanPp, splitTopLevelBraces(body, `vanilla evolution [SPECIES_${m[1]}]`), `vanilla evolution for ${species}`, 0));
     }
     return out;
   })();
@@ -2014,16 +1524,141 @@ function extract(repo) {
 
   const statsOf = (s) => ({ hp: s.hp, atk: s.atk, def: s.def, spa: s.spa, spd: s.spd, spe: s.spe, total: s.hp + s.atk + s.def + s.spa + s.spd + s.spe });
 
-  const vanEvoPair = (selfId) => {
-    const evos = vanEvolutions.get(selfId) ?? [];
-    const next = evos.length > 0 ? { id: evos[0].target, method: evos[0].method } : undefined;
-    let prev;
-    const candidates = [...vanEvolutions.entries()].filter(([, list]) => list.length > 0 && list[0].target === selfId);
-    if (candidates.length > 0) {
-      candidates.sort((a, b) => (vanDexNum.get(a[0]) ?? 0) - (vanDexNum.get(b[0]) ?? 0));
-      prev = { id: candidates[0][0], method: candidates[0][1][0].method };
+  // ----- evolution rewrite (the port of Rogue_ModifyEvolution) ----------------
+  // Branch-scoped lookup contexts for the port. profileLevelUp is what
+  // ModifyKnowMoveEvo reads (Rogue_GetPokemonProfile — the level-up move
+  // list, resolved per species the same way the rest of the record resolves
+  // its profile: record id first, then the base id for form entries).
+  const exEvoCtx = {
+    evoConsts: makeEvoConsts('ex', exPp, 'EX evo constants'),
+    none: resolveConst(exPp, 'SPECIES_NONE', 'EX SPECIES_NONE'),
+    species: (tail) => exSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`EX evo: unknown species ${tail}`),
+    baseSpecies: (tail) => {
+      // GET_BASE_SPECIES_ID — the first member of the species' value group
+      // (all members share one value, so this is the group's value)
+      const v = exSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`EX evo: unknown species ${tail}`);
+      const group = exValueGroups.get(v);
+      if (!group || group.length === 0) fail(`EX evo: no value group for ${tail}`);
+      return v;
+    },
+    item: (tail) => exItemValues.get(tail) ?? fail(`EX evo: unknown item ${tail}`),
+    nature: (tail) => resolveConst(exPp, `NATURE_${tail}`, `EX nature ${tail}`),
+    profileLevelUp: (value) => {
+      const id = exCtx.recordIdByValue.get(value) ?? exCtx.byValue.get(value);
+      const entry = id ? exEntries.get(id) : null;
+      const pid = entry ? (profile('ex', entry.id) ? entry.id : entry.baseId) : null;
+      const p = pid ? profile('ex', pid) : null;
+      return p ? p.levelUp : null;
+    },
+  };
+  const vanEvoCtx = {
+    evoConsts: makeEvoConsts('vanilla', vanPp, 'vanilla evo constants'),
+    none: resolveConst(vanPp, 'SPECIES_NONE', 'vanilla SPECIES_NONE'),
+    species: (tail) => vanSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`vanilla evo: unknown species ${tail}`),
+    baseSpecies: (tail) => vanSpecies.idByValue.get(tail.toLowerCase()) ?? fail(`vanilla evo: unknown species ${tail}`),
+    item: (tail) => vanItemValues.get(tail) ?? fail(`vanilla evo: unknown item ${tail}`),
+    nature: (tail) => resolveConst(vanPp, `NATURE_${tail}`, `vanilla nature ${tail}`),
+    profileLevelUp: (value) => {
+      const id = vanRecordIdByValue.get(value);
+      const p = id ? profile('vanilla', id) : null;
+      return p ? p.levelUp : null;
+    },
+  };
+
+  // The post-rewrite display lists, keyed by entry/record id: the
+  // { id, method, target } of every surviving branch (in table order, capped
+  // at 8 like the in-game display). `target` (the species value) is kept for
+  // the prev computation; it is dropped from the emitted shape.
+  const exEvoPost = (() => {
+    const out = new Map();
+    for (const entry of allExEntries) {
+      const raw = entry.id === 'meltan' ? meltanEvoRaw : (exEvoRaw.get(entry.id) ?? []);
+      const list = [];
+      for (const evo of buildEvoDisplayList('ex', exEvoCtx, entry.value, raw)) {
+        const h = humanizeEvolution(evo.method, evo.param, evo.target, exEvoMethods, `EX evolution for ${entry.id}`, exCtx);
+        if (!exEntries.has(h.target)) fail(`EX evolution for ${entry.id}: target ${h.target} is not a record`);
+        list.push({ id: h.target, method: h.method, target: evo.target });
+      }
+      out.set(entry.id, list);
     }
-    return next || prev ? { ...(next ? { next } : {}), ...(prev ? { prev } : {}) } : null;
+    return out;
+  })();
+  const vanEvoPost = (() => {
+    const out = new Map();
+    for (const [vanId, raw] of vanEvoRaw) {
+      const list = [];
+      for (const evo of buildEvoDisplayList('vanilla', vanEvoCtx, vanSpecies.idByValue.get(vanId), raw)) {
+        const h = humanizeEvolution(evo.method, evo.param, evo.target, vanEvoMethods, `vanilla evolution for ${vanId}`, vanEvoHumanizeCtx);
+        if (!vanBaseStats.has(h.target)) fail(`vanilla evolution for ${vanId}: target ${h.target} has no base stats`);
+        list.push({ id: h.target, method: h.method, target: evo.target });
+      }
+      out.set(vanId, list);
+    }
+    return out;
+  })();
+
+  // ----- evolution references (shared evoLinks) --------------------------------
+  // The post-rewrite lists reference FORM entries in two places: a branch
+  // targeting a form (Hisuian Typhlosion, Basculegion (Male), the Alcremie
+  // creams, ...) and the in-game `prev` (Runerigus <- Galarian Yamask, ...
+  // issue #97). The shared evoLinks names every branch target and every
+  // prev source, so the emitted `form` fields, the form rosters and the
+  // sprite extractor's extraRosters all derive from one computation.
+  const exEvoEntries = new Map(); // entryId -> { id, value, baseId, dexNum, isRecord }
+  for (const entry of allExEntries) {
+    const value = exSpecies.idByValue.get(entry.id);
+    if (value === undefined) fail(`${entry.id}: no SPECIES_ value`);
+    const isRecord = exEntries.has(entry.id);
+    exEvoEntries.set(entry.id, { id: entry.id, value, baseId: entry.baseId, dexNum: isRecord ? entry.dexNum : exEntries.get(entry.baseId).dexNum, isRecord });
+  }
+  const vanEvoEntries = new Map(); // recordId -> same shape (Vanilla has no forms —
+  // every record, not just the evolution sources, so targets resolve)
+  for (const vanId of vanBaseStats.keys()) {
+    vanEvoEntries.set(vanId, { id: vanId, value: vanSpecies.idByValue.get(vanId), baseId: vanId, dexNum: vanDexNum.get(vanId) ?? 0, isRecord: true });
+  }
+  const idsByValueOf = (idByValue) => {
+    const m = new Map();
+    for (const [id, value] of idByValue) {
+      if (!m.has(value)) m.set(value, []);
+      m.get(value).push(id);
+    }
+    return m;
+  };
+
+  // { prev?, evos? } for a record or form (issue #97 shape): evos = the
+  // post-rewrite branches (each carrying `form` — the target's form
+  // display name, exactly as documented in the record's forms array — when
+  // the in-game display shows a form rather than the record name), prev =
+  // the [dexNum, isForm]-minimum source whose list targets this species
+  // (a form source carries its form name and deep-links its base record).
+  // The form name a branch/prev references: a form entry renders its own
+  // display name; a roster alias without an entry derives the same
+  // missingFormName the record's forms array uses (base = the TARGET's
+  // record id, so the strings match exactly).
+  const exEvoFormName = (nameId, baseRecordId) =>
+    exEntries.has(nameId) || exNoDexMap.has(nameId)
+      ? exDisplayNames.get(nameId)
+      : missingFormName(baseRecordId, exDisplayNames.get(baseRecordId), nameId);
+  const exEvoPair = (selfId, selfValue, selfIsForm) => {
+    const evos = exEvoPost.get(selfId) ?? [];
+    const prev = exEvoLinks.prevOf.get(selfId);
+    if (!prev && evos.length === 0) return null;
+    return {
+      ...(prev ? { prev: prev.isForm ? { id: prev.id, method: prev.method, form: exEvoFormName(prev.srcId, prev.id) } : { id: prev.id, method: prev.method } } : {}),
+      ...(evos.length > 0 ? { evos: evos.map((e, idx) => {
+        const nameId = exEvoLinks.evoFormOf.get(`${selfId}\u0000${idx}`);
+        return nameId ? { id: e.id, method: e.method, form: exEvoFormName(nameId, e.id) } : { id: e.id, method: e.method };
+      }) } : {}),
+    };
+  };
+  const vanEvoPair = (vanId) => {
+    const evos = vanEvoPost.get(vanId) ?? [];
+    const prev = vanEvoLinks.prevOf.get(vanId);
+    if (!prev && evos.length === 0) return null;
+    return {
+      ...(prev ? { prev: { id: prev.id, method: prev.method } } : {}),
+      ...(evos.length > 0 ? { evos: evos.map(({ id, method }) => ({ id, method })) } : {}),
+    };
   };
 
   const buildMoves = (profileSpeciesId, branch) => {
@@ -2070,6 +1705,40 @@ function extract(repo) {
     if (entry.formIds.length < 2) return [];
     return entry.formIds.filter((f) => f !== exId);
   };
+  const baseRosterOf = (recordId) => {
+    const entry = exEntries.get(recordId);
+    return formRosterOf(recordId, profile('ex', recordId) ? recordId : entry.baseId);
+  };
+
+  // The shared evolution-reference pass (issue #97): names every branch
+  // target and prev source, and reports the form entries the rosters must
+  // gain so the site documents what the in-game Pokédex shows. Vanilla has
+  // no forms, so its run only computes the record prev winners.
+  const exEvoLinks = evoLinks({
+    entries: exEvoEntries,
+    lists: exEvoPost,
+    recordOf: (v) => exCtx.recordIdByValue.get(v),
+    idsByValue: idsByValueOf(exSpecies.idByValue),
+    baseRosterOf,
+    label: 'EX evolution references',
+  });
+  const vanEvoLinks = evoLinks({
+    entries: vanEvoEntries,
+    lists: vanEvoPost,
+    recordOf: (v) => vanRecordIdByValue.get(v),
+    idsByValue: idsByValueOf(vanSpecies.idByValue),
+    baseRosterOf: () => [],
+    label: 'vanilla evolution references',
+  });
+
+  // the documented roster: the profile/form-table roster PLUS the forms the
+  // in-game evolution lists reference (branch targets and prev sources —
+  // e.g. Meowth's Alolan/Galarian forms, Urshifu's Rapid Strike Style)
+  const evoRosterOf = (exId, profileId) => {
+    const base = formRosterOf(exId, profileId);
+    const extra = exEvoLinks.refs.get(exId) ?? [];
+    return extra.length > 0 ? [...base, ...extra] : base;
+  };
 
   // per-form data from the form's own species_info entry (dex-less forms —
   // the mega battle forms and regional variants — live in exNoDexMap); each
@@ -2095,6 +1764,10 @@ function extract(repo) {
     // sprite-forms rule; base-identical / ternary / no-entry forms fall
     // back to the base sprite and stay name-only)
     if (formManifest.classify(f).own) form.sprite = f;
+    // the form's own evolution branches — the runtime rewrite is keyed by
+    // the species value held, so a form runs through it with its own value
+    const fevo = exEvoPair(f, entry.value, true);
+    if (fevo) form.evo = fevo;
     return form;
   };
 
@@ -2102,13 +1775,13 @@ function extract(repo) {
     const p = profile('ex', profileId);
     const fromProfile = p && p.species.length > 1;
     const baseName = exDisplayNames.get(exId);
-    for (const f of formRosterOf(exId, profileId)) {
+    for (const f of evoRosterOf(exId, profileId)) {
       const art = formManifest.classify(f);
       if (!art.own) continue;
       referencedOwn.add(f);
       if (!existsSync(path.join(spriteDir, `${f}.png`))) missingFormArt.push(f);
     }
-    const forms = formRosterOf(exId, profileId).map((f) => formObjectOf(f, exId, baseName, fromProfile));
+    const forms = evoRosterOf(exId, profileId).map((f) => formObjectOf(f, exId, baseName, fromProfile));
     return forms.length > 0 ? forms : null;
   };
 
@@ -2147,7 +1820,7 @@ function extract(repo) {
     rec.baseExp = ex.baseExp;
     rec.description = ex.description;
 
-    const evo = exEvoPair(exId);
+    const evo = exEvoPair(exId, ex.value, false);
     if (evo) rec.evo = evo;
 
     const movesProfileId = profile('ex', exId) ? exId : exBaseId;
@@ -2216,7 +1889,10 @@ function extract(repo) {
       push('src/data/pokemon/base_stats.h @vanilla');
       push('src/data/pokemon/pokedex_entries.h @vanilla');
       push('src/data/pokemon/pokedex_text.h @vanilla');
-      if (rec.vanilla?.evo !== undefined) push('src/data/pokemon/evolution.h @vanilla');
+      if (rec.vanilla?.evo !== undefined) {
+        push('src/data/pokemon/evolution.h @vanilla');
+        push('src/rogue_baked.c @vanilla'); // the runtime rewrite the display shows
+      }
       if (rec.vanilla?.name !== undefined) push('src/data/text/species_names.h @vanilla');
       if (rec.vanilla?.moves !== undefined) push(`src/data/rogue/pokemon/vanilla/${vanId}/vanilla_profile.json @vanilla`);
       if (rec.vanilla?.dexVariants !== undefined) push('src/data/rogue_pokedex.h @vanilla');
@@ -2224,15 +1900,17 @@ function extract(repo) {
       if (rec.vanilla?.notes !== undefined) push('src/data/rogue_routes.h @vanilla');
     }
     push(`${ex.file} @origin/expansion`);
+    if (rec.evo) push('src/rogue_baked.c @origin/expansion'); // the runtime rewrite the display shows
     if (ex.namedTextFields.length > 0) push('src/data/pokemon/species_info.h @origin/expansion');
     if (rec.forms) {
       push('src/data/pokemon/form_species_tables.h @origin/expansion');
       // the per-form data comes from each form's own species_info entry,
       // and an own-art form's sprite source (the palette file too, when it
       // lives outside the form's front directory)
-      for (const f of formRosterOf(exId, movesProfileId)) {
+      for (const f of evoRosterOf(exId, movesProfileId)) {
         const fe = exEntries.get(f) ?? exNoDexMap.get(f);
         if (fe) push(`${fe.file} @origin/expansion`);
+        if (fe && exEvoPair(f, fe.value, true)) push('src/rogue_baked.c @origin/expansion');
         const art = formManifest.classify(f);
         if (art.own) {
           push(`${art.frontPath} @origin/expansion`);
@@ -2352,10 +2030,10 @@ function buildDoc({ records, counts }) {
           'forms are EX-only — the Vanilla overlay mirrors them as an empty list',
           'height/weight pre-formatted for display (dm/hg ÷ 10)',
           'description is null when a build has no Pokédex text (one case: Minior)',
-          'evo.next = first evolution, evo.prev = lowest-dex-number source',
+          'evo.evos = the branches the in-game Pokédex shows (the raw table rewritten by Rogue_ModifyEvolution — friendship evos become level 30, trades become Link Cable items, and per-species overrides rewrite the rest); evo.prev = the lowest-dex-number record whose evo.evos target this species',
           'X_MISC_INFO family stat blocks are expanded — values shown are final',
         ],
-        source: 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla',
+        source: 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/rogue_baked.c @vanilla; src/rogue_baked.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla',
       },
       {
         id: 'moves',
