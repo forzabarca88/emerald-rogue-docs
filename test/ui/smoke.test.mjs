@@ -346,13 +346,13 @@ const PAGES = [
     counts: {
       dexTiles: {
         sel: '.dex-tile',
-        expected: 28,
-        why: `data/site.json dex.pageSize = 28 (the in-game Overview's tile page) → pokedex.js renders exactly pageSize .dex-tile links on page 1 of the default ${VERSION} version`,
+        expected: 24,
+        why: `data/site.json dex.pageSize = 24 (the site's tile page — the in-game Overview draws 28) → pokedex.js renders exactly pageSize .dex-tile links on page 1 of the default ${VERSION} version`,
       },
       dexCount: {
         sel: '#dex-count',
-        text: '1025 species · page 1 of 37',
-        why: `data/pokedex.json: all 1025 records include version ${VERSION} (386 shared + 639 EX-only) → “1025 species”; ceil(1025 / dex.pageSize 28) = 37 → “page 1 of 37” (pokedex.js updateBrowse)`,
+        text: '1025 species · page 1 of 43',
+        why: `data/pokedex.json: all 1025 records include version ${VERSION} (386 shared + 639 EX-only) → “1025 species”; ceil(1025 / dex.pageSize 24) = 43 → “page 1 of 43” (pokedex.js updateBrowse)`,
       },
       regionButtons: {
         sel: '.dex-filter__btn',

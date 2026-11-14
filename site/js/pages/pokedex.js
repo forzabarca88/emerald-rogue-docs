@@ -32,7 +32,8 @@
  *      the region chips wrap at 360px, so it is measured, never
  *      hardcoded). The .dex-grid
  *      follows the strip: exactly site.json
- *      dex.pageSize (28 — the in-game Overview's tile page) .dex-tile
+ *      dex.pageSize (24 — the site's tile page; the in-game Overview
+ *      draws 28) .dex-tile
  *      <a> links per page, each a lazy-loaded sprite (onerror → the
  *      placeholder tile showing the dex number in mono) + the active
  *      version's #NNN. The four prose blocks (issue #84 — each
@@ -189,10 +190,10 @@
     }
 
     /* The tile-page size — data/site.json dex.pageSize is the single
-     * source (the in-game Overview's 28-tile page); 28 is only a
-     * fallback for a misconfigured site.json. */
+     * source (the site's 24-tile page — the in-game Overview draws 28);
+     * 24 is only a fallback for a misconfigured site.json. */
     var pageSize = Number(site && site.dex ? site.dex.pageSize : NaN);
-    if (!Number.isFinite(pageSize) || pageSize <= 0) pageSize = 28;
+    if (!Number.isFinite(pageSize) || pageSize <= 0) pageSize = 24;
 
     /* Surviving state: the query, region and variant filters persist
      * across version re-renders (quests.js / routes.js pattern) — the
@@ -489,7 +490,7 @@
         'dex-browse',
         'Overview',
         'Browse the ' + ROGUE.versionLabel(ROGUE.version) + ' dex',
-        'As the in-game Overview draws it — ' + pageSize + ' tiles a page. Open a tile for the full entry, or search and filter first.',
+        'The site’s tile page — ' + pageSize + ' tiles a page (the in-game Overview draws 28). Open a tile for the full entry, or search and filter first.',
         '<div class="dex-browse">' +
         '<div class="dex-toolbar">' +
         '<div class="search dex-search"><input type="search" id="dex-search" placeholder="Search species" aria-label="Search species"></div>' +

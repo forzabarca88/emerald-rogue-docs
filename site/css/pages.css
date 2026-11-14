@@ -2016,8 +2016,9 @@
    the active build's settings.json options, "All variants" default) —
    the live #dex-count line and the .dex-pager between the count and the
    grid), then the .dex-grid —
-   exactly data/site.json dex.pageSize (28, the in-game Overview's tile
-   page) .dex-tile <a> links per page, each a lazy sprite
+   exactly data/site.json dex.pageSize (24 — the site's tile page; the
+   in-game Overview draws 28) .dex-tile <a> links per page, each a lazy
+   sprite
    (--tile-sprite-size, pixelated) with an onerror placeholder tile
    (--placeholder) showing the dex number in mono — and the four prose
    blocks (issue #84 — short text + each block's `list` facts as a
@@ -2209,7 +2210,7 @@
 
 .page--pokedex .dex-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 152px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 176px), 1fr));
   gap: var(--space-3);
 }
 

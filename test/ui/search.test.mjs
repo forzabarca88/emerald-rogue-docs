@@ -109,11 +109,11 @@
  *   "wobbuffet" (issue #50 parity) → 1 card ("The Final Run." — the word is
  *   in its REWARD, absent from every quest's name + description);
  *   hub.html "unique" → 8 of 48 upgrades; routes.html Hoenn → 12 of 36;
- *   pokedex.html EX "thunderbolt" → "255 species · page 1 of 10" (the
+ *   pokedex.html EX "thunderbolt" → "255 species · page 1 of 11" (the
  *   count line — the 255-record match of the palette's "thunderbolt"),
  *   first tile Rattata; "pikachu" → "1 species · page 1 of 1"; clearing
- *   restores "1025 species · page 1 of 37" (EX) / "386 species · page 1
- *   of 14" (Vanilla).
+ *   restores "1025 species · page 1 of 43" (EX) / "386 species · page 1
+ *   of 17" (Vanilla).
  *
  * Waiting is always on a DOM state (the count line, aria-activedescendant,
  * the anchor's bounding box) with a bounded timeout — no arbitrary sleeps;
@@ -1148,8 +1148,8 @@ test('pokedex.html (in-page regression): the dex filter runs on the shared ROGUE
     await page.fill('#dex-search', 'thunderbolt');
     await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('255'), null, { timeout: SETTLE_TIMEOUT_MS });
     const d1 = await dexState();
-    assert.equal(d1.line, '255 species \u00B7 page 1 of 10', 'the count line: the 255-record match paged at the 28-tile page size (data/site.json dex.pageSize; the same 255 the palette surfaces)');
-    assert.equal(d1.visible, 28, 'page 1 draws exactly 28 tiles');
+    assert.equal(d1.line, '255 species \u00B7 page 1 of 11', 'the count line: the 255-record match paged at the 24-tile page size (data/site.json dex.pageSize; the same 255 the palette surfaces)');
+    assert.equal(d1.visible, 24, 'page 1 draws exactly 24 tiles');
     assert.equal(d1.firstTile, 'Rattata', 'first grid tile in dex order: Rattata #19, the first TM-86 learner (data/pokedex.json learnset union)');
 
     // "pikachu" — the species NAME: exactly one record (its forms live in
@@ -1172,10 +1172,10 @@ test('pokedex.html (in-page regression): the dex filter runs on the shared ROGUE
     // shared count line
     await page.fill('#dex-search', '');
     await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('1025'), null, { timeout: SETTLE_TIMEOUT_MS });
-    assert.equal((await dexState()).line, '1025 species \u00B7 page 1 of 37', 'clearing restores all 1025 EX species (data/pokedex.json; ceil(1025 / 28) = 37 pages)');
+    assert.equal((await dexState()).line, '1025 species \u00B7 page 1 of 43', 'clearing restores all 1025 EX species (data/pokedex.json; ceil(1025 / 24) = 43 pages)');
     await page.click('.version-toggle__option[data-version="vanilla"]');
     await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('386'), null, { timeout: SETTLE_TIMEOUT_MS });
-    assert.equal((await dexState()).line, '386 species \u00B7 page 1 of 14', 'the Vanilla build re-scopes to the 386 shared species (ceil(386 / 28) = 14 pages)');
+    assert.equal((await dexState()).line, '386 species \u00B7 page 1 of 17', 'the Vanilla build re-scopes to the 386 shared species (ceil(386 / 24) = 17 pages)');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();

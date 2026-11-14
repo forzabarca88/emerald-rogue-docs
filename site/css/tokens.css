@@ -158,7 +158,7 @@
      pixelated; the sprites themselves are the one scoped references/
      exception documented in DESIGN.md §10).
      --------------------------------------------------------------------- */
-  --tile-sprite-size: 3rem; /* 48  pokedex overview-tile sprite */
+  --tile-sprite-size: 5rem; /* 80  pokedex overview-tile sprite — 5x the sprites' 16px pixel grid: an integer multiple, so image-rendering: pixelated scales it evenly (issue #98) */
   --sprite-size:      8rem; /* 128 pokedex species-detail sprite */
 
   /* ---------------------------------------------------------------------
