@@ -26664,7 +26664,7 @@
         "evos": [
           {
             "id": "annihilape",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -43922,7 +43922,7 @@
         "evos": [
           {
             "id": "lickilicky",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -46126,7 +46126,7 @@
         "evos": [
           {
             "id": "tangrowth",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -48624,7 +48624,7 @@
       "evo": {
         "prev": {
           "id": "mime_jr",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -69820,7 +69820,7 @@
       "evo": {
         "prev": {
           "id": "bonsly",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -71350,7 +71350,7 @@
         "evos": [
           {
             "id": "ambipom",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -72263,7 +72263,7 @@
         "evos": [
           {
             "id": "yanmega",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -75927,7 +75927,7 @@
         "evos": [
           {
             "id": "farigiraf",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -76920,11 +76920,11 @@
         "evos": [
           {
             "id": "dudunsparce",
-            "method": "Level up knowing Hyper Drill (two-segment form)"
+            "method": "Level up at 38"
           },
           {
             "id": "dudunsparce",
-            "method": "Level up knowing Hyper Drill (three-segment form)",
+            "method": "Level up at 38",
             "form": "Dudunsprce (Three Segment)"
           }
         ]
@@ -78968,7 +78968,7 @@
             "evos": [
               {
                 "id": "overqwil",
-                "method": "Level up at 30"
+                "method": "Level up at 38"
               }
             ]
           }
@@ -82216,7 +82216,7 @@
         "evos": [
           {
             "id": "mamoswine",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -142291,7 +142291,7 @@
       "evo": {
         "prev": {
           "id": "aipom",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -145007,7 +145007,7 @@
         "evos": [
           {
             "id": "sudowoodo",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -145188,7 +145188,7 @@
         "evos": [
           {
             "id": "mr_mime",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           },
           {
             "id": "mr_mime",
@@ -149895,7 +149895,7 @@
       "evo": {
         "prev": {
           "id": "lickitung",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -150331,7 +150331,7 @@
       "evo": {
         "prev": {
           "id": "tangela",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -151159,7 +151159,7 @@
       "evo": {
         "prev": {
           "id": "yanma",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -152012,7 +152012,7 @@
       "evo": {
         "prev": {
           "id": "piloswine",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -208406,7 +208406,7 @@
         "evos": [
           {
             "id": "tsareena",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -208555,7 +208555,7 @@
       "evo": {
         "prev": {
           "id": "steenee",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -216243,7 +216243,7 @@
         "evos": [
           {
             "id": "naganadel",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -216385,7 +216385,7 @@
       "evo": {
         "prev": {
           "id": "poipole",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -224268,7 +224268,7 @@
         "evos": [
           {
             "id": "grapploct",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -224412,7 +224412,7 @@
       "evo": {
         "prev": {
           "id": "clobbopus",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -235016,7 +235016,7 @@
       "evo": {
         "prev": {
           "id": "qwilfish",
-          "method": "Level up at 30",
+          "method": "Level up at 38",
           "form": "Hisuian Qwilfish (Hisuian)"
         }
       },
@@ -247931,7 +247931,7 @@
       "evo": {
         "prev": {
           "id": "primeape",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248329,7 +248329,7 @@
       "evo": {
         "prev": {
           "id": "girafarig",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248533,7 +248533,7 @@
       "evo": {
         "prev": {
           "id": "dunsparce",
-          "method": "Level up knowing Hyper Drill (two-segment form)"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248727,7 +248727,7 @@
           "evo": {
             "prev": {
               "id": "dunsparce",
-              "method": "Level up knowing Hyper Drill (two-segment form)"
+              "method": "Level up at 38"
             }
           }
         },
@@ -248757,7 +248757,7 @@
           "evo": {
             "prev": {
               "id": "dunsparce",
-              "method": "Level up knowing Hyper Drill (three-segment form)"
+              "method": "Level up at 38"
             }
           }
         }

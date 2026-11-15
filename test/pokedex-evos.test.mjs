@@ -346,20 +346,37 @@ test('ursaluna: prev is the Peat Block branch; the Bloodmoon form’s prev is th
  * level-up table the C's ModifyKnowMoveEvo reads).
  */
 
+// the branch to <target> carries the expected method (subset semantics —
+// the source record may have other branches, e.g. mime_jr's Galar Artefact
+// branch to the Galarian Mr. Mime form of the same mr_mime record, which
+// the know-move rewrite leaves untouched)
+function expectBranchMethod(record, build, target, method, label, form) {
+  const evo = evoOf(record, build);
+  // form undefined = the PLAIN target branch (a form branch to the same
+  // record carries its own `form` field, e.g. mime_jr's Galar Artefact ->
+  // Galarian Mr. Mime)
+  const branches = (evo.evos ?? []).filter((e) => e.id === target && e.form === (form ?? undefined));
+  assert.ok(branches.length >= 1, `${label}: no branch ${target}${form ? ` (form ${form})` : ''}`);
+  assert.ok(
+    branches.every((e) => e.method === method),
+    `${label}: expected all ${target} branches at "${method}", got ${JSON.stringify(branches.map((e) => e.method))}`,
+  );
+}
+
 test('know-move profile HIT: 15 EX branches are the level evo at max(38, profile level)', () => {
-  expectEvos(byId.get('primeape'), 'ex', 'annihilape', ['Level up at 38'], 'primeape ex (Rage Fist @35)');
-  expectEvos(byId.get('lickitung'), 'ex', 'lickilicky', ['Level up at 38'], 'lickitung ex (Rollout @6)');
-  expectEvos(byId.get('mime_jr'), 'ex', 'mr_mime', ['Level up at 38'], 'mime_jr ex (Mimic @32)');
-  expectEvos(byId.get('bonsly'), 'ex', 'sudowoodo', ['Level up at 38'], 'bonsly ex (Mimic @16)');
-  expectEvos(byId.get('aipom'), 'ex', 'ambipom', ['Level up at 38'], 'aipom ex (Double Hit @32)');
-  expectEvos(byId.get('yanma'), 'ex', 'yanmega', ['Level up at 38'], 'yanma ex (Ancient Power @33)');
-  expectEvos(byId.get('tangela'), 'ex', 'tangrowth', ['Level up at 38'], 'tangela ex (Ancient Power @24)');
-  expectEvos(byId.get('piloswine'), 'ex', 'mamoswine', ['Level up at 38'], 'piloswine ex (Ancient Power @1)');
-  expectEvos(byId.get('girafarig'), 'ex', 'farigiraf', ['Level up at 38'], 'girafarig ex (Twin Beam @32)');
+  expectBranchMethod(byId.get('primeape'), 'ex', 'annihilape', 'Level up at 38', 'primeape ex (Rage Fist @35)');
+  expectBranchMethod(byId.get('lickitung'), 'ex', 'lickilicky', 'Level up at 38', 'lickitung ex (Rollout @6)');
+  expectBranchMethod(byId.get('mime_jr'), 'ex', 'mr_mime', 'Level up at 38', 'mime_jr ex (Mimic @32)');
+  expectBranchMethod(byId.get('bonsly'), 'ex', 'sudowoodo', 'Level up at 38', 'bonsly ex (Mimic @16)');
+  expectBranchMethod(byId.get('aipom'), 'ex', 'ambipom', 'Level up at 38', 'aipom ex (Double Hit @32)');
+  expectBranchMethod(byId.get('yanma'), 'ex', 'yanmega', 'Level up at 38', 'yanma ex (Ancient Power @33)');
+  expectBranchMethod(byId.get('tangela'), 'ex', 'tangrowth', 'Level up at 38', 'tangela ex (Ancient Power @24)');
+  expectBranchMethod(byId.get('piloswine'), 'ex', 'mamoswine', 'Level up at 38', 'piloswine ex (Ancient Power @1)');
+  expectBranchMethod(byId.get('girafarig'), 'ex', 'farigiraf', 'Level up at 38', 'girafarig ex (Twin Beam @32)');
   expectFormEvos(byId.get('qwilfish'), 'Hisuian Qwilfish (Hisuian)', 'overqwil', ['Level up at 38'], 'qwilfish hisuian ex (Barb Barrage @28)');
-  expectEvos(byId.get('clobbopus'), 'ex', 'grapploct', ['Level up at 38'], 'clobbopus ex (Taunt @35)');
-  expectEvos(byId.get('steenee'), 'ex', 'tsareena', ['Level up at 38'], 'steenee ex (Stomp @28)');
-  expectEvos(byId.get('poipole'), 'ex', 'naganadel', ['Level up at 38'], 'poipole ex (Dragon Pulse @1)');
+  expectBranchMethod(byId.get('clobbopus'), 'ex', 'grapploct', 'Level up at 38', 'clobbopus ex (Taunt @35)');
+  expectBranchMethod(byId.get('steenee'), 'ex', 'tsareena', 'Level up at 38', 'steenee ex (Stomp @28)');
+  expectBranchMethod(byId.get('poipole'), 'ex', 'naganadel', 'Level up at 38', 'poipole ex (Dragon Pulse @1)');
   // dunsparce: the profile knows Hyper Drill @32 for BOTH segments, so both
   // branches are the level-38 rewrite (the C rewrites EVO_MOVE_TWO_SEGMENT /
   // EVO_MOVE_THREE_SEGMENT to EVO_LEVEL_TWO_SEGMENT / EVO_LEVEL_THREE_SEGMENT,

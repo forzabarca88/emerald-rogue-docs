@@ -80,6 +80,27 @@ export function parseItemValues(pp, where) {
   return out;
 }
 
+/**
+ * Full MOVE_ symbol -> value ("MOVE_ROLLOUT" -> 357), exactly as the C
+ * preprocessor resolves it: every `#define MOVE_X <expr>` in the branch's
+ * include/constants/moves.h that evaluates (aliases included — they
+ * evaluate to the same value the C would). The level-up profile check
+ * (ModifyKnowMoveEvo) compares the profile's move symbol against the evo's
+ * param, both as u16 move values — the profile JSON stores the C symbol,
+ * so the extractor must resolve it to the numeric value before comparing.
+ */
+export function parseMoveValues(pp, where) {
+  const out = new Map();
+  for (const line of pp.provider.fetch('include/constants/moves.h').split('\n')) {
+    const cm = /^\s*#define\s+(MOVE_[A-Z0-9_]+)\s+(.+?)\s*(\/\/*.*)?$/.exec(line);
+    if (!cm) continue;
+    let value;
+    try { value = pp.evalExpr(cm[2], `${where} ${cm[1]}`); } catch { continue; }
+    if (!out.has(cm[1])) out.set(cm[1], value);
+  }
+  return out;
+}
+
 // Per-branch resolved EVO_* constants. The two branches assign DIFFERENT
 // numbers to several methods (EVO_LEVEL 4 in both, but e.g. EVO_ITEM 27 in
 // EX vs 7 in Vanilla), so the constants come from each branch's own
@@ -140,7 +161,10 @@ export const makeEvoConsts = (branch, pp, where) => {
  * SPECIES_NONE value, species/item/nature value lookups,
  * GET_BASE_SPECIES_ID for the Rockruff/Cosmoem time-of-day exception,
  * and the species' level-up learnset profile (what ModifyKnowMoveEvo
- * reads via Rogue_GetPokemonProfile).
+ * reads via Rogue_GetPokemonProfile) as [MOVE VALUE, level] pairs —
+ * NUMERIC move values, because the C compares the profile's level-up
+ * move against evo.param as u16 == u16 (the profile JSON stores the C
+ * symbol "MOVE_X"; the extractor resolves it via parseMoveValues).
  *
  * The run-scoped "invalid evolution" check (L497-504) needs live run
  * state (Rogue_IsRunActive + Pokédex-variant membership) and can never
@@ -280,7 +304,8 @@ export function modifyEvolution(branch, ctx, speciesValue, evoIdx, evo) {
     // ModifyKnowMoveEvo (L354-376): the species' level-up list (the
     // "assume this was a tutor move" part — the profile's tutor list — is
     // never used by any evolution, so only the level-up loop is ported),
-    // then the EVO_MOVE fallback.
+    // then the EVO_MOVE fallback. levelUp is [MOVE VALUE, level] pairs
+    // (numeric — the C's u16 == u16 compare), resolved by the ctx.
     const levelUp = ctx.profileLevelUp(speciesValue);
     const knowMove = (fromMethod, toMethod) => {
       if (out.method !== fromMethod) return;
@@ -706,6 +731,7 @@ export function exEvoRosters({ provider, genTableTexts, baseDomain, profiles }) 
   // species/item/nature values, the SPECIES_NONE sentinel, and each
   // species' level-up list for the ModifyKnowMoveEvo profile check
   const itemValues = parseItemValues(exPp, 'evo roster items');
+  const moveValues = parseMoveValues(exPp, 'evo roster profile moves');
   const evoCtx = {
     evoConsts: makeEvoConsts('ex', exPp, 'evo roster constants'),
     none: resolveConst(exPp, 'SPECIES_NONE', 'SPECIES_NONE'),
@@ -714,11 +740,17 @@ export function exEvoRosters({ provider, genTableTexts, baseDomain, profiles }) 
     item: (tail) => itemValues.get(tail) ?? fail(`evo rosters: unknown item ${tail}`),
     nature: (tail) => resolveConst(exPp, `NATURE_${tail}`, `evo roster nature ${tail}`),
     profileLevelUp: (value) => {
-      // pokedex parity: record id first, then the family base id
-      const id = recordIdByValue.get(value);
-      if (!id || !recordsSet.has(id)) return null;
+      // C: gRoguePokemonProfiles is indexed by the RAW species value — a
+      // dex-less form with its own profile bakes its own list into its
+      // slot; without one the slot falls back to the family base's profile
+      // (pokedex parity: the first species.h holder owns the value)
+      const id = idsByValue.get(value)?.[0];
+      if (!id) return null;
       const pid = profiles.species.has(id) ? id : baseIdOf(id);
-      return profiles.levelUp.get(pid) ?? null;
+      const p = profiles.levelUp.get(pid);
+      // the profile JSON stores C move symbols; the C's ModifyKnowMoveEvo
+      // compares the resolved u16 value against evo.param
+      return p ? p.map(([sym, lvl]) => [moveValues.get(sym) ?? fail(`evo rosters: profile move ${sym} has no value in EX include/constants/moves.h`), lvl]) : null;
     },
   };
 

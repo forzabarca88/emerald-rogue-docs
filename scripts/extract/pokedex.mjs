@@ -81,7 +81,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { Preprocessor, seedDefines, collectEnums, resolveConst } from './preprocessor.mjs';
-import { makeEvoConsts, buildEvoDisplayList, parseEvoTuples, evoLinks, parseItemValues, EX_BUILD_SEEDS, VAN_BUILD_SEEDS, EX_CONSTANT_HEADERS } from './evolutions.mjs';
+import { makeEvoConsts, buildEvoDisplayList, parseEvoTuples, evoLinks, parseItemValues, parseMoveValues, EX_BUILD_SEEDS, VAN_BUILD_SEEDS, EX_CONSTANT_HEADERS } from './evolutions.mjs';
 import process from 'node:process';
 import { NON_SPECIES_DIRS, formSpriteManifest, parseSpriteTables } from './sprite-forms.mjs';
 import { fileURLToPath } from 'node:url';
@@ -1115,6 +1115,11 @@ function extract(repo) {
   };
   const exMoveByValue = parseMoveByValue(exPp, exMoveNames, 'EX moves');
   const vanMoveByValue = parseMoveByValue(vanPp, vanMoveNames, 'vanilla moves');
+  // C move symbol -> numeric value for the evolution profile check
+  // (ModifyKnowMoveEvo compares the profile's level-up move VALUE against
+  // evo.param, u16 == u16 — the profile JSON stores the C symbol)
+  const exProfileMoveValues = parseMoveValues(exPp, 'EX evo profile moves');
+  const vanProfileMoveValues = parseMoveValues(vanPp, 'vanilla evo profile moves');
 
   // value -> title maps for list fields, so entries can carry expression
   // macros (e.g. `.types = { TOGEPI_FAMILY_TYPE, TOGEPI_FAMILY_TYPE }`)
@@ -2120,11 +2125,17 @@ function extract(repo) {
     item: (tail) => exItemValues.get(tail) ?? fail(`EX evo: unknown item ${tail}`),
     nature: (tail) => resolveConst(exPp, `NATURE_${tail}`, `EX nature ${tail}`),
     profileLevelUp: (value) => {
-      const id = exCtx.recordIdByValue.get(value) ?? exCtx.byValue.get(value);
-      const entry = id ? exEntries.get(id) : null;
+      // C: gRoguePokemonProfiles is indexed by the RAW species value — a
+      // dex-less form with its own profile JSON bakes its own level-up
+      // list into its own slot (no profile file carries BuildSettings,
+      // so every form REPLACES the base's list); a form without a profile
+      // file falls back to the family base's profile (ParseProfile)
+      const id = exCtx.byValue.get(value) ?? exCtx.recordIdByValue.get(value);
+      const entry = id ? (exEntries.get(id) ?? exNoDexMap.get(id)) : null;
       const pid = entry ? (profile('ex', entry.id) ? entry.id : entry.baseId) : null;
       const p = pid ? profile('ex', pid) : null;
-      return p ? p.levelUp : null;
+      // the C compares u16 move VALUES — resolve the profile's C symbols
+      return p ? p.levelUp.map(([sym, lvl]) => [exProfileMoveValues.get(sym) ?? fail(`EX evo profile ${p.file}: move ${sym} has no value in EX include/constants/moves.h`), lvl]) : null;
     },
   };
   const vanEvoCtx = {
@@ -2137,7 +2148,8 @@ function extract(repo) {
     profileLevelUp: (value) => {
       const id = vanRecordIdByValue.get(value);
       const p = id ? profile('vanilla', id) : null;
-      return p ? p.levelUp : null;
+      // the C compares u16 move VALUES — resolve the profile's C symbols
+      return p ? p.levelUp.map(([sym, lvl]) => [vanProfileMoveValues.get(sym) ?? fail(`vanilla evo profile ${p.file}: move ${sym} has no value in vanilla include/constants/moves.h`), lvl]) : null;
     },
   };
 
