@@ -245,8 +245,11 @@
 
 /* --- Section nav (the in-page section strip) ------------------------------
    The shared sticky chip strip that navigates WITHIN a page (issue #98):
-   one a.chip anchor per page section, emitted by ROGUE.sectionNav
-   (site/js/render.js). It pins under the sticky site header while the
+   one chip per section — an a.chip anchor by default, or a
+   button.chip[data-target] action chip for hash-routed pages whose
+   contract forbids hash writes (reopened #98 — the pokedex species
+   detail), emitted by ROGUE.sectionNav (site/js/render.js). It pins
+   under the sticky site header while the
    page scrolls, so the sections are one click away at any scroll
    position. The top offset reads --site-header-h — the #site-header's
    measured rendered height, published on <html> by site/js/nav.js at
@@ -281,6 +284,22 @@
 }
 
 .section-nav a:hover {
+  color: var(--color-emerald);
+  border-color: var(--color-emerald);
+}
+
+/* The action-chip variant (reopened #98 — the pokedex species detail's
+   strip): a <button type="button" class="chip" data-target> instead of
+   an <a> — the strip never writes the URL hash (the detail's contract
+   is #rec-pokedex-<id>); the jump is the caller's delegated
+   scrollIntoView. The .chip class already carries the whole look
+   (box, type, spacing); buttons only need the link-like cursor and
+   the mirrored hover (the global :focus-visible rule covers focus). */
+.section-nav button.chip {
+  cursor: pointer;
+}
+
+.section-nav button.chip:hover {
   color: var(--color-emerald);
   border-color: var(--color-emerald);
 }

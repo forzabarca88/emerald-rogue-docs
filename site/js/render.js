@@ -189,14 +189,23 @@
   };
 
   /** The shared sticky in-page section strip (issue #98): one a.chip anchor
-   *  per item. `items` = [{id, label, count?, anchor?}] — each chip links to
-   *  `#<anchor>` (defaulting to `#<id>`), and a present `count` appends a mono
-   *  .section-nav__count span carrying data-count="<id>" (the quests page's
-   *  live count updates key on that attribute, which is why `id` is the
-   *  logical key while `anchor` may differ — the quest group divs are
-   *  id'd `quest-<group>`). `label` becomes the nav's aria-label. The
-   *  sticky/pinned styling is the contract .section-nav rule in
-   *  components.css — pages pass only their chips. */
+   *  per item. `items` = [{id, label, count?, anchor?, target?}] — each chip
+   *  links to `#<anchor>` (defaulting to `#<id>`), and a present `count`
+   *  appends a mono .section-nav__count span carrying data-count="<id>" (the
+   *  quests page's live count updates key on that attribute, which is why
+   *  `id` is the logical key while `anchor` may differ — the quest group
+   *  divs are id'd `quest-<group>`). An item carrying a string `target`
+   *  instead emits a `<button type="button" class="chip"
+   *  data-target="<target>">` action chip (no anchor): an in-page jump the
+   *  caller executes through its own delegated click listener (reopened
+   *  #98 — the pokedex species detail's strip). The `<button>` makes the
+   *  hash contract unbreakable by construction (a chip click can never
+   *  write the URL — sacred on hash-routed views, where any non-record hash
+   *  would drop the page back to the overview), keeps the chip natively
+   *  keyboard-activatable, and matches the .dex-filter__btn house pattern.
+   *  `label` becomes the nav's aria-label. The sticky/pinned styling is the
+   *  contract .section-nav rule in components.css — pages pass only their
+   *  chips. */
   ROGUE.sectionNav = function (items, label) {
     if (!Array.isArray(items) || !items.length) return '';
     return (
@@ -213,6 +222,16 @@
                 '">' +
                 ROGUE.esc(String(item.count)) +
                 '</span>';
+          if (typeof item.target === 'string' && item.target) {
+            return (
+              '<button type="button" class="chip" data-target="' +
+              ROGUE.esc(item.target) +
+              '">' +
+              ROGUE.esc(item.label) +
+              count +
+              '</button>'
+            );
+          }
           return (
             '<a class="chip" href="#' +
             ROGUE.esc(item.anchor || item.id) +
