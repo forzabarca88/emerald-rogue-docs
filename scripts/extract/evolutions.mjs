@@ -420,11 +420,16 @@ export function modifyEvolution(branch, ctx, speciesValue, evoIdx, evo) {
 
 /**
  * The in-game evolution display list for one entry: run every raw tuple
- * through modifyEvolution, drop the SPECIES_NONE targets and the 0xfffe
- * sentinels (EVO_NONE — "not an actual evolution"), and cap at 8
- * (GetEvolutionName only shows displayCount < 8).
+ * through modifyEvolution and drop the SPECIES_NONE targets and the 0xfffe
+ * sentinels (EVO_NONE — "not an actual evolution").
+ *
+ * The in-game display (DisplayMonEvosText) is SCROLLABLE: its
+ * `displayCount < 8` bounds LINES PER SCREEN (each entry up to 2 lines,
+ * paged by listScrollAmount), so every survivor is shown — this returns
+ * ALL of them and hard-fails if a species ever exceeds 8 survivors
+ * (today's max is Eevee's 8), so a future divergence can never be silent.
  */
-export function buildEvoDisplayList(branch, ctx, speciesValue, rawList) {
+export function buildEvoDisplayList(branch, ctx, speciesValue, rawList, label) {
   // GetMaxEvolutionCount: the loop never runs on an empty table, so the
   // per-species overrides can't fire for it either
   if (rawList.length === 0) return [];
@@ -433,8 +438,9 @@ export function buildEvoDisplayList(branch, ctx, speciesValue, rawList) {
     const evo = modifyEvolution(branch, ctx, speciesValue, i, rawList[i]);
     if (evo.target === ctx.none || evo.method === 0xfffe) continue;
     survivors.push(evo);
-    if (survivors.length >= 8) break;
   }
+  if (survivors.length > 8)
+    fail(`${label ?? `species ${speciesValue}`}: ${survivors.length} surviving evolutions exceed 8 — the in-game list is scrollable; review the port against DisplayMonEvosText before extending it`);
   return survivors;
 }
 
@@ -767,7 +773,7 @@ export function exEvoRosters({ provider, genTableTexts, baseDomain, profiles }) 
       ? [{ method: 0xfffe, param: 0, target: resolveConst(exPp, 'SPECIES_MELMETAL', 'SPECIES_MELMETAL') }]
       : evoTuplesOfBody(exPp, expandedBodies.get(id), `evo roster ${id}`, 0xffff);
     const list = [];
-    for (const evo of buildEvoDisplayList('ex', evoCtx, value, raw)) {
+    for (const evo of buildEvoDisplayList('ex', evoCtx, value, raw, id)) {
       const target = recordIdByValue.get(evo.target);
       if (!target) fail(`evo rosters: ${id} evolution target value ${evo.target} is not a record`);
       list.push({ id: target, method: evo.method, target: evo.target });

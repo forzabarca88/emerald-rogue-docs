@@ -174,10 +174,18 @@ function titleIfUpper(s) {
 /** UPPERCASE Vanilla item names → Title case for display, with the acronym
  *  guard: a ≤2-char all-caps word stays uppercase only when it OPENS the
  *  name ("PP UP" → "PP Up", "X ATTACK" → "X Attack"). Mixed-case words
- *  (the "POKé" ball) pass through untouched. */
+ *  (the "POKé" ball) pass through untouched. Hyphenated all-caps words
+ *  title-case each part ("UP-GRADE" → "Up-Grade"), and initials words
+ *  ("S.S. TICKET" → "S.S. Ticket") stay fully uppercase. */
 function titleItemName(s) {
   return s.split(' ').map((w, i) => {
     if (!(w === w.toUpperCase() && /[A-Z]/.test(w))) return w;
+    if (w.includes('-')) {
+      // title-case every part — the ≤2-char opener guard does not apply
+      // inside a hyphenated word ("UP-GRADE" → "Up-Grade", not "UP-Grade")
+      return w.split('-').map((part) => (part === '' ? part : part.charAt(0) + part.slice(1).toLowerCase())).join('-');
+    }
+    if (/^[A-Z.]+$/.test(w) && w.includes('.')) return w; // initials
     if (i === 0 && w.length <= 2) return w;
     return w.charAt(0) + w.slice(1).toLowerCase();
   }).join(' ');
@@ -2154,15 +2162,17 @@ function extract(repo) {
   };
 
   // The post-rewrite display lists, keyed by entry/record id: the
-  // { id, method, target } of every surviving branch (in table order, capped
-  // at 8 like the in-game display). `target` (the species value) is kept for
-  // the prev computation; it is dropped from the emitted shape.
+  // { id, method, target } of every surviving branch, in table order. The
+  // in-game display is scrollable (see buildEvoDisplayList), so there is no
+  // cap here — the extractor hard-fails if a species ever exceeds 8
+  // survivors (today's max is Eevee's 8). `target` (the species value) is
+  // kept for the prev computation; it is dropped from the emitted shape.
   const exEvoPost = (() => {
     const out = new Map();
     for (const entry of allExEntries) {
       const raw = entry.id === 'meltan' ? meltanEvoRaw : (exEvoRaw.get(entry.id) ?? []);
       const list = [];
-      for (const evo of buildEvoDisplayList('ex', exEvoCtx, entry.value, raw)) {
+      for (const evo of buildEvoDisplayList('ex', exEvoCtx, entry.value, raw, entry.id)) {
         const h = humanizeEvolution(evo.method, evo.param, evo.target, exEvoMethods, `EX evolution for ${entry.id}`, exCtx);
         if (!exEntries.has(h.target)) fail(`EX evolution for ${entry.id}: target ${h.target} is not a record`);
         list.push({ id: h.target, method: h.method, target: evo.target });
@@ -2175,7 +2185,7 @@ function extract(repo) {
     const out = new Map();
     for (const [vanId, raw] of vanEvoRaw) {
       const list = [];
-      for (const evo of buildEvoDisplayList('vanilla', vanEvoCtx, vanSpecies.idByValue.get(vanId), raw)) {
+      for (const evo of buildEvoDisplayList('vanilla', vanEvoCtx, vanSpecies.idByValue.get(vanId), raw, vanId)) {
         const h = humanizeEvolution(evo.method, evo.param, evo.target, vanEvoMethods, `vanilla evolution for ${vanId}`, vanEvoHumanizeCtx);
         if (!vanBaseStats.has(h.target)) fail(`vanilla evolution for ${vanId}: target ${h.target} has no base stats`);
         list.push({ id: h.target, method: h.method, target: evo.target });
@@ -2623,9 +2633,21 @@ function buildDoc({ records, counts, catalog, typeChart }) {
           'height/weight pre-formatted for display (dm/hg ÷ 10)',
           'description is null when a build has no Pokédex text (one case: Minior)',
           'evo.evos = the branches the in-game Pokédex shows (the raw table rewritten by Rogue_ModifyEvolution — friendship evos become level 30, trades become Link Cable items, and per-species overrides rewrite the rest); evo.prev = the lowest-dex-number record whose evo.evos target this species',
+          'know-move evos are checked against the species\' level-up profile (ModifyKnowMoveEvo): the branch becomes a level evo at max(38, the profile\'s level for that move) when the profile knows it — only a profile that LACKS the move takes the level-30 fallback, and only for plain EVO_MOVE',
+          'out of scope — Revised Mode: with the range-revision-mode setting active, GetBaseEvolution reads the per-species _revised profile evos instead of the species table (the site documents the default state)',
+          'out of scope — a run\'s restricted Pokédex variant blanks out-of-variant evo targets mid-run (the "invalid evo" check; it cannot fire in the documented out-of-run state)',
+          'out of scope — the Everstone evo curse blanks a mon\'s evos mid-run (Rogue_ModifyEvolution_ApplyCurses, applied by DisplayMonEvosText after each rewrite)',
+          'two/three-segment know-move evos whose profile LACKS the move keep their raw method — the in-game display switch has no case for them and falls to the TODO placeholder ("EVO TEXT TODO"); the site documents the intended method instead (both dunsparce branches know Hyper Drill, so they display as level evos)',
           'X_MISC_INFO family stat blocks are expanded — values shown are final',
         ],
-        source: 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/rogue_baked.c @vanilla; src/rogue_baked.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla',
+        source:
+          'src/rogue_pokedex.c @vanilla L1877, L1884-2014 (DisplayMonEvosText: applies the evo curses, the method display switch + the TODO placeholder) (identical @origin/expansion); '
+          + 'src/rogue_baked.c @vanilla L348-376 (ModifyKnowMoveEvo: the level-up profile\'s move VALUE == evo param, u16) (identical @origin/expansion); '
+          + 'src/rogue_baked.c @vanilla L296-306 (GetBaseEvolution: Revised Mode swaps in the _revised profile evos) (identical @origin/expansion); '
+          + 'src/rogue_baked.c @vanilla L512-520 (the "invalid evo" check: a run\'s restricted dex variant blanks out-of-variant targets) (identical @origin/expansion); '
+          + 'src/rogue_baked.c @vanilla L732-749 (Rogue_ModifyEvolution_ApplyCurses: the Everstone evo curse) (identical @origin/expansion); '
+          + 'src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; '
+          + 'src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla; data/settings.json (site data)',
       },
       {
         id: 'moves',
