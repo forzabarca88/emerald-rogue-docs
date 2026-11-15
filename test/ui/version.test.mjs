@@ -608,7 +608,7 @@ test('config.html: the 7 EX-only settings disappear under Vanilla (19 → 12 tog
   }
 });
 
-test('pokedex.html: the count line flips EX → Vanilla (1025/37 → 386/14) and an EX-only selection closes to the overview under Vanilla, reopening on the round-trip', async (t) => {
+test('pokedex.html: the count line flips EX → Vanilla (1025/43 → 386/17) and an EX-only selection closes to the overview under Vanilla, reopening on the round-trip', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html' });
   try {

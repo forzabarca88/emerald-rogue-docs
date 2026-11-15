@@ -61,8 +61,35 @@
  *      mono label (arrow + "Prev"/"Next" + #NNN, the trailing arrow on
  *      the next side) + the display-face name span — the 360px
  *      ellipsis point, full name in the link's title; the missing side
- *      at a list end renders as an empty slot), the
- *      seven stat rows with value bars (width = value/255 capped, BST
+ *      at a list end renders as an empty slot), the detail's OWN
+ *      .section-nav strip (reopened #98 — "Pokedex requires excessive
+ *      scrolling through Pokemon's moves to see their forms": every
+ *      section must be one chip away without scrolling) — one action
+ *      chip (button.chip[data-target="dex-f-…"] via ROGUE.sectionNav's
+ *      `target` item, NO anchors) per PRESENT section in body order —
+ *      Base stats, Abilities, Evolutions (when the evo field renders),
+ *      Forms (when the record has forms), Moves, Included in, Ride
+ *      (when the record has ride), Notes (when the record has notes) —
+ *      built from the same computed values the body renders, so a chip
+ *      never points at an absent field. The jump is bindDetailNav's
+ *      ONE delegated click listener: getElementById(target).
+ *      scrollIntoView() with NO behavior argument (the CSS-gated
+ *      motion) and NO hash write (the detail's hash stays
+ *      #rec-pokedex-<id>). The strip is a child of the article (sticky
+ *      across the whole detail, Mew's 292-row move list included),
+ *      pinned under the site header (the base `top:
+ *      var(--site-header-h)` — the --dex-scroll-clear override is
+ *      scoped to #dex-overview .section-nav), and its measured
+ *      clearance (header + the strip's offsetHeight + 16px —
+ *      setBrowseTop) publishes --dex-detail-clear: the scroll-margin
+ *      of each dex-f-* field (the .dex-species__field divs + the
+ *      .dex-moves box — the dex-f-* ids are JS-only jump targets,
+ *      never hash anchors). The deep-link target is the ARTICLE
+ *      itself — pages.css gives it the measured header-only scroll
+ *      margin (the old 112px rule sat inert on the wrapping
+ *      <section>, where it could never apply — absorbed: the detail
+ *      now opens with its sprite visible under the sticky header),
+ *      the seven stat rows with value bars (width = value/255 capped, BST
  *      row last), the meta rows (catch rate / height / weight / gender
  *      / egg groups / base EXP), the Pokédex text, the abilities
  *      (issue #99 — one .dex-ability block each: the display-face name +
@@ -73,12 +100,10 @@
  *      trade-off), the .dex-evo evolution line (prev / current / next —
  *      the neighbors are hash links with mono method captions, the
  *      "easy to navigate" requirement; a target missing from the active
- *      build renders as a plain non-link cell), the three move groups
- *      (issue #99 — one contract .table each: Move — name + the mono
- *      `Lv n` level tag (Level Up only; level 0 → `(Evo)`) —, the Type
- *      chip, the mono Pow / Acc / PP, the in-game effect; cells the
- *      active build's catalog lacks render "—"), the structured forms section
- *      (issue #85 — one .dex-form block per form: the form’s sprite
+ *      build renders as a plain non-link cell), the structured forms
+ *      section ABOVE the move groups (reopened #98 — the owner had to
+ *      scroll through up to 292 move rows to see their forms; issue
+ *      #85 — one .dex-form block per form: the form’s sprite
  *      (a .dex-form__sprite img — the form’s own <formEntryId>.png
  *      via its `sprite` field, the base record’s sprite as the
  *      fallback for the no-art forms, a bound onerror handler hides
@@ -87,7 +112,11 @@
  *      .dex-stats box, BST row last), its abilities, its
  *      height/weight in the base meta’s mono treatment, its Pokédex
  *      text; a name-only custom form with no species entry is a
- *      plain sprite+name row), the “Included in”
+ *      plain sprite+name row), the three move groups (issue #99 — one
+ *      contract .table each: Move — name + the mono `Lv n` level tag
+ *      (Level Up only; level 0 → `(Evo)`) —, the Type chip, the mono
+ *      Pow / Acc / PP, the in-game effect; cells the active build's
+ *      catalog lacks render "—"), the “Included in"
  *      dex-variant chips (a single "All N variants" chip for the
  *      dexVariants: "all" shorthand, N from the settings.json
  *      range-pokedex-variant record's optionsByVersion length), the
@@ -98,7 +127,10 @@
  * overview hides, the detail shows and scrolls into view); any other
  * hash — including the empty one and #dex-overview itself — returns to
  * the overview. A deep link that arrives on load is honoured by the
- * first render (the hashchange listener covers later changes).
+ * first render (the hashchange listener covers later changes). The
+ * detail's section strip never writes the hash (its chips are
+ * buttons; the delegated jump is scroll-only) — the contract above is
+ * unbreakable by construction.
  *
  * Version semantics: the record's top-level fields are the EX variant;
  * `vanilla` holds ONLY the differing fields, so the active version's
@@ -1512,7 +1544,9 @@
       var rows = evoRowsHtml(evo);
       if (!rows) return '';
       var current = '<span class="dex-evo__cell dex-evo__cell--current"><span class="dex-evo__name">' + ROGUE.esc(dexVariant(record, 'name')) + '</span></span>';
-      return '<div class="dex-species__field"><span class="field-label">Evolutions</span><div class="dex-evo">' + current + rows + '</div></div>';
+      /* id="dex-f-evos" — the detail strip's Evolutions chip jump
+       * target (JS-only, never a hash anchor) */
+      return '<div class="dex-species__field" id="dex-f-evos"><span class="field-label">Evolutions</span><div class="dex-evo">' + current + rows + '</div></div>';
     }
 
     /* The abilities field (issue #99): one .dex-ability block per
@@ -1566,6 +1600,9 @@
         effect: entry && entry.effect ? entry.effect : '\u2014'
       };
     }
+    /* The .dex-moves box carries id="dex-f-moves": the detail strip's
+     * Moves chip jump target (the dex-f-* ids are JS-only —
+     * getElementById + scrollIntoView, never hash anchors). */
     function movesHtml(moves) {
       var m = moves && typeof moves === 'object' ? moves : {};
       var levelUpRows = (Array.isArray(m.levelUp) ? m.levelUp : []).map(function (p) {
@@ -1578,7 +1615,7 @@
         return rows.length ? ROGUE.table(rows, MOVE_COLUMNS) : '<span class="dex-moves__none">\u2014</span>';
       };
       return (
-        '<div class="dex-moves">' +
+        '<div class="dex-moves" id="dex-f-moves">' +
         '<div class="dex-moves__group"><span class="field-label">Level Up</span>' +
         groupTable(levelUpRows) +
         '</div>' +
@@ -1596,8 +1633,19 @@
       );
     }
 
-    function fieldBlock(label, inner) {
-      return '<div class="dex-species__field"><span class="field-label">' + label + '</span>' + inner + '</div>';
+    /* One detail field block. The optional third `id` is the detail
+     * strip's jump target (the dex-f-* ids — JS-only, never hash
+     * anchors). */
+    function fieldBlock(label, inner, id) {
+      return (
+        '<div class="dex-species__field"' +
+        (id ? ' id="' + id + '"' : '') +
+        '><span class="field-label">' +
+        label +
+        '</span>' +
+        inner +
+        '</div>'
+      );
     }
 
     /**
@@ -1788,31 +1836,64 @@
        * back to the grid or the page top. */
       html += dexNavHtml(record);
 
+      /* The detail's OWN .section-nav strip (reopened #98 — the owner
+       * had to scroll through up to 292 move rows to see a species'
+       * forms): one action chip (button.chip[data-target="dex-f-…"] —
+       * ROGUE.sectionNav's `target` item, NO anchors) per PRESENT
+       * section, in body order, built from the same computed values
+       * the body below renders (the guards mirror the render guards,
+       * so a chip never points at an absent field). The jump is
+       * bindDetailNav's ONE delegated click listener (scrollIntoView,
+       * no behavior arg — the CSS-gated motion) — the hash is NEVER
+       * written (the detail's hash contract is #rec-pokedex-<id>; any
+       * other hash would drop back to the overview). A child of the
+       * article → sticky across the whole detail. */
+      var evoField = evoHtml(record);
+      var detailNavItems = [
+        { id: 'dex-f-stats', label: 'Base stats', target: 'dex-f-stats' },
+        { id: 'dex-f-abilities', label: 'Abilities', target: 'dex-f-abilities' }
+      ];
+      if (evoField) detailNavItems.push({ id: 'dex-f-evos', label: 'Evolutions', target: 'dex-f-evos' });
+      if (forms.length) detailNavItems.push({ id: 'dex-f-forms', label: 'Forms', target: 'dex-f-forms' });
+      detailNavItems.push(
+        { id: 'dex-f-moves', label: 'Moves', target: 'dex-f-moves' },
+        { id: 'dex-f-variants', label: 'Included in', target: 'dex-f-variants' }
+      );
+      if (ride.length) detailNavItems.push({ id: 'dex-f-ride', label: 'Ride', target: 'dex-f-ride' });
+      if (notes.length) detailNavItems.push({ id: 'dex-f-notes', label: 'Notes', target: 'dex-f-notes' });
+      html += ROGUE.sectionNav(detailNavItems, 'Species page sections');
+
       html += '<div class="dex-species__body">';
-      html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>');
+      html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>', 'dex-f-stats');
       /* the issue-#100 stat radar (PR 4b) — under the stat bars, per
        * the plan: the 6-axis spider of this entry's (version-scoped)
        * stats, with the native compare select (default "None") */
       html += radarHtml(record);
       html += fieldBlock('Details', '<div class="dex-meta">' + metaHtml(record) + '</div>');
       if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
-      html += fieldBlock('Abilities', abilitiesHtml(abilities));
-      html += evoHtml(record);
+      html += fieldBlock('Abilities', abilitiesHtml(abilities), 'dex-f-abilities');
+      html += evoField;
+      /* the structured forms field sits ABOVE the move groups
+       * (reopened #98 — seeing the forms must not require scrolling
+       * through the move tables); id="dex-f-forms" serves the strip's
+       * Forms chip */
+      if (forms.length) html += fieldBlock('Forms', formsHtml(forms, record), 'dex-f-forms');
       html += movesHtml(moves);
-      if (forms.length) html += fieldBlock('Forms', formsHtml(forms, record));
       html += fieldBlock(
         'Included in',
         variants === 'all'
           ? '<div class="chip-row">' + ROGUE.chip(variantCount() ? 'All ' + variantCount() + ' variants' : 'All variants') + '</div>'
-          : '<div class="chip-row">' + (Array.isArray(variants) ? variants : []).map(ROGUE.chip).join('') + '</div>'
+          : '<div class="chip-row">' + (Array.isArray(variants) ? variants : []).map(ROGUE.chip).join('') + '</div>',
+        'dex-f-variants'
       );
-      if (ride.length) html += fieldBlock('Ride', '<div class="chip-row">' + ride.map(ROGUE.chip).join('') + '</div>');
+      if (ride.length) html += fieldBlock('Ride', '<div class="chip-row">' + ride.map(ROGUE.chip).join('') + '</div>', 'dex-f-ride');
       if (notes.length) {
         html += fieldBlock(
           'Notes',
           '<ul class="dex-notes">' + notes.map(function (n) {
             return '<li>' + ROGUE.esc(n) + '</li>';
-          }).join('') + '</ul>'
+          }).join('') + '</ul>',
+          'dex-f-notes'
         );
       }
       if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
@@ -1846,6 +1927,15 @@
       if (selected) html += speciesSection(selected);
 
       main.innerHTML = html;
+      /* measure the sticky offsets BEFORE anything scrolls: a
+       * load-time deep link's panel.scrollIntoView() below must see
+       * the measured clearances (the pre-measurement CSS fallbacks
+       * err lower — the deep link would land tucked under the header
+       * on the first render otherwise). Every render re-measures so
+       * the values track the bar / strips as the detail opens and
+       * closes — a hidden bar or strip has offsetHeight 0 and its
+       * guard keeps the last visible value. */
+      setBrowseTop();
       bindToolbar();
       /* The issue-#100 visualisations (PR 4b): the typechart renders
        * with the overview on every render (hidden — but present —
@@ -1853,6 +1943,7 @@
        * the radar exists only while a detail is open. */
       bindTypechart();
       if (selected) bindRadar(selected);
+      if (selected) bindDetailNav();
       /* The browse end state stays fresh even while the detail is open
        * (the overview is hidden, not unrendered) — returning to it shows
        * the current count line and grid page immediately. */
@@ -1880,10 +1971,6 @@
       } else {
         disposeViewer();
       }
-      /* keep the sticky bar's measurements fresh on every render —
-       * the bar exists again once the detail closes (hidden while it is
-       * open, so setBrowseTop's guard skips that render) */
-      setBrowseTop();
     }
 
     /** The live end state of the overview: grid tiles, count line, empty
@@ -2039,8 +2126,18 @@
      * or hidden (the detail view hides the whole overview — a
      * display:none bar has offsetHeight 0): the value is then left at
      * its last visible measurement (or the CSS fallback, before the
-     * first overview render). #dex-species keeps a header-only
-     * clearance — the bar is hidden while the detail is open.
+     * first overview render). The detail's own strip (reopened #98)
+     * adds
+     * --dex-detail-clear = header + the detail strip's rendered
+     * offsetHeight + 16px — the scroll-margin-top the detail's dex-f-*
+     * fields use so the strip's action chips land BELOW the pinned
+     * detail strip. Measured while the detail is open (the last
+     * visible value persists while it is closed — the variable is only
+     * read in the detail context); the detail's deep-link target (the
+     * .dex-species article) keeps a header-only clearance — the bar
+     * and the overview strip are hidden while the detail is open, and
+     * the detail strip itself sits inside the article, below its top
+     * edge.
      */
     function setBrowseTop() {
       var main = document.querySelector('main');
@@ -2061,6 +2158,44 @@
           main.style.setProperty('--dex-section-clear', (top + bar.offsetHeight + strip.offsetHeight + 16) + 'px');
         }
       }
+      /* the detail's own strip (reopened #98) — visible exactly when
+       * the detail is open (the mirror of the bar's guard): its
+       * measured clearance is the scroll target of the strip's action
+       * chips (the dex-f-* fields must land BELOW the pinned strip).
+       * The last visible value persists while the detail is closed —
+       * the variable is only read in the detail context. */
+      var detailStrip = document.querySelector('#dex-species .section-nav');
+      if (detailStrip && detailStrip.offsetParent !== null) {
+        main.style.setProperty('--dex-detail-clear', (top + detailStrip.offsetHeight + 16) + 'px');
+      }
+    }
+
+    /* The detail's section strip (reopened #98): ONE delegated click
+     * listener on the strip (a fresh element per render — the house
+     * pattern of bindRadar / bindTypechart). The chips are the
+     * ROGUE.sectionNav `target` action chips (button.chip[data-target]
+     * — NO anchors), so the jump is getElementById(target).
+     * scrollIntoView() with NO behavior argument: the site's
+     * scroll-behavior is CSS-gated (base.css — smooth under
+     * no-preference, forced auto under reduce), the jump is
+     * reduced-motion-safe by construction, and the URL hash is NEVER
+     * written (the detail's contract is #rec-pokedex-<id>; any other
+     * hash would drop the page back to the overview). */
+    function bindDetailNav() {
+      var strip = document.querySelector('#dex-species .section-nav');
+      if (!strip) return;
+      strip.addEventListener('click', function (e) {
+        var t = e.target;
+        var target = t && t.getAttribute ? t.getAttribute('data-target') : null;
+        /* a click on a child of the chip (e.g. a count span, if one
+         * were ever added) walks up one level to it */
+        if (!target && t && t.parentNode && t.parentNode.getAttribute) {
+          target = t.parentNode.getAttribute('data-target');
+        }
+        if (!target) return;
+        var el = document.getElementById(target);
+        if (el) el.scrollIntoView();
+      });
     }
 
     state.selection = hashSelection();

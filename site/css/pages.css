@@ -2033,7 +2033,13 @@
    layer), name, badge + #NNN chip, types, category, the .dex-nav
    prev/next strip (issue #86 — the neighbours in the active version's
    full dex order, two-sided; the name span is the 360px ellipsis
-   point), the stat bars (.dex-stat: label + track + emerald fill, width =
+   point), the detail's own .section-nav strip (reopened #98 — one
+   button.chip[data-target="dex-f-…"] action chip per present section
+   in body order, jumped by a delegated scrollIntoView that never
+   writes the hash; pinned at the contract base top, the measured
+   --site-header-h — see the #dex-overview-scoped override below; its
+   measured clearance is --dex-detail-clear, the scroll-margin of the
+   dex-f-* fields), the stat bars (.dex-stat: label + track + emerald fill, width =
    value/255 capped, BST row last), the meta rows, the Pokédex text,
    the abilities (issue #99 — one .dex-ability block each: the
    display-face name + the in-game description from the active
@@ -2041,17 +2047,18 @@
    name-only block when the build's catalog has no entry, never a
    fake dash), the .dex-evo line (neighbors as hash links with mono
    method captions; --absent for a species the active build lacks),
-   the three move groups (issue #99 — the contract .table per group:
-   Move — name + the mono `Lv n` level tag, level 0 → `(Evo)` —,
-   the Type chip, the mono Pow/Acc/PP, the in-game effect), the
-   structured forms section (issue #85 —
+   the structured forms section ABOVE the move groups (reopened #98 —
+   the forms must not hide behind up to 292 move rows; issue #85 —
    one .dex-form block per form: the form’s sprite (.dex-form__sprite
    at the tile token — its own <formEntryId>.png via the data’s
    form.sprite field, the base record’s sprite as the fallback for
    the no-art forms), the display-face name, the form’s type chips,
    its stat rows, abilities, height/weight and Pokédex text;
    --plain is the box-less sprite+name row for a name-only custom
-   form), “Included in” / ride chips, notes and the .card__source
+   form), the three move groups (issue #99 — the contract .table per
+   group: Move — name + the mono `Lv n` level tag, level 0 → `(Evo)`
+   —, the Type chip, the mono Pow/Acc/PP, the in-game effect),
+   “Included in” / ride chips, notes and the .card__source
    citation. All rules scoped under .page--pokedex. */
 
 .page--pokedex .page-fallback {
@@ -2080,15 +2087,35 @@
    (setBrowseTop) and published on <main> as --dex-section-clear
    (header + the bar's offsetHeight + the strip's offsetHeight + a
    16px margin) — never hardcoded here; the 360px fallback only
-   applies before the first measurement. #dex-species keeps the
-   header-only 112px: the detail REPLACES the overview, so the bar and
-   the strip are hidden while it is open. */
+   applies before the first measurement.
+   The detail's deep-link target is the ARTICLE (render() scrolls
+   #rec-pokedex-<id> into view — the id lives on the .dex-species
+   article, and scroll-margin-top is NOT inherited, so the old 112px
+   rule that sat on the wrapping <section> was inert): the article
+   carries the header-only MEASURED var(--site-header-h) clearance
+   (the nav.js variable, never hardcoded — the 118px fallback is
+   pre-measurement only). Header-only is correct: the bar and the
+   overview strip are hidden while the detail is open, and the detail
+   strip itself sits INSIDE the article, below its top edge. Absorbing
+   the dead 112px rule is a deliberate visible fix (reopened #98):
+   the detail now opens with its sprite/name visible under the sticky
+   header instead of possibly tucked under it.
+   The detail strip's own clearance is --dex-detail-clear (header +
+   the strip's measured offsetHeight + 16px — setBrowseTop, the
+   180px fallback pre-measurement only): the strip's action-chip
+   scroll targets are the detail's dex-f-* fields, which must land
+   BELOW the pinned strip. */
 .page--pokedex #dex-overview .section[id] {
   scroll-margin-top: var(--dex-section-clear, 360px);
 }
 
-.page--pokedex #dex-species {
-  scroll-margin-top: 112px;
+.page--pokedex .dex-species {
+  scroll-margin-top: var(--site-header-h, 118px);
+}
+
+.page--pokedex #dex-species .dex-species__field,
+.page--pokedex #dex-species .dex-moves {
+  scroll-margin-top: var(--dex-detail-clear, 180px);
 }
 
 .page--pokedex [hidden] {
@@ -2140,14 +2167,19 @@
   margin-bottom: var(--space-4);
 }
 
-/* The section strip (issue #98) pinned UNDER the sticky browse bar:
-   its `top` overrides the contract rule's --site-header-h with the
-   measured --dex-scroll-clear (header + bar + 16px — setBrowseTop).
-   It sits between the bar and the grid inside the #dex-browse section,
-   so it pins while the grid pages, releases with the section when the
-   prose blocks begin, and hides with the overview when a detail is
-   open. */
-.page--pokedex .section-nav {
+/* The OVERVIEW section strip (issue #98) pinned UNDER the sticky
+   browse bar: its `top` overrides the contract rule's --site-header-h
+   with the measured --dex-scroll-clear (header + bar + 16px —
+   setBrowseTop). It sits between the bar and the grid inside the
+   #dex-browse section, so it pins while the grid pages, releases with
+   the section when the prose blocks begin, and hides with the
+   overview when a detail is open. Scoped to #dex-overview (reopened
+   #98): the species detail carries its OWN .section-nav strip, which
+   keeps the contract base top (the measured --site-header-h — the
+   nav.js variable) and pins under the site header for the whole
+   detail; a bare .page--pokedex scope here would mis-pin it under the
+   (hidden) browse bar. */
+.page--pokedex #dex-overview .section-nav {
   top: var(--dex-scroll-clear, 320px);
 }
 
