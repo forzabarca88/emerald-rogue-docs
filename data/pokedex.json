@@ -29,9 +29,14 @@
         "height/weight pre-formatted for display (dm/hg ÷ 10)",
         "description is null when a build has no Pokédex text (one case: Minior)",
         "evo.evos = the branches the in-game Pokédex shows (the raw table rewritten by Rogue_ModifyEvolution — friendship evos become level 30, trades become Link Cable items, and per-species overrides rewrite the rest); evo.prev = the lowest-dex-number record whose evo.evos target this species",
+        "know-move evos are checked against the species' level-up profile (ModifyKnowMoveEvo): the branch becomes a level evo at max(38, the profile's level for that move) when the profile knows it — only a profile that LACKS the move takes the level-30 fallback, and only for plain EVO_MOVE",
+        "out of scope — Revised Mode: with the range-revision-mode setting active, GetBaseEvolution reads the per-species _revised profile evos instead of the species table (the site documents the default state)",
+        "out of scope — a run's restricted Pokédex variant blanks out-of-variant evo targets mid-run (the \"invalid evo\" check; it cannot fire in the documented out-of-run state)",
+        "out of scope — the Everstone evo curse blanks a mon's evos mid-run (Rogue_ModifyEvolution_ApplyCurses, applied by DisplayMonEvosText after each rewrite)",
+        "two/three-segment know-move evos whose profile LACKS the move keep their raw method — the in-game display switch has no case for them and falls to the TODO placeholder (\"EVO TEXT TODO\"); the site documents the intended method instead (both dunsparce branches know Hyper Drill, so they display as level evos)",
         "X_MISC_INFO family stat blocks are expanded — values shown are final"
       ],
-      "source": "src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/rogue_baked.c @vanilla; src/rogue_baked.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla"
+      "source": "src/rogue_pokedex.c @vanilla L1877, L1884-2014 (DisplayMonEvosText: applies the evo curses, the method display switch + the TODO placeholder) (identical @origin/expansion); src/rogue_baked.c @vanilla L348-376 (ModifyKnowMoveEvo: the level-up profile's move VALUE == evo param, u16) (identical @origin/expansion); src/rogue_baked.c @vanilla L296-306 (GetBaseEvolution: Revised Mode swaps in the _revised profile evos) (identical @origin/expansion); src/rogue_baked.c @vanilla L512-520 (the \"invalid evo\" check: a run's restricted dex variant blanks out-of-variant targets) (identical @origin/expansion); src/rogue_baked.c @vanilla L732-749 (Rogue_ModifyEvolution_ApplyCurses: the Everstone evo curse) (identical @origin/expansion); src/rogue_pokedex.c @vanilla; src/rogue_pokedex.c @origin/expansion; src/data/pokemon/species_info.h @origin/expansion; src/data/pokemon/base_stats.h @vanilla; data/settings.json (site data)"
     },
     {
       "id": "moves",
@@ -26664,7 +26669,7 @@
         "evos": [
           {
             "id": "annihilape",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -43922,7 +43927,7 @@
         "evos": [
           {
             "id": "lickilicky",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -46126,7 +46131,7 @@
         "evos": [
           {
             "id": "tangrowth",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -48624,7 +48629,7 @@
       "evo": {
         "prev": {
           "id": "mime_jr",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -53752,7 +53757,7 @@
           "evos": [
             {
               "id": "porygon2",
-              "method": "Use Up-grade"
+              "method": "Use Up-Grade"
             }
           ]
         },
@@ -69820,7 +69825,7 @@
       "evo": {
         "prev": {
           "id": "bonsly",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -71350,7 +71355,7 @@
         "evos": [
           {
             "id": "ambipom",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -72263,7 +72268,7 @@
         "evos": [
           {
             "id": "yanmega",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -75927,7 +75932,7 @@
         "evos": [
           {
             "id": "farigiraf",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -76920,11 +76925,11 @@
         "evos": [
           {
             "id": "dudunsparce",
-            "method": "Level up knowing Hyper Drill (two-segment form)"
+            "method": "Level up at 38"
           },
           {
             "id": "dudunsparce",
-            "method": "Level up knowing Hyper Drill (three-segment form)",
+            "method": "Level up at 38",
             "form": "Dudunsprce (Three Segment)"
           }
         ]
@@ -78968,7 +78973,7 @@
             "evos": [
               {
                 "id": "overqwil",
-                "method": "Level up at 30"
+                "method": "Level up at 38"
               }
             ]
           }
@@ -82216,7 +82221,7 @@
         "evos": [
           {
             "id": "mamoswine",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -86220,7 +86225,7 @@
         "evo": {
           "prev": {
             "id": "porygon",
-            "method": "Use Up-grade"
+            "method": "Use Up-Grade"
           }
         },
         "moves": {
@@ -142291,7 +142296,7 @@
       "evo": {
         "prev": {
           "id": "aipom",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -145007,7 +145012,7 @@
         "evos": [
           {
             "id": "sudowoodo",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -145188,7 +145193,7 @@
         "evos": [
           {
             "id": "mr_mime",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           },
           {
             "id": "mr_mime",
@@ -149895,7 +149900,7 @@
       "evo": {
         "prev": {
           "id": "lickitung",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -150331,7 +150336,7 @@
       "evo": {
         "prev": {
           "id": "tangela",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -151159,7 +151164,7 @@
       "evo": {
         "prev": {
           "id": "yanma",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -152012,7 +152017,7 @@
       "evo": {
         "prev": {
           "id": "piloswine",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -208406,7 +208411,7 @@
         "evos": [
           {
             "id": "tsareena",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -208555,7 +208560,7 @@
       "evo": {
         "prev": {
           "id": "steenee",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -216243,7 +216248,7 @@
         "evos": [
           {
             "id": "naganadel",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -216385,7 +216390,7 @@
       "evo": {
         "prev": {
           "id": "poipole",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -224268,7 +224273,7 @@
         "evos": [
           {
             "id": "grapploct",
-            "method": "Level up at 30"
+            "method": "Level up at 38"
           }
         ]
       },
@@ -224412,7 +224417,7 @@
       "evo": {
         "prev": {
           "id": "clobbopus",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -235016,7 +235021,7 @@
       "evo": {
         "prev": {
           "id": "qwilfish",
-          "method": "Level up at 30",
+          "method": "Level up at 38",
           "form": "Hisuian Qwilfish (Hisuian)"
         }
       },
@@ -247931,7 +247936,7 @@
       "evo": {
         "prev": {
           "id": "primeape",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248329,7 +248334,7 @@
       "evo": {
         "prev": {
           "id": "girafarig",
-          "method": "Level up at 30"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248533,7 +248538,7 @@
       "evo": {
         "prev": {
           "id": "dunsparce",
-          "method": "Level up knowing Hyper Drill (two-segment form)"
+          "method": "Level up at 38"
         }
       },
       "moves": {
@@ -248727,7 +248732,7 @@
           "evo": {
             "prev": {
               "id": "dunsparce",
-              "method": "Level up knowing Hyper Drill (two-segment form)"
+              "method": "Level up at 38"
             }
           }
         },
@@ -248757,7 +248762,7 @@
           "evo": {
             "prev": {
               "id": "dunsparce",
-              "method": "Level up knowing Hyper Drill (three-segment form)"
+              "method": "Level up at 38"
             }
           }
         }

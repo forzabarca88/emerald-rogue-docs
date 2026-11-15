@@ -8,8 +8,10 @@
  * The emitted shape per record / vanilla-overlay / form:
  *   { prev?: { id, method, form? }, evos?: [ { id, method, form? }, … ] }
  * - `evos` = the surviving post-rewrite branches (SPECIES_NONE targets and
- *   the surviving 0xFFFE EVO_NONE sentinels dropped, capped at 8 like the
- *   in-game display);
+ *   the 0xFFFE EVO_NONE sentinels dropped). The in-game list is SCROLLABLE
+ *   (4 lines per screen) and shows every survivor — the extractor hard-fails
+ *   if a species ever exceeds 8 survivors (today's max is Eevee's 8), so a
+ *   future >8 species can never diverge silently;
  * - `prev` = the smallest-dex-number record (same build) whose own post-
  *   rewrite list targets this species (records by id, forms by their own
  *   species value — which resolves to the form's base record id); when the
@@ -84,7 +86,7 @@ test('every evo value (records, vanilla overlays, forms) carries only prev/evos 
     };
     if (evo.evos !== undefined) {
       if (!Array.isArray(evo.evos)) return problems.push(`${where}: evos is not an array`);
-      if (evo.evos.length > 8) problems.push(`${where}: ${evo.evos.length} evos exceed the 8-branch display cap`);
+      if (evo.evos.length > 8) problems.push(`${where}: ${evo.evos.length} evos exceed the extractor's 8-survivor guard (the in-game list is scrollable — the extractor fails beyond 8 so the divergence can never be silent)`);
       if (evo.evos.length === 0) problems.push(`${where}: empty evos array (the key must be omitted)`);
       for (const e of evo.evos) {
         checkEntry(e, 'evo');
@@ -328,4 +330,98 @@ test('ursaluna: prev is the Peat Block branch; the Bloodmoon form’s prev is th
   const bloodmoon = formOf(rec, 'Ursaluna (Bloodmoon)');
   assert.ok(bloodmoon && bloodmoon.evo, 'Ursaluna (Bloodmoon) carries its own evo');
   assert.deepEqual(bloodmoon.evo.prev, { id: 'ursaring', method: 'Use Moon Stone' }, 'bloodmoon prev');
+});
+
+/* --- 3b. the know-move profile rewrite (ModifyKnowMoveEvo) ----------------
+ *
+ * The C compares the profile's level-up MOVE VALUE against the evo's param
+ * (u16 == u16): when the species' level-up profile knows the move, the
+ * branch is rewritten to a level evo at max(38, profile level); only a
+ * profile that does NOT know the move takes the level-30 fallback — and
+ * that fallback exists only for plain EVO_MOVE (the two/three-segment
+ * methods are left raw by the C, which the display switch then renders as
+ * the TODO placeholder; the site documents the intended level rewrite).
+ * The profile levels are the per-species
+ * src/data/rogue/pokemon/expansion/<id>/expansion_profile.json lists (the
+ * level-up table the C's ModifyKnowMoveEvo reads).
+ */
+
+// the branch to <target> carries the expected method (subset semantics —
+// the source record may have other branches, e.g. mime_jr's Galar Artefact
+// branch to the Galarian Mr. Mime form of the same mr_mime record, which
+// the know-move rewrite leaves untouched)
+function expectBranchMethod(record, build, target, method, label, form) {
+  const evo = evoOf(record, build);
+  // form undefined = the PLAIN target branch (a form branch to the same
+  // record carries its own `form` field, e.g. mime_jr's Galar Artefact ->
+  // Galarian Mr. Mime)
+  const branches = (evo.evos ?? []).filter((e) => e.id === target && e.form === (form ?? undefined));
+  assert.ok(branches.length >= 1, `${label}: no branch ${target}${form ? ` (form ${form})` : ''}`);
+  assert.ok(
+    branches.every((e) => e.method === method),
+    `${label}: expected all ${target} branches at "${method}", got ${JSON.stringify(branches.map((e) => e.method))}`,
+  );
+}
+
+test('know-move profile HIT: 15 EX branches are the level evo at max(38, profile level)', () => {
+  expectBranchMethod(byId.get('primeape'), 'ex', 'annihilape', 'Level up at 38', 'primeape ex (Rage Fist @35)');
+  expectBranchMethod(byId.get('lickitung'), 'ex', 'lickilicky', 'Level up at 38', 'lickitung ex (Rollout @6)');
+  expectBranchMethod(byId.get('mime_jr'), 'ex', 'mr_mime', 'Level up at 38', 'mime_jr ex (Mimic @32)');
+  expectBranchMethod(byId.get('bonsly'), 'ex', 'sudowoodo', 'Level up at 38', 'bonsly ex (Mimic @16)');
+  expectBranchMethod(byId.get('aipom'), 'ex', 'ambipom', 'Level up at 38', 'aipom ex (Double Hit @32)');
+  expectBranchMethod(byId.get('yanma'), 'ex', 'yanmega', 'Level up at 38', 'yanma ex (Ancient Power @33)');
+  expectBranchMethod(byId.get('tangela'), 'ex', 'tangrowth', 'Level up at 38', 'tangela ex (Ancient Power @24)');
+  expectBranchMethod(byId.get('piloswine'), 'ex', 'mamoswine', 'Level up at 38', 'piloswine ex (Ancient Power @1)');
+  expectBranchMethod(byId.get('girafarig'), 'ex', 'farigiraf', 'Level up at 38', 'girafarig ex (Twin Beam @32)');
+  expectFormEvos(byId.get('qwilfish'), 'Hisuian Qwilfish (Hisuian)', 'overqwil', ['Level up at 38'], 'qwilfish hisuian ex (Barb Barrage @28)');
+  expectBranchMethod(byId.get('clobbopus'), 'ex', 'grapploct', 'Level up at 38', 'clobbopus ex (Taunt @35)');
+  expectBranchMethod(byId.get('steenee'), 'ex', 'tsareena', 'Level up at 38', 'steenee ex (Stomp @28)');
+  expectBranchMethod(byId.get('poipole'), 'ex', 'naganadel', 'Level up at 38', 'poipole ex (Dragon Pulse @1)');
+  // dunsparce: the profile knows Hyper Drill @32 for BOTH segments, so both
+  // branches are the level-38 rewrite (the C rewrites EVO_MOVE_TWO_SEGMENT /
+  // EVO_MOVE_THREE_SEGMENT to EVO_LEVEL_TWO_SEGMENT / EVO_LEVEL_THREE_SEGMENT,
+  // which the display switch renders with the plain level string "Reach LV38")
+  // — the two/three-segment TODO placeholder only applies to a profile that
+  // LACKS the move
+  const duns = evoOf(byId.get('dunsparce'), 'ex');
+  assert.deepEqual(
+    duns.evos,
+    [
+      { id: 'dudunsparce', method: 'Level up at 38' },
+      { id: 'dudunsparce', method: 'Level up at 38', form: 'Dudunsprce (Three Segment)' },
+    ],
+    'dunsparce ex: both segments are the level-38 rewrite (Hyper Drill @32)',
+  );
+});
+
+test('know-move profile MISS: plain EVO_MOVE falls back to level 30 (the 2 branches whose profile lacks the move)', () => {
+  expectEvos(byId.get('stantler'), 'ex', 'wyrdeer', ['Level up at 30'], 'stantler ex (Psyshield Bash — not in the profile)');
+  expectEvos(byId.get('dipplin'), 'ex', 'hydrapple', ['Level up at 30'], 'dipplin ex (Dragon Cheer — not in the profile)');
+});
+
+test('the know-move targets’ prev rows carry the same rewritten method', () => {
+  const expect38 = (recId, ctx) => expectPrev(byId.get(recId), 'ex', ctx, 'Level up at 38', `${recId} prev`);
+  // each target's claiming source (the record id the prev points at)
+  const sources = new Map([
+    ['annihilape', 'primeape'],
+    ['lickilicky', 'lickitung'],
+    ['mr_mime', 'mime_jr'],
+    ['sudowoodo', 'bonsly'],
+    ['ambipom', 'aipom'],
+    ['yanmega', 'yanma'],
+    ['tangrowth', 'tangela'],
+    ['mamoswine', 'piloswine'],
+    ['farigiraf', 'girafarig'],
+    ['grapploct', 'clobbopus'],
+    ['tsareena', 'steenee'],
+    ['naganadel', 'poipole'],
+    ['dudunsparce', 'dunsparce'],
+  ]);
+  for (const [target, source] of sources) expect38(target, source);
+  // the form-sourced prev (the branch sits on the Hisuian Qwilfish form)
+  assert.deepEqual(
+    evoOf(byId.get('overqwil'), 'ex').prev,
+    { id: 'qwilfish', method: 'Level up at 38', form: 'Hisuian Qwilfish (Hisuian)' },
+    'overqwil prev (the Hisuian Qwilfish form)',
+  );
 });
