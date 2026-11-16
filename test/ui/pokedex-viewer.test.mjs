@@ -2,12 +2,12 @@
  * The 3D species viewer (issue #79) — laziness, determinism and context
  * discipline (node --test, zero deps; Playwright resolved by the harness).
  *
- * The viewer is a billboard turntable of the in-game sprite in the Pokedex
- * species detail (DESIGN.md §7): the vendored three.js
- * (./vendor/three.min.js) is deferred-injected only when a detail first
- * opens, the reduced-motion end state is exactly one static frame (no rAF
- * loop — deterministic), and the static <img> stays as the no-WebGL
- * fallback with the same box (no layout shift).
+ * The viewer is a GBA-affine-style perspective sway of the in-game sprite
+ * in the Pokedex species detail (DESIGN.md §7, issue #111): the vendored
+ * three.js (./vendor/three.min.js) is deferred-injected only when a detail
+ * first opens, the reduced-motion end state is exactly one static frame
+ * (no rAF loop — deterministic), and the static <img> stays as the
+ * no-WebGL fallback with the same box (no layout shift).
  *
  * Coverage:
  *   1. laziness — pokedex.html with NO selection: no <canvas> in the DOM
@@ -207,7 +207,7 @@ test('reduced motion: the detail opens with one static frame (or the static-spri
       });
       assert.ok(sample, 'the static frame must be readable back from the canvas');
       assert.ok(sample.sum > 0, 'the static frame must not be blank (sampled pixel sum > 0)');
-      assert.ok(sample.distinct >= 2, 'the static frame must show the scene (background + floor/grid/sprite), not one flat color');
+      assert.ok(sample.distinct >= 2, 'the static frame must show the scene (background + sprite), not one flat color');
     } else {
       // WebGL unavailable in this environment — the documented end state:
       // the static sprite <img> stays, in the same box, error-free
