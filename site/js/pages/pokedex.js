@@ -176,9 +176,10 @@
  *      6-axis spider (hp/atk/def/spa/spd/spe, normalized to 255 like
  *      the bars), the selected species' polygon in --color-emerald
  *      (solid token fill + fill-opacity, no rgba), the compare
- *      species' polygon in --color-gold when the native compare
- *      select (default "None", the active version's full dex) picks
- *      one; ONE delegated pointerover listener on the container reads
+ *      species' polygon in --color-gold when the compare typeahead
+ *      (issue #110 — the .dex-radar__compare search input over the
+ *      active version's dex, replacing the old full-dex native select)
+ *      picks one; ONE delegated pointerover listener on the container reads
  *      data-axis off the 6 wide invisible hit sectors (pointer-events:
  *      all — hover AND touch tap at 360px) and writes the mono
  *      caption "<stat>: <value>[ vs <compare value>]" (values
@@ -317,9 +318,34 @@
      * palette (the issue-#50 parity). Version-independent — it unions
      * BOTH variants. */
     var searchText = {};
+    /* the FOLDED (accent-stripped) copy of each haystack — the radar
+     * compare typeahead (issue #110) matches accent-insensitively, the
+     * site palette's rule (search-index.js folds NFD before its
+     * substring test, so a query for "pokemon" finds "Pokémon"). */
+    var searchFolded = {};
     records.forEach(function (r) {
       searchText[r.id] = ROGUE.pokedexSearchText(r);
+      searchFolded[r.id] = foldAccents(searchText[r.id]);
     });
+
+    /**
+     * NFD-fold a string (strip combining marks) per code unit — the
+     * SAME fold search-index.js applies to every index entry and query
+     * before its substring test. Only the folded text is needed here
+     * (never the index map), so the fold stays this simple.
+     */
+    function foldAccents(s) {
+      var out = '';
+      for (var i = 0; i < s.length; i++) {
+        var d = s.charAt(i).normalize('NFD');
+        for (var j = 0; j < d.length; j++) {
+          var cu = d.charCodeAt(j);
+          if (cu >= 0x0300 && cu <= 0x036f) continue; // combining mark
+          out += d.charAt(j);
+        }
+      }
+      return out;
+    }
 
     /**
      * The active version's value for a record field: the record's
@@ -795,6 +821,15 @@
     ];
     var RADAR_GEOM = { size: 300, cx: 150, cy: 150, r: 96, labelR: 114, hitR: 126, max: 255 };
 
+    /** The radar's default caption (a sector read replaces it — the
+     * last axis read is never auto-cleared; a tap must persist). */
+    var RADAR_CAPTION_DEFAULT = 'Hover or tap an axis for its value.';
+
+    /** The compare typeahead's visible-row cap (issue #110): the old
+     * native select listed every species of the active build; the
+     * input shows a bounded ranked list instead. */
+    var RADAR_COMPARE_CAP = 12;
+
     /** A radar vertex for axis i at stat value v (clamped to 0…255). */
     function radarPoint(i, v) {
       var n = Number(v);
@@ -928,35 +963,64 @@
     }
 
     /**
+     * The compare typeahead's ranked rows (issue #110): a plain
+     * substring filter over the ACTIVE build's dex on the shared
+     * ROGUE.pokedexSearchText haystacks — accent-insensitive (folded
+     * like the site palette): tier 0 the folded name STARTS with the
+     * query, tier 1 the folded name INCLUDES it, tier 2 the folded
+     * haystack INCLUDES it — stable dex order within a tier, capped
+     * at RADAR_COMPARE_CAP rows. Empty query → no rows (the default
+     * state is no compare).
+     */
+    function compareResults(query) {
+      var q = foldAccents(query.trim().toLowerCase());
+      if (!q) return [];
+      var list = orderedList();
+      var out = [];
+      for (var i = 0; i < list.length; i++) {
+        var r = list[i];
+        var name = foldAccents(dexVariant(r, 'name').toLowerCase());
+        var tier = name.indexOf(q) === 0 ? 0 : name.indexOf(q) !== -1 ? 1 : searchFolded[r.id].indexOf(q) !== -1 ? 2 : -1;
+        if (tier !== -1) out.push({ r: r, tier: tier });
+      }
+      /* the sort is stable (ES2019+), so a tier-0/1/2 grouping keeps
+       * the data order within each tier */
+      out.sort(function (a, b) {
+        return a.tier - b.tier;
+      });
+      return out.slice(0, RADAR_COMPARE_CAP);
+    }
+
+    /** The legend's swatch keys (the selected species + the compare when present). */
+    function radarLegend(record, compare) {
+      return (
+        '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--main"></span>' + ROGUE.esc(dexVariant(record, 'name')) + '</span>' +
+        (compare ? '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--compare"></span>' + ROGUE.esc(dexVariant(compare, 'name')) + '</span>' : '')
+      );
+    }
+
+    /**
      * The radar field (rendered under the detail's stat bars): the
-     * native compare select (default "None" — the active version's
-     * full dex as options, data-derived), the SVG stage, the swatch
-     * legend (the selected species + the compare when present) and
-     * the mono caption (the last axis read — a tap must persist, so
-     * nothing clears it). The whole block is re-swapped in place when
-     * the compare changes (bindRadar's container listener survives —
-     * it sits on the container, not the inner markup).
+     * compare typeahead (issue #110 — a .search-styled input over the
+     * active build's dex + its capped result list; a picked species'
+     * name stays in the input, an empty input means no compare), the
+     * SVG stage, the swatch legend and the mono caption (the last axis
+     * read — a tap must persist, so nothing clears it). A compare
+     * change re-swaps ONLY the stage, legend and caption
+     * (renderRadar) — the input keeps its value and focus, and the
+     * delegated container listeners sit on the container, never on the
+     * swapped markup.
      */
     function radarInner(record) {
       var compare = compareRecord();
-      var options = orderedList()
-        .map(function (r) {
-          return '<option value="' + ROGUE.esc(r.id) + '"' + (compare && compare.id === r.id ? ' selected' : '') + '>' + ROGUE.esc(dexVariant(r, 'name')) + '</option>';
-        })
-        .join('');
       return (
         '<div class="dex-radar__controls">' +
-        '<select id="dex-radar-compare" class="dex-radar__compare" aria-label="Compare the stat radar with a species">' +
-        '<option value="">None</option>' +
-        options +
-        '</select>' +
+        '<input type="search" id="dex-radar-compare" class="search dex-radar__compare" placeholder="Compare with a species" aria-label="Compare the stat radar with a species" value="' + ROGUE.esc(compare ? dexVariant(compare, 'name') : '') + '">' +
         '</div>' +
+        '<ul id="dex-radar-compare-list" class="dex-radar__compare-list" hidden></ul>' +
         '<div class="dex-radar__stage">' + radarSvg(record, compare) + '</div>' +
-        '<div class="dex-radar__legend">' +
-        '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--main"></span>' + ROGUE.esc(dexVariant(record, 'name')) + '</span>' +
-        (compare ? '<span class="dex-radar__key"><span class="dex-radar__swatch dex-radar__swatch--compare"></span>' + ROGUE.esc(dexVariant(compare, 'name')) + '</span>' : '') +
-        '</div>' +
-        '<p class="dex-radar__caption" id="dex-radar-caption">Hover or tap an axis for its value.</p>'
+        '<div class="dex-radar__legend">' + radarLegend(record, compare) + '</div>' +
+        '<p class="dex-radar__caption" id="dex-radar-caption">' + RADAR_CAPTION_DEFAULT + '</p>'
       );
     }
 
@@ -965,15 +1029,25 @@
     }
 
     /**
-     * The radar's ONE delegated listener (pointerover on the .dex-radar
-     * container — data-axis read off the target: the six invisible hit
-     * sectors are the only children carrying it). pointerover fires for
-     * BOTH pointer hover and touch tap (a touch dispatches pointerover
-     * on touch-down), so hover and tap share one code path; the caption
-     * it writes is the last axis read and is never auto-cleared (a tap
-     * must persist — there is deliberately no pointerleave handler). Then
-     * re-swaps the inner markup so the select shows the current compare
-     * selection.
+     * The radar's delegated listeners, bound once per full render on the
+     * .dex-radar container (plus the input's own listeners — the input
+     * element is per-render, like bindToolbar's):
+     *   - pointerover — data-axis read off the target: the six
+     *     invisible hit sectors are the only children carrying it.
+     *     pointerover fires for BOTH pointer hover and touch tap (a
+     *     touch dispatches pointerover on touch-down), so hover and tap
+     *     share one code path; the caption it writes is the last axis
+     *     read and is never auto-cleared (a tap must persist — there is
+     *     deliberately no pointerleave handler).
+     *   - click — data-id read off a typeahead row (issue #110): the
+     *     compare pick. Rows carry no data-axis, so the two delegated
+     *     reads never collide.
+     *   - input — re-renders the result list; clearing the input (the
+     *     whole value, not a partial edit) clears the compare.
+     *   - keydown Enter — picks the first visible row (the input has no
+     *     keyboard row navigation of its own — the list is capped).
+     * The container listeners outlive renderRadar's partial stage/
+     * legend swaps (they sit on the container, not the inner markup).
      */
     function bindRadar(record) {
       var radar = document.getElementById('dex-radar');
@@ -986,25 +1060,93 @@
         var cap = document.getElementById('dex-radar-caption');
         if (cap) cap.textContent = radarCaptionText(record, axis);
       });
+      radar.addEventListener('click', function (e) {
+        var t = e.target;
+        if (!t || !t.getAttribute) return;
+        var id = t.getAttribute('data-id');
+        if (!id) return;
+        selectCompare(record, id);
+      });
+      var input = document.getElementById('dex-radar-compare');
+      if (input) {
+        input.addEventListener('input', function () {
+          if (input.value.trim() === '') {
+            state.radarCompare = null;
+            renderRadar(record);
+          }
+          renderCompareList();
+        });
+        input.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter') return;
+          e.preventDefault();
+          var row = document.querySelector('#dex-radar-compare-list .dex-radar__compare-row');
+          if (row) selectCompare(record, row.getAttribute('data-id'));
+        });
+      }
       renderRadar(record);
     }
 
     /**
-     * Re-swaps the radar's inner markup (compare change) and re-binds
-     * the select (the container-level pointerover listener, bound once
-     * per full render, survives the innerHTML swap).
+     * Re-renders the typeahead's result list from the input's current
+     * value (compareResults — capped ranked rows, data-id on each). The
+     * list hides (and empties) when the query matches nothing — the
+     * default empty-input state shows no rows at all.
+     */
+    function renderCompareList() {
+      var input = document.getElementById('dex-radar-compare');
+      var list = document.getElementById('dex-radar-compare-list');
+      if (!input || !list) return;
+      var rows = compareResults(input.value);
+      if (rows.length === 0) {
+        list.innerHTML = '';
+        list.hidden = true;
+        return;
+      }
+      list.hidden = false;
+      list.innerHTML = rows
+        .map(function (m) {
+          return '<li class="dex-radar__compare-row" data-id="' + ROGUE.esc(m.r.id) + '" role="option">' + ROGUE.esc(dexVariant(m.r, 'name')) + '</li>';
+        })
+        .join('');
+    }
+
+    /**
+     * Picks a typeahead row: sets state.radarCompare (survives re-renders
+     * like every other page state — the reset-when-the-active-build
+     * lacks-the-species rule is the one in the onChange handler), shows
+     * the picked species' name in the input, hides the list, and
+     * refreshes the compare parts of the radar.
+     */
+    function selectCompare(record, id) {
+      var rec = byId[id];
+      if (!rec || !rec.versions || rec.versions.indexOf(ROGUE.version) === -1) return;
+      state.radarCompare = id;
+      var input = document.getElementById('dex-radar-compare');
+      if (input) input.value = dexVariant(rec, 'name');
+      var list = document.getElementById('dex-radar-compare-list');
+      if (list) {
+        list.innerHTML = '';
+        list.hidden = true;
+      }
+      renderRadar(record);
+    }
+
+    /**
+     * Refreshes ONLY what a compare change touches — the SVG stage, the
+     * legend and the caption (back to the default — the old full re-swap
+     * did the same). The typeahead input is untouched, so its value and
+     * focus survive (no full re-swap of the radar block).
      */
     function renderRadar(record) {
       var radar = document.getElementById('dex-radar');
       if (!radar) return;
-      radar.innerHTML = radarInner(record);
-      var select = document.getElementById('dex-radar-compare');
-      if (select) {
-        select.addEventListener('change', function () {
-          state.radarCompare = select.value || null;
-          renderRadar(record);
-        });
-      }
+      var compare = compareRecord();
+      var stage = radar.querySelector('.dex-radar__stage');
+      if (stage) stage.innerHTML = radarSvg(record, compare);
+      var legend = radar.querySelector('.dex-radar__legend');
+      if (legend) legend.innerHTML = radarLegend(record, compare);
+      var cap = document.getElementById('dex-radar-caption');
+      if (cap) cap.textContent = RADAR_CAPTION_DEFAULT;
     }
 
     /* --- issue-#100 visualisation B: the type matchup heatmap (overview) ---- */
@@ -1877,7 +2019,7 @@
       html += fieldBlock('Base stats', '<div class="dex-stats">' + statRowsHtml(stats) + '</div>', 'dex-f-stats');
       /* the issue-#100 stat radar (PR 4b) — under the stat bars, per
        * the plan: the 6-axis spider of this entry's (version-scoped)
-       * stats, with the native compare select (default "None") */
+       * stats, with the compare typeahead (issue #110) */
       html += radarHtml(record);
       html += fieldBlock('Details', '<div class="dex-meta">' + metaHtml(record) + '</div>');
       if (description) html += '<p class="dex-desc">' + ROGUE.esc(description) + '</p>';
