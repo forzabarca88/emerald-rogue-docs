@@ -123,8 +123,12 @@ captions or surrounding prose):
   labelled from the ladder (Gym 1–8, Elite 1–4, Champion, Final). Each
   step sits in a `.run-path__cell` column wrapper with a mono
   `.run-path__label` caption under it (in `--font-mono` / `--text-xs` /
-  `--color-muted`); the chain rows tighten the links to 10px so the
-  widest label set still fits at 360px. The chain sits in one
+  `--color-muted`). Each chain row is a two-track grid — a 36px node
+  track and a 20px label track — so every label on every row shares one
+  baseline and the 10px links sit on the node centres (the fork
+  variants, 20–36px tall, all centre inside the 36px track); the rows
+  tighten the links to 10px so the widest label set still fits at
+  360px. The chain sits in one
   `.path-diagram` panel with a compact `.run-legend` (node style → room
   type) above it and three `.mode-shape` mini-rows below it —
   `.run-path--mini` schematic paths (12px nodes, 8px links) for the
