@@ -1552,11 +1552,20 @@
     /* The abilities field (issue #99): one .dex-ability block per
      * ability — the display-face name + the in-game description from the
      * active build's catalog (catalog.vanilla under Vanilla); an ability
-     * with no catalog entry renders its name only, never a fake "—". */
+     * with no catalog entry renders its name only, never a fake "—".
+     * The in-game display loop (src/rogue_pokedex.c) prints each slot only
+     * when it differs from the PREVIOUSLY PRINTED one, so consecutive
+     * duplicates (the 3-slot table's triple repeats — mostly Mega forms)
+     * render once here too; a repeated-but-separated name still renders
+     * both times. */
     function abilitiesHtml(abilities) {
       if (!abilities.length) return '<span class="dex-moves__none">\u2014</span>';
+      var kept = [];
+      abilities.forEach(function (a) {
+        if (a && kept[kept.length - 1] !== a) kept.push(a);
+      });
       return (
-        abilities
+        kept
           .map(function (a) {
             var desc = abilityDesc(a);
             return (
@@ -1656,7 +1665,8 @@
      * chips (deduped the same way as the base types), its stat rows —
      * the shared statRowsHtml() in the same .dex-stats box the base
      * stats use, so the BST row is last — its abilities (the in-game
-     * triple repeat kept, like the base abilities), its
+     * display rule mirrored by the shared abilitiesHtml() — consecutive
+     * duplicates render once), its
      * height/weight in the base meta's mono treatment, and its
      * Pokédex text. A name-only form (a rogue-only custom form with
      * no species entry and no per-form data) renders as a plain
