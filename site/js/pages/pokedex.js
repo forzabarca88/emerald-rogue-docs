@@ -155,8 +155,8 @@
  * parity for the dex).
  *
  * The 3D species viewer (issue #79): the detail head's sprite sits in a
- * .dex-viewer box that doubles as the mount for a three.js billboard
- * turntable (js/three-viewer.js — the site's one 3D placement, see
+ * .dex-viewer box that doubles as the mount for the three.js perspective-
+ * sway 3D viewer (js/three-viewer.js — the site's one 3D placement, see
  * DESIGN.md §7). The vendored three.js (./vendor/three.min.js, the
  * third self-hosted asset family, DESIGN.md §11) is deferred-injected
  * ONCE (promise-memoized) the first time a species detail opens — never

@@ -4,10 +4,15 @@
  * the binding pure-CSS signature and the hub/safari diagrams are tested
  * layout surfaces, so the Pokedex species detail is where 3D earns its keep).
  *
- * A deterministic billboard turntable of the in-game sprite: the 128×128
- * species PNG becomes a THREE.CanvasTexture (NearestFilter, no mipmaps —
- * pixel-art crisp) on a plane floating above a minimal floor + grid drawn
- * in the site's CSS tokens.
+ * A deterministic perspective sway of the in-game sprite (issue #111 —
+ * the flat 2D billboard turntable read as tacky): the 128×128 species PNG
+ * becomes a THREE.CanvasTexture (NearestFilter, no mipmaps — pixel-art
+ * crisp) on a plane floating in a plain scene background — the scene reads
+ * as the in-game Pokedex sprite on a plain backdrop, not a 3D diorama.
+ * The motion is the GBA-affine-style turn (trainer_pokemon_sprites.c's
+ * MON_PIC_AFFINE_FRONT / gAffineAnims_BattleSpriteOpponentSide): the plane
+ * swings toward/away from the viewer within a limited Y tilt — a gentle
+ * perspective turntable, never a full 360° billboard flip.
  *
  * This module is a STATIC script on pokedex.html only (like the other site
  * modules), but it touches nothing — no THREE access, no DOM writes — until
@@ -18,12 +23,12 @@
  * Design contract (DESIGN.md §7):
  *   - Scene colors come ONLY from the CSS tokens: read at init via
  *     getComputedStyle(document.documentElement) on --color-bg (scene
- *     background — the sprite box's own background), --color-surface (floor),
- *     --color-line (grid major), --color-grid (grid minor). A missing or
+ *     background — the sprite box's own background). A missing or
  *     malformed token fails init and the static <img> stays — nothing
  *     leaves tokens.css.
- *   - Motion (slow turntable + gentle idle bob, one requestAnimationFrame
- *     loop) runs ONLY while matchMedia('(prefers-reduced-motion:
+ *   - Motion (a GBA-affine-style perspective sway — the sprite plane
+ *     oscillates in Y around the viewer within a limited tilt, plus a
+ *     gentle idle bob — one requestAnimationFrame loop) runs ONLY while matchMedia('(prefers-reduced-motion:
  *     no-preference)') matches. Under reduced motion the scene renders
  *     exactly one static frame (the t=0 pose) and no loop starts —
  *     deterministic for the screenshot pipeline and the UI tests. The loop
@@ -70,31 +75,28 @@
   /* Sprite plane (world units): sized so the in-frame art renders at about
    * the same scale as the static <img> fallback (the 128×128 frame fills the
    * box there) — 2.2 high is ~90% of the framed height, the transparent
-   * frame margins do the rest. The floor + grid stay readable underneath. */
+   * frame margins do the rest. */
   var SPRITE_HEIGHT = 2.2;
-  var BASE_Y = 1.1; /* sprite center at rest (floor is y=0) */
-  var FLOOR_SIZE = 8;
-  var GRID_DIVISIONS = 16;
+  var BASE_Y = 1.1; /* sprite center at rest */
 
-  /* Motion rates — "slow turntable + gentle idle bob": one full turn every
-   * ~15.7s, one bob every ~3.7s with a 0.04-unit amplitude. Fixed constants:
-   * the pose is a pure function of scene time (deterministic). */
-  var TURN_SPEED = 0.4; /* rad/s */
+  /* Motion rates — the GBA-affine-style perspective sway (issue #111): the
+   * plane stays front-lit and oscillates in Y around the viewer, swinging
+   * toward/away within a limited tilt so the DoubleSide back is never
+   * visible and the sprite never goes edge-on. One full left↔right swing
+   * every ~6s, one bob every ~3.7s with a 0.03-unit amplitude. Fixed
+   * constants: the pose is a pure function of scene time (deterministic). */
+  var SWAY_SPEED = 1.05; /* rad/s */
+  var SWAY_MAX_TILT = 0.55; /* rad (~31°) — max Y tilt from the viewer */
   var BOB_SPEED = 1.7; /* rad/s */
-  var BOB_AMPLITUDE = 0.04;
+  var BOB_AMPLITUDE = 0.03;
 
   /* The camera is FIXED — no per-frame movement, no per-frame RNG. The
    * distance leaves headroom so the plane's corners stay in frame through
-   * the whole turntable rotation. */
+   * the whole sway. */
   var CAMERA = { fov: 38, position: [0, 1.6, 3.6], lookAt: [0, 0.9, 0], near: 0.1, far: 50 };
 
-  /* The tokens the scene is drawn from (DESIGN.md §2) — nothing else. */
-  var TOKENS = {
-    background: '--color-bg',
-    floor: '--color-surface',
-    gridMajor: '--color-line',
-    gridMinor: '--color-grid'
-  };
+  /* The token the scene is drawn from (DESIGN.md §2) — nothing else. */
+  var TOKENS = { background: '--color-bg' };
 
   /* --- shared state ------------------------------------------------------
    * Everything below the renderer is created once (first successful init)
@@ -104,7 +106,7 @@
     canvas: null, /* the renderer's canvas (re-parented into the mount) */
     scene: null,
     camera: null,
-    group: null, /* the turntable/bob pivot (holds the sprite plane) */
+    group: null, /* the sway/bob pivot (holds the sprite plane) */
     plane: null, /* the sprite plane (geometry re-fit per texture aspect) */
     material: null, /* sprite plane material (map swapped per species) */
     texture: null, /* the current CanvasTexture (disposed on swap/teardown) */
@@ -181,23 +183,14 @@
     camera.lookAt(new THREE.Vector3(CAMERA.lookAt[0], CAMERA.lookAt[1], CAMERA.lookAt[2]));
     fitRenderer(renderer, camera, w, h);
 
-    /* The minimal floor + grid, in token colors (unlit — fixed by
-     * construction). The floor sits a hair below the grid to avoid
-     * z-fighting. */
-    var floor = new THREE.Mesh(
-      new THREE.PlaneGeometry(FLOOR_SIZE, FLOOR_SIZE),
-      new THREE.MeshBasicMaterial({ color: colors.floor })
-    );
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.y = -0.02;
-    scene.add(floor);
-
-    var grid = new THREE.GridHelper(FLOOR_SIZE, GRID_DIVISIONS, new THREE.Color(colors.gridMajor), new THREE.Color(colors.gridMinor));
-    scene.add(grid);
+    /* No floor, no grid (issue #111): the in-game Pokedex sprite floats on
+     * a plain background — the scene background (the .dex-viewer box's own
+     * --color-bg) is the backdrop. */
 
     /* The sprite: an unlit double-sided plane (the 2D billboard — a GBA
-     * sprite has no real depth, so the "3D" is the turntable, not a model),
-     * its size set from the texture's aspect when the texture is applied. */
+     * sprite has no real depth, so the "3D" is the perspective sway, not a
+     * model), its size set from the texture's aspect when the texture is
+     * applied. */
     var group = new THREE.Group();
     var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true });
     var plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
@@ -249,9 +242,11 @@
 
   /* --- the pose + the loop ------------------------------------------------ */
 
-  /** The pose as a pure function of scene time (the determinism core). */
+  /** The pose as a pure function of scene time (the determinism core):
+   * the GBA-affine-style perspective sway — a bounded Y oscillation, not a
+   * full turn — plus the gentle idle bob. */
   function pose(t) {
-    state.group.rotation.y = t * TURN_SPEED;
+    state.group.rotation.y = Math.sin(t * SWAY_SPEED) * SWAY_MAX_TILT;
     state.group.position.y = BASE_Y + Math.sin(t * BOB_SPEED) * BOB_AMPLITUDE;
   }
 

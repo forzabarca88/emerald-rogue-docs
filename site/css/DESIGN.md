@@ -191,15 +191,19 @@ in `base.css` is final. If a page wants to animate, the pattern is: define
 the `@keyframes` in `pages.css` under your `.page--<stem>` scope and apply
 it only inside the `no-preference` block.
 
-**3D (the Pokedex species viewer, issue #79):** the one JS-driven animation
-on the site — a `requestAnimationFrame` loop (slow turntable + gentle idle
-bob) that runs **only** when `matchMedia('(prefers-reduced-motion:
+**3D (the Pokedex species viewer, issue #79, redesigned for issue #111):**
+the one JS-driven animation on the site — a `requestAnimationFrame` loop
+(GBA-affine-style perspective sway: the sprite plane swings toward/away from
+the viewer within a limited Y tilt, never a full 360° turntable, plus a
+gentle idle bob) that runs **only** when `matchMedia('(prefers-reduced-motion:
 no-preference)')` matches; under reduced motion the scene renders exactly
 one static frame and no loop starts (deterministic for the screenshot
-pipeline). Scene colors are read from the CSS tokens at init
-(`getComputedStyle` on the `--color-*` values), so nothing leaves
-`tokens.css`. No WebGL context (or a failed texture load) → the static
-sprite `<img>` stays: no layout shift, no console error. The Pokedex
+pipeline). The scene is a plain backdrop — no floor, no grid (the in-game
+Pokedex sprite floats on a plain background), so scene colors are read
+from the CSS tokens at init (`getComputedStyle` on `--color-bg` only, the
+`.dex-viewer` box's own background), and nothing leaves `tokens.css`. No
+WebGL context (or a failed texture load) → the static sprite `<img>` stays:
+no layout shift, no console error. The Pokedex
 species detail is the **one** 3D placement: the home-hero run path is the
 §5.1 binding pure-CSS signature ("do not add per-page animations") and
 the hub/safari diagrams are tested layout surfaces where a WebGL layer
