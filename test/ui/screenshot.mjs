@@ -47,6 +47,13 @@
  * ABOVE the backdrop by design — the version toggle stays reachable while
  * the palette is open).
  *
+ * EVERY capture emulates reducedMotion: 'reduce' (page.emulateMedia,
+ * applied as soon as the page opens): the entrance fades finish
+ * instantly, and every 3D surface (the home-hero run path, the Pokedex
+ * sprite) renders exactly ONE static frame at t=0 under the shared 3D
+ * foundation's reduced-motion contract — the whole grid is therefore
+ * deterministic (two runs capture the same pixels).
+ *
  * Before EVERY capture — plain and palette states alike — the tool settles
  * the entrance motion (DESIGN.md §7: the ≤480ms header/page fade, plus the
  * ≤120ms palette drop for the palette states): the computed opacity of
@@ -258,6 +265,7 @@ async function capturePaletteState({ pageName, version, width, suffix, query }) 
   let opened = null;
   try {
     opened = await openPage({ path: `${pageName}.html`, version, width, height: HEIGHT });
+    await opened.page.emulateMedia({ reducedMotion: 'reduce' });
   } catch (err) {
     failures.push(`${file}: page load/readiness failed — ${brief(err)}`);
     return;
@@ -294,6 +302,7 @@ try {
         let opened = null;
         try {
           opened = await openPage({ path: `${page}.html`, version, width, height: HEIGHT });
+          await opened.page.emulateMedia({ reducedMotion: 'reduce' });
         } catch (err) {
           failures.push(`${file}: page load/readiness failed — ${brief(err)}`);
           continue; // any open context is reaped by closeAll() below

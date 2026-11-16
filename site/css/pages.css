@@ -28,6 +28,46 @@
   font-size: var(--text-md);
 }
 
+/* The hero run-path stage (issue #79): a fixed-height box carrying BOTH
+   the binding pure-CSS .run-path (the no-JS / no-WebGL fallback layer —
+   its markup is unchanged, see the binding comment below) and, when
+   WebGL is available, the 3D canvas the shared foundation
+   (js/three-scene.js) appends over it — the site's second 3D placement
+   (DESIGN.md §7). The box is fixed-size, so mounting/unmounting the
+   canvas never shifts the layout. The pure-CSS path is centred in the
+   box, matching the 3D scene's centred framing. */
+.page--index .hero-stage {
+  position: relative;
+  height: 132px;
+  margin-top: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* the stage carries the .run-path's own top margin */
+.page--index .hero-stage .run-path {
+  margin-top: 0;
+}
+
+/* the 3D canvas fills the stage (the foundation appends it; the static
+   fallback layer underneath stays on every failure path) — the same
+   inset:0 pattern as the Pokedex's .dex-viewer */
+.page--index .hero-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .page--index .hero-stage {
+    height: 96px;
+  }
+}
+
 /* stat blocks — real counts from data/site.json, display-face values */
 .page--index .hero__stats {
   list-style: none;
@@ -77,8 +117,16 @@
    when it builds a run, so it opens the home page in place of a stock
    hero graphic. It is decorative — keep aria-hidden="true" on the root.
 
+   The index hero wraps it in the fixed-height .hero-stage (index block
+   above — also the 3D placement's box, issue #79 / DESIGN.md §7): the
+   pure-CSS path below stays the no-JS / no-WebGL fallback layer, and a
+   WebGL canvas — appended by js/three-scene.js's ROGUE3D.mount() when
+   WebGL is available — renders the same path in 3D over it. Both layers
+   are emitted from the SAME single source of truth (HERO_PATH in
+   site/js/pages/home.js).
+
    Binding markup (wired into index.html between the subtitle and
-   the stats):
+   the stats, inside the .hero-stage):
 
      <div class="run-path" aria-hidden="true">
        <span class="run-path__node run-path__node--hub"></span>

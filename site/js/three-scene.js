@@ -5,8 +5,10 @@
  * window-global style as the other site/js modules) that owns ALL of the
  * site's WebGL discipline. Every 3D placement mounts through it: the
  * Pokedex species detail is the first placement live (its GBA-affine-style
- * sway scene is supplied by pages/pokedex.js as the `build` callback); the
- * home-hero run path will be the second, on this same foundation.
+ * sway scene is supplied by pages/pokedex.js as the `build` callback) and
+ * the home-hero run path is the second (its token-coloured-box scene is
+ * supplied by pages/home.js, built from the same HERO_PATH that emits the
+ * binding pure-CSS fallback markup).
  *
  * This module is INERT until a page calls ROGUE3D.load() and ROGUE3D.mount()
  * — no THREE access, no DOM writes, no listeners that do anything until

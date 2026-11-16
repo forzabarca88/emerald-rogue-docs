@@ -68,6 +68,14 @@
   <script src="./js/main.js"></script>
   <script src="./js/search-index.js"></script>
   <script src="./js/search.js"></script>
+  <!-- The shared 3D foundation (issue #79): inert until pages/home.js
+       mounts the hero's 3D run path via ROGUE3D.mount() — and that only
+       after ROGUE3D.load() has resolved the page's ONE deferred vendored-
+       three.js injection (the vendored three.js is never in static markup
+       — DESIGN.md §11, and the e2e vendor guard asserts the shells contain
+       no reference to it). The home-hero run path is the foundation's
+       second 3D placement. -->
+  <script src="./js/three-scene.js"></script>
   <script src="./js/pages/home.js"></script>
 </body>
 </html>
