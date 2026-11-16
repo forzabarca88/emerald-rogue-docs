@@ -1695,16 +1695,19 @@
      * ability — the display-face name + the in-game description from the
      * active build's catalog (catalog.vanilla under Vanilla); an ability
      * with no catalog entry renders its name only, never a fake "—".
-     * The in-game display loop (src/rogue_pokedex.c) prints each slot only
-     * when it differs from the PREVIOUSLY PRINTED one, so consecutive
-     * duplicates (the 3-slot table's triple repeats — mostly Mega forms)
-     * render once here too; a repeated-but-separated name still renders
-     * both times. */
+     * The in-game display loop (src/rogue_pokedex.c) prints each slot
+     * only when it is non-empty AND differs from the RAW previous slot
+     * (it sets prevAbility unconditionally, empty slots included), so
+     * consecutive duplicates (the 3-slot table's triple repeats — mostly
+     * Mega forms) render once here too, and a name repeated across an
+     * empty slot still renders both times. */
     function abilitiesHtml(abilities) {
       if (!abilities.length) return '<span class="dex-moves__none">\u2014</span>';
       var kept = [];
+      var prev = null; /* the raw previous slot (ABILITY_NONE initially) */
       abilities.forEach(function (a) {
-        if (a && kept[kept.length - 1] !== a) kept.push(a);
+        if (a && a !== prev) kept.push(a);
+        prev = a;
       });
       return (
         kept
