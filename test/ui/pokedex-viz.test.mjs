@@ -7,8 +7,10 @@
  *   A. The BASE-STAT RADAR (#dex-radar, in the species detail, under
  *      the stat bars) — a six-axis polygon (HP/ATK/DEF/SP.A/SP.D/SPE,
  *      0–255 scale, 4 ring guides) in the build's emerald, plus an
- *      optional COMPARE polygon (gold) from the native compare select
- *      (the active build's full dex as options). ONE delegated
+ *      optional COMPARE polygon (gold) from the .dex-radar__compare
+ *      species TYPEAHEAD (issue #110 — a search input over the active
+ *      build's dex: accent-insensitive substring on the shared pokedex
+ *      haystacks, name-first ranked, a bounded row list). ONE delegated
  *      pointerover listener on the container (the six invisible hit
  *      sectors carry data-axis — pointerover fires for hover AND tap)
  *      writes the mono caption "<STAT>: <value>[ vs <compare>]" — the
@@ -60,12 +62,16 @@
  *   5. typechart re-render — the EX-only species selection resets
  *      under the live toggle.
  *   6. radar (EX detail) — the derived main polygon (ring/axis/sector
- *      counts, the full compare option list, the legend, the default
- *      caption, no compare polygon).
- *   7. radar compare — the derived second polygon, the two-key
- *      legend, the "vs" caption on a sector pointerover.
+ *      counts), the compare typeahead (empty input by default; a typed
+ *      fragment shows a bounded filtered row list containing the
+ *      species — not the full dex), the legend, the default caption,
+ *      no compare polygon.
+ *   7. radar compare — picking a typeahead row renders the derived
+ *      second polygon, the two-key legend, and the "vs" caption on a
+ *      sector pointerover.
  *   8. radar version scope — the polygon re-reads the Vanilla overlay
- *      (derived different points) and the EX-only compare resets.
+ *      (derived different points) and the EX-only compare resets (the
+ *      typeahead is cleared).
  *   9. 360px — the heatmap block-scrolls (svg wider than the wrapper)
  *      and neither view overflows the page.
  */
@@ -476,7 +482,7 @@ test('typechart re-render: the EX-only species selection resets under the live t
   }
 });
 
-test('radar (EX detail): the derived polygon, the rings/axes/sectors, and the full compare list', async (t) => {
+test('radar (EX detail): the derived polygon, the rings/axes/sectors, and the compare typeahead', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html#rec-pokedex-' + DETAIL.id });
   try {
@@ -496,7 +502,7 @@ test('radar (EX detail): the derived polygon, the rings/axes/sectors, and the fu
         comparePoly: !!radar.querySelector('.dex-radar__poly--compare'),
         legend: [...radar.querySelectorAll('.dex-radar__key')].map((x) => x.textContent.trim()),
         caption: (document.getElementById('dex-radar-caption')?.textContent || '').trim(),
-        compareOptions: compareSel ? compareSel.options.length : 0,
+        compareTag: compareSel ? compareSel.tagName : null,
         compareValue: compareSel ? compareSel.value : null,
       };
     }, EX_POINTS);
@@ -512,8 +518,26 @@ test('radar (EX detail): the derived polygon, the rings/axes/sectors, and the fu
     assert.equal(facts.comparePoly, false, 'no compare polygon until one is picked');
     assert.deepEqual(facts.legend, [DETAIL.name], 'the legend keys the selected species');
     assert.equal(facts.caption, RADAR_CAPTION_DEFAULT, 'the default caption');
-    assert.equal(facts.compareOptions, exRecords.length + 1, 'the compare select offers the full EX dex + "None"');
-    assert.equal(facts.compareValue, '', 'the default compare is "None"');
+    assert.equal(facts.compareTag, 'INPUT', 'the compare control is a search input (issue #110 — the full-dex native select is gone)');
+    assert.equal(facts.compareValue, '', 'the typeahead is empty by default (no compare)');
+
+    // ACT — type a distinctive fragment: a bounded filtered list, not the full dex
+    await page.fill('#dex-radar-compare', COMPARE.name);
+    const rows = await page.evaluate(() => {
+      const list = document.getElementById('dex-radar-compare-list');
+      if (!list) return { hidden: true, rows: [] };
+      return {
+        hidden: list.hidden,
+        rows: [...list.querySelectorAll('.dex-radar__compare-row')].map((x) => ({
+          id: x.getAttribute('data-id'),
+          text: x.textContent.trim()
+        }))
+      };
+    });
+    assert.equal(rows.hidden, false, 'the typeahead shows its result list while typing');
+    assert.ok(rows.rows.length >= 1 && rows.rows.length < exRecords.length, 'the result list is a bounded filtered list — not the full dex');
+    assert.equal(rows.rows[0].id, COMPARE.id, 'the name match ranks first');
+    assert.equal(rows.rows[0].text, COMPARE.name, 'the first row shows the species display name');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();
@@ -524,21 +548,28 @@ test('radar compare: the derived second polygon, the two-key legend, and the "vs
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html#rec-pokedex-' + DETAIL.id });
   try {
-    // ACT — pick the compare species (present in both builds)
-    await page.selectOption('#dex-radar-compare', COMPARE.id);
+    // ACT — pick the compare species through the typeahead (present in
+    // both builds): type the name, click the row
+    await page.fill('#dex-radar-compare', COMPARE.name);
+    await page.evaluate((id) => {
+      const row = document.querySelector('#dex-radar-compare-list .dex-radar__compare-row[data-id="' + id + '"]');
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }, COMPARE.id);
     const facts = await page.evaluate((points) => {
       const radar = document.getElementById('dex-radar');
       return {
         mainPoints: radar.querySelector('.dex-radar__poly--main')?.getAttribute('points') || null,
         comparePoints: radar.querySelector('.dex-radar__poly--compare')?.getAttribute('points') || null,
         legend: [...radar.querySelectorAll('.dex-radar__key')].map((x) => x.textContent.trim()),
-        select: document.getElementById('dex-radar-compare').value,
+        compareValue: document.getElementById('dex-radar-compare').value,
+        listHidden: document.getElementById('dex-radar-compare-list').hidden,
       };
     }, COMPARE_POINTS);
     assert.equal(facts.mainPoints, EX_POINTS, 'the main polygon is untouched by a compare');
     assert.equal(facts.comparePoints, COMPARE_POINTS, 'the compare polygon is the derived compare-stat points');
     assert.deepEqual(facts.legend, [DETAIL.name, COMPARE.name], 'the legend keys both species (emerald + gold)');
-    assert.equal(facts.select, COMPARE.id, 'the select holds the compare');
+    assert.equal(facts.compareValue, COMPARE.name, 'the input holds the picked species');
+    assert.equal(facts.listHidden, true, 'the result list hides after a pick');
 
     // ACT — pointerover the HP hit sector (hover AND tap share the
     // one delegated listener)
@@ -559,8 +590,12 @@ test('radar version scope: the polygon re-reads the Vanilla overlay and the EX-o
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html#rec-pokedex-' + DETAIL.id });
   try {
-    // ARRANGE — EX, the EX-ONLY compare selected
-    await page.selectOption('#dex-radar-compare', EX_ONLY_COMPARE.id);
+    // ARRANGE — EX, the EX-ONLY compare picked through the typeahead
+    await page.fill('#dex-radar-compare', EX_ONLY_COMPARE.name);
+    await page.evaluate((id) => {
+      const row = document.querySelector('#dex-radar-compare-list .dex-radar__compare-row[data-id="' + id + '"]');
+      row.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }, EX_ONLY_COMPARE.id);
     await page.waitForFunction(
       () => !!document.querySelector('#dex-radar .dex-radar__poly--compare'),
       null,
@@ -576,20 +611,18 @@ test('radar version scope: the polygon re-reads the Vanilla overlay and the EX-o
     );
 
     // ASSERT — the polygon re-read the overlay stats; the EX-only
-    // compare reset to "None"
+    // compare reset (the typeahead cleared)
     const facts = await page.evaluate(() => {
       const radar = document.getElementById('dex-radar');
       return {
         mainPoints: radar.querySelector('.dex-radar__poly--main')?.getAttribute('points') || null,
-        comparePoly: !!radar.querySelector('.dex-radar__poly--compare'),
+        comparePoly: !!radar.querySelector('#dex-radar .dex-radar__poly--compare'),
         compareValue: document.getElementById('dex-radar-compare').value,
-        compareOptions: document.getElementById('dex-radar-compare').options.length,
       };
     });
     assert.equal(facts.mainPoints, VAN_POINTS, 'the main polygon is the derived Vanilla-overlay points (genuinely different from EX)');
     assert.equal(facts.comparePoly, false, 'the EX-only compare\u2019s polygon is gone');
-    assert.equal(facts.compareValue, '', 'the EX-only compare reset to "None" under Vanilla');
-    assert.equal(facts.compareOptions, vanillaRecords.length + 1, 'the compare list is the Vanilla dex + "None"');
+    assert.equal(facts.compareValue, '', 'the EX-only compare reset (the typeahead is cleared) under Vanilla');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();
