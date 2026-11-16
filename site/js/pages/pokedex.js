@@ -809,8 +809,10 @@
      * (the 255 max — the stat bars' own value/255 normalization), axis
      * labels at radius 114, the 6 hit sectors out to radius 126 (they
      * tile the full 360° in 60° wedges, so every point of the chart is
-     * tappable). The six axes in STAT_ROWS order minus the BST row:
-     * hp top, then clockwise atk / def / spd / spe / spa. */
+     * tappable), the mono "255" tick centred on the vertical axis above
+     * the outer ring's top vertex (baseline at cy − r − 4 — clear of the
+     * ring's slanted top edges). The six axes in STAT_ROWS order minus
+     * the BST row: hp top, then clockwise atk / def / spd / spe / spa. */
     var RADAR_AXES = [
       ['hp', 'HP'],
       ['atk', 'ATK'],
@@ -883,7 +885,8 @@
     /**
      * The radar's static SVG (string-built): the 4 ring guides
      * (25/50/75/100% of 255), the 6 axis lines, the mono axis labels +
-     * the "255" tick on the outer ring, the species polygon
+     * the "255" tick centred above the outer ring's top vertex, the
+     * species polygon
      * (--color-emerald, solid token fill + fill-opacity), the compare
      * polygon (--color-gold) when present, the vertex dots, and the 6
      * invisible hit sectors LAST (topmost — they take the pointers).
@@ -905,7 +908,7 @@
         var ly = (g.cy + g.labelR * Math.sin(a) + 3.5).toFixed(1);
         s += '<text class="dex-radar__label" x="' + lx + '" y="' + ly + '" text-anchor="middle">' + RADAR_AXES[i][1] + '</text>';
       }
-      s += '<text class="dex-radar__tick" x="' + (g.cx + 5) + '" y="' + (g.cy - g.r + 12) + '">255</text>';
+      s += '<text class="dex-radar__tick" x="' + g.cx + '" y="' + (g.cy - g.r - 4) + '" text-anchor="middle">255</text>';
       var stats = dexVariant(record, 'stats') || {};
       s += '<polygon class="dex-radar__poly dex-radar__poly--main" points="' + radarPolyPoints(stats) + '"/>';
       if (compare) {
@@ -1183,10 +1186,13 @@
     }
 
     /* The cell geometry: 24-unit cells, a 52-unit left gutter for the
-     * row labels and a 44-unit top gutter for the -45°-rotated column
-     * labels. N comes from typeOptions() (EX 18 / Vanilla 17) — the
-     * grid is derived, never hardcoded. */
-    var TC_GEOM = { cell: 24, left: 52, top: 44, pad: 8 };
+     * row labels, a 44-unit top gutter for the -45°-rotated column
+     * labels, a 20-unit right gutter (the last column's rotated label
+     * overflows the grid's right edge by up to ~15.6 units at its
+     * 4-char mono max — the gutter keeps it inside the viewBox) and an
+     * 8-unit bottom pad. N comes from typeOptions() (EX 18 / Vanilla
+     * 17) — the grid is derived, never hardcoded. */
+    var TC_GEOM = { cell: 24, left: 52, top: 44, right: 20, pad: 8 };
 
     /** The bin class suffix for a multiplier (0→i0, 0.5→i1, 1→i2, 2→i3). */
     function tcBin(m) {
@@ -1213,7 +1219,7 @@
       }
       var N = types.length;
       var g = TC_GEOM;
-      var w = g.left + N * g.cell + g.pad;
+      var w = g.left + N * g.cell + g.right;
       var h = g.top + N * g.cell + g.pad;
       var s = '<svg class="dex-typechart__grid" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Type matchup chart: rows attack, columns defend">';
       var a, d;
