@@ -2791,7 +2791,8 @@
 /* --- issue-#100 visualisation A: the stat radar (detail, under the
    |  stat bars) -------------------------------------------------------
    |  A hand-rolled inline-SVG spider chart (js/pages/pokedex.js builds
-   |  the string; the viewBox scales it to the 420px cap). Tokens only:
+   |  the string; the viewBox scales it to the 420px STAGE cap — the
+   |  square .dex-radar__stage, see the width split below). Tokens only:
    |    - the species polygon: SOLID --color-emerald fill + the
    |      fill-opacity presentation attribute (the site's no-rgba-
    |      literals rule — DESIGN.md §10);
@@ -2799,8 +2800,8 @@
    |      (emerald vs amber reads unambiguously on the dark surface);
    |    - the guides (4 rings + 6 axes): --color-line; the mono axis
    |      labels + the "255" tick: --color-muted (SVG text sizes are
-   |      viewBox units — 10 units ≈ 14px at the 420px cap, ≈9px at
-   |      360px, both legible);
+   |      viewBox units — 10 units ≈ 14px at the 420px stage cap,
+   |      ≈9px at 360px, both legible);
    |    - the six hit sectors paint nothing (fill: none +
    |      pointer-events: all) — they are pointer targets, not visual
    |      elements (hover AND touch tap, one delegated listener).
@@ -2817,10 +2818,16 @@
    |  list (.dex-radar__compare-list) shares the SAME tokens-only box the
    |  toolbar selects do (line border, surface background, radius-sm),
    |  one padded row per visible match (no hover paint — the pick is a
-   |  click; no new breakpoint — it rides the .dex-radar 420px grid,
-   |  full-width at 360px). */
+   |  click; no new breakpoint — it rides the .dex-radar's full-width
+   |  grid, so it is full-width at every width).
+   |
+   |  Width split (issue #118): the .dex-radar CONTAINER spans the full
+   |  .dex-species__body field (like the .dex-meta box below it), so the
+   |  field's compare control, result list, legend and caption ride the
+   |  full width and the field aligns with its siblings — only the square
+   |  SVG STAGE (the .dex-radar__stage wrapper) keeps the 420px cap,
+   |  left-aligned like the 560px .dex-stats block above. */
 .page--pokedex .dex-radar {
-  max-width: 420px;
   display: grid;
   gap: var(--space-2);
 }
@@ -2846,6 +2853,12 @@
   font-size: var(--text-sm);
   color: var(--color-ink);
   cursor: pointer;
+}
+
+/* the square SVG stage — the only part of the field that keeps the
+   420px cap (issue #118); left-aligned like the .dex-stats block */
+.page--pokedex .dex-radar__stage {
+  max-width: 420px;
 }
 
 .page--pokedex .dex-radar__svg {
