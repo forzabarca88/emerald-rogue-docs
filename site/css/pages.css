@@ -35,7 +35,10 @@
    (js/three-scene.js) appends over it — the site's second 3D placement
    (DESIGN.md §7). The box is fixed-size, so mounting/unmounting the
    canvas never shifts the layout. The pure-CSS path is centred in the
-   box, matching the 3D scene's centred framing. */
+   box, matching the 3D scene's centred framing. The stage's surface is
+   the same plain --color-bg the 3D scene paints as its backdrop, so
+   the no-WebGL and WebGL states look identical (the CSS path no longer
+   sits on the body's tile-grid texture). */
 .page--index .hero-stage {
   position: relative;
   height: 132px;
@@ -44,6 +47,7 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  background: var(--color-bg);
 }
 
 /* the stage carries the .run-path's own top margin */

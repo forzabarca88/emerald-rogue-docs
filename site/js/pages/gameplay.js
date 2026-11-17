@@ -117,9 +117,11 @@
      *    one segment (tower row 4, sim row 10);
      *  - honey (room-honey-tree): "badge 1+ · one per path" — row 10;
      *  - den (room-wild-den): "each remaining route rolls" with the
-     *    minimum regular routes always kept — at most one den per
-     *    segment here (2 at the Champion+ rows, where only one route
-     *    is kept) — rows 11, 12, 13;
+     *    minimum regular routes always kept (3 on badges 0–7, 2 for
+     *    the Elite Four, 1 at the Champion and beyond) — zero dens
+     *    on the badges 0–7 rows, at most one per segment on the Elite
+     *    rows (2 at the Champion+ rows, where only one route is kept)
+     *    — rows 11, 12, 13;
      *  - gap (room-none): "never badge 0" — row 9 only;
      *  - rest (room-reststop): any badge, weight 100/20/5/1 by rest
      *    stops already on the path — one per segment here: rows
@@ -194,13 +196,19 @@
     }
 
     /* The three mode shapes (the how-the-path-works prose in
-       data/adventure.json): a compact schematic run-path per mode —
-       Classic 3 rooms, Fast Path 4 (5 at the Champion stage),
-       Gauntlet 7 on badge 0 then 2. */
+       data/adventure.json): a compact schematic run-path per mode.
+       `rooms` is the ROOM COLUMN count — the generator's totalLength
+       minus its two fixed columns (the initial split and the final
+       encounter — src/rogue_adventurepaths.c's "// +2 to account for
+       final encounter and initial split"): Classic totalLength 5 →
+       3 rooms; Fast Path 6 → 4 (3 at the Champion stage, where
+       totalLength is 5); Gauntlet 7 → 5 rooms on badge 0, then
+       totalLength 2 → 0 rooms after the first badge (the boss right
+       after the split). */
     var MODE_SHAPES = [
       { name: 'Classic', rooms: 3, note: '3 rooms, split, boss' },
-      { name: 'Fast Path', rooms: 4, note: '4 rooms (5 at the Champion stage)' },
-      { name: 'Gauntlet', rooms: 7, note: '7 on badge 0, then 2' }
+      { name: 'Fast Path', rooms: 4, note: '4 rooms (3 at the Champion stage)' },
+      { name: 'Gauntlet', rooms: 5, note: '5 rooms on badge 0, then none (boss right after the split)' }
     ];
 
     /* A mini mode-shape path: hub → N route nodes → split (two lanes)
@@ -361,7 +369,7 @@
             '<div class="mode-shapes">' +
             MODE_SHAPES.map(modeShapeRow).join('') +
             '</div>' +
-            '<p class="path-diagram__caption">The three mode shapes, same read order — Fast Path steps hold 4 rooms (5 at the Champion stage); the Gauntlet opens with 7 rooms on badge 0, then 2 after the first badge.</p>' +
+            '<p class="path-diagram__caption">The three mode shapes, same read order — Fast Path steps hold 4 rooms (3 at the Champion stage); the Gauntlet opens with 5 rooms on badge 0, then none (boss right after the split).</p>' +
             '</div>'
         );
     }

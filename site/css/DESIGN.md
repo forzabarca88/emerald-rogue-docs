@@ -116,7 +116,10 @@ captions or surrounding prose):
   which is also the mount for the second 3D placement (§7): the pure-CSS
   path stays the no-JS / no-WebGL fallback layer in the same box, and a
   WebGL canvas renders the same path in 3D over it — both layers emitted
-  from the single `HERO_PATH` source of truth in `js/pages/home.js`.
+  from the single `HERO_PATH` source of truth in `js/pages/home.js`. The
+  stage's own surface is a plain `--color-bg` fill (the same colour the
+  3D scene paints as its backdrop), so the stage looks identical in the
+  no-WebGL and WebGL states.
 - **Gameplay example-run chain** (issue #119,
   `.run-path--labeled.run-path--chain`) — an *example* Classic run, one
   labelled row per badge step (badge 0–13, 14 segments — “a run is a
@@ -137,9 +140,11 @@ captions or surrounding prose):
   `.path-diagram` panel with a compact `.run-legend` (node style → room
   type) above it and three `.mode-shape` mini-rows below it —
   `.run-path--mini` schematic paths (12px nodes, 8px links) for the
-  three mode shapes from the `how-the-path-works` prose: Classic 3
-  rooms, Fast Path 4 (5 at the Champion stage), Gauntlet 7 on badge 0
-  then 2.
+  three mode shapes from the `how-the-path-works` prose — ROOM COLUMN
+  counts (the generator's `totalLength` minus its two fixed columns,
+  the initial split and the final encounter): Classic 3 rooms, Fast
+  Path 4 (3 at the Champion stage), Gauntlet 5 rooms on badge 0, then
+  none (boss right after the split).
 - **Gameplay wild-den callout** — a Fast Path hidden-route segment
   (hub → den nodes → boss) drawn with the same labelled structure.
 

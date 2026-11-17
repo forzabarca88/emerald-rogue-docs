@@ -85,10 +85,12 @@
    * Scene constants (world units): the geometry above, the FIXED camera
    * (a downward tilt at the origin — the only per-frame change is the
    * whole-group yaw drift in the returned pose). The scene is FIT to the
-   * stage's client box at build (fitScene): the vertical field-of-view is
-   * derived from the aspect (the foundation sets camera.aspect after
-   * build) so the path's world bounding box fills the stage without
-   * clipping. Colors come ONLY from the named --color-* tokens below. */
+   * stage's client box (fitScene): the vertical field-of-view is derived
+   * from the aspect so the path's world bounding box fills the stage
+   * without clipping — applied at build AND re-applied on every live
+   * resize through the foundation's refit hook (the foundation sets
+   * camera.aspect after build / on resize, then calls refit(aspect)).
+   * Colors come ONLY from the named --color-* tokens below. */
   var SCENE = {
     pitch: 1.9, /* node-to-node centre distance (= one link gap) */
     node: 1.0, /* tile footprint (x × z) */
@@ -170,21 +172,29 @@
    * only (no camera movement, no per-frame allocations).
    */
   function buildHeroScene(THREE, scene, camera, colors, stage) {
-    var fit = fitScene(Math.max(1, stage.clientWidth) / Math.max(1, stage.clientHeight));
-    camera.fov = fit.fov;
-    camera.near = 0.1;
-    camera.far = 100;
+    var aspect = Math.max(1, stage.clientWidth) / Math.max(1, stage.clientHeight);
     camera.position.set(0, SCENE.camY, SCENE.camZ);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
 
-    /* the plain --color-bg backdrop (the in-frame art floats on the page
-     * background, like the CSS path does) */
+    /* the plain --color-bg backdrop (the .hero-stage box paints the same
+     * --color-bg surface in CSS, so both states look identical) */
     scene.background = new THREE.Color(colors.background);
 
     var group = new THREE.Group();
-    group.position.x = -fit.lastX / 2; /* centre the path on the camera target */
-    group.position.z = fit.z; /* centre the band vertically in the stage */
+    group.position.x = -fitScene(aspect).lastX / 2; /* centre the path on the camera target */
     scene.add(group);
+
+    /* The aspect-dependent fit (the vertical fov + the band's vertical
+     * centre): the foundation's fit hook applies it once after build
+     * (before the first frame) and again on every live resize, so the
+     * fov is never frozen at the mount aspect. */
+    function applyFit(a) {
+      var fit = fitScene(a);
+      camera.fov = fit.fov;
+      camera.near = 0.1;
+      camera.far = 100;
+      group.position.z = fit.z; /* centre the band vertically in the stage */
+    }
 
     function box(w, h, d, color) {
       return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshBasicMaterial({ color: color }));
@@ -251,8 +261,11 @@
 
     placeSteps(HERO_PATH, 0, 0, null, []);
 
-    return function pose(t) {
-      group.rotation.y = Math.sin(t * YAW_SPEED) * YAW_MAX; /* the slow yaw drift */
+    return {
+      pose: function pose(t) {
+        group.rotation.y = Math.sin(t * YAW_SPEED) * YAW_MAX; /* the slow yaw drift */
+      },
+      refit: applyFit /* the foundation's (re)fit hook — the aspect-derived fov */
     };
   }
 

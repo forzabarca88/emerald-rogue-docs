@@ -37,6 +37,10 @@
  *   - No WebGL context, or a build() that throws → the mount aborts
  *     WITHOUT adding a canvas: the static fallback layer stays — no
  *     layout shift, no console error on any failure path.
+ *   - A runtime render failure (a throw out of renderer.render(), e.g.
+ *     a driver dropping the context mid-frame) is handled like a
+ *     context loss: the loop stops and the full teardown below runs —
+ *     no pageerror escapes on any failure path.
  *   - webglcontextlost → FULL teardown (the per-mount scene objects,
  *     the shared renderer, forceContextLoss()) and the NEXT mount
  *     rebuilds from scratch.
@@ -56,11 +60,14 @@
  *   load() → Promise<Boolean>
  *       Injects a deferred <script src="./vendor/three.min.js"> ONCE —
  *       this is the ONE place the vendored three.js is ever loaded — and
- *       resolves true when window.THREE is present. If THREE is already
- *       present it resolves immediately (no injection); the promise is
- *       memoized for the page lifetime and a load failure (the script
- *       errors) resolves false and is NEVER retried (a missing vendor file
- *       is not a transient fault).
+ *       resolves true only when window.THREE is present (a script that
+ *       "loads" but defines nothing — a corrupt vendor file — resolves
+ *       false, like a load failure). If THREE is already present it
+ *       resolves immediately (no injection); the promise is memoized for
+ *       the page lifetime and a load failure (the script errors, or loads
+ *       without defining window.THREE) resolves false and is NEVER
+ *       retried (a missing or corrupt vendor file is not a transient
+ *       fault).
  *
  *   mount(mountEl, { tokens, build }) → Promise<Boolean>
  *       mountEl   the element the canvas will fill. The caller's CSS owns
@@ -68,8 +75,10 @@
  *                 absolutely-positioned inset:0 canvas over a static
  *                 fallback layer in the same box); the foundation sizes
  *                 the drawing buffer to the element's client box at mount
- *                 and re-fits (renderer size + camera aspect) on window
- *                 resize while mounted.
+ *                 and re-fits (renderer size + camera aspect, then the
+ *                 placement's optional refit hook) on window resize while
+ *                 mounted, re-rendering the static frame when no loop is
+ *                 running (the reduced-motion end state stays one frame).
  *       tokens    an object of role → '--color-*' custom-property name
  *                 (e.g. { background: '--color-bg' }). Each named token is
  *                 read once at mount via getComputedStyle(document.
@@ -83,12 +92,20 @@
  *                 scenes), may configure the camera (the foundation
  *                 creates a default PerspectiveCamera and sets
  *                 camera.aspect + updateProjectionMatrix() AFTER build,
- *                 since build may re-set fov/near/far), and may return
- *                 pose(t): a PURE function of scene time (seconds since
+ *                 since build may re-set fov/near/far), and may return:
+ *                 - pose(t): a PURE function of scene time (seconds since
  *                 the loop (re)started — the clock restarts at 0 each time
  *                 the loop starts) that MUTATES PRE-BUILT objects only,
  *                 with NO per-frame allocations. Returning undefined/null
  *                 mounts a static scene (exactly one frame, no loop).
+ *                 - or an object { pose?, refit? } carrying that same
+ *                 pose(t) plus an OPTIONAL refit(aspect): called by the
+ *                 foundation whenever it re-fits the mount — once after
+ *                 build (before the first frame) and again on every live
+ *                 window resize, BEFORE the re-render — for placements
+ *                 whose camera fit depends on the box's aspect (the home
+ *                 hero's aspect-derived vertical fov). refit has no
+ *                 per-frame cost: it only runs on (re)fit.
  *                 If build() throws, the mount aborts (resolves false, no
  *                 canvas; the half-built scene's objects are disposed).
  *       Returns a promise resolving true when the mount is live (the
@@ -128,6 +145,7 @@
     camera: null, /* per-mount camera */
     mountEl: null, /* the element the canvas currently fills */
     pose: null, /* the caller's pose(t), if build() returned one */
+    refit: null, /* the caller's refit(aspect), if build() returned { pose, refit } */
     raf: 0, /* active requestAnimationFrame id (0 = no loop) */
     lastNow: 0, /* last rAF timestamp (ms) */
     sceneTime: 0, /* seconds since the loop (re)started — the pose's clock */
@@ -180,6 +198,7 @@
     state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     state.renderer.setSize(w, h, false);
     state.camera.aspect = w / h;
+    if (state.refit) state.refit(state.camera.aspect); /* the placement's aspect-dependent fit (e.g. an aspect-derived fov) */
     state.camera.updateProjectionMatrix();
   }
 
@@ -199,7 +218,16 @@
     state.lastNow = now;
     state.sceneTime += dt;
     state.pose(state.sceneTime);
-    state.renderer.render(state.scene, state.camera);
+    try {
+      state.renderer.render(state.scene, state.camera);
+    } catch (e) {
+      /* a runtime render throw (a driver dropping the context mid-frame)
+       * is handled like a context loss: stop the loop, full teardown —
+       * no pageerror escapes on any failure path */
+      state.raf = 0;
+      onContextLost(null);
+      return;
+    }
     state.raf = window.requestAnimationFrame(tick);
   }
 
@@ -224,7 +252,13 @@
   /** Exactly one static frame at t=0 (reduced motion, or a no-pose scene). */
   function renderStatic() {
     if (state.pose) state.pose(0);
-    state.renderer.render(state.scene, state.camera);
+    try {
+      state.renderer.render(state.scene, state.camera);
+    } catch (e) {
+      /* the same contract as the loop's render: full teardown, no pageerror */
+      state.raf = 0;
+      onContextLost(null);
+    }
   }
 
   /** The motion end state for the current media state (loop vs one frame). */
@@ -278,6 +312,7 @@
     state.scene = null;
     state.camera = null;
     state.pose = null;
+    state.refit = null;
     state.mountEl = null;
   }
 
@@ -309,11 +344,14 @@
 
   /** Re-fit a live mount on window resize (responsive stages — the caller's
    *  box may change with the viewport; the drawing buffer + camera aspect
-   *  must track it, or the frame stretches). */
+   *  must track it, or the frame stretches). When no loop is running
+   *  (reduced motion, or a no-pose scene) the re-fit clears the buffer,
+   *  so the static frame is re-rendered — the end state stays one frame. */
   function onResize() {
     if (!state.scene || !state.renderer || !state.mountEl) return;
     if (!state.canvas || !state.canvas.parentNode) return;
     fit(state.mountEl);
+    if (!state.raf) renderStatic();
   }
   window.addEventListener('resize', onResize);
 
@@ -322,8 +360,9 @@
   /**
    * The ONE place the vendored three.js is ever loaded: a deferred
    * <script> injection, promise-memoized for the page lifetime. Resolves
-   * true when window.THREE is present (already loaded → immediately, no
-   * injection); false — never retried — if the script fails to load.
+   * true only when window.THREE is present (already loaded → immediately,
+   * no injection); false — never retried — if the script fails to load,
+   * or loads without defining window.THREE (a corrupt vendor file).
    */
   function load() {
     if (window.THREE) return Promise.resolve(true);
@@ -332,7 +371,7 @@
       var script = document.createElement('script');
       script.src = THREE_SRC;
       script.onload = function () {
-        resolve(true);
+        resolve(!!window.THREE); /* a script that "loads" but defines nothing is a failure too */
       };
       script.onerror = function () {
         resolve(false);
@@ -386,8 +425,20 @@
       state.scene = scene;
       var camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
       state.camera = camera;
-      var pose = options.build(THREE, scene, camera, colors);
-      state.pose = typeof pose === 'function' ? pose : null;
+      var ret = options.build(THREE, scene, camera, colors);
+      /* build may return pose(t) directly, or an object { pose?, refit? }
+       * — the refit hook re-applies the placement's aspect-dependent
+       * camera fit on every foundation (re)fit (the home hero's
+       * aspect-derived vertical fov). */
+      var pose = null;
+      var refit = null;
+      if (typeof ret === 'function') pose = ret;
+      else if (ret && typeof ret === 'object') {
+        if (typeof ret.pose === 'function') pose = ret.pose;
+        if (typeof ret.refit === 'function') refit = ret.refit;
+      }
+      state.pose = pose;
+      state.refit = refit;
       state.mountEl = mountEl;
       fit(mountEl); /* after build — the caller may have re-set fov/near/far */
       mountEl.appendChild(state.canvas);

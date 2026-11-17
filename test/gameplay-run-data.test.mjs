@@ -48,8 +48,10 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   const EXAMPLE_RUN = literalFrom(source, 'EXAMPLE_RUN');
 
   /* The room vocabulary maps onto the placeable room-type records —
-     every key in the draw must be a real room, and room-miniboss
-     (placement.kind "never") must be absent from the vocabulary. */
+     every key in the draw must be a real room, and the two room types
+     outside the vocabulary must be absent: room-miniboss (placement.kind
+     "never") and room-boss (the mandatory end of every row, drawn
+     separately as the labelled boss). */
   const ROOM_IDS = {
     route: 'room-route',
     rest: 'room-reststop',
@@ -70,7 +72,7 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   assert.deepEqual(
     Object.keys(ROOM_STYLES).sort(),
     Object.keys(ROOM_IDS).sort(),
-    'ROOM_STYLES must name exactly the placeable room types (room-miniboss is never placed)'
+    'ROOM_STYLES must name exactly the placeable room types (room-miniboss is never placed; room-boss is the mandatory end, drawn separately in every row)'
   );
   for (const [key, id] of Object.entries(ROOM_IDS)) {
     assert.ok(records.has(id), `data/adventure.json lost the ${id} record (ROOM_STYLES "${key}")`);
@@ -174,15 +176,19 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   assert.ok(shrineBadges.length <= 1, 'the shrine appears on one pre-rolled badge per run');
   assert.ok(shrineBadges.every((b) => b >= 1 && b <= 13), 'the shrine badge is rolled within the run');
 
-  /* Minimum-route retention (the wild-den `placement` note — 2 regular
-     routes kept on the Elite Four, 1 at the Champion and beyond): at
-     most one den per segment until the Champion stage, at most two
-     after — and every segment keeps at least one plain route (the
-     default room the specials "replace"). */
+  /* Minimum-route retention (the wild-den `placement` note in
+     data/adventure.json — the generator always keeps a minimum number of
+     regular routes: 3 on badges 0–7, 2 for the Elite Four, 1 at the
+     Champion and beyond; its den pass rolls each remaining route only
+     while freeRoomCount > minRouteCount — src/rogue_adventurepaths.c):
+     with the Classic 3-column segment, ZERO dens are placeable on badges
+     0–7, at most one on badges 8–11, at most two from badge 12 — and
+     every segment keeps at least one plain route (the default room the
+     specials "replace"). */
   EXAMPLE_RUN.forEach((seg, i) => {
     const dens = seg.rooms.filter((r) => r === 'den').length;
-    const maxDens = seg.badge >= 12 ? 2 : 1;
-    assert.ok(dens <= maxDens, `badge ${i}: at most ${maxDens} den (minimum-route retention)`);
+    const maxDens = seg.badge >= 12 ? 2 : seg.badge >= 8 ? 1 : 0;
+    assert.ok(dens <= maxDens, `badge ${i}: at most ${maxDens} dens (minimum-route retention)`);
     assert.ok(seg.rooms.includes('route'), `badge ${i}: every segment keeps a plain route`);
   });
 });
