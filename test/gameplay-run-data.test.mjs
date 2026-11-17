@@ -1,13 +1,16 @@
 /**
  * The gameplay page's example-run chain (issue #119) is a hand-authored
- * Classic run — one labelled row per badge step (0–13). This guard
- * validates the drawn rows against the `placement` rules in
+ * Classic run — one 2-D mini-grid row per badge step (0–13): hub → 3
+ * room COLUMNS (each a list of 1–3 lane cells; a null cell is the
+ * in-game empty-sand gap) → the split's 2–3-lane fork → boss. This
+ * guard validates the drawn rows against the `placement` rules in
  * data/adventure.json (end result: the diagram the page shows is a
- * legal draw, never an impossible one): the per-room badge gating, the
- * one-per-path caps (incl. the sim/tower 50/50 alternative), the
- * per-run legendary/hideout/shrine slots, the minimum-route retention
- * behind the den counts, and the boss-ladder order (the end boss is
- * always the next one on the ladder).
+ * legal draw, never an impossible one): the per-column lane counts,
+ * the per-room badge gating, the one-per-path caps (incl. the
+ * sim/tower 50/50 alternative), the per-run legendary/hideout/shrine
+ * slots, the minimum-route retention behind the den counts (gaps legal
+ * anywhere a route would sit, never badge 0), and the boss-ladder order
+ * (the end boss is always the next one on the ladder).
  *
  * The rows are read straight out of site/js/pages/gameplay.js (a regex
  * slice of the `var` literals + a vm eval — the same no-mock setup
@@ -80,14 +83,31 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   }
 
   /* One row per badge step: 14 rows, badge 0–13 in order, each a
-     3-column segment with a 2-or-3-lane split. */
+     3-column segment (every column a list of 1–3 lane cells — null is
+     the empty-sand gap) with a 2-or-3-lane split. */
   assert.equal(EXAMPLE_RUN.length, 14, 'one row per badge step (badge 0–13)');
   EXAMPLE_RUN.forEach((seg, i) => {
     assert.equal(seg.badge, i, `row ${i} carries badge ${seg.badge} — rows are badge steps 0–13 in order`);
     assert.equal(seg.rooms.length, 3, `badge ${i}: the Classic segment has 3 room columns`);
     assert.ok(seg.lanes === 2 || seg.lanes === 3, `badge ${i}: the split forks into 2 or 3 lanes`);
-    seg.rooms.forEach((key) => assert.ok(ROOM_IDS[key], `badge ${i}: unknown room key "${key}"`));
+    seg.rooms.forEach((column, c) => {
+      assert.ok(Array.isArray(column), `badge ${i} column ${c + 1}: each room column is a lane list`);
+      assert.ok(
+        column.length >= 1 && column.length <= 3,
+        `badge ${i} column ${c + 1}: each room column holds 1–3 lanes`
+      );
+      column.forEach((key, l) =>
+        assert.ok(
+          key === null || ROOM_IDS[key],
+          `badge ${i} column ${c + 1} lane ${l + 1}: unknown room "${key}" (null = the empty-sand gap)`
+        )
+      );
+    });
   });
+
+  /* Flatten a segment's lane cells, naming nulls 'gap' — the placement
+     rules gate rooms, and a gap sits anywhere a route would. */
+  const cellsOf = (seg) => seg.rooms.flat().map((cell) => (cell === null ? 'gap' : cell));
 
   /* The boss ladder — derived from the boss records' badge ranges in
      the record names (Gym Leaders 0–7, Elite Four 8–11, Champion 12,
@@ -115,7 +135,9 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
     assert.equal(seg.boss, ladder[i], `badge ${i}: the end boss is ${ladder[i]} (the next ladder step)`);
   });
 
-  /* Badge gating — each room's `placement` note in data/adventure.json. */
+  /* Badge gating — each room's `placement` note in data/adventure.json
+     (gaps: null lane cells, legal anywhere a route would sit — never
+     badge 0). */
   const range = (a, b) => {
     const out = [];
     for (let i = a; i <= b; i++) out.push(i);
@@ -135,7 +157,7 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   for (const [key, badges] of Object.entries(GATED)) {
     EXAMPLE_RUN.forEach((seg, i) => {
       assert.ok(
-        !seg.rooms.includes(key) || badges.includes(seg.badge),
+        !cellsOf(seg).includes(key) || badges.includes(seg.badge),
         `badge ${i}: "${key}" is offered on badges ${badges.join('/')} only`
       );
     });
@@ -145,14 +167,15 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
      plus the 50/50 sim/tower alternative — never both in one segment. */
   const CAPPED = ['legend', 'hideout', 'honey', 'deal', 'lab', 'show', 'sign', 'sim', 'tower'];
   EXAMPLE_RUN.forEach((seg, i) => {
+    const cells = cellsOf(seg);
     for (const key of CAPPED) {
       assert.ok(
-        seg.rooms.filter((r) => r === key).length <= 1,
+        cells.filter((r) => r === key).length <= 1,
         `badge ${i}: at most one "${key}" per path`
       );
     }
     assert.ok(
-      !(seg.rooms.includes('sim') && seg.rooms.includes('tower')),
+      !(cells.includes('sim') && cells.includes('tower')),
       `badge ${i}: the Battle Sim and the Tower are the 50/50 alternative pair`
     );
   });
@@ -160,7 +183,7 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
   /* The per-run slots: up to three legendary slots, the two hideouts
      (Early on a badge 2–4, Pre-Legend mirroring the Box legendary),
      and the one pre-rolled shrine badge. */
-  const badgesOf = (key) => EXAMPLE_RUN.filter((s) => s.rooms.includes(key)).map((s) => s.badge);
+  const badgesOf = (key) => EXAMPLE_RUN.filter((s) => cellsOf(s).includes(key)).map((s) => s.badge);
   const legendBadges = badgesOf('legend');
   assert.ok(legendBadges.length <= 3, 'a run carries up to three legendary slots');
   const hideoutBadges = badgesOf('hideout');
@@ -183,12 +206,14 @@ test('the example-run chain is a legal Classic draw (issue #119)', () => {
      while freeRoomCount > minRouteCount — src/rogue_adventurepaths.c):
      with the Classic 3-column segment, ZERO dens are placeable on badges
      0–7, at most one on badges 8–11, at most two from badge 12 — and
-     every segment keeps at least one plain route (the default room the
-     specials "replace"). */
+     this draw keeps a plain route in every segment (a promise of the
+     draw, not the generator: its special-encounter pass can replace all
+     remaining routes). */
   EXAMPLE_RUN.forEach((seg, i) => {
-    const dens = seg.rooms.filter((r) => r === 'den').length;
+    const cells = cellsOf(seg);
+    const dens = cells.filter((r) => r === 'den').length;
     const maxDens = seg.badge >= 12 ? 2 : seg.badge >= 8 ? 1 : 0;
     assert.ok(dens <= maxDens, `badge ${i}: at most ${maxDens} dens (minimum-route retention)`);
-    assert.ok(seg.rooms.includes('route'), `badge ${i}: every segment keeps a plain route`);
+    assert.ok(cells.includes('route'), `badge ${i}: this draw keeps a plain route in every segment`);
   });
 });

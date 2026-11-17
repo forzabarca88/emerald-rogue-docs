@@ -240,33 +240,35 @@
   color: var(--color-muted);
 }
 
-/* the example-run chain (gameplay, issue #119): one labelled row per
-   badge step — the links tighten further so the widest label set of
+/* the example-run chain (gameplay, issue #119): one 2-D mini-grid row
+   per badge step — hub → 3 room COLUMNS (each a vertical stack of 1–3
+   lane cells; a null cell is the in-game empty-sand gap) → the split's
+   2–3-lane fork → boss. The links tighten further so the widest row of
    the 14-row draw still fits at 360px (measured: the widest row —
-   Legend + Hideout + Elite 1 — sits at 288px inside the 292px panel) */
+   Hub…Champion — sits at ~198px inside the 292px panel) */
 .run-path--chain .run-path__link {
   width: 10px;
 }
 
-/* Row rhythm (issue #118 audit): each chain row is a two-track grid —
-   a 36px NODE track (the 3-lane fork is exactly 36px; the 2-lane fork,
-   the 20px nodes and the 24px boss diamond all centre inside it) plus
-   a 20px LABEL track, 4px apart. Every row is exactly 6 cells + 5
-   links (Hub, 3 rooms, Split, Boss), so the 11 columns are explicit
-   max-content: max-content tracks can't stretch, unlike auto tracks,
-   which would spread the columns across the whole panel. Each cell is
-   a nested grid spanning both tracks (36 + 4 + 20 = the row's 60px)
-   with its node in track 1 and its label in track 2. The result:
-   every label shares ONE baseline (before, centred variable-height
-   cells dropped the Split label up to 8px low on 3-lane rows and the
-   boss label 2px low on every row, and the rows alternated 48/60px),
-   and the row-1 links sit on the node centres instead of the nodes'
-   bottom edges. Column widths are unchanged (the widest label still
-   sets each column), so the 360px fit is untouched. */
+/* Row rhythm (issue #118 audit, re-cut for the 2-D lanes in #119):
+   each chain row is a two-track grid — an AUTO node track (a 3-lane
+   column stack is 68px tall; the 20–24px fork, the 20px nodes and the
+   24px boss diamond all centre inside it) plus a 20px LABEL track, 4px
+   apart. Every row is exactly 11 grid slots (Hub, 3 room columns,
+   Split, Boss, the 5 links between them), so the 11 columns are
+   explicit max-content: max-content tracks can't stretch, unlike auto
+   tracks, which would spread the columns across the whole panel. Hub,
+   Split and Boss sit in .run-path__cell wrappers — a nested grid
+   spanning both tracks — with their mono caption in track 2, so every
+   caption on every row shares ONE baseline and the row-1 links sit on
+   the node centres. The room columns carry no captions: the lane
+   cells' node treatment + glyph is the caption (the legend decodes it).
+   Column widths are unchanged (20px node stacks), so the 360px fit
+   holds with room to spare. */
 .run-path--chain {
   display: grid;
   grid-template-columns: repeat(11, max-content);
-  grid-template-rows: 36px 20px;
+  grid-template-rows: auto 20px;
   row-gap: var(--space-1);
   align-items: center;
   justify-items: center;
@@ -274,11 +276,57 @@
 
 .run-path--chain .run-path__cell {
   display: grid;
-  grid-template-rows: 36px 20px;
-  grid-row: 1 / 3; /* span both tracks (60px total) */
+  grid-template-rows: auto 20px;
+  grid-row: 1 / 3; /* span both tracks */
   row-gap: var(--space-1);
   align-items: center;
   justify-items: center;
+}
+
+/* one room column — a vertical stack of 1–3 lane cells (the in-game
+   2-D segment layout: columns x lanes), centred in the row's node
+   track so the lanes drift row by row */
+.run-path--chain .run-path__col {
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* the lane-cell nodes: flex-centred so the special's two-letter mono
+   glyph sits dead centre — chain rows and the chain's legend only, so
+   the index hero's bare nodes (and the --mini / --labeled variants)
+   are untouched */
+.run-path--chain .run-path__node,
+.page--gameplay .run-legend .run-path__node {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1;
+  color: var(--color-ink);
+}
+
+/* a route — the default node — carries a small centre marker (the
+   in-game per-type route sprite: a bright plant/crystal/rock marker on
+   the sand); every other node type is already distinguished by its
+   fill/border, and the gap stays empty ("nothing here") */
+.run-path--chain
+  .run-path__node:not(.run-path__node--hub):not(.run-path__node--boss):
+  not(.run-path__node--rest):not(.run-path__node--den):
+  not(.run-path__node--gap):not(.run-path__node--special)::after,
+.page--gameplay
+  .run-legend
+  .run-path__node:not(.run-path__node--hub):not(.run-path__node--boss):
+  not(.run-path__node--rest):not(.run-path__node--den):
+  not(.run-path__node--gap):not(.run-path__node--special)::after {
+  content: "";
+  width: var(--space-1);
+  height: var(--space-1);
+  background: var(--color-emerald);
 }
 
 .run-path--chain .run-path__label {

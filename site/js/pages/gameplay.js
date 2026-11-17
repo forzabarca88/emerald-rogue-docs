@@ -56,26 +56,28 @@
 
     /* Room vocabulary for the example-run chain (issue #119) — one
        entry per placeable room type in data/adventure.json (category
-       "room-type"): the mono label the node carries, and the node
-       modifier it renders as. Every special encounter shares the one
-       --special node style (DESIGN.md §5.1); the labels tell the rooms
-       apart. room-miniboss is deliberately absent — it is never placed
-       by the generator. */
+       "room-type"): the mono name the legend carries, the node modifier
+       the lane cell renders as, and (for the specials) the two-letter
+       mono glyph inside the node — the lane cell is 20px wide, too small
+       for a name, so the glyph is its caption and the legend decodes it.
+       Every special encounter shares the one --special node style
+       (DESIGN.md §5.1); the glyphs tell the rooms apart. room-miniboss
+       is deliberately absent — it is never placed by the generator. */
     var ROOM_STYLES = {
       route: { label: 'Route', node: '' },
       rest: { label: 'Rest', node: 'run-path__node--rest' },
       gap: { label: 'Gap', node: 'run-path__node--gap' },
       den: { label: 'Den', node: 'run-path__node--den' },
-      legend: { label: 'Legend', node: 'run-path__node--special' },
-      hideout: { label: 'Hideout', node: 'run-path__node--special' },
-      honey: { label: 'Honey', node: 'run-path__node--special' },
-      deal: { label: 'Dark Deal', node: 'run-path__node--special' },
-      lab: { label: 'Lab', node: 'run-path__node--special' },
-      show: { label: 'Game Show', node: 'run-path__node--special' },
-      sign: { label: 'Sign', node: 'run-path__node--special' },
-      sim: { label: 'Sim', node: 'run-path__node--special' },
-      tower: { label: 'Tower', node: 'run-path__node--special' },
-      shrine: { label: 'Shrine', node: 'run-path__node--special' }
+      legend: { label: 'Legendary', node: 'run-path__node--special', glyph: 'LG' },
+      hideout: { label: 'Hideout', node: 'run-path__node--special', glyph: 'HD' },
+      honey: { label: 'Honey', node: 'run-path__node--special', glyph: 'HN' },
+      deal: { label: 'Dark Deal', node: 'run-path__node--special', glyph: 'DK' },
+      lab: { label: 'Lab', node: 'run-path__node--special', glyph: 'LB' },
+      show: { label: 'Game Show', node: 'run-path__node--special', glyph: 'GS' },
+      sign: { label: 'Sign', node: 'run-path__node--special', glyph: 'SG' },
+      sim: { label: 'Sim', node: 'run-path__node--special', glyph: 'SI' },
+      tower: { label: 'Tower', node: 'run-path__node--special', glyph: 'TW' },
+      shrine: { label: 'Shrine', node: 'run-path__node--special', glyph: 'SH' }
     };
 
     /*
@@ -83,17 +85,22 @@
      * 14 Classic segments). Hand-authored from the `placement` rules in
      * data/adventure.json so every row is a legal draw; NO RNG — the
      * rows are fixed so the page's screenshots stay deterministic. Each
-     * row reads Hub → 3 room columns → Split (2 or 3 lanes) → Boss, and
-     * the boss is the next one on the ladder (the boss-ladder prose:
-     * "the room at the end of the path is always the next one on the
-     * ladder") — Gym 1–8 (badges 0–7), Elite 1–4 (badges 8–11),
-     * Champion (12), Final (13).
+     * row reads Hub → 3 room COLUMNS → Split (2 or 3 lanes) → Boss, the
+     * in-game 2-D layout: a segment is totalLength COLUMNS (x) × up to
+     * 3 LANES (y, top/mid/bot), and the split fans out of the boss into
+     * 2–3 lanes. Each room column is a list of 1–3 lane cells — a lane
+     * cell is a room type, or null = the in-game empty-sand gap
+     * (ADVPATH_ROOM_NONE: no object, no floor). The boss is the next one
+     * on the ladder (the boss-ladder prose: "the room at the end of the
+     * path is always the next one on the ladder") — Gym 1–8 (badges
+     * 0–7), Elite 1–4 (badges 8–11), Champion (12), Final (13).
      *
      * Placement rules encoded (each room's `placement` field in
      * data/adventure.json):
      *  - route (room-route): "the default room — special encounters
-     *    replace routes" — every segment keeps at least one plain
-     *    route here;
+     *    replace routes" — this draw keeps a plain route in every
+     *    segment (the generator's own guarantee is weaker: its
+     *    special-encounter pass can replace all remaining routes);
      *  - legend (room-legendary): weight 200, "placed on its assigned
      *    badge · one per path" — the run's three slots: the Roamer on a
      *    badge 1–5 (row 3), the Minor on a badge 3–5 (row 5), the Box
@@ -122,32 +129,54 @@
      *    on the badges 0–7 rows, at most one per segment on the Elite
      *    rows (2 at the Champion+ rows, where only one route is kept)
      *    — rows 11, 12, 13;
-     *  - gap (room-none): "never badge 0" — row 9 only;
+     *  - gap (room-none): "never badge 0 or Gauntlet" — the null cells,
+     *    legal anywhere a route would sit (rows 1–13 here);
      *  - rest (room-reststop): any badge, weight 100/20/5/1 by rest
      *    stops already on the path — one per segment here: rows
      *    0, 2, 3, 6, 9.
      * test/gameplay-run-data.test.mjs re-validates these rows against
      * the same rules. */
     var EXAMPLE_RUN = [
-      { badge: 0, boss: 'Gym 1', lanes: 2, rooms: ['route', 'rest', 'show'] },
-      { badge: 1, boss: 'Gym 2', lanes: 2, rooms: ['shrine', 'sign', 'route'] },
-      { badge: 2, boss: 'Gym 3', lanes: 3, rooms: ['hideout', 'route', 'rest'] },
-      { badge: 3, boss: 'Gym 4', lanes: 2, rooms: ['legend', 'route', 'rest'] },
-      { badge: 4, boss: 'Gym 5', lanes: 3, rooms: ['route', 'deal', 'tower'] },
-      { badge: 5, boss: 'Gym 6', lanes: 2, rooms: ['legend', 'lab', 'route'] },
-      { badge: 6, boss: 'Gym 7', lanes: 2, rooms: ['route', 'rest', 'route'] },
-      { badge: 7, boss: 'Gym 8', lanes: 3, rooms: ['sign', 'deal', 'route'] },
-      { badge: 8, boss: 'Elite 1', lanes: 2, rooms: ['legend', 'hideout', 'route'] },
-      { badge: 9, boss: 'Elite 2', lanes: 2, rooms: ['rest', 'gap', 'route'] },
-      { badge: 10, boss: 'Elite 3', lanes: 3, rooms: ['sim', 'honey', 'route'] },
-      { badge: 11, boss: 'Elite 4', lanes: 2, rooms: ['lab', 'route', 'den'] },
-      { badge: 12, boss: 'Champion', lanes: 3, rooms: ['route', 'den', 'den'] },
-      { badge: 13, boss: 'Final', lanes: 2, rooms: ['deal', 'den', 'route'] }
+      { badge: 0, boss: 'Gym 1', lanes: 2, rooms: [['rest', 'route'], ['show'], ['route', 'route']] },
+      { badge: 1, boss: 'Gym 2', lanes: 2, rooms: [['shrine', 'route'], ['sign', null, 'route'], ['route']] },
+      { badge: 2, boss: 'Gym 3', lanes: 3, rooms: [['hideout'], ['route', 'rest', null], ['route', 'route', 'route']] },
+      { badge: 3, boss: 'Gym 4', lanes: 2, rooms: [['legend', null], ['route', 'rest'], ['route']] },
+      { badge: 4, boss: 'Gym 5', lanes: 3, rooms: [['route', 'deal'], ['route', null, 'tower'], ['route', 'route']] },
+      { badge: 5, boss: 'Gym 6', lanes: 2, rooms: [['legend'], ['lab', null], ['route', 'route']] },
+      { badge: 6, boss: 'Gym 7', lanes: 2, rooms: [['route', 'route'], ['rest', 'route', null], ['route']] },
+      { badge: 7, boss: 'Gym 8', lanes: 3, rooms: [['sign', 'route', null], ['route', 'deal'], ['route']] },
+      { badge: 8, boss: 'Elite 1', lanes: 2, rooms: [['legend', 'route'], ['hideout', null], ['route']] },
+      { badge: 9, boss: 'Elite 2', lanes: 2, rooms: [['rest', null], [null, 'route'], ['route', null]] },
+      { badge: 10, boss: 'Elite 3', lanes: 3, rooms: [['sim', 'route', null], ['honey'], ['route', 'route']] },
+      { badge: 11, boss: 'Elite 4', lanes: 2, rooms: [['lab', null], ['route', 'den'], ['route', 'route']] },
+      { badge: 12, boss: 'Champion', lanes: 3, rooms: [['den', 'route', null], ['route', 'den'], ['route']] },
+      { badge: 13, boss: 'Final', lanes: 2, rooms: [['deal', null], ['den', 'route'], ['route', null]] }
     ];
 
-    /* One example-run row: Hub → 3 room columns → Split (2–3 lanes)
-       → Boss, each step in a labelled cell (the --chain variant
-       tightens the links so the widest labels still fit at 360px). */
+    /* One lane cell of a room column: the room's node — the specials
+       carry their two-letter mono glyph inside (the legend decodes it);
+       a null cell renders as the gap node. */
+    function laneCell(key) {
+      var style = ROOM_STYLES[key === null ? 'gap' : key];
+      return (
+        '<span class="run-path__node' +
+        (style.node ? ' ' + style.node : '') + '">' +
+        (style.glyph || '') +
+        '</span>'
+      );
+    }
+
+    /* One room column: a vertical stack of 1–3 lane cells — the
+       in-game 2-D segment layout (columns x lanes), the lanes drifting
+       row by row. */
+    function laneColumn(cells) {
+      return '<span class="run-path__col">' + cells.map(laneCell).join('') + '</span>';
+    }
+
+    /* One example-run row: Hub → 3 room COLUMNS (1–3 lane cells each,
+       null = empty-sand gap) → Split (2–3 lanes) → Boss, hub/split/boss
+       in labelled cells (the --chain variant tightens the links so the
+       widest row still fits at 360px). */
     function exampleRunRow(segment) {
       var lanes = '';
       for (var i = 0; i < segment.lanes; i++) {
@@ -159,8 +188,8 @@
         cell('run-path__node--hub', 'Hub') +
         LINK +
         segment.rooms
-          .map(function (key) {
-            return cell(ROOM_STYLES[key].node, ROOM_STYLES[key].label);
+          .map(function (column) {
+            return laneColumn(column);
           })
           .join(LINK) +
         LINK +
@@ -174,21 +203,39 @@
     }
 
     /* The room-type legend (node style → room type), for the chain's
-       panel. */
+       panel — the node vocabulary: hub, route, rest stop, wild den,
+       gap, the ten special glyphs, the split fork, boss. */
     var LEGEND = [
       { node: 'run-path__node--hub', name: 'Hub' },
       { node: '', name: 'Route' },
       { node: 'run-path__node--rest', name: 'Rest Stop' },
-      { node: 'run-path__node--gap', name: 'Gap' },
       { node: 'run-path__node--den', name: 'Wild Den' },
-      { node: 'run-path__node--special', name: 'Special Room' },
+      { node: 'run-path__node--gap', name: 'Gap' },
+      { node: 'run-path__node--special', glyph: 'LG', name: 'Legendary' },
+      { node: 'run-path__node--special', glyph: 'HD', name: 'Team Hideout' },
+      { node: 'run-path__node--special', glyph: 'HN', name: 'Honey Tree' },
+      { node: 'run-path__node--special', glyph: 'DK', name: 'Dark Deal' },
+      { node: 'run-path__node--special', glyph: 'LB', name: 'Lab' },
+      { node: 'run-path__node--special', glyph: 'GS', name: 'Game Show' },
+      { node: 'run-path__node--special', glyph: 'SG', name: 'Sign' },
+      { node: 'run-path__node--special', glyph: 'SI', name: 'Battle Sim' },
+      { node: 'run-path__node--special', glyph: 'TW', name: 'Battle Tower' },
+      { node: 'run-path__node--special', glyph: 'SH', name: 'Shrine' },
+      { fork: true, name: 'Split' },
       { node: 'run-path__node--boss', name: 'Boss' }
     ];
 
     function legendItem(entry) {
+      var marker = entry.fork
+        ? '<span class="run-path__fork"><span class="run-path__lane"><span class="run-path__link"></span></span>' +
+          '<span class="run-path__lane"><span class="run-path__link"></span></span></span>'
+        : '<span class="run-path__node' +
+          (entry.node ? ' ' + entry.node : '') + '">' +
+          (entry.glyph || '') +
+          '</span>';
       return (
-        '<span class="run-legend__item"><span class="run-path__node' +
-        (entry.node ? ' ' + entry.node : '') + '"></span>' +
+        '<span class="run-legend__item">' +
+        marker +
         '<span class="run-legend__name">' +
         entry.name +
         '</span></span>'
@@ -201,13 +248,14 @@
        minus its two fixed columns (the initial split and the final
        encounter — src/rogue_adventurepaths.c's "// +2 to account for
        final encounter and initial split"): Classic totalLength 5 →
-       3 rooms; Fast Path 6 → 4 (3 at the Champion stage, where
-       totalLength is 5); Gauntlet 7 → 5 rooms on badge 0, then
-       totalLength 2 → 0 rooms after the first badge (the boss right
-       after the split). */
+       3 rooms; Fast Path 6 → 4 (4 when routes are hidden, where
+       totalLength is 4 → 2 rooms; 5 at the Champion stage, where
+       totalLength is 5 → 3 rooms); Gauntlet 7 → 5 rooms on badge 0,
+       then totalLength 2 → 0 rooms after the first badge (the boss
+       right after the split). */
     var MODE_SHAPES = [
       { name: 'Classic', rooms: 3, note: '3 rooms, split, boss' },
-      { name: 'Fast Path', rooms: 4, note: '4 rooms (3 at the Champion stage)' },
+      { name: 'Fast Path', rooms: 4, note: '4 rooms — 2 when routes are hidden, 3 at the Champion stage' },
       { name: 'Gauntlet', rooms: 5, note: '5 rooms on badge 0, then none (boss right after the split)' }
     ];
 
@@ -365,11 +413,11 @@
             '<div class="run-chain">' +
             EXAMPLE_RUN.map(exampleRunRow).join('') +
             '</div>' +
-            '<p class="path-diagram__caption">An example Classic run: one row per badge step (0–13, top to bottom) — the path re-rolls after every boss, and every room column can be a route or a special room at the odds in <a href="#gp-placement">How rooms are placed</a>.</p>' +
+            '<p class="path-diagram__caption">An example Classic run — one row per badge step (0–13, top to bottom), each row the in-game 2-D layout: the hub, three room columns (each a stack of 1–3 lanes — an empty lane is a gap of sand), the split’s 2–3-lane fan-out, and the boss. The path re-rolls after every boss, and every lane can be a route or a special room at the odds in <a href="#gp-placement">How rooms are placed</a>.</p>' +
             '<div class="mode-shapes">' +
             MODE_SHAPES.map(modeShapeRow).join('') +
             '</div>' +
-            '<p class="path-diagram__caption">The three mode shapes, same read order — Fast Path steps hold 4 rooms (3 at the Champion stage); the Gauntlet opens with 5 rooms on badge 0, then none (boss right after the split).</p>' +
+            '<p class="path-diagram__caption">The three mode shapes, same read order — Fast Path steps hold 4 rooms (2 when routes are hidden, 3 at the Champion stage); the Gauntlet opens with 5 rooms on badge 0, then none (boss right after the split).</p>' +
             '</div>'
         );
     }
