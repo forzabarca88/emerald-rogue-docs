@@ -54,240 +54,170 @@
       );
     }
 
-    /* Room vocabulary for the example-run chain (issue #119) — one
-       entry per placeable room type in data/adventure.json (category
-       "room-type"): the mono name the legend carries, the node modifier
-       the lane cell renders as, and (for the specials) the two-letter
-       mono glyph inside the node — the lane cell is 20px wide, too small
-       for a name, so the glyph is its caption and the legend decodes it.
-       Every special encounter shares the one --special node style
-       (DESIGN.md §5.1); the glyphs tell the rooms apart. room-miniboss
-       is deliberately absent — it is never placed by the generator. */
-    var ROOM_STYLES = {
-      route: { label: 'Route', node: '' },
-      rest: { label: 'Rest', node: 'run-path__node--rest' },
-      gap: { label: 'Gap', node: 'run-path__node--gap' },
-      den: { label: 'Den', node: 'run-path__node--den' },
-      legend: { label: 'Legendary', node: 'run-path__node--special', glyph: 'LG' },
-      hideout: { label: 'Hideout', node: 'run-path__node--special', glyph: 'HD' },
-      honey: { label: 'Honey', node: 'run-path__node--special', glyph: 'HN' },
-      deal: { label: 'Dark Deal', node: 'run-path__node--special', glyph: 'DK' },
-      lab: { label: 'Lab', node: 'run-path__node--special', glyph: 'LB' },
-      show: { label: 'Game Show', node: 'run-path__node--special', glyph: 'GS' },
-      sign: { label: 'Sign', node: 'run-path__node--special', glyph: 'SG' },
-      sim: { label: 'Sim', node: 'run-path__node--special', glyph: 'SI' },
-      tower: { label: 'Tower', node: 'run-path__node--special', glyph: 'TW' },
-      shrine: { label: 'Shrine', node: 'run-path__node--special', glyph: 'SH' }
+    /*
+     * The example path board (issue #119) — ONE Classic segment for
+     * badge 1: the board rolled right after the first badge, heading
+     * for Gym 2. Hand-authored from the `placement` rules in
+     * data/adventure.json — every cell is a legal draw at badge 1
+     * (routes and rest stops any badge; the wild den at the 40% badge
+     * 1–7 tier; the gap at the 5% badge 1–7 tier; the game show at the
+     * 50% roll on badges 0–5) — and NO RNG: the board is fixed so the
+     * page's screenshots stay deterministic.
+     *
+     * `rooms` reads left to right, the in-game board layout (columns ×
+     * lanes): the spawn column, then two more room columns; each column
+     * is a list of 1–3 lane cells, top to bottom. A cell is a room key —
+     * `gap` is the in-game empty-sand lane (ADVPATH_ROOM_NONE: no
+     * object, just path). `splitLanes` is the 2–3-lane fan-out from the
+     * last column into the boss through the always-empty column in front
+     * of the gym. `links` is the lane wiring, one [fromCol, fromLane,
+     * toCol, toLane] each — column -1 is the start line, column 3 the
+     * boss: one legal roll (every cell reachable from the start line
+     * and reaching the boss, each cell at most 3 exits, the boss
+     * fan-in = splitLanes). The minimum-route retention keeps 3 of the
+     * 4 routes plain — one of them is the den.
+     * test/gameplay-run-data.test.mjs re-validates the board against
+     * the same rules. */
+    var EXAMPLE_BOARD = {
+      badge: 1,
+      boss: 'Gym 2',
+      splitLanes: 2,
+      rooms: [
+        ['route', 'rest'],
+        ['den', 'route', 'gap'],
+        ['show', 'route']
+      ],
+      links: [
+        [-1, 0, 0, 0],
+        [-1, 1, 0, 1],
+        [0, 0, 1, 0],
+        [0, 0, 1, 1],
+        [0, 1, 1, 1],
+        [0, 1, 1, 2],
+        [1, 0, 2, 0],
+        [1, 1, 2, 0],
+        [1, 1, 2, 1],
+        [1, 2, 2, 1],
+        [2, 0, 3, 0],
+        [2, 1, 3, 0]
+      ]
     };
 
-    /*
-     * An example run (issue #119) — one row per badge step (badge 0–13:
-     * 14 Classic segments). Hand-authored from the `placement` rules in
-     * data/adventure.json so every row is a legal draw; NO RNG — the
-     * rows are fixed so the page's screenshots stay deterministic. Each
-     * row reads Hub → 3 room COLUMNS → Split (2 or 3 lanes) → Boss, the
-     * in-game 2-D layout: a segment is totalLength COLUMNS (x) × up to
-     * 3 LANES (y, top/mid/bot), and the split fans out of the boss into
-     * 2–3 lanes. Each room column is a list of 1–3 lane cells — a lane
-     * cell is a room type, or null = the in-game empty-sand gap
-     * (ADVPATH_ROOM_NONE: no object, no floor). The boss is the next one
-     * on the ladder (the boss-ladder prose: "the room at the end of the
-     * path is always the next one on the ladder") — Gym 1–8 (badges
-     * 0–7), Elite 1–4 (badges 8–11), Champion (12), Final (13).
-     *
-     * Placement rules encoded (each room's `placement` field in
-     * data/adventure.json):
-     *  - route (room-route): "the default room — special encounters
-     *    replace routes" — this draw keeps a plain route in every
-     *    segment (the generator's own guarantee is weaker: its
-     *    special-encounter pass can replace all remaining routes);
-     *  - legend (room-legendary): weight 200, "placed on its assigned
-     *    badge · one per path" — the run's three slots: the Roamer on a
-     *    badge 1–5 (row 3), the Minor on a badge 3–5 (row 5), the Box
-     *    on a badge 7–8 (row 8);
-     *  - hideout (room-team-hideout): "placed on its assigned badge ·
-     *    one per path" — the Early hideout on a badge 2–4 missing the
-     *    legendary badges (row 2), the Pre-Legend mirroring the Box
-     *    legendary's badge (row 8);
-     *  - shrine (room-shrine): one per RUN on the run's pre-rolled
-     *    badge (row 1) — unlike the other specials, whose cap is per
-     *    path;
-     *  - deal (room-dark-deal): badge 3+ after a 25% roll, "skip badges
-     *    divisible by 3" — rows 4, 7, 13;
-     *  - lab (room-lab): badge 3+ after a 25% roll, "skip if badge
-     *    mod 3 = 1" — rows 5, 11;
-     *  - show (room-gameshow): "badges 0–5" — row 0;
-     *  - sign (room-sign): "below Elite Four only (badges 0–7)" —
-     *    rows 1, 7;
-     *  - sim / tower (room-battle-sim / room-battle-tower): "badge 1+
-     *    · one per path" — the 50/50 alternative pair, never both in
-     *    one segment (tower row 4, sim row 10);
-     *  - honey (room-honey-tree): "badge 1+ · one per path" — row 10;
-     *  - den (room-wild-den): "each remaining route rolls" with the
-     *    minimum regular routes always kept (3 on badges 0–7, 2 for
-     *    the Elite Four, 1 at the Champion and beyond) — zero dens
-     *    on the badges 0–7 rows, at most one per segment on the Elite
-     *    rows (2 at the Champion+ rows, where only one route is kept)
-     *    — rows 11, 12, 13;
-     *  - gap (room-none): "never badge 0 or Gauntlet" — the null cells,
-     *    legal anywhere a route would sit (rows 1–13 here);
-     *  - rest (room-reststop): any badge, weight 100/20/5/1 by rest
-     *    stops already on the path — one per segment here: rows
-     *    0, 2, 3, 6, 9.
-     * test/gameplay-run-data.test.mjs re-validates these rows against
-     * the same rules. */
-    var EXAMPLE_RUN = [
-      { badge: 0, boss: 'Gym 1', lanes: 2, rooms: [['rest', 'route'], ['show'], ['route', 'route']] },
-      { badge: 1, boss: 'Gym 2', lanes: 2, rooms: [['shrine', 'route'], ['sign', null, 'route'], ['route']] },
-      { badge: 2, boss: 'Gym 3', lanes: 3, rooms: [['hideout'], ['route', 'rest', null], ['route', 'route', 'route']] },
-      { badge: 3, boss: 'Gym 4', lanes: 2, rooms: [['legend', null], ['route', 'rest'], ['route']] },
-      { badge: 4, boss: 'Gym 5', lanes: 3, rooms: [['route', 'deal'], ['route', null, 'tower'], ['route', 'route']] },
-      { badge: 5, boss: 'Gym 6', lanes: 2, rooms: [['legend'], ['lab', null], ['route', 'route']] },
-      { badge: 6, boss: 'Gym 7', lanes: 2, rooms: [['route', 'route'], ['rest', 'route', null], ['route']] },
-      { badge: 7, boss: 'Gym 8', lanes: 3, rooms: [['sign', 'route', null], ['route', 'deal'], ['route']] },
-      { badge: 8, boss: 'Elite 1', lanes: 2, rooms: [['legend', 'route'], ['hideout', null], ['route']] },
-      { badge: 9, boss: 'Elite 2', lanes: 2, rooms: [['rest', null], [null, 'route'], ['route', null]] },
-      { badge: 10, boss: 'Elite 3', lanes: 3, rooms: [['sim', 'route', null], ['honey'], ['route', 'route']] },
-      { badge: 11, boss: 'Elite 4', lanes: 2, rooms: [['lab', null], ['route', 'den'], ['route', 'route']] },
-      { badge: 12, boss: 'Champion', lanes: 3, rooms: [['den', 'route', null], ['route', 'den'], ['route']] },
-      { badge: 13, boss: 'Final', lanes: 2, rooms: [['deal', null], ['den', 'route'], ['route', null]] }
-    ];
+    /* The board's geometry (viewBox units — the SVG scales to the panel
+       width; DESIGN.md §5.1): the sand board, the start line, the 3 room
+       columns (lane rows top/mid/bot — a 2-lane column takes the top and
+       bottom rows, a 1-lane column the middle, the lanes drifting row by
+       row like the in-game board), the always-empty split space and the
+       boss. */
+    var BOARD = {
+      w: 336,
+      h: 164,
+      sand: { x: 4, y: 8, w: 328, h: 148, r: 8 },
+      startX: 20,
+      colX: [64, 136, 208],
+      bossX: 298,
+      bossInset: 15.6, /* the rotated boss square's left vertex */
+      laneY: [26, 76, 126],
+      node: 10, /* half-size of a 20-unit node square */
+      labelDy: 23 /* label baseline below the node centre */
+    };
 
-    /* One lane cell of a room column: the room's node — the specials
-       carry their two-letter mono glyph inside (the legend decodes it);
-       a null cell renders as the gap node. */
-    function laneCell(key) {
-      var style = ROOM_STYLES[key === null ? 'gap' : key];
-      return (
-        '<span class="run-path__node' +
-        (style.node ? ' ' + style.node : '') + '">' +
-        (style.glyph || '') +
-        '</span>'
-      );
+    /* The lane rows a column's cells sit on (see BOARD.laneY). */
+    function laneRows(count) {
+      if (count === 3) return BOARD.laneY;
+      if (count === 2) return [BOARD.laneY[0], BOARD.laneY[2]];
+      return [BOARD.laneY[1]];
     }
 
-    /* One room column: a vertical stack of 1–3 lane cells — the
-       in-game 2-D segment layout (columns x lanes), the lanes drifting
-       row by row. */
-    function laneColumn(cells) {
-      return '<span class="run-path__col">' + cells.map(laneCell).join('') + '</span>';
+    /* The centre of a board position: column -1 is the start line (the
+       start line's links leave it at the neighbour column's lane row),
+       0–2 the room columns, 3 the boss (the middle row). */
+    function posXY(col, lane) {
+      var x = col === -1 ? BOARD.startX : col === 3 ? BOARD.bossX : BOARD.colX[col];
+      var y =
+        col === -1
+          ? laneRows(EXAMPLE_BOARD.rooms[0].length)[lane]
+          : col === 3
+            ? BOARD.laneY[1]
+            : laneRows(EXAMPLE_BOARD.rooms[col].length)[lane];
+      return [x, y];
     }
 
-    /* One example-run row: Hub → 3 room COLUMNS (1–3 lane cells each,
-       null = empty-sand gap) → Split (2–3 lanes) → Boss, hub/split/boss
-       in labelled cells (the --chain variant tightens the links so the
-       widest row still fits at 360px). */
-    function exampleRunRow(segment) {
-      var lanes = '';
-      for (var i = 0; i < segment.lanes; i++) {
-        lanes +=
-          '<span class="run-path__lane"><span class="run-path__link"></span></span>';
+    /* One link of the sand path: a straight run when both ends share a
+       row, an elbow (horizontal, one vertical, horizontal) through the
+       mid-gap rail when they don't — the in-game T-junctions. */
+    function linkPath(link) {
+      var f = posXY(link[0], link[1]);
+      var t = posXY(link[2], link[3]);
+      var x1 = link[0] === -1 ? f[0] : f[0] + BOARD.node;
+      var x2 = link[2] === 3 ? t[0] - BOARD.bossInset : t[0] - BOARD.node;
+      if (f[1] === t[1]) return 'M' + x1 + ' ' + f[1] + 'H' + x2;
+      var midX = Math.round((x1 + x2) / 2);
+      return 'M' + x1 + ' ' + f[1] + 'H' + midX + 'V' + t[1] + 'H' + x2;
+    }
+
+    /* One room cell's node (the gap draws none — its lane is empty sand,
+       and only its label marks the position): the route squares carry
+       their type marker — the in-game per-type route sprite, grass /
+       water / fire in order of appearance; the rest stop is the dashed
+       outline; the den is the gold square, the sibling of the gold boss
+       diamond; the game show is the small screen glyph. */
+    var ROUTE_MARKS = ['grass', 'water', 'fire'];
+
+    function cellNode(key, x, y, routeIndex) {
+      var n =
+        '<rect class="path-board__node' +
+        (key === 'rest' ? ' path-board__node--rest' : key === 'den' ? ' path-board__node--den' : '') +
+        '" x="' +
+        (x - BOARD.node) +
+        '" y="' +
+        (y - BOARD.node) +
+        '" width="' +
+        BOARD.node * 2 +
+        '" height="' +
+        BOARD.node * 2 +
+        '"/>';
+      var mark = '';
+      if (key === 'route') {
+        var kind = ROUTE_MARKS[routeIndex % ROUTE_MARKS.length];
+        if (kind === 'grass') mark = '<polygon class="path-board__mark" points="' + [x, y - 4.5, x - 4.5, y + 3.5, x + 4.5, y + 3.5].join(',') + '"/>';
+        else if (kind === 'water') mark = '<circle class="path-board__mark" cx="' + x + '" cy="' + y + '" r="4"/>';
+        else mark = '<polygon class="path-board__mark" points="' + [x, y - 4.5, x + 4.5, y, x, y + 4.5, x - 4.5, y].join(',') + '"/>';
+      } else if (key === 'show') {
+        mark = '<rect class="path-board__mark" x="' + (x - 3.5) + '" y="' + (y - 3.5) + '" width="7" height="7"/>';
       }
-      return (
-        '<div class="run-path run-path--labeled run-path--chain" aria-hidden="true">' +
-        cell('run-path__node--hub', 'Hub') +
-        LINK +
-        segment.rooms
-          .map(function (column) {
-            return laneColumn(column);
-          })
-          .join(LINK) +
-        LINK +
-        '<span class="run-path__cell"><span class="run-path__fork">' +
-        lanes +
-        '</span><span class="run-path__label">Split</span></span>' +
-        LINK +
-        cell('run-path__node--boss', segment.boss) +
-        '</div>'
-      );
+      return n + mark;
     }
 
-    /* The room-type legend (node style → room type), for the chain's
-       panel — the node vocabulary: hub, route, rest stop, wild den,
-       gap, the ten special glyphs, the split fork, boss. */
-    var LEGEND = [
-      { node: 'run-path__node--hub', name: 'Hub' },
-      { node: '', name: 'Route' },
-      { node: 'run-path__node--rest', name: 'Rest Stop' },
-      { node: 'run-path__node--den', name: 'Wild Den' },
-      { node: 'run-path__node--gap', name: 'Gap' },
-      { node: 'run-path__node--special', glyph: 'LG', name: 'Legendary' },
-      { node: 'run-path__node--special', glyph: 'HD', name: 'Team Hideout' },
-      { node: 'run-path__node--special', glyph: 'HN', name: 'Honey Tree' },
-      { node: 'run-path__node--special', glyph: 'DK', name: 'Dark Deal' },
-      { node: 'run-path__node--special', glyph: 'LB', name: 'Lab' },
-      { node: 'run-path__node--special', glyph: 'GS', name: 'Game Show' },
-      { node: 'run-path__node--special', glyph: 'SG', name: 'Sign' },
-      { node: 'run-path__node--special', glyph: 'SI', name: 'Battle Sim' },
-      { node: 'run-path__node--special', glyph: 'TW', name: 'Battle Tower' },
-      { node: 'run-path__node--special', glyph: 'SH', name: 'Shrine' },
-      { fork: true, name: 'Split' },
-      { node: 'run-path__node--boss', name: 'Boss' }
-    ];
-
-    function legendItem(entry) {
-      var marker = entry.fork
-        ? '<span class="run-path__fork"><span class="run-path__lane"><span class="run-path__link"></span></span>' +
-          '<span class="run-path__lane"><span class="run-path__link"></span></span></span>'
-        : '<span class="run-path__node' +
-          (entry.node ? ' ' + entry.node : '') + '">' +
-          (entry.glyph || '') +
-          '</span>';
-      return (
-        '<span class="run-legend__item">' +
-        marker +
-        '<span class="run-legend__name">' +
-        entry.name +
-        '</span></span>'
-      );
-    }
-
-    /* The three mode shapes (the how-the-path-works prose in
-       data/adventure.json): a compact schematic run-path per mode.
-       `rooms` is the ROOM COLUMN count — the generator's totalLength
-       minus its two fixed columns (the initial split and the final
-       encounter — src/rogue_adventurepaths.c's "// +2 to account for
-       final encounter and initial split"): Classic totalLength 5 →
-       3 rooms; Fast Path 6 → 4 (4 when routes are hidden, where
-       totalLength is 4 → 2 rooms; 5 at the Champion stage, where
-       totalLength is 5 → 3 rooms); Gauntlet 7 → 5 rooms on badge 0,
-       then totalLength 2 → 0 rooms after the first badge (the boss
-       right after the split). */
-    var MODE_SHAPES = [
-      { name: 'Classic', rooms: 3, note: '3 rooms, split, boss' },
-      { name: 'Fast Path', rooms: 4, note: '4 rooms — 2 when routes are hidden, 3 at the Champion stage' },
-      { name: 'Gauntlet', rooms: 5, note: '5 rooms on badge 0, then none (boss right after the split)' }
-    ];
-
-    /* A mini mode-shape path: hub → N route nodes → split (two lanes)
-       → boss, on the --mini schematic scale. */
-    function miniPath(roomCount) {
-      var rooms = '';
-      for (var i = 0; i < roomCount; i++) {
-        rooms += (i ? LINK : '') + '<span class="run-path__node"></span>';
-      }
-      return (
-        '<div class="run-path run-path--mini" aria-hidden="true">' +
-        '<span class="run-path__node run-path__node--hub"></span>' +
-        LINK +
-        rooms +
-        LINK +
-        '<span class="run-path__fork"><span class="run-path__lane"><span class="run-path__link"></span></span>' +
-        '<span class="run-path__lane"><span class="run-path__link"></span></span></span>' +
-        LINK +
-        '<span class="run-path__node run-path__node--boss"></span>' +
-        '</div>'
-      );
-    }
-
-    function modeShapeRow(mode) {
-      return (
-        '<div class="mode-shape">' +
-        '<span class="mode-shape__label">' + mode.name + '</span>' +
-        miniPath(mode.rooms) +
-        '<span class="mode-shape__note">' + mode.note + '</span>' +
-        '</div>'
-      );
+    /* The board's static inline SVG (DESIGN.md §5.1): the sand, the
+       start line, the elbow sand path, the room nodes with their inline
+       mono labels (the labels replace a legend), and the gold boss
+       diamond labelled with its ladder step. Decorative — the visible
+       caption and micro-note carry the meaning. */
+    function boardSvg() {
+      var s = '<svg class="path-board" viewBox="0 0 ' + BOARD.w + ' ' + BOARD.h + '" aria-hidden="true">';
+      var sd = BOARD.sand;
+      s += '<rect class="path-board__sand" x="' + sd.x + '" y="' + sd.y + '" width="' + sd.w + '" height="' + sd.h + '" rx="' + sd.r + '"/>';
+      s += '<line class="path-board__start" x1="' + BOARD.startX + '" y1="' + BOARD.laneY[0] + '" x2="' + BOARD.startX + '" y2="' + BOARD.laneY[2] + '"/>';
+      EXAMPLE_BOARD.links.forEach(function (link) {
+        s += '<path class="path-board__line" d="' + linkPath(link) + '"/>';
+      });
+      var routeSeen = 0;
+      EXAMPLE_BOARD.rooms.forEach(function (column, c) {
+        var rows = laneRows(column.length);
+        column.forEach(function (key, lane) {
+          var x = BOARD.colX[c];
+          var y = rows[lane];
+          if (key !== 'gap') {
+            s += cellNode(key, x, y, key === 'route' ? routeSeen++ : -1);
+          }
+          s += '<text class="path-board__label" x="' + x + '" y="' + (y + BOARD.labelDy) + '" text-anchor="middle">' + key + '</text>';
+        });
+      });
+      s += '<rect class="path-board__boss" x="' + (BOARD.bossX - 11) + '" y="' + (BOARD.laneY[1] - 11) + '" width="22" height="22" transform="rotate(45 ' + BOARD.bossX + ' ' + BOARD.laneY[1] + ')"/>';
+      s += '<text class="path-board__label path-board__label--boss" x="' + BOARD.bossX + '" y="' + (BOARD.laneY[1] + BOARD.labelDy + 4) + '" text-anchor="middle">' + ROGUE.esc(EXAMPLE_BOARD.boss) + '</text>';
+      s += '<text class="path-board__label" x="' + BOARD.startX + '" y="' + (BOARD.laneY[2] + BOARD.labelDy) + '" text-anchor="middle">start</text>';
+      return s + '</svg>';
     }
 
     /* The Fast Path hidden-route segment (2 room columns): every
@@ -394,9 +324,11 @@
       html += ROGUE.section('gp-hub', 'The hub', hubIntro.heading, null, ROGUE.paragraphs(hubIntro.text) + guideLink('hub', hubLabel));
     }
 
-    /* Phase 2 — the run: the example-run chain (issue #119) — one
-       labelled row per badge step (0–13), re-rolled after each boss,
-       with the room-type legend and the three mode shapes. */
+    /* Phase 2 — the run: the how-the-path-works prose (how a run is
+       actually played) + the example path board (issue #119) — ONE
+       Classic segment (badge 1 → Gym 2) as a static inline SVG: the
+       sand, the lane wiring, the room nodes with their inline mono
+       labels, and the boss. */
     var pathProse = ROGUE.proseById(adventure, 'how-the-path-works');
     if (pathProse) {
       html +=
@@ -407,17 +339,9 @@
           null,
           ROGUE.paragraphs(pathProse.text) +
             '<div class="path-diagram">' +
-            '<div class="run-legend" aria-hidden="true">' +
-            LEGEND.map(legendItem).join('') +
-            '</div>' +
-            '<div class="run-chain">' +
-            EXAMPLE_RUN.map(exampleRunRow).join('') +
-            '</div>' +
-            '<p class="path-diagram__caption">An example Classic run — one row per badge step (0–13, top to bottom), each row the in-game 2-D layout: the hub, three room columns (each a stack of 1–3 lanes — an empty lane is a gap of sand), the split’s 2–3-lane fan-out, and the boss. The path re-rolls after every boss, and every lane can be a route or a special room at the odds in <a href="#gp-placement">How rooms are placed</a>.</p>' +
-            '<div class="mode-shapes">' +
-            MODE_SHAPES.map(modeShapeRow).join('') +
-            '</div>' +
-            '<p class="path-diagram__caption">The three mode shapes, same read order — Fast Path steps hold 4 rooms (2 when routes are hidden, 3 at the Champion stage); the Gauntlet opens with 5 rooms on badge 0, then none (boss right after the split).</p>' +
+            boardSvg() +
+            '<p class="path-diagram__caption">One Classic segment — the board after your first badge, heading for Gym 2; every badge re-rolls a fresh one.</p>' +
+            '<p class="path-diagram__note">A lane with no marker is just empty sand — the path still runs through it. Only the boss is mandatory.</p>' +
             '</div>'
         );
     }

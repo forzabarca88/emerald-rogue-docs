@@ -1,219 +1,163 @@
-/**
- * The gameplay page's example-run chain (issue #119) is a hand-authored
- * Classic run — one 2-D mini-grid row per badge step (0–13): hub → 3
- * room COLUMNS (each a list of 1–3 lane cells; a null cell is the
- * in-game empty-sand gap) → the split's 2–3-lane fork → boss. This
- * guard validates the drawn rows against the `placement` rules in
- * data/adventure.json (end result: the diagram the page shows is a
- * legal draw, never an impossible one): the per-column lane counts,
- * the per-room badge gating, the one-per-path caps (incl. the
- * sim/tower 50/50 alternative), the per-run legendary/hideout/shrine
- * slots, the minimum-route retention behind the den counts (gaps legal
- * anywhere a route would sit, never badge 0), and the boss-ladder order
- * (the end boss is always the next one on the ladder).
- *
- * The rows are read straight out of site/js/pages/gameplay.js (a regex
- * slice of the `var` literals + a vm eval — the same no-mock setup
- * test/search.test.mjs uses) so this guards the source of truth, not a
- * copy.
+/*
+ * The gameplay page's example path board (issue #119) — one static
+ * Classic segment for badge 1, heading for Gym 2 — must stay a legal
+ * draw of the generator: every cell a room type the `placement` rules
+ * in data/adventure.json allow at badge 1, the layout the generator's
+ * shape (3 room columns × 1–3 lanes, the 2–3-lane split in front of
+ * the gym, the minimum regular routes kept), and the lane wiring one
+ * legal board (every cell reachable from the start line and reaching
+ * the boss, at most 3 exits per cell, the boss fan-in = the split's
+ * lane count).
  */
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import vm from 'node:vm';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const pageSrc = readFileSync(new URL('../site/js/pages/gameplay.js', import.meta.url), 'utf8');
+const boardMatch = pageSrc.match(/\bvar EXAMPLE_BOARD = (\{[\s\S]*?\n    \});/);
+assert.ok(boardMatch, 'EXAMPLE_BOARD literal must exist in site/js/pages/gameplay.js');
+const BOARD = vm.runInNewContext('(' + boardMatch[1] + ')');
 
-/**
- * Pull one top-level `var NAME = <literal>` out of the page script. The
- * literals are flat (single-line entries, no nested containers beyond
- * the value objects), so a slice from the declaration to the matching
- * closing line is exact — a reformat of the declaration fails loudly
- * here instead of silently guarding stale text.
- */
-function literalFrom(source, name) {
-  const marker = `var ${name} = `;
-  const start = source.indexOf(marker);
-  assert.notEqual(start, -1, `${marker.trim()} not found in site/js/pages/gameplay.js`);
-  const body = source.slice(start + marker.length);
-  const close = body[0] === '{' ? '\n    };' : '\n    ];';
-  const end = body.indexOf(close);
-  assert.notEqual(end, -1, `could not find the closing ${close.trim()} of var ${name}`);
-  return vm.runInNewContext('(' + body.slice(0, end + close.length - 1) + ')', {});
+const adventure = JSON.parse(readFileSync(new URL('../data/adventure.json', import.meta.url), 'utf8'));
+
+/* board cell key → room-type record id in data/adventure.json */
+const KEY_TO_ROOM = {
+  route: 'room-route',
+  rest: 'room-reststop',
+  den: 'room-wild-den',
+  gap: 'room-none',
+  show: 'room-gameshow'
+};
+
+const roomById = new Map(adventure.records.filter((r) => r.category === 'room-type').map((r) => [r.id, r]));
+
+/* one of the placement `bars` label → the badge range it covers
+   (the generator's stages, per the boss-ladder records) */
+function tierBadges(label) {
+  if (label === 'badge 0') return [0, 0];
+  const m = label.match(/^badges (\d+)[–-](\d+)$/);
+  if (m) return [Number(m[1]), Number(m[2])];
+  if (label === 'Elite Four') return [8, 11];
+  if (label === 'Champion+') return [12, 13];
+  return null;
 }
 
-test('the example-run chain is a legal Classic draw (issue #119)', () => {
-  const source = readFileSync(path.join(root, 'site', 'js', 'pages', 'gameplay.js'), 'utf8');
-  const adventure = JSON.parse(readFileSync(path.join(root, 'data', 'adventure.json'), 'utf8'));
-  const ROOM_STYLES = literalFrom(source, 'ROOM_STYLES');
-  const EXAMPLE_RUN = literalFrom(source, 'EXAMPLE_RUN');
+const badge = BOARD.badge;
 
-  /* The room vocabulary maps onto the placeable room-type records —
-     every key in the draw must be a real room, and the two room types
-     outside the vocabulary must be absent: room-miniboss (placement.kind
-     "never") and room-boss (the mandatory end of every row, drawn
-     separately as the labelled boss). */
-  const ROOM_IDS = {
-    route: 'room-route',
-    rest: 'room-reststop',
-    gap: 'room-none',
-    den: 'room-wild-den',
-    legend: 'room-legendary',
-    hideout: 'room-team-hideout',
-    honey: 'room-honey-tree',
-    deal: 'room-dark-deal',
-    lab: 'room-lab',
-    show: 'room-gameshow',
-    sign: 'room-sign',
-    sim: 'room-battle-sim',
-    tower: 'room-battle-tower',
-    shrine: 'room-shrine'
-  };
-  const records = new Map(adventure.records.map((r) => [r.id, r]));
-  assert.deepEqual(
-    Object.keys(ROOM_STYLES).sort(),
-    Object.keys(ROOM_IDS).sort(),
-    'ROOM_STYLES must name exactly the placeable room types (room-miniboss is never placed; room-boss is the mandatory end, drawn separately in every row)'
-  );
-  for (const [key, id] of Object.entries(ROOM_IDS)) {
-    assert.ok(records.has(id), `data/adventure.json lost the ${id} record (ROOM_STYLES "${key}")`);
-    assert.equal(records.get(id).category, 'room-type', `${id} is no longer a room-type record`);
-  }
+test('the example board is one Classic segment on the badge 1 ladder step', () => {
+  assert.equal(badge, 1, 'the example board is badge 1 — right after the first badge');
+  assert.equal(BOARD.boss, 'Gym 2', 'the boss is the next step on the ladder (Gym Leaders, Badges 0–7)');
+  assert.ok([2, 3].includes(BOARD.splitLanes), 'the split fans out into 2–3 lanes');
+  assert.equal(BOARD.rooms.length, 3, 'a Classic segment holds 3 room columns');
+});
 
-  /* One row per badge step: 14 rows, badge 0–13 in order, each a
-     3-column segment (every column a list of 1–3 lane cells — null is
-     the empty-sand gap) with a 2-or-3-lane split. */
-  assert.equal(EXAMPLE_RUN.length, 14, 'one row per badge step (badge 0–13)');
-  EXAMPLE_RUN.forEach((seg, i) => {
-    assert.equal(seg.badge, i, `row ${i} carries badge ${seg.badge} — rows are badge steps 0–13 in order`);
-    assert.equal(seg.rooms.length, 3, `badge ${i}: the Classic segment has 3 room columns`);
-    assert.ok(seg.lanes === 2 || seg.lanes === 3, `badge ${i}: the split forks into 2 or 3 lanes`);
-    seg.rooms.forEach((column, c) => {
-      assert.ok(Array.isArray(column), `badge ${i} column ${c + 1}: each room column is a lane list`);
+test('every board cell is a room type the placement rules allow at badge 1', () => {
+  for (const key of BOARD.rooms.flat()) {
+    assert.ok(key in KEY_TO_ROOM, `board key '${key}' must map to a room-type record`);
+    const room = roomById.get(KEY_TO_ROOM[key]);
+    assert.ok(room, `${KEY_TO_ROOM[key]} must be a room-type record in data/adventure.json`);
+    const placement = room.placement;
+    assert.notEqual(placement.kind, 'never', `${room.id} is never placed by the generator`);
+    /* kind "tier": the badge must fall inside one of the bar tiers */
+    if (placement.kind === 'tier') {
+      const tiers = placement.bars.map((b) => tierBadges(b.l)).filter((r) => r !== null);
+      assert.ok(tiers.length > 0, `${room.id} must carry parseable badge tiers`);
       assert.ok(
-        column.length >= 1 && column.length <= 3,
-        `badge ${i} column ${c + 1}: each room column holds 1–3 lanes`
+        tiers.some(([from, to]) => badge >= from && badge <= to),
+        `${room.id} has no placement tier covering badge ${badge}`
       );
-      column.forEach((key, l) =>
+    }
+    /* kind "roll" with a badge range in the note (e.g. the game show,
+       "badges 0–5") */
+    if (placement.kind === 'roll') {
+      const m = (placement.note || '').match(/badges (\d+)[–-](\d+)/);
+      if (m) {
         assert.ok(
-          key === null || ROOM_IDS[key],
-          `badge ${i} column ${c + 1} lane ${l + 1}: unknown room "${key}" (null = the empty-sand gap)`
-        )
-      );
-    });
-  });
+          badge >= Number(m[1]) && badge <= Number(m[2]),
+          `${room.id} only rolls on ${m[0]} — not badge ${badge}`
+        );
+      }
+    }
+    /* the gap (room-none): "never badge 0" */
+    if (key === 'gap') assert.notEqual(badge, 0, 'a gap is never placed at badge 0');
+  }
+});
 
-  /* Flatten a segment's lane cells, naming nulls 'gap' — the placement
-     rules gate rooms, and a gap sits anywhere a route would. */
-  const cellsOf = (seg) => seg.rooms.flat().map((cell) => (cell === null ? 'gap' : cell));
+test('the board layout obeys the generator shape at badge 1', () => {
+  for (const column of BOARD.rooms) {
+    assert.ok(column.length >= 1 && column.length <= 3, 'each column holds 1–3 lanes');
+    assert.ok(column.some((k) => k !== 'gap'), 'each column holds at least one room');
+  }
+  const cells = BOARD.rooms.flat();
+  const routes = cells.filter((k) => k === 'route').length;
+  /* "Minimum regular routes are always kept: 3 on badges 0–7" (the
+     wild-den placement rule in data/adventure.json) */
+  assert.ok(routes >= 3, `badges 0–7 keep at least 3 regular routes (found ${routes})`);
+});
 
-  /* The boss ladder — derived from the boss records' badge ranges in
-     the record names (Gym Leaders 0–7, Elite Four 8–11, Champion 12,
-     Final Battle 13; the Victory Lap carries no badge): the end boss of
-     row i is always the next one on the ladder. */
-  const ladder = {};
-  for (const b of adventure.records.filter((r) => r.category === 'boss')) {
-    const m = b.name.match(/Badge[s]? (\d+)(?:–(\d+))?/);
-    if (!m) continue;
-    const prefix = b.name.split(' (')[0].split(' ')[0];
-    const start = Number(m[1]);
-    const end = m[2] !== undefined ? Number(m[2]) : start;
-    for (let n = 0; n <= end - start; n++) {
-      ladder[start + n] = end === start ? prefix : `${prefix} ${n + 1}`;
+test('the lane wiring is one legal board: start line to boss, every cell in the flow', () => {
+  const columns = BOARD.rooms;
+  const pos = (c, l) => c + ':' + l;
+  const adj = new Map();
+  const add = (a, b) => {
+    if (!adj.has(a)) adj.set(a, new Set());
+    adj.get(a).add(b);
+  };
+  for (const [fc, fl, tc, tl] of BOARD.links) {
+    assert.ok(fc >= -1 && fc <= 3 && tc >= -1 && tc <= 3, 'links run from the start line (-1) to the boss (3)');
+    if (fc !== -1 && fc !== 3) assert.ok(fl >= 0 && fl < columns[fc].length, `from-lane ${fl} out of range in column ${fc}`);
+    if (tc !== -1 && tc !== 3) assert.ok(tl >= 0 && tl < columns[tc].length, `to-lane ${tl} out of range in column ${tc}`);
+    add(pos(fc, fl), pos(tc, tl));
+  }
+  /* forward reachability from the start line */
+  const reach = new Set();
+  const queue = [];
+  for (const [fc, fl] of BOARD.links.filter((l) => l[0] === -1).map((l) => [l[0], l[1]])) {
+    const p = pos(fc, fl);
+    if (!reach.has(p)) {
+      reach.add(p);
+      queue.push(p);
     }
   }
-  assert.deepEqual(
-    Object.keys(ladder)
-      .map(Number)
-      .sort((a, b) => a - b),
-    [...Array(14).keys()],
-    'the boss records span exactly badges 0–13'
-  );
-  EXAMPLE_RUN.forEach((seg, i) => {
-    assert.equal(seg.boss, ladder[i], `badge ${i}: the end boss is ${ladder[i]} (the next ladder step)`);
-  });
-
-  /* Badge gating — each room's `placement` note in data/adventure.json
-     (gaps: null lane cells, legal anywhere a route would sit — never
-     badge 0). */
-  const range = (a, b) => {
-    const out = [];
-    for (let i = a; i <= b; i++) out.push(i);
-    return out;
-  };
-  const GATED = {
-    legend: [1, 2, 3, 4, 5, 7, 8], // assigned slots: Roamer 1–5, Minor 3–5, Box 7–8
-    deal: [4, 5, 7, 8, 10, 11, 13], // badge 3+ · skip badges divisible by 3
-    lab: [3, 5, 6, 8, 9, 11, 12], // badge 3+ · skip if badge mod 3 = 1
-    show: range(0, 5), // badges 0–5
-    sign: range(0, 7), // below Elite Four only
-    honey: range(1, 13), // badge 1+
-    sim: range(1, 13), // badge 1+
-    tower: range(1, 13), // badge 1+
-    gap: range(1, 13) // never badge 0
-  };
-  for (const [key, badges] of Object.entries(GATED)) {
-    EXAMPLE_RUN.forEach((seg, i) => {
-      assert.ok(
-        !cellsOf(seg).includes(key) || badges.includes(seg.badge),
-        `badge ${i}: "${key}" is offered on badges ${badges.join('/')} only`
-      );
-    });
+  while (queue.length) {
+    const p = queue.shift();
+    for (const n of adj.get(p) || []) {
+      if (!reach.has(n)) {
+        reach.add(n);
+        queue.push(n);
+      }
+    }
   }
-
-  /* One-per-path caps per segment (the "one per path" placement notes),
-     plus the 50/50 sim/tower alternative — never both in one segment. */
-  const CAPPED = ['legend', 'hideout', 'honey', 'deal', 'lab', 'show', 'sign', 'sim', 'tower'];
-  EXAMPLE_RUN.forEach((seg, i) => {
-    const cells = cellsOf(seg);
-    for (const key of CAPPED) {
+  for (let c = 0; c < columns.length; c++) {
+    for (let l = 0; l < columns[c].length; l++) {
       assert.ok(
-        cells.filter((r) => r === key).length <= 1,
-        `badge ${i}: at most one "${key}" per path`
+        reach.has(pos(c, l)),
+        `cell '${columns[c][l]}' (column ${c}, lane ${l}) is unreachable from the start line`
+      );
+      /* every cell must reach the boss: walk its own forward closure */
+      const own = new Set([pos(c, l)]);
+      const q2 = [pos(c, l)];
+      while (q2.length) {
+        const p = q2.shift();
+        for (const n of adj.get(p) || []) {
+          if (!own.has(n)) {
+            own.add(n);
+            q2.push(n);
+          }
+        }
+      }
+      assert.ok(
+        [...own].some((p) => p.startsWith('3:')),
+        `cell '${columns[c][l]}' (column ${c}, lane ${l}) never reaches the boss`
       );
     }
-    assert.ok(
-      !(cells.includes('sim') && cells.includes('tower')),
-      `badge ${i}: the Battle Sim and the Tower are the 50/50 alternative pair`
-    );
-  });
-
-  /* The per-run slots: up to three legendary slots, the two hideouts
-     (Early on a badge 2–4, Pre-Legend mirroring the Box legendary),
-     and the one pre-rolled shrine badge. */
-  const badgesOf = (key) => EXAMPLE_RUN.filter((s) => cellsOf(s).includes(key)).map((s) => s.badge);
-  const legendBadges = badgesOf('legend');
-  assert.ok(legendBadges.length <= 3, 'a run carries up to three legendary slots');
-  const hideoutBadges = badgesOf('hideout');
-  assert.ok(hideoutBadges.length <= 2, 'Classic carries two hideouts per run');
-  if (hideoutBadges.length === 2) {
-    assert.ok(hideoutBadges.some((b) => b >= 2 && b <= 4), 'the Early hideout lands on a badge 2–4');
-    assert.ok(
-      hideoutBadges.some((b) => legendBadges.includes(b)),
-      'the Pre-Legend hideout mirrors the Box legendary badge'
-    );
   }
-  const shrineBadges = badgesOf('shrine');
-  assert.ok(shrineBadges.length <= 1, 'the shrine appears on one pre-rolled badge per run');
-  assert.ok(shrineBadges.every((b) => b >= 1 && b <= 13), 'the shrine badge is rolled within the run');
-
-  /* Minimum-route retention (the wild-den `placement` note in
-     data/adventure.json — the generator always keeps a minimum number of
-     regular routes: 3 on badges 0–7, 2 for the Elite Four, 1 at the
-     Champion and beyond; its den pass rolls each remaining route only
-     while freeRoomCount > minRouteCount — src/rogue_adventurepaths.c):
-     with the Classic 3-column segment, ZERO dens are placeable on badges
-     0–7, at most one on badges 8–11, at most two from badge 12 — and
-     this draw keeps a plain route in every segment (a promise of the
-     draw, not the generator: its special-encounter pass can replace all
-     remaining routes). */
-  EXAMPLE_RUN.forEach((seg, i) => {
-    const cells = cellsOf(seg);
-    const dens = cells.filter((r) => r === 'den').length;
-    const maxDens = seg.badge >= 12 ? 2 : seg.badge >= 8 ? 1 : 0;
-    assert.ok(dens <= maxDens, `badge ${i}: at most ${maxDens} dens (minimum-route retention)`);
-    assert.ok(cells.includes('route'), `badge ${i}: this draw keeps a plain route in every segment`);
-  });
+  /* at most 3 exits per cell (the in-game lane budget) */
+  for (const [p, exits] of adj) {
+    assert.ok(exits.size <= 3, `cell ${p} has ${exits.size} exits (max 3)`);
+  }
+  /* the boss fan-in is the split's lane count */
+  const bossIn = BOARD.links.filter((l) => l[2] === 3).length;
+  assert.equal(bossIn, BOARD.splitLanes, `the boss fan-in (${bossIn}) must equal the split's ${BOARD.splitLanes} lanes`);
 });

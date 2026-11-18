@@ -204,25 +204,8 @@
   border-color: var(--color-gold);
 }
 
-/* a gap — the trail skips ahead: a hollow, dashed-outlined square in
-   the line hue (the --rest dashed style, dimmed to "nothing here") */
-.run-path__node--gap {
-  border-color: var(--color-line);
-  border-style: dashed;
-  background: transparent;
-}
-
-/* a special encounter — a moss fill under the emerald outline:
-   the highlighted stop on the trail (legendary, hideout, honey tree,
-   dark deal, lab, game show, sign, battle sim/tower, shrine — the
-   gameplay page's mono labels tell them apart) */
-.run-path__node--special {
-  background: var(--color-raised);
-}
-
-/* labelled variant (gameplay page path diagrams): one column wrapper
-   per step — node on top, mono caption below — with a touch tighter
-   links so the labelled Classic 5-column segment still fits at 360px */
+/* labelled variant (gameplay wild-den callout): one column wrapper per
+   step — node on top, mono caption below — with a touch tighter links */
 .run-path--labeled .run-path__cell {
   display: flex;
   flex-direction: column;
@@ -238,125 +221,6 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--color-muted);
-}
-
-/* the example-run chain (gameplay, issue #119): one 2-D mini-grid row
-   per badge step — hub → 3 room COLUMNS (each a vertical stack of 1–3
-   lane cells; a null cell is the in-game empty-sand gap) → the split's
-   2–3-lane fork → boss. The links tighten further so the widest row of
-   the 14-row draw still fits at 360px (measured: the widest row —
-   Hub…Champion — sits at ~198px inside the 292px panel) */
-.run-path--chain .run-path__link {
-  width: 10px;
-}
-
-/* Row rhythm (issue #118 audit, re-cut for the 2-D lanes in #119):
-   each chain row is a two-track grid — an AUTO node track (a 3-lane
-   column stack is 68px tall; the 20–24px fork, the 20px nodes and the
-   24px boss diamond all centre inside it) plus a 20px LABEL track, 4px
-   apart. Every row is exactly 11 grid slots (Hub, 3 room columns,
-   Split, Boss, the 5 links between them), so the 11 columns are
-   explicit max-content: max-content tracks can't stretch, unlike auto
-   tracks, which would spread the columns across the whole panel. Hub,
-   Split and Boss sit in .run-path__cell wrappers — a nested grid
-   spanning both tracks — with their mono caption in track 2, so every
-   caption on every row shares ONE baseline and the row-1 links sit on
-   the node centres. The room columns carry no captions: the lane
-   cells' node treatment + glyph is the caption (the legend decodes it).
-   Column widths are unchanged (20px node stacks), so the 360px fit
-   holds with room to spare. */
-.run-path--chain {
-  display: grid;
-  grid-template-columns: repeat(11, max-content);
-  grid-template-rows: auto 20px;
-  row-gap: var(--space-1);
-  align-items: center;
-  justify-items: center;
-}
-
-.run-path--chain .run-path__cell {
-  display: grid;
-  grid-template-rows: auto 20px;
-  grid-row: 1 / 3; /* span both tracks */
-  row-gap: var(--space-1);
-  align-items: center;
-  justify-items: center;
-}
-
-/* one room column — a vertical stack of 1–3 lane cells (the in-game
-   2-D segment layout: columns x lanes), centred in the row's node
-   track so the lanes drift row by row */
-.run-path--chain .run-path__col {
-  grid-row: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1);
-}
-
-/* the lane-cell nodes: flex-centred so the special's two-letter mono
-   glyph sits dead centre — chain rows and the chain's legend only, so
-   the index hero's bare nodes (and the --mini / --labeled variants)
-   are untouched */
-.run-path--chain .run-path__node,
-.page--gameplay .run-legend .run-path__node {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  line-height: 1;
-  color: var(--color-ink);
-}
-
-/* a route — the default node — carries a small centre marker (the
-   in-game per-type route sprite: a bright plant/crystal/rock marker on
-   the sand); every other node type is already distinguished by its
-   fill/border, and the gap stays empty ("nothing here") */
-.run-path--chain
-  .run-path__node:not(.run-path__node--hub):not(.run-path__node--boss):
-  not(.run-path__node--rest):not(.run-path__node--den):
-  not(.run-path__node--gap):not(.run-path__node--special)::after,
-.page--gameplay
-  .run-legend
-  .run-path__node:not(.run-path__node--hub):not(.run-path__node--boss):
-  not(.run-path__node--rest):not(.run-path__node--den):
-  not(.run-path__node--gap):not(.run-path__node--special)::after {
-  content: "";
-  width: var(--space-1);
-  height: var(--space-1);
-  background: var(--color-emerald);
-}
-
-.run-path--chain .run-path__label {
-  grid-row: 2;
-}
-
-.run-path--chain .run-path__link {
-  grid-row: 1;
-}
-
-/* mini mode-shape schematics (the Classic / Fast Path / Gauntlet
-   rows): the same run-path family scaled down — 12px nodes, 8px links */
-.run-path--mini .run-path__node {
-  width: 12px;
-  height: 12px;
-}
-
-.run-path--mini .run-path__node--boss {
-  width: 14px;
-  height: 14px;
-  margin-inline: 2px;
-}
-
-.run-path--mini .run-path__link {
-  width: 8px;
-  height: 3px;
-}
-
-.run-path--mini .run-path__fork {
-  gap: 6px;
 }
 
 .run-path__fork {
@@ -456,10 +320,11 @@
   margin-top: var(--space-5);
 }
 
-/* path diagrams (DESIGN.md §5.1): a bordered panel around a
-   run-path instance with a visible caption under it — the diagram
-   root is aria-hidden, the caption carries the meaning. The panel
-   owns the spacing, so the run path's own top margin drops. */
+/* path diagrams (DESIGN.md §5.1): a bordered panel around a diagram
+   (the example path board's inline SVG, the wild-den callout's
+   run-path) with a visible caption under it — the diagram root is
+   aria-hidden, the caption carries the meaning. The panel owns the
+   spacing, so the run path's own top margin drops. */
 .page--gameplay .path-diagram {
   margin-top: var(--space-5);
   background: var(--color-surface);
@@ -478,59 +343,92 @@
   font-size: var(--text-sm);
 }
 
-/* the example-run chain (issue #119), inside the same .path-diagram
-   panel as its captions: the room-type legend, the 14-row badge-step
-   stack, and the mode-shape mini-rows */
-.page--gameplay .run-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-4);
-}
-
-.page--gameplay .run-legend__item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.page--gameplay .run-legend__name {
+/* the mono micro-note under the caption (the example board's empty-sand
+   lane) */
+.page--gameplay .path-diagram__note {
+  margin-top: var(--space-2);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--color-muted);
 }
 
-.page--gameplay .run-chain {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
+/* the example path board (issue #119, DESIGN.md §5.1): ONE Classic
+   segment (badge 1 → Gym 2) as a static inline SVG — the in-game
+   generated board at a glance: the sand, the start line, the elbow
+   sand path, the room nodes (each with its inline mono label — the
+   labels replace a legend) and the gold boss diamond. Tokens only:
+   the sand is the raised token, the path the line token, the nodes
+   muted squares with bg outlines, the den the gold square (sibling of
+   the gold boss diamond), the start line the emerald accent. The
+   viewBox is 336 units wide — at 360px the panel holds it at ~296px
+   (~0.88 scale, 12-unit labels at ~10.5px); the 520px cap keeps the
+   labels legible at full width. No animation (DESIGN.md §7: the page
+   entrance already carries the motion). */
+.page--gameplay .path-board {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin-inline: auto;
 }
 
-.page--gameplay .mode-shapes {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
+.page--gameplay .path-board__sand {
+  fill: var(--color-raised);
+  stroke: var(--color-line);
+  stroke-width: 2;
 }
 
-.page--gameplay .mode-shape {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+.page--gameplay .path-board__line {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-.page--gameplay .mode-shape__label {
-  min-width: 68px;
+/* the start line — the vertical sand line the player spawns on */
+.page--gameplay .path-board__start {
+  stroke: var(--color-emerald);
+  stroke-width: 4;
+}
+
+.page--gameplay .path-board__node {
+  fill: var(--color-muted);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+/* the rest stop — the dashed outline (the run-path family's rest glyph) */
+.page--gameplay .path-board__node--rest {
+  stroke-dasharray: 3.5 3;
+}
+
+/* the wild den — the gold square, sibling of the gold boss diamond */
+.page--gameplay .path-board__node--den {
+  fill: var(--color-gold);
+}
+
+/* the boss — the gold diamond, the only mandatory room */
+.page--gameplay .path-board__boss {
+  fill: var(--color-gold);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+/* the node's inner glyph: the route's per-type marker (grass /
+   water / fire), the game show's screen */
+.page--gameplay .path-board__mark {
+  fill: var(--color-bg);
+}
+
+.page--gameplay .path-board__label {
   font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-muted);
+  font-size: 12px;
+  fill: var(--color-muted);
 }
 
-.page--gameplay .mode-shape__note {
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  color: var(--color-muted);
+.page--gameplay .path-board__label--boss {
+  fill: var(--color-gold);
 }
 
 /* the wild-den callout (under the room-type note) wears the den gold */
