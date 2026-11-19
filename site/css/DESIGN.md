@@ -104,11 +104,13 @@ offline. Type scale tokens: `--text-xs` 12 · `--text-sm` 14 · `--text-base`
 
 ### 5.1 The run path (home hero + gameplay diagrams)
 
-A pure-CSS rendering of a generated adventure path:
+A rendering of a generated adventure path:
 hub (filled emerald square) → route node → **fork of two lanes** → boss
-(gold diamond, rotated square). Four instances, all decorative
+(gold diamond, rotated square). Three instances, all decorative
 (`aria-hidden="true"` on the root, with the meaning carried by visible
-captions or surrounding prose):
+captions or surrounding prose) — two pure-CSS runs of the path (the
+index hero, the wild-den callout) and the one inline-SVG variant (the
+example path board, below):
 
 - **Index hero** — one per site. **The binding markup is in the comment
   block above `.run-path` in `pages.css`** — copy it verbatim. The hero

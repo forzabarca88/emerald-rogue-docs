@@ -122,6 +122,10 @@
       labelDy: 23 /* label baseline below the node centre */
     };
 
+    /* The route squares' type marker (the in-game per-type route
+       sprite) — grass / water / fire in order of appearance. */
+    var ROUTE_MARKS = ['grass', 'water', 'fire'];
+
     /* The lane rows a column's cells sit on (see BOARD.laneY). */
     function laneRows(count) {
       if (count === 3) return BOARD.laneY;
@@ -158,12 +162,10 @@
 
     /* One room cell's node (the gap draws none — its lane is empty sand,
        and only its label marks the position): the route squares carry
-       their type marker — the in-game per-type route sprite, grass /
-       water / fire in order of appearance; the rest stop is the dashed
-       outline; the den is the gold square, the sibling of the gold boss
-       diamond; the game show is the small screen glyph. */
-    var ROUTE_MARKS = ['grass', 'water', 'fire'];
-
+       their type marker (ROUTE_MARKS, in order of appearance); the rest
+       stop is the dashed outline; the den is the gold square, the
+       sibling of the gold boss diamond; the game show is the small
+       screen glyph. */
     function cellNode(key, x, y, routeIndex) {
       var n =
         '<rect class="path-board__node' +

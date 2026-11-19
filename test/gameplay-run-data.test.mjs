@@ -32,22 +32,53 @@ const KEY_TO_ROOM = {
 
 const roomById = new Map(adventure.records.filter((r) => r.category === 'room-type').map((r) => [r.id, r]));
 
+/* The boss ladder, derived from the boss-ladder records in
+   data/adventure.json (each record's name carries its badge range —
+   Gym Leaders (Badges 0–7), Elite Four (Badges 8–11), Champion
+   (Badge 12), Final Battle (Badge 13); the Victory Lap carries none):
+   `ladder[badge]` = the end boss a board for that badge heads for. */
+const ladder = {};
+let lastBadged = -1;
+for (const b of adventure.records.filter((r) => r.category === 'boss')) {
+  const m = b.name.match(/Badge[s]? (\d+)(?:–(\d+))?/);
+  if (!m) continue;
+  const prefix = b.name.split(' (')[0].split(' ')[0];
+  const start = Number(m[1]);
+  const end = m[2] !== undefined ? Number(m[2]) : start;
+  lastBadged = Math.max(lastBadged, end);
+  for (let n = 0; n <= end - start; n++) {
+    ladder[start + n] = end === start ? prefix : `${prefix} ${n + 1}`;
+  }
+}
+
 /* one of the placement `bars` label → the badge range it covers
-   (the generator's stages, per the boss-ladder records) */
+   (the generator's stages, per the boss-ladder records: "Elite Four"
+   is that record's own badges, "Champion+" runs from the Champion to
+   the last badged record) */
 function tierBadges(label) {
   if (label === 'badge 0') return [0, 0];
   const m = label.match(/^badges (\d+)[–-](\d+)$/);
   if (m) return [Number(m[1]), Number(m[2])];
-  if (label === 'Elite Four') return [8, 11];
-  if (label === 'Champion+') return [12, 13];
-  return null;
+  const rec = adventure.records.find((r) => r.category === 'boss' && r.name.startsWith(label.replace(/\+$/, '')));
+  const rm = rec && rec.name.match(/Badge[s]? (\d+)(?:–(\d+))?/);
+  if (!rm) return null;
+  const start = Number(rm[1]);
+  const end = label.endsWith('+') ? lastBadged : rm[2] !== undefined ? Number(rm[2]) : start;
+  return [start, end];
 }
 
 const badge = BOARD.badge;
 
 test('the example board is one Classic segment on the badge 1 ladder step', () => {
   assert.equal(badge, 1, 'the example board is badge 1 — right after the first badge');
-  assert.equal(BOARD.boss, 'Gym 2', 'the boss is the next step on the ladder (Gym Leaders, Badges 0–7)');
+  assert.deepEqual(
+    Object.keys(ladder)
+      .map(Number)
+      .sort((a, b) => a - b),
+    [...Array(14).keys()],
+    'the boss-ladder records span exactly badges 0–13 (the ladder derivation must see every record)'
+  );
+  assert.equal(BOARD.boss, ladder[badge], `the boss is the next step on the ladder for badge ${badge} (${ladder[badge]})`);
   assert.ok([2, 3].includes(BOARD.splitLanes), 'the split fans out into 2–3 lanes');
   assert.equal(BOARD.rooms.length, 3, 'a Classic segment holds 3 room columns');
 });
@@ -87,7 +118,7 @@ test('every board cell is a room type the placement rules allow at badge 1', () 
 test('the board layout obeys the generator shape at badge 1', () => {
   for (const column of BOARD.rooms) {
     assert.ok(column.length >= 1 && column.length <= 3, 'each column holds 1–3 lanes');
-    assert.ok(column.some((k) => k !== 'gap'), 'each column holds at least one room');
+    assert.ok(column.some((k) => k !== 'gap'), 'this example keeps at least one room in every column');
   }
   const cells = BOARD.rooms.flat();
   const routes = cells.filter((k) => k === 'route').length;
@@ -105,9 +136,13 @@ test('the lane wiring is one legal board: start line to boss, every cell in the 
     adj.get(a).add(b);
   };
   for (const [fc, fl, tc, tl] of BOARD.links) {
-    assert.ok(fc >= -1 && fc <= 3 && tc >= -1 && tc <= 3, 'links run from the start line (-1) to the boss (3)');
-    if (fc !== -1 && fc !== 3) assert.ok(fl >= 0 && fl < columns[fc].length, `from-lane ${fl} out of range in column ${fc}`);
-    if (tc !== -1 && tc !== 3) assert.ok(tl >= 0 && tl < columns[tc].length, `to-lane ${tl} out of range in column ${tc}`);
+    /* the flow runs start line (-1) → room columns (0–2) → boss (3):
+       a link never leaves the boss and never enters the start line */
+    assert.ok(fc >= -1 && fc <= 2 && tc >= 0 && tc <= 3, 'links run from the start line (-1) to the boss (3), never in reverse');
+    if (fc === -1) assert.ok(fl >= 0 && fl < columns[0].length, `start-line lane ${fl} out of range (the start line fans out into column 0's ${columns[0].length} lanes)`);
+    else assert.ok(fl >= 0 && fl < columns[fc].length, `from-lane ${fl} out of range in column ${fc}`);
+    if (tc === 3) assert.ok(tl >= 0 && tl < BOARD.splitLanes, `boss lane ${tl} out of range (the split fans in on ${BOARD.splitLanes} lanes)`);
+    else assert.ok(tl >= 0 && tl < columns[tc].length, `to-lane ${tl} out of range in column ${tc}`);
     add(pos(fc, fl), pos(tc, tl));
   }
   /* forward reachability from the start line */
