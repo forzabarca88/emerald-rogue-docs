@@ -28,6 +28,50 @@
   font-size: var(--text-md);
 }
 
+/* The hero run-path stage (issue #79): a fixed-height box carrying BOTH
+   the binding pure-CSS .run-path (the no-JS / no-WebGL fallback layer —
+   its markup is unchanged, see the binding comment below) and, when
+   WebGL is available, the 3D canvas the shared foundation
+   (js/three-scene.js) appends over it — the site's second 3D placement
+   (DESIGN.md §7). The box is fixed-size, so mounting/unmounting the
+   canvas never shifts the layout. The pure-CSS path is centred in the
+   box, matching the 3D scene's centred framing. The stage's surface is
+   the same plain --color-bg the 3D scene paints as its backdrop, so
+   the no-WebGL and WebGL states look identical (the CSS path no longer
+   sits on the body's tile-grid texture). */
+.page--index .hero-stage {
+  position: relative;
+  height: 132px;
+  margin-top: var(--space-6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+/* the stage carries the .run-path's own top margin */
+.page--index .hero-stage .run-path {
+  margin-top: 0;
+}
+
+/* the 3D canvas fills the stage (the foundation appends it; the static
+   fallback layer underneath stays on every failure path) — the same
+   inset:0 pattern as the Pokedex's .dex-viewer */
+.page--index .hero-stage canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+@media (max-width: 560px) {
+  .page--index .hero-stage {
+    height: 96px;
+  }
+}
+
 /* stat blocks — real counts from data/site.json, display-face values */
 .page--index .hero__stats {
   list-style: none;
@@ -77,8 +121,16 @@
    when it builds a run, so it opens the home page in place of a stock
    hero graphic. It is decorative — keep aria-hidden="true" on the root.
 
+   The index hero wraps it in the fixed-height .hero-stage (index block
+   above — also the 3D placement's box, issue #79 / DESIGN.md §7): the
+   pure-CSS path below stays the no-JS / no-WebGL fallback layer, and a
+   WebGL canvas — appended by js/three-scene.js's ROGUE3D.mount() when
+   WebGL is available — renders the same path in 3D over it. Both layers
+   are emitted from the SAME single source of truth (HERO_PATH in
+   site/js/pages/home.js).
+
    Binding markup (wired into index.html between the subtitle and
-   the stats):
+   the stats, inside the .hero-stage):
 
      <div class="run-path" aria-hidden="true">
        <span class="run-path__node run-path__node--hub"></span>
@@ -152,17 +204,8 @@
   border-color: var(--color-gold);
 }
 
-/* a gap — the trail skips ahead: a hollow, dashed-outlined square in
-   the line hue (the --rest dashed style, dimmed to "nothing here") */
-.run-path__node--gap {
-  border-color: var(--color-line);
-  border-style: dashed;
-  background: transparent;
-}
-
-/* labelled variant (gameplay page path diagrams): one column wrapper
-   per step — node on top, mono caption below — with a touch tighter
-   links so the labelled Classic 5-column segment still fits at 360px */
+/* labelled variant (gameplay wild-den callout): one column wrapper per
+   step — node on top, mono caption below — with a touch tighter links */
 .run-path--labeled .run-path__cell {
   display: flex;
   flex-direction: column;
@@ -277,10 +320,11 @@
   margin-top: var(--space-5);
 }
 
-/* path diagrams (DESIGN.md §5.1): a bordered panel around a
-   run-path instance with a visible caption under it — the diagram
-   root is aria-hidden, the caption carries the meaning. The panel
-   owns the spacing, so the run path's own top margin drops. */
+/* path diagrams (DESIGN.md §5.1): a bordered panel around a diagram
+   (the example path board's inline SVG, the wild-den callout's
+   run-path) with a visible caption under it — the diagram root is
+   aria-hidden, the caption carries the meaning. The panel owns the
+   spacing, so the run path's own top margin drops. */
 .page--gameplay .path-diagram {
   margin-top: var(--space-5);
   background: var(--color-surface);
@@ -297,6 +341,94 @@
   margin-top: var(--space-3);
   color: var(--color-muted);
   font-size: var(--text-sm);
+}
+
+/* the mono micro-note under the caption (the example board's empty-sand
+   lane) */
+.page--gameplay .path-diagram__note {
+  margin-top: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+/* the example path board (issue #119, DESIGN.md §5.1): ONE Classic
+   segment (badge 1 → Gym 2) as a static inline SVG — the in-game
+   generated board at a glance: the sand, the start line, the elbow
+   sand path, the room nodes (each with its inline mono label — the
+   labels replace a legend) and the gold boss diamond. Tokens only:
+   the sand is the raised token, the path the line token, the nodes
+   muted squares with bg outlines, the den the gold square (sibling of
+   the gold boss diamond), the start line the emerald accent. The
+   viewBox is 336 units wide — at 360px the panel holds it at ~296px
+   (~0.88 scale, 12-unit labels at ~10.5px); the 520px cap keeps the
+   labels legible at full width. No animation (DESIGN.md §7: the page
+   entrance already carries the motion). */
+.page--gameplay .path-board {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  margin-inline: auto;
+}
+
+.page--gameplay .path-board__sand {
+  fill: var(--color-raised);
+  stroke: var(--color-line);
+  stroke-width: 2;
+}
+
+.page--gameplay .path-board__line {
+  fill: none;
+  stroke: var(--color-line);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* the start line — the vertical sand line the player spawns on */
+.page--gameplay .path-board__start {
+  stroke: var(--color-emerald);
+  stroke-width: 4;
+}
+
+.page--gameplay .path-board__node {
+  fill: var(--color-muted);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+/* the rest stop — the dashed outline (the run-path family's rest glyph) */
+.page--gameplay .path-board__node--rest {
+  stroke-dasharray: 3.5 3;
+}
+
+/* the wild den — the gold square, sibling of the gold boss diamond */
+.page--gameplay .path-board__node--den {
+  fill: var(--color-gold);
+}
+
+/* the boss — the gold diamond, the only mandatory room */
+.page--gameplay .path-board__boss {
+  fill: var(--color-gold);
+  stroke: var(--color-bg);
+  stroke-width: 2;
+}
+
+/* the node's inner glyph: the route's per-type marker (grass /
+   water / fire), the game show's screen */
+.page--gameplay .path-board__mark {
+  fill: var(--color-bg);
+}
+
+.page--gameplay .path-board__label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  fill: var(--color-muted);
+}
+
+.page--gameplay .path-board__label--boss {
+  fill: var(--color-gold);
 }
 
 /* the wild-den callout (under the room-type note) wears the den gold */
@@ -2791,7 +2923,8 @@
 /* --- issue-#100 visualisation A: the stat radar (detail, under the
    |  stat bars) -------------------------------------------------------
    |  A hand-rolled inline-SVG spider chart (js/pages/pokedex.js builds
-   |  the string; the viewBox scales it to the 420px cap). Tokens only:
+   |  the string; the viewBox scales it to the 420px STAGE cap — the
+   |  square .dex-radar__stage, see the width split below). Tokens only:
    |    - the species polygon: SOLID --color-emerald fill + the
    |      fill-opacity presentation attribute (the site's no-rgba-
    |      literals rule — DESIGN.md §10);
@@ -2799,8 +2932,8 @@
    |      (emerald vs amber reads unambiguously on the dark surface);
    |    - the guides (4 rings + 6 axes): --color-line; the mono axis
    |      labels + the "255" tick: --color-muted (SVG text sizes are
-   |      viewBox units — 10 units ≈ 14px at the 420px cap, ≈9px at
-   |      360px, both legible);
+   |      viewBox units — 10 units ≈ 14px at the 420px stage cap,
+   |      ≈9px at 360px, both legible);
    |    - the six hit sectors paint nothing (fill: none +
    |      pointer-events: all) — they are pointer targets, not visual
    |      elements (hover AND touch tap, one delegated listener).
@@ -2817,10 +2950,16 @@
    |  list (.dex-radar__compare-list) shares the SAME tokens-only box the
    |  toolbar selects do (line border, surface background, radius-sm),
    |  one padded row per visible match (no hover paint — the pick is a
-   |  click; no new breakpoint — it rides the .dex-radar 420px grid,
-   |  full-width at 360px). */
+   |  click; no new breakpoint — it rides the .dex-radar's full-width
+   |  grid, so it is full-width at every width).
+   |
+   |  Width split (issue #118): the .dex-radar CONTAINER spans the full
+   |  .dex-species__body field (like the .dex-meta box below it), so the
+   |  field's compare control, result list, legend and caption ride the
+   |  full width and the field aligns with its siblings — only the square
+   |  SVG STAGE (the .dex-radar__stage wrapper) keeps the 420px cap,
+   |  left-aligned like the 560px .dex-stats block above. */
 .page--pokedex .dex-radar {
-  max-width: 420px;
   display: grid;
   gap: var(--space-2);
 }
@@ -2846,6 +2985,12 @@
   font-size: var(--text-sm);
   color: var(--color-ink);
   cursor: pointer;
+}
+
+/* the square SVG stage — the only part of the field that keeps the
+   420px cap (issue #118); left-aligned like the .dex-stats block */
+.page--pokedex .dex-radar__stage {
+  max-width: 420px;
 }
 
 .page--pokedex .dex-radar__svg {

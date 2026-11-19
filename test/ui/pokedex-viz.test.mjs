@@ -113,11 +113,13 @@ assert.ok(!VAN_TYPES.includes('Fairy'), 'the Vanilla build has no Fairy type');
 /* The 4-bin ramp (the page's tcBin rule). */
 const binOf = (m) => (m <= 0.25 ? 0 : m <= 0.75 ? 1 : m <= 1.5 ? 2 : 3);
 
-/* The grid geometry (the page's TC_GEOM — mirrored, not re-typed). */
-const TC = { cell: 24, left: 52, top: 44, pad: 8 };
-const viewBoxOf = (n) => '0 0 ' + (TC.left + n * TC.cell + TC.pad) + ' ' + (TC.top + n * TC.cell + TC.pad);
-assert.equal(viewBoxOf(18), '0 0 492 484', 'the EX viewBox derives from the geometry');
-assert.equal(viewBoxOf(17), '0 0 468 460', 'the Vanilla viewBox derives from the geometry');
+/* The grid geometry (the page's TC_GEOM — mirrored, not re-typed):
+ * right = the gutter the last column's -45°-rotated label overflows
+ * into, pad = the bottom pad. */
+const TC = { cell: 24, left: 52, top: 44, right: 20, pad: 8 };
+const viewBoxOf = (n) => '0 0 ' + (TC.left + n * TC.cell + TC.right) + ' ' + (TC.top + n * TC.cell + TC.pad);
+assert.equal(viewBoxOf(18), '0 0 504 484', 'the EX viewBox derives from the geometry');
+assert.equal(viewBoxOf(17), '0 0 480 460', 'the Vanilla viewBox derives from the geometry');
 
 /* The version-scoped stats/types (the page's dexVariant overlay rule). */
 const variantOf = (r, version, field) =>

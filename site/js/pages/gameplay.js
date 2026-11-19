@@ -54,27 +54,173 @@
       );
     }
 
-    /* A typical Classic 5-column segment, mixing the room types a
-       player usually encounters: hub → route → rest stop (dashed) →
-       gap (hollow) → split (fork of two lanes — two or three in the
-       game) → boss. */
-    var labeledSegment =
-      '<div class="run-path run-path--labeled" aria-hidden="true">' +
-      cell('run-path__node--hub', 'Hub') +
-      LINK +
-      cell('', 'Route') +
-      LINK +
-      cell('run-path__node--rest', 'Rest') +
-      LINK +
-      cell('run-path__node--gap', 'Gap') +
-      LINK +
-      '<span class="run-path__cell"><span class="run-path__fork">' +
-      '<span class="run-path__lane"><span class="run-path__link"></span></span>' +
-      '<span class="run-path__lane"><span class="run-path__link"></span></span>' +
-      '</span><span class="run-path__label">Split</span></span>' +
-      LINK +
-      cell('run-path__node--boss', 'Boss') +
-      '</div>';
+    /*
+     * The example path board (issue #119) — ONE Classic segment for
+     * badge 1: the board rolled right after the first badge, heading
+     * for Gym 2. Hand-authored from the `placement` rules in
+     * data/adventure.json — every cell is a legal draw at badge 1
+     * (routes and rest stops any badge; the wild den at the 40% badge
+     * 1–7 tier; the gap at the 5% badge 1–7 tier; the game show at the
+     * 50% roll on badges 0–5) — and NO RNG: the board is fixed so the
+     * page's screenshots stay deterministic.
+     *
+     * `rooms` reads left to right, the in-game board layout (columns ×
+     * lanes): the spawn column, then two more room columns; each column
+     * is a list of 1–3 lane cells, top to bottom. A cell is a room key —
+     * `gap` is the in-game empty-sand lane (ADVPATH_ROOM_NONE: no
+     * object, just path). `splitLanes` is the 2–3-lane fan-out from the
+     * last column into the boss through the always-empty column in front
+     * of the gym. `links` is the lane wiring, one [fromCol, fromLane,
+     * toCol, toLane] each — column -1 is the start line, column 3 the
+     * boss: one legal roll (every cell reachable from the start line
+     * and reaching the boss, each cell at most 3 exits, the boss
+     * fan-in = splitLanes). The minimum-route retention keeps 3 of the
+     * 4 routes plain — one of them is the den.
+     * test/gameplay-run-data.test.mjs re-validates the board against
+     * the same rules. */
+    var EXAMPLE_BOARD = {
+      badge: 1,
+      boss: 'Gym 2',
+      splitLanes: 2,
+      rooms: [
+        ['route', 'rest'],
+        ['den', 'route', 'gap'],
+        ['show', 'route']
+      ],
+      links: [
+        [-1, 0, 0, 0],
+        [-1, 1, 0, 1],
+        [0, 0, 1, 0],
+        [0, 0, 1, 1],
+        [0, 1, 1, 1],
+        [0, 1, 1, 2],
+        [1, 0, 2, 0],
+        [1, 1, 2, 0],
+        [1, 1, 2, 1],
+        [1, 2, 2, 1],
+        [2, 0, 3, 0],
+        [2, 1, 3, 0]
+      ]
+    };
+
+    /* The board's geometry (viewBox units — the SVG scales to the panel
+       width; DESIGN.md §5.1): the sand board, the start line, the 3 room
+       columns (lane rows top/mid/bot — a 2-lane column takes the top and
+       bottom rows, a 1-lane column the middle, the lanes drifting row by
+       row like the in-game board), the always-empty split space and the
+       boss. */
+    var BOARD = {
+      w: 336,
+      h: 164,
+      sand: { x: 4, y: 8, w: 328, h: 148, r: 8 },
+      startX: 20,
+      colX: [64, 136, 208],
+      bossX: 298,
+      bossInset: 15.6, /* the rotated boss square's left vertex */
+      laneY: [26, 76, 126],
+      node: 10, /* half-size of a 20-unit node square */
+      labelDy: 23 /* label baseline below the node centre */
+    };
+
+    /* The route squares' type marker (the in-game per-type route
+       sprite) — grass / water / fire in order of appearance. */
+    var ROUTE_MARKS = ['grass', 'water', 'fire'];
+
+    /* The lane rows a column's cells sit on (see BOARD.laneY). */
+    function laneRows(count) {
+      if (count === 3) return BOARD.laneY;
+      if (count === 2) return [BOARD.laneY[0], BOARD.laneY[2]];
+      return [BOARD.laneY[1]];
+    }
+
+    /* The centre of a board position: column -1 is the start line (the
+       start line's links leave it at the neighbour column's lane row),
+       0–2 the room columns, 3 the boss (the middle row). */
+    function posXY(col, lane) {
+      var x = col === -1 ? BOARD.startX : col === 3 ? BOARD.bossX : BOARD.colX[col];
+      var y =
+        col === -1
+          ? laneRows(EXAMPLE_BOARD.rooms[0].length)[lane]
+          : col === 3
+            ? BOARD.laneY[1]
+            : laneRows(EXAMPLE_BOARD.rooms[col].length)[lane];
+      return [x, y];
+    }
+
+    /* One link of the sand path: a straight run when both ends share a
+       row, an elbow (horizontal, one vertical, horizontal) through the
+       mid-gap rail when they don't — the in-game T-junctions. */
+    function linkPath(link) {
+      var f = posXY(link[0], link[1]);
+      var t = posXY(link[2], link[3]);
+      var x1 = link[0] === -1 ? f[0] : f[0] + BOARD.node;
+      var x2 = link[2] === 3 ? t[0] - BOARD.bossInset : t[0] - BOARD.node;
+      if (f[1] === t[1]) return 'M' + x1 + ' ' + f[1] + 'H' + x2;
+      var midX = Math.round((x1 + x2) / 2);
+      return 'M' + x1 + ' ' + f[1] + 'H' + midX + 'V' + t[1] + 'H' + x2;
+    }
+
+    /* One room cell's node (the gap draws none — its lane is empty sand,
+       and only its label marks the position): the route squares carry
+       their type marker (ROUTE_MARKS, in order of appearance); the rest
+       stop is the dashed outline; the den is the gold square, the
+       sibling of the gold boss diamond; the game show is the small
+       screen glyph. */
+    function cellNode(key, x, y, routeIndex) {
+      var n =
+        '<rect class="path-board__node' +
+        (key === 'rest' ? ' path-board__node--rest' : key === 'den' ? ' path-board__node--den' : '') +
+        '" x="' +
+        (x - BOARD.node) +
+        '" y="' +
+        (y - BOARD.node) +
+        '" width="' +
+        BOARD.node * 2 +
+        '" height="' +
+        BOARD.node * 2 +
+        '"/>';
+      var mark = '';
+      if (key === 'route') {
+        var kind = ROUTE_MARKS[routeIndex % ROUTE_MARKS.length];
+        if (kind === 'grass') mark = '<polygon class="path-board__mark" points="' + [x, y - 4.5, x - 4.5, y + 3.5, x + 4.5, y + 3.5].join(',') + '"/>';
+        else if (kind === 'water') mark = '<circle class="path-board__mark" cx="' + x + '" cy="' + y + '" r="4"/>';
+        else mark = '<polygon class="path-board__mark" points="' + [x, y - 4.5, x + 4.5, y, x, y + 4.5, x - 4.5, y].join(',') + '"/>';
+      } else if (key === 'show') {
+        mark = '<rect class="path-board__mark" x="' + (x - 3.5) + '" y="' + (y - 3.5) + '" width="7" height="7"/>';
+      }
+      return n + mark;
+    }
+
+    /* The board's static inline SVG (DESIGN.md §5.1): the sand, the
+       start line, the elbow sand path, the room nodes with their inline
+       mono labels (the labels replace a legend), and the gold boss
+       diamond labelled with its ladder step. Decorative — the visible
+       caption and micro-note carry the meaning. */
+    function boardSvg() {
+      var s = '<svg class="path-board" viewBox="0 0 ' + BOARD.w + ' ' + BOARD.h + '" aria-hidden="true">';
+      var sd = BOARD.sand;
+      s += '<rect class="path-board__sand" x="' + sd.x + '" y="' + sd.y + '" width="' + sd.w + '" height="' + sd.h + '" rx="' + sd.r + '"/>';
+      s += '<line class="path-board__start" x1="' + BOARD.startX + '" y1="' + BOARD.laneY[0] + '" x2="' + BOARD.startX + '" y2="' + BOARD.laneY[2] + '"/>';
+      EXAMPLE_BOARD.links.forEach(function (link) {
+        s += '<path class="path-board__line" d="' + linkPath(link) + '"/>';
+      });
+      var routeSeen = 0;
+      EXAMPLE_BOARD.rooms.forEach(function (column, c) {
+        var rows = laneRows(column.length);
+        column.forEach(function (key, lane) {
+          var x = BOARD.colX[c];
+          var y = rows[lane];
+          if (key !== 'gap') {
+            s += cellNode(key, x, y, key === 'route' ? routeSeen++ : -1);
+          }
+          s += '<text class="path-board__label" x="' + x + '" y="' + (y + BOARD.labelDy) + '" text-anchor="middle">' + key + '</text>';
+        });
+      });
+      s += '<rect class="path-board__boss" x="' + (BOARD.bossX - 11) + '" y="' + (BOARD.laneY[1] - 11) + '" width="22" height="22" transform="rotate(45 ' + BOARD.bossX + ' ' + BOARD.laneY[1] + ')"/>';
+      s += '<text class="path-board__label path-board__label--boss" x="' + BOARD.bossX + '" y="' + (BOARD.laneY[1] + BOARD.labelDy + 4) + '" text-anchor="middle">' + ROGUE.esc(EXAMPLE_BOARD.boss) + '</text>';
+      s += '<text class="path-board__label" x="' + BOARD.startX + '" y="' + (BOARD.laneY[2] + BOARD.labelDy) + '" text-anchor="middle">start</text>';
+      return s + '</svg>';
+    }
 
     /* The Fast Path hidden-route segment (2 room columns): every
        leftover route of the segment becomes a wild den. */
@@ -180,8 +326,11 @@
       html += ROGUE.section('gp-hub', 'The hub', hubIntro.heading, null, ROGUE.paragraphs(hubIntro.text) + guideLink('hub', hubLabel));
     }
 
-    /* Phase 2 — the run: the freshly generated path, with the labelled
-       path-segment diagram (DESIGN.md §5.1). */
+    /* Phase 2 — the run: the how-the-path-works prose (how a run is
+       actually played) + the example path board (issue #119) — ONE
+       Classic segment (badge 1 → Gym 2) as a static inline SVG: the
+       sand, the lane wiring, the room nodes with their inline mono
+       labels, and the boss. */
     var pathProse = ROGUE.proseById(adventure, 'how-the-path-works');
     if (pathProse) {
       html +=
@@ -192,8 +341,9 @@
           null,
           ROGUE.paragraphs(pathProse.text) +
             '<div class="path-diagram">' +
-            labeledSegment +
-            '<p class="path-diagram__caption">A typical Classic segment: hub plus five steps, left to right — the split forks into two or three lanes.</p>' +
+            boardSvg() +
+            '<p class="path-diagram__caption">One Classic segment — the board after your first badge, heading for Gym 2; every badge re-rolls a fresh one.</p>' +
+            '<p class="path-diagram__note">A lane with no marker is just empty sand — the path still runs through it. Only the boss is mandatory.</p>' +
             '</div>'
         );
     }

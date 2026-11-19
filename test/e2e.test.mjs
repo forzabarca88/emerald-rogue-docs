@@ -32,7 +32,8 @@
  *     the vendored three.js (site/vendor/ — issue #79) ships in
  *     dist/vendor/ and serves 200 while no page references any CDN host
  *     (jsdelivr / unpkg / cdnjs / Google Fonts) or statically references
- *     the vendored script (it is deferred-injected at run time only).
+ *     the vendored script (it is deferred-injected at run time only —
+ *     js/three-scene.js's ROGUE3D.load(), used by the two 3D pages).
  * (4) The poisoned build: a temp copy of the repo's build inputs with one
  *     data file whose meta.id breaks out of the window["..."] global-name
  *     interpolation must fail the build (naming the offending file) instead
@@ -835,7 +836,7 @@ test('vendored three.js ships in dist and no page references any CDN host', asyn
       }
       assert.ok(
         !body.includes('vendor/three.min.js'),
-        `${page} statically references the vendored three.js (it must be deferred-injected at run time by the Pokedex page script, never baked into a shell)`
+        `${page} statically references the vendored three.js (it must be deferred-injected at run time by js/three-scene.js's ROGUE3D.load() — the one loader, used by the two 3D pages (Pokedex + home) — never baked into a shell)`
       );
     }
   } finally {

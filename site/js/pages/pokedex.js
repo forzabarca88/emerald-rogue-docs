@@ -155,16 +155,19 @@
  * parity for the dex).
  *
  * The 3D species viewer (issue #79): the detail head's sprite sits in a
- * .dex-viewer box that doubles as the mount for the three.js perspective-
- * sway 3D viewer (js/three-viewer.js — the site's one 3D placement, see
- * DESIGN.md §7). The vendored three.js (./vendor/three.min.js, the
- * third self-hosted asset family, DESIGN.md §11) is deferred-injected
- * ONCE (promise-memoized) the first time a species detail opens — never
- * in any shell's static markup — and the viewer is disposed on
- * deselect, version re-render and every re-init, so no loop or WebGL
- * context accumulates under repeated toggles/deep links. The static
- * <img> stays in the box as the no-WebGL / texture-failure fallback
- * (no layout shift either way).
+ * .dex-viewer box that doubles as the mount for the shared 3D foundation
+ * (js/three-scene.js — the site's 3D system; the Pokedex species detail
+ * is its first placement, see DESIGN.md §7). The vendored three.js
+ * (./vendor/three.min.js, the third self-hosted asset family,
+ * DESIGN.md §11) is deferred-injected ONCE — ROGUE3D.load(),
+ * promise-memoized and the one place the vendored script is ever loaded
+ * — the first time a species detail opens, never in any shell's static
+ * markup — and the viewer is disposed on deselect, version re-render
+ * and every re-init, so no loop or WebGL context accumulates under
+ * repeated toggles/deep links (one context per page lifetime — the
+ * foundation's shared renderer is deliberately kept across deselects).
+ * The static <img> stays in the box as the no-WebGL / texture-failure
+ * fallback (no layout shift either way).
  *
  * The issue-#100 analytics visualisations (PR 4b) — two hand-rolled
  * inline-SVG charts (ES5 string-built, viewBox + width:100%, STATIC —
@@ -809,8 +812,10 @@
      * (the 255 max — the stat bars' own value/255 normalization), axis
      * labels at radius 114, the 6 hit sectors out to radius 126 (they
      * tile the full 360° in 60° wedges, so every point of the chart is
-     * tappable). The six axes in STAT_ROWS order minus the BST row:
-     * hp top, then clockwise atk / def / spd / spe / spa. */
+     * tappable), the mono "255" tick centred on the vertical axis above
+     * the outer ring's top vertex (baseline at cy − r − 4 — clear of the
+     * ring's slanted top edges). The six axes in STAT_ROWS order minus
+     * the BST row: hp top, then clockwise atk / def / spd / spe / spa. */
     var RADAR_AXES = [
       ['hp', 'HP'],
       ['atk', 'ATK'],
@@ -883,7 +888,8 @@
     /**
      * The radar's static SVG (string-built): the 4 ring guides
      * (25/50/75/100% of 255), the 6 axis lines, the mono axis labels +
-     * the "255" tick on the outer ring, the species polygon
+     * the "255" tick centred above the outer ring's top vertex, the
+     * species polygon
      * (--color-emerald, solid token fill + fill-opacity), the compare
      * polygon (--color-gold) when present, the vertex dots, and the 6
      * invisible hit sectors LAST (topmost — they take the pointers).
@@ -905,7 +911,7 @@
         var ly = (g.cy + g.labelR * Math.sin(a) + 3.5).toFixed(1);
         s += '<text class="dex-radar__label" x="' + lx + '" y="' + ly + '" text-anchor="middle">' + RADAR_AXES[i][1] + '</text>';
       }
-      s += '<text class="dex-radar__tick" x="' + (g.cx + 5) + '" y="' + (g.cy - g.r + 12) + '">255</text>';
+      s += '<text class="dex-radar__tick" x="' + g.cx + '" y="' + (g.cy - g.r - 4) + '" text-anchor="middle">255</text>';
       var stats = dexVariant(record, 'stats') || {};
       s += '<polygon class="dex-radar__poly dex-radar__poly--main" points="' + radarPolyPoints(stats) + '"/>';
       if (compare) {
@@ -1183,10 +1189,13 @@
     }
 
     /* The cell geometry: 24-unit cells, a 52-unit left gutter for the
-     * row labels and a 44-unit top gutter for the -45°-rotated column
-     * labels. N comes from typeOptions() (EX 18 / Vanilla 17) — the
-     * grid is derived, never hardcoded. */
-    var TC_GEOM = { cell: 24, left: 52, top: 44, pad: 8 };
+     * row labels, a 44-unit top gutter for the -45°-rotated column
+     * labels, a 20-unit right gutter (the last column's rotated label
+     * overflows the grid's right edge by up to ~15.6 units at its
+     * 4-char mono max — the gutter keeps it inside the viewBox) and an
+     * 8-unit bottom pad. N comes from typeOptions() (EX 18 / Vanilla
+     * 17) — the grid is derived, never hardcoded. */
+    var TC_GEOM = { cell: 24, left: 52, top: 44, right: 20, pad: 8 };
 
     /** The bin class suffix for a multiplier (0→i0, 0.5→i1, 1→i2, 2→i3). */
     function tcBin(m) {
@@ -1213,7 +1222,7 @@
       }
       var N = types.length;
       var g = TC_GEOM;
-      var w = g.left + N * g.cell + g.pad;
+      var w = g.left + N * g.cell + g.right;
       var h = g.top + N * g.cell + g.pad;
       var s = '<svg class="dex-typechart__grid" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Type matchup chart: rows attack, columns defend">';
       var a, d;
@@ -1519,54 +1528,147 @@
       applyTypechart();
     }
 
-    /* --- the 3D species viewer (issue #79) ----------------------------------
-     * The vendored three.js is deferred-injected once — promise-memoized,
-     * cached for the page lifetime — the first time a species detail
+    /* --- the 3D species viewer (issue #79) — on the shared 3D foundation ---
+     * The vendored three.js is deferred-injected exactly once —
+     * ROGUE3D.load() is promise-memoized and is the ONE place the
+     * vendored script is ever loaded — the first time a species detail
      * opens. It resolves false (and is not retried — a missing vendor
      * file is not a transient fault) when the script itself fails to
      * load; the static sprite <img> stays in place on every failure
-     * path (js/three-viewer.js handles the rest). The viewer is
+     * path (js/three-scene.js handles the rest). The viewer is
      * (re-)mounted on every detail render and disposed on every
      * overview render, so repeated deep links / version toggles never
-     * accumulate loops or WebGL contexts. */
+     * accumulate loops or WebGL contexts — one context per page
+     * lifetime (the foundation's shared renderer survives deselects).
+     *
+     * The dex's scene (issue #111): a GBA-affine-style perspective sway
+     * of the 128×128 species PNG — a NearestFilter sRGB CanvasTexture on
+     * an unlit double-sided plane floating on a plain --color-bg
+     * backdrop (no floor, no grid — the in-game Pokedex sprite floats on
+     * a plain background). The plane swings toward/away from the viewer
+     * within a limited Y tilt (never a full 360° turntable) plus a
+     * gentle idle bob: the pose is a pure function of scene time mutating
+     * the pre-built group only — no per-frame allocations. */
 
-    var threeLoad = null;
+    /* The dex placement's fixed scene constants (ported from the
+     * discarded js/three-viewer.js): one full left↔right swing every
+     * ~6s, one bob every ~3.7s. SPRITE_HEIGHT is sized so the in-frame
+     * art renders at about the same scale as the static <img> fallback
+     * (the 128×128 frame fills the box there) — 2.2 high is ~90% of the
+     * framed height, the transparent frame margins do the rest. The
+     * camera is FIXED per mount (no per-frame movement, no per-frame
+     * RNG); the distance leaves headroom so the plane's corners stay in
+     * frame through the whole sway. */
+    var VIEWER_CAMERA = { fov: 38, position: [0, 1.6, 3.6], lookAt: [0, 0.9, 0], near: 0.1, far: 50 };
+    var VIEWER_TOKENS = { background: '--color-bg' };
+    var SPRITE_HEIGHT = 2.2;
+    var BASE_Y = 1.1; /* sprite center at rest */
+    var SWAY_SPEED = 1.05; /* rad/s */
+    var SWAY_MAX_TILT = 0.55; /* rad (~31°) — max Y tilt from the viewer */
+    var BOB_SPEED = 1.7; /* rad/s */
+    var BOB_AMPLITUDE = 0.03;
 
-    function loadThree() {
-      if (window.THREE) return Promise.resolve(true);
-      if (threeLoad) return threeLoad;
-      threeLoad = new Promise(function (resolve) {
-        var script = document.createElement('script');
-        script.src = './vendor/three.min.js';
-        script.onload = function () {
-          resolve(true);
-        };
-        script.onerror = function () {
-          resolve(false);
-        };
-        document.body.appendChild(script);
-      });
-      return threeLoad;
+    /** Pixel-art crisp sprite texture: drawn 1:1 onto a scratch canvas
+     *  at native size, NearestFilter for mag AND min, no mipmaps
+     *  (required with nearest min — and the 128×128 art needs none),
+     *  sRGB so the palette renders exactly as the token-palette PNG. */
+    function makeSpriteTexture(THREE, image) {
+      var w = image.naturalWidth || image.width || 128;
+      var h = image.naturalHeight || image.height || 128;
+      var scratch = document.createElement('canvas');
+      scratch.width = w;
+      scratch.height = h;
+      var ctx = scratch.getContext('2d');
+      if (!ctx) throw new Error('no 2d context for the sprite texture');
+      ctx.drawImage(image, 0, 0);
+      var texture = new THREE.CanvasTexture(scratch);
+      texture.magFilter = THREE.NearestFilter;
+      texture.minFilter = THREE.NearestFilter;
+      texture.generateMipmaps = false;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.userData.aspect = w / h;
+      return texture;
     }
 
     function disposeViewer() {
       if (window.ROGUE3D) window.ROGUE3D.dispose();
     }
 
+    /**
+     * The dex's build callback for ROGUE3D.mount: the fixed camera, the
+     * plain token backdrop and the unlit double-sided sprite plane (a
+     * GBA sprite has no real depth — the "3D" is the perspective sway,
+     * not a model), the plane sized from the texture's aspect (the art
+     * is square, but don't assume it). Returns the sway pose(t).
+     */
+    function buildSpriteScene(THREE, scene, camera, colors, image) {
+      camera.fov = VIEWER_CAMERA.fov;
+      camera.near = VIEWER_CAMERA.near;
+      camera.far = VIEWER_CAMERA.far;
+      camera.position.set(VIEWER_CAMERA.position[0], VIEWER_CAMERA.position[1], VIEWER_CAMERA.position[2]);
+      camera.lookAt(new THREE.Vector3(VIEWER_CAMERA.lookAt[0], VIEWER_CAMERA.lookAt[1], VIEWER_CAMERA.lookAt[2]));
+
+      /* No floor, no grid (issue #111): the in-game Pokedex sprite floats
+       * on a plain background — the scene background (the .dex-viewer
+       * box's own --color-bg) is the backdrop. */
+      scene.background = new THREE.Color(colors.background);
+
+      var group = new THREE.Group();
+      var material = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide, transparent: true });
+      var plane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), material);
+      group.add(plane);
+      group.position.y = BASE_Y;
+      scene.add(group);
+
+      var texture = makeSpriteTexture(THREE, image);
+      material.map = texture;
+      var aspect = texture.userData.aspect || 1;
+      plane.geometry.dispose();
+      plane.geometry = new THREE.PlaneGeometry(SPRITE_HEIGHT * aspect, SPRITE_HEIGHT);
+
+      /* The GBA-affine-style perspective sway — a bounded Y oscillation,
+       * not a full turn — plus the gentle idle bob. A pure function of
+       * scene time (deterministic). */
+      return function pose(t) {
+        group.rotation.y = Math.sin(t * SWAY_SPEED) * SWAY_MAX_TILT;
+        group.position.y = BASE_Y + Math.sin(t * BOB_SPEED) * BOB_AMPLITUDE;
+      };
+    }
+
     function mountViewer(record) {
       var id = record.id;
       disposeViewer(); /* re-init on every detail render (species change, version re-render) */
+      if (!window.ROGUE3D) return;
       var src = spriteSrc(record);
       var start = function () {
         /* a later render may have superseded this one (a fast deep link or
          * toggle) — mount only if this species is still the selection */
-        if (state.selection !== id || !window.THREE || !window.ROGUE3D) return;
-        var mount = document.querySelector('#dex-species .dex-viewer');
-        if (!mount) return;
-        window.ROGUE3D.init(mount, src);
+        if (state.selection !== id || !window.ROGUE3D) return;
+        var box = document.querySelector('#dex-species .dex-viewer');
+        if (!box) return;
+        /* The sprite image loads async (a few ms locally): the canvas is
+         * only mounted once its texture source has landed, so the first
+         * frame already shows the sprite (the reduced-motion static
+         * frame is sampled right after the canvas appears). */
+        var image = new Image();
+        image.onload = function () {
+          /* the same supersede guard — the load can race a newer render */
+          if (state.selection !== id) return;
+          var mount = document.querySelector('#dex-species .dex-viewer');
+          if (!mount) return;
+          window.ROGUE3D.mount(mount, {
+            tokens: VIEWER_TOKENS,
+            build: function (THREE, scene, camera, colors) {
+              return buildSpriteScene(THREE, scene, camera, colors, image);
+            }
+          });
+        };
+        image.onerror = function () { /* texture failure → the static <img> stays, silently */ };
+        image.src = src;
       };
-      if (window.THREE && window.ROGUE3D) start();
-      else loadThree().then(start);
+      window.ROGUE3D.load().then(function (ok) {
+        if (ok) start();
+      });
     }
 
     /* --- the species detail view ------------------------------------------ */

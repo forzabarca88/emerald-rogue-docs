@@ -79,7 +79,7 @@ const PAGES = [
       runPath: {
         sel: '.hero .run-path',
         expected: 1,
-        why: 'the home hero carries exactly one run-path signature diagram (DESIGN.md §5.1, home.js RUN_PATH)',
+        why: 'the home hero carries exactly one run-path signature diagram (DESIGN.md §5.1, home.js HERO_PATH)',
       },
     },
   },

@@ -47,6 +47,13 @@
  * ABOVE the backdrop by design — the version toggle stays reachable while
  * the palette is open).
  *
+ * EVERY capture emulates reducedMotion: 'reduce' (page.emulateMedia,
+ * applied as soon as the page opens): the entrance fades finish
+ * instantly, and every 3D surface (the home-hero run path, the Pokedex
+ * sprite) renders exactly ONE static frame at t=0 under the shared 3D
+ * foundation's reduced-motion contract — the whole grid is therefore
+ * deterministic (two runs capture the same pixels).
+ *
  * Before EVERY capture — plain and palette states alike — the tool settles
  * the entrance motion (DESIGN.md §7: the ≤480ms header/page fade, plus the
  * ≤120ms palette drop for the palette states): the computed opacity of
@@ -55,6 +62,21 @@
  * the kill switch makes the wait a no-op). The probe polls on rAF with a
  * ~2s bound, so a plain capture can never go out as a mid-fade image; a
  * settle that cannot complete fails the run.
+ *
+ * After that, before EVERY capture, the tool settles the 3D end state:
+ * the hero/viewer canvas mounts ASYNC (the deferred vendor-script
+ * injection + parse + context init + first frame), so without a bounded
+ * wait a capture could show the CSS fallback instead of the documented
+ * "exactly one static frame at t=0" (reduced motion is emulated on every
+ * capture), or flip states between runs on a slow machine. The wait
+ * resolves instantly on pages with no 3D surface (no mount box in the
+ * DOM), returns 'canvas' once the canvas holds a NON-BLANK frame (the
+ * same in-page pixel read-back the pokedex-viewer suite uses: drawImage
+ * → getImageData, sampled sum > 0 and more than one distinct colour),
+ * and on the bounded timeout returns 'fallback' — a no-WebGL
+ * environment, or the surface absent on this view (the screenshots never
+ * open a Pokedex detail) — where the capture proceeds with the static
+ * CSS layer. Neither outcome is a capture failure.
  *
  * Exit contract:
  *   - Playwright absent → print the harness SKIP_MESSAGE verbatim and exit 0
@@ -95,6 +117,20 @@ const EMPTY_QUERY_PAGES = ['index'];
 const SETTLE_TIMEOUT_MS = 10_000;
 /** Bounded settle timeout for the entrance-motion probe (~4× the 480ms fade). */
 const ENTRANCE_SETTLE_TIMEOUT_MS = 2_000;
+/** Bounded settle timeout for the 3D end state (the async canvas mount). */
+const THREE_SETTLE_TIMEOUT_MS = 4_000;
+
+/**
+ * The 3D surface each captured page can host (issue #79) — the mount-box
+ * selector per page. Only the index hero stage and the Pokedex viewer box
+ * exist (the viewer box only while a species detail is open, which the
+ * screenshots never do — that target therefore resolves instantly); every
+ * other page has no 3D surface and the settle is a no-op.
+ */
+const THREE_TARGETS = {
+  index: '.hero-stage',
+  pokedex: '#dex-species .dex-viewer',
+};
 
 /** First line of an error's message, capped — keeps failure output readable. */
 const brief = (err) => String(err && err.message ? err.message : err).split('\n')[0].slice(0, 300);
@@ -180,6 +216,61 @@ async function settleEntrance(page, extra = []) {
 }
 
 /**
+ * Settle the 3D end state before capture (issue #79): the canvas mounts
+ * asynchronously (the deferred vendor-script injection + parse + context
+ * init + first frame), so without a bounded wait a capture could show the
+ * CSS fallback instead of the documented "exactly one static frame at
+ * t=0" (reduced motion is emulated on every capture). Returns 'none'
+ * (no 3D surface — resolved instantly), 'canvas' (the canvas holds a
+ * NON-BLANK frame — the same in-page pixel read-back the pokedex-viewer
+ * suite uses: drawImage the WebGL canvas onto a 2D canvas, sample: sum > 0
+ * and ≥ 2 distinct colours), or 'fallback' (the bounded timeout elapsed —
+ * no WebGL, or the surface absent on this view; the capture proceeds with
+ * the static layer). Neither the 'none' nor the 'fallback' outcome is a
+ * failure — both are documented end states.
+ */
+async function settle3D(page, boxSelector) {
+  if (!boxSelector) return 'none';
+  try {
+    return await page.waitForFunction(
+      (sel) => {
+        const box = document.querySelector(sel);
+        if (!box) return 'none'; /* no 3D surface on this page/view — nothing to settle */
+        const c = box.querySelector('canvas');
+        if (!c || !c.width || !c.height) return null; /* the canvas has not mounted yet */
+        const off = document.createElement('canvas');
+        off.width = c.width;
+        off.height = c.height;
+        const ctx = off.getContext('2d');
+        if (!ctx) return null;
+        ctx.drawImage(c, 0, 0);
+        let data;
+        try {
+          data = ctx.getImageData(0, 0, off.width, off.height).data;
+        } catch (err) {
+          return null; /* the frame is not readable back yet — keep waiting */
+        }
+        let sum = 0;
+        const distinct = new Set();
+        const stride = Math.max(1, Math.floor((off.width * off.height) / 120));
+        for (let i = 0; i < data.length; i += 4 * stride) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          sum += r + g + b;
+          distinct.add((r << 16) | (g << 8) | b);
+        }
+        return sum > 0 && distinct.size >= 2 ? 'canvas' : null; /* a blank frame is not the end state */
+      },
+      boxSelector,
+      { timeout: THREE_SETTLE_TIMEOUT_MS, polling: 100 }
+    );
+  } catch (err) {
+    return 'fallback'; /* bounded: no WebGL / surface absent — proceed with the CSS layer */
+  }
+}
+
+/**
  * Settle on the palette being open: root unhidden, the input holding focus,
  * and the entrance motion finished (settleEntrance, plus the panel's
  * opacity at the final 1). Throws on timeout; the caller reports the file.
@@ -258,6 +349,7 @@ async function capturePaletteState({ pageName, version, width, suffix, query }) 
   let opened = null;
   try {
     opened = await openPage({ path: `${pageName}.html`, version, width, height: HEIGHT });
+    await opened.page.emulateMedia({ reducedMotion: 'reduce' });
   } catch (err) {
     failures.push(`${file}: page load/readiness failed — ${brief(err)}`);
     return;
@@ -271,6 +363,7 @@ async function capturePaletteState({ pageName, version, width, suffix, query }) 
       await opened.page.keyboard.type(query);
       await waitForQuerySettled(opened.page, searchCounts[pageName][version]);
     }
+    await settle3D(opened.page, THREE_TARGETS[pageName]);
     await opened.page.screenshot({ path: path.join(outDir, file), fullPage: true });
     captured += 1;
     console.log(`  captured ${file}`);
@@ -294,6 +387,7 @@ try {
         let opened = null;
         try {
           opened = await openPage({ path: `${page}.html`, version, width, height: HEIGHT });
+          await opened.page.emulateMedia({ reducedMotion: 'reduce' });
         } catch (err) {
           failures.push(`${file}: page load/readiness failed — ${brief(err)}`);
           continue; // any open context is reaped by closeAll() below
@@ -302,6 +396,10 @@ try {
           // the plain capture must not fire mid-fade: settle the 480ms
           // header/page entrance before the fullPage screenshot
           await settleEntrance(opened.page);
+          // the 3D canvas mounts async — settle its end state (one static
+          // frame under the emulated reduce, or the CSS fallback) before
+          // the fullPage screenshot
+          await settle3D(opened.page, THREE_TARGETS[page]);
           await opened.page.screenshot({ path: path.join(outDir, file), fullPage: true });
           captured += 1;
           console.log(`  captured ${file}`);
