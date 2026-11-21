@@ -8,17 +8,17 @@
     {
       "id": "what-time-does",
       "heading": "Time sets the mood, not the rules",
-      "text": "The in-game clock drives the look of the world: the overworld and battle palettes smoothly blend through six keyframe tints — night, sunrise, daylight, sunset and back to night — as the minutes pass. It does not, however, change the route tables themselves — the same species are listed at any hour (in EX the clock does gate the time-of-day form of a few species, such as Lycanroc and Rockruff). What the clock and the season do change: the season stamp on your run's status screen, the hub's music, and — in EX — which seasonal or time-of-day forms of certain species can be found."
+      "text": "The world clock drives the look of the world: the overworld and battle palettes smoothly blend through six keyframe tints — night, sunrise, daylight, sunset and back to night — as the minutes pass. It does not, however, change the route tables themselves — the same species are listed at any hour (in EX the clock does gate the time-of-day form of a few species, such as Lycanroc and Rockruff). What the clock and the season do change: the season stamp on your run's status screen, the hub's music, and — in EX — which seasonal or time-of-day forms of certain species can be found. Note that this is the world's day and night clock — it is separate from your run's play time, which runs in real time from the moment a run starts and is what the \"I am Speed\" quest measures."
     },
     {
       "id": "a-day-in-the-run",
       "heading": "A day goes by quickly",
-      "text": "A run begins at 10:00. Every time you move between rooms during the run, one hour passes, so a full classic run is roughly one in-game day. In the hub, time moves more slowly — a quarter hour per room change. When the clock rolls past midnight, a day is counted; every two days the season advances, so a long campaign of runs takes you from spring through winter and around again."
+      "text": "The world clock is set to 10:00 once, when a new save is created — after that it simply keeps going from run to run, so a run picks up from whatever time the clock already shows. Every time you move between rooms the clock advances — one hour during an active run, a quarter hour in the hub — so how far a single run carries it depends on where you go. This is the world's day and night clock: it tints the world and keeps the day and season counts, and it is not the timer the \"I am Speed\" quest measures (that one counts your run's real play time from the moment the run starts). When the clock rolls past midnight, a day is counted; every two days the season advances, so a long campaign of runs takes you from spring through winter and around again."
     },
     {
       "id": "waking-up",
       "heading": "Choose when you wake up",
-      "text": "The bed in your home is the run's time machine. Lying down asks what time you'd like to wake up — Dawn, Day, Dusk or Night — and which season, letting you set the hub's clock and season before a run. In multiplayer, the host's time and season are the ones everyone shares."
+      "text": "The bed in your home sets the world clock directly. Lying down asks what time you'd like to wake up — Dawn, Day, Dusk or Night — and which season, so you choose the hub's clock and season before your next run. It does not touch your run's play time: that counter always starts fresh when the run itself starts. In multiplayer, the host's time and season are the ones everyone shares."
     }
   ],
   "records": [
@@ -40,18 +40,18 @@
     },
     {
       "id": "run-clock",
-      "name": "The run clock",
+      "name": "The world clock during a run",
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "A run always starts at 10:00. Each room change during an active run adds one hour, so a run covers roughly one in-game day from morning through the night. When the clock wraps past 24:00 a new day is counted and the season day-counter advances.",
-      "source": "src/rogue_controller.c @vanilla L3328 (run start: RogueToD_SetTime(60 × 10)), L5686-5688 (+60 min per warp while a run is active) / @origin/expansion L3315, L5677-5679; src/rogue_timeofday.c @vanilla L152-165 (time set with 24h wrap and day counter increment) (identical @origin/expansion)"
+      "description": "The world clock is set to 10:00 once, when a new save is created (Rogue_OnNewGame — not at run start); after that runs continue from whatever time it already shows. Each room change during an active run adds one hour, so how far the clock moves over a run depends on where you go. When the clock wraps past 24:00 a new day is counted and the season day-counter advances. This day and night clock is separate from the run play time counter — reset when each run begins and what the \"I am Speed\" quest measures.",
+      "source": "src/rogue_controller.c @vanilla L3328 (new game: RogueToD_SetTime(60 × 10) in Rogue_OnNewGame L3276-3361, not in BeginRogueRun), L4751-4752 (run play time: PlayTimeCounter_Reset + Start in BeginRogueRun L4638-4843), L5686-5688 (+60 min per warp while a run is active) / @origin/expansion L3315, L4742-4743, L5677-5679; src/rogue_timeofday.c @vanilla L152-165 (time set with 24h wrap and day counter increment) (identical @origin/expansion); src/rogue_quest.c @vanilla L1787-1792 (RunTimerLessThanMins reads the play-time counter) (identical @origin/expansion)"
     },
     {
       "id": "hub-clock",
       "name": "The hub clock",
       "category": "timeofday-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "In the hub (outside a run) time moves a quarter hour per room change, so the hub's time of day drifts slowly as you explore between runs. In a multiplayer hub, clients simply adopt the host's time and season.",
+      "description": "In the hub (outside a run) the same world clock moves a quarter hour per room change, so the hub's time of day drifts slowly as you explore between runs. In a multiplayer hub, clients simply adopt the host's time and season.",
       "source": "src/rogue_controller.c @vanilla L5713-5720 / @origin/expansion L5704-5711 (hub: clients copy host time/season, host +15 min per warp)"
     },
     {
@@ -67,7 +67,7 @@
       "name": "Seasons",
       "category": "season-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "The year cycles Spring → Summer → Autumn → Winter, and each season lasts two in-game days (so the season changes every two days on the run clock). Your current season is stamped on the run's status screen alongside the clock and badges, and the hub's music changes with it: spring plays a New Bark Town–style theme, summer Sandgem Town, autumn Floaroma Town and winter Snowpoint Town.",
+      "description": "The year cycles Spring → Summer → Autumn → Winter, and each season lasts two in-game days (so the season changes every two days on the world clock). Your current season is stamped on the run's status screen alongside the clock and badges, and the hub's music changes with it: spring plays a New Bark Town–style theme, summer Sandgem Town, autumn Floaroma Town and winter Snowpoint Town.",
       "source": "src/rogue_timeofday.c @vanilla L62 (DAYS_PER_SEASON 2), L180-212 (season from day counter) (identical @origin/expansion); include/constants/rogue.h @vanilla L847-851 / @origin/expansion L849-853 (season enum); src/rogue_controller.c @vanilla L2929-2945 (season stamp on the status screen), L915-930 (seasonal hub music) / @origin/expansion L2916-2932, L915-930"
     },
     {

@@ -23,7 +23,7 @@
     {
       "id": "time-weather-season",
       "heading": "Time, seasons and weather",
-      "text": "The hub runs on a simulated clock that only moves when you warp between maps — each warp during an active run adds 60 in-game minutes, and each warp while you're in the hub adds 15; there is no real-time clock. Whenever a new day or noon rolls over — and you are not in the middle of an adventure — the hub's weather re-rolls. The bed in your Home Base lets you sleep until a chosen wake time (Dawn, Day, Dusk or Night) and pick which season to wake up in, which is how you set the hub's clock.",
+      "text": "The hub shares the game's world clock — the simulated day and night clock that only moves when you warp between maps: each warp during an active run adds 60 in-game minutes, and each warp while you're in the hub adds 15. There is no real-time component to it, and it is not the play time counter the \"I am Speed\" quest measures (that one runs in real time from the start of each run). Whenever a new day or noon rolls over — and you are not in the middle of an adventure — the hub's weather re-rolls. The bed in your Home Base sets this clock and the season directly: sleep until a chosen wake time (Dawn, Day, Dusk or Night) and pick which season you wake up in.",
       "cycles": {
         "day": ["Dawn", "Day", "Dusk", "Night"],
         "season": {

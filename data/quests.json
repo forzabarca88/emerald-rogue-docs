@@ -7,23 +7,23 @@
   "prose": [
     {
       "id": "system",
-      "heading": "A data-driven quest system",
-      "text": "Every quest is defined in JSON, not code: src/data/rogue/quests.json pulls in 13 of the 14 files in src/data/rogue/quests/ via \"includes\" (template.json is included by nothing), and each file's top-level \"defaults\" object supplies shared fields (display group, flags, triggers) that individual quests override per-key. At build time the CustomJson tool (the quests_c exporter in the game repo's tools directory) compiles all of it into one C table consumed by src/rogue_quest.c. The quest files are byte-identical between the two branches — the Vanilla/EX split is done with \"#if defined(ROGUE_EXPANSION)\" gates on individual quests and rewards, so 94 quests (plus several extra rewards on shared quests) exist only in EX. Names, descriptions and trigger parameters support %TEMPLATE% placeholders (e.g. every mon mastery is one template entry), and the quest log text keeps the game's {PKMN}/{POKEBLOCK} placeholders for \"Pokémon\"/\"Pokéblock\"."
+      "heading": "How to use this page",
+      "text": "Every quest the game can hand you — a main quest, a challenge or a mastery quest — is listed below, in the nine display groups the in-game Quest Log uses. The search box in the quest log filters all groups at once by name, description, trigger, requirement or reward (it matches what the cards display, so searching \"Pokémon\" finds every card that shows it), the strip above it jumps to a group, and the site-wide search (press / on any page) reaches the same cards. Objectives reach you two ways: quests flagged \"Unlocked from the start\" are in the log from the new game, and the rest arrive as another quest's \"Unlocks quest: …\" reward — clearing \"Post Game?\" at the Challenge Frontier opens up most of the postgame content. The challenge and mastery quests themselves stay out of the log until you unlock their feature in the Challenge Frontier (talk to the NPCs there), and each card's source line cites the quest's game file and build."
     },
     {
       "id": "display-groups",
       "heading": "The nine display groups",
-      "text": "The Quest Log groups quests into nine display groups, in this order: Final Quests, Starter Quests, Default Quests, Starter Challenges, Default Challenges, Evil Team Challenges, Region Challenges, Type Challenges and Mon Masteries. Each quest carries a display_group (usually inherited from its file's defaults; a few quests, like the \"Final Run\" in EX, sit in a different group per version). Only Type Challenges is sorted alphabetically in the in-game UI. Starter Challenges is defined in the source but currently holds no quests."
+      "text": "The Quest Log groups quests into nine display groups, in this order: Final Quests, Starter Quests, Default Quests, Starter Challenges, Default Challenges, Evil Team Challenges, Region Challenges, Type Challenges and Mon Masteries. A quest sits in whatever group the game assigns it — a few, like the \"Final Run\" in EX, sit in a different group per version — and only Type Challenges is sorted alphabetically in the in-game UI. Starter Challenges is defined in the source but currently holds no quests. The strip above the log jumps to any group, and each group heading counts the quests currently visible in it."
     },
     {
       "id": "quest-classes",
       "heading": "Main quests, challenges and mon masteries",
-      "text": "There are three quest classes. Main quests (IS_MAIN_QUEST) are one-shot story objectives — once completed they cannot be repeated. Challenges (IS_CHALLENGE) are repeatable: completing one at a higher difficulty unlocks that tier's additional rewards, and challenges stay hidden (\"suppressed\") until the challenges feature itself is unlocked. Mon masteries (IS_MON_MASTERY) track a species line automatically and keep progressing in the background even while suppressed. Each quest is ACTIVE_IN_RUN, ACTIVE_IN_HUB or both (ACTIVE_ALWAYS). A quest that is not handed over by another quest's reward is UNLOCKED_BY_DEFAULT (unlocked at new game); the rest chain off a \"quest unlock\" reward — e.g. \"Post Game?\" unlocks most of the challenge content."
+      "text": "There are three quest classes. Main quests are one-shot story objectives — once completed they cannot be repeated. Challenges are repeatable: the game remembers the difficulty you last completed them at, and a reward marked for a harder tier is only granted once you have beaten the challenge at that difficulty — so a challenge is worth replaying at a higher difficulty (chosen in the Config Lab) to collect the remaining rewards. Mon masteries track a species line: when you enter the Hall of Fame, every line in your party is marked mastered, each line's mastery quest then completes, and in EX the mastery NPC at the Challenge Frontier starts selling you that line's special item. Each quest is active in runs, in the hub, or both; the quests flagged \"Unlocked from the start\" are in the log from the new game, the rest arrive as another quest's reward."
     },
     {
       "id": "triggers-rewards",
       "heading": "How triggers, requirements and rewards work",
-      "text": "A quest completes or fails when a trigger event fires — run start/end, earning a badge, entering the Hall of Fame, catching a Pokémon, using a field item, a map event, a battle event — and the trigger's condition passes. Conditions check the current difficulty, party composition, config settings, Pokédex progress, money and more; each record's \"trigger\" field summarises them in plain language. Active quests can also carry requirements: the quest silently fails if one stops being met (e.g. a required item runs out or a setting changes). Rewards are difficulty-tiered: a reward marked HARD is only granted once the quest has been completed at Hard difficulty or above, which is why challenges are worth repeating. {PKMN} and {POKEBLOCK} in names/descriptions are the game's text placeholders for \"Pokémon\" and \"Pokéblock\"."
+      "text": "A quest completes or fails when a trigger event fires — run start/end, earning a badge, entering the Hall of Fame, catching a Pokémon, using a field item, a battle or a map event — and the game can attach a result to either side of the check: most quests complete when their condition holds, but some complete when it does not (\"Not Today!\" finishes when the item used is an Escape Rope and the rival-battle-disabled flag is NOT set). Each card's \"Trigger\" line summarises the events and conditions in plain language. Active quests can also carry requirements: the quest silently fails if one stops being met (a required item runs out or a setting changes), so the \"Requirements\" line is your checklist for keeping a quest alive. Rewards are difficulty-tiered: a reward marked Hard is only granted once the quest has been completed at Hard difficulty or above, which is why challenges are worth repeating."
     }
   ],
   "display_groups": [
@@ -366,7 +366,7 @@
         "Main quest",
         "Active in runs"
       ],
-      "trigger": "At the start of a run: unless the Final Quest settings are met (only Rogue Trainers enabled, Standard game mode, and the matching National Pokédex), the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless the Final Quest settings are met (only Rogue Trainers enabled, Classic game mode, and the matching National Pokédex), the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥20,000",
         "a special Mareep (level 10)",
@@ -481,7 +481,7 @@
         "Main quest",
         "Active in runs"
       ],
-      "trigger": "When you leave an encounter: unless the current adventure room is one of: Rest Stop, further trigger checks are skipped. When you leave an encounter: if you have more than ¥49,999 in your pocket then the quest completes.",
+      "trigger": "When you leave an encounter: unless the current adventure room is a Rest Stop, nothing happens. When you leave an encounter: if you have more than ¥49,999 in your pocket then the quest completes.",
       "rewards": [
         "¥1,000",
         "15× Build Parts"
@@ -636,7 +636,7 @@
         "Main quest",
         "Active in runs"
       ],
-      "trigger": "When you earn a badge: unless difficulty is above 8, further trigger checks are skipped. When you earn a badge: unless your party contains a Legendary Pokémon, the quest fails. When you earn a badge: if difficulty is above 11 then the quest completes.",
+      "trigger": "When you earn a badge: unless difficulty is above 8, nothing happens. When you earn a badge: unless your party contains a Legendary Pokémon, the quest fails. When you earn a badge: if difficulty is above 11 then the quest completes.",
       "rewards": [
         "¥2,000",
         "Unlocks Master Ball in the shop",
@@ -808,7 +808,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you leave an encounter: unless the current adventure room is one of: Rest Stop, further trigger checks are skipped. When you leave an encounter: if you used a Mr. Randoman trade here then the quest completes.",
+      "trigger": "When you leave an encounter: unless the current adventure room is a Rest Stop, nothing happens. When you leave an encounter: if you used a Mr. Randoman trade here then the quest completes.",
       "rewards": [
         "¥1,000",
         "5× Build Parts"
@@ -851,7 +851,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you use a field item: unless the item you just used is one of: Escape Rope, further trigger checks are skipped. When you use a field item: the \"Rival battle disabled\" flag is set (no action).",
+      "trigger": "When you use a field item: unless the item you just used is an Escape Rope, nothing happens. When you use a field item: unless the \"Rival battle disabled\" flag is set, the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks Escape Rope in the shop",
@@ -916,7 +916,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you leave an encounter: unless the current adventure room is one of: Rest Stop, further trigger checks are skipped. When you leave an encounter: if you have spent more than ¥19,999 on the current map then the quest completes.",
+      "trigger": "When you leave an encounter: unless the current adventure room is a Rest Stop, nothing happens. When you leave an encounter: if you have spent more than ¥19,999 on the current map then the quest completes.",
       "rewards": [
         "¥1,000",
         "5× Build Parts",
@@ -1168,7 +1168,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you leave an encounter: unless the current adventure room is one of: Rest Stop, further trigger checks are skipped. When you leave an encounter: unless a Mr. Randoman trade was available during this run, further trigger checks are skipped. When you leave an encounter: unless you used a Mr. Randoman trade here, the quest fails. When you leave an encounter: unless your last Mr. Randoman trade used your full party, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "When you leave an encounter: unless the current adventure room is a Rest Stop, nothing happens. When you leave an encounter: unless a Mr. Randoman trade was available during this run, nothing happens. When you leave an encounter: unless you used a Mr. Randoman trade here, the quest fails. When you leave an encounter: unless your last Mr. Randoman trade used your full party, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "Unlocks quest: Chaos Master",
@@ -1180,7 +1180,7 @@
       ],
       "source": "src/data/rogue/quests/default_challenges.json @vanilla (identical @origin/expansion)",
       "requirements": [
-        "the \"random starter received\" flag is set"
+        "you received a random starter"
       ]
     },
     {
@@ -1300,7 +1300,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if your in-game run time is under 150 minutes then the quest completes. When any battle ends: unless your in-game run time is under 150 minutes, the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if your run play time is under 2 hours 30 minutes then the quest completes. When any battle ends: unless your run play time is under 2 hours 30 minutes, the quest fails.",
       "rewards": [
         "¥2,000",
         "Shiny Ninjask (level 10) (earned only when completed at Hard difficulty or above)"
@@ -1332,7 +1332,7 @@
       ],
       "source": "src/data/rogue/quests/default_challenges.json @vanilla (identical @origin/expansion)",
       "requirements": [
-        "the \"random starter received\" flag is set",
+        "you received a random starter",
         "battle format is set to Mixed",
         "Fresh Start is on",
         "you have at least 1× Embargo Curse",
@@ -1360,7 +1360,7 @@
       ],
       "source": "src/data/rogue/quests/default_challenges.json @vanilla (identical @origin/expansion)",
       "requirements": [
-        "the \"random starter received\" flag is set",
+        "you received a random starter",
         "Fresh Start is on",
         "you have at least 1× Embargo Curse",
         "you have at least 5× Capacity Curse",
@@ -1373,7 +1373,7 @@
             "Shiny Togepi (level 10) (earned only when completed at Hard difficulty or above)"
           ],
           "requirements": [
-            "the \"random starter received\" flag is set",
+            "you received a random starter",
             "Fresh Start is on",
             "you have at least 1× Embargo Curse",
             "you have at least 5× Capacity Curse",
@@ -1386,7 +1386,7 @@
             "Shiny Kingambit (level 10) (earned only when completed at Hard difficulty or above)"
           ],
           "requirements": [
-            "the \"random starter received\" flag is set",
+            "you received a random starter",
             "Fresh Start is on",
             "you have at least 1× Embargo Curse",
             "you have at least 5× Capacity Curse",
@@ -1522,7 +1522,7 @@
       ],
       "source": "src/data/rogue/quests/default_challenges.json @vanilla (identical @origin/expansion)",
       "requirements": [
-        "the \"random starter received\" flag is set",
+        "you received a random starter",
         "you have at least 1× Embargo Curse",
         "you have at least 1× Species Curse",
         "you have at least 10× Wild Curse"
@@ -1603,7 +1603,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Aqua then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Aqua then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Aqua Grunt",
@@ -1625,7 +1625,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Flare then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Flare then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Flare Grunt",
@@ -1646,7 +1646,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Galactic then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Galactic then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Galactic Grunt",
@@ -1667,7 +1667,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Magma then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Magma then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Magma Grunt",
@@ -1689,7 +1689,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Plasma then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Plasma then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Plasma Grunt",
@@ -1710,7 +1710,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "On a map event: unless you are in a Team Hideout, further trigger checks are skipped. On a map event: if your run's Evil Team is one of: Team Rocket (Kanto) and Team Rocket (Johto) then the quest completes.",
+      "trigger": "On a map event: unless you are in a Team Hideout, nothing happens. On a map event: if your run's Evil Team is Team Rocket (Kanto) or Team Rocket (Johto) then the quest completes.",
       "rewards": [
         "¥1,000",
         "Unlocks outfit: Rocket Grunt",
@@ -1732,7 +1732,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Alola variant, the quest fails. At the start of a run: unless only Alola Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to an Alola variant, the quest fails. At the start of a run: unless only Alola Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Drampa (level 10)",
@@ -1753,7 +1753,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Galar variant, the quest fails. At the start of a run: unless only Galar Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Galar variant, the quest fails. At the start of a run: unless only Galar Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Clobbopus (level 10)",
@@ -1774,7 +1774,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Hoenn variant, the quest fails. At the start of a run: unless only Hoenn Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Hoenn variant, the quest fails. At the start of a run: unless only Hoenn Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Castform (level 10)",
@@ -1796,7 +1796,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Johto variant, the quest fails. At the start of a run: unless only Johto Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Johto variant, the quest fails. At the start of a run: unless only Johto Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Spinarak (level 10)",
@@ -1818,7 +1818,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Kalos variant, the quest fails. At the start of a run: unless only Kalos Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Kalos variant, the quest fails. At the start of a run: unless only Kalos Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Litleo (level 10)",
@@ -1839,7 +1839,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Kanto variant, the quest fails. At the start of a run: unless only Kanto Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Kanto variant, the quest fails. At the start of a run: unless only Kanto Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Farfetchd (level 10)",
@@ -1861,7 +1861,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if your party contains all of: Umbreon and Espeon then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if your party contains both Umbreon and Espeon then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥5,000",
         "a special Lotad (level 10)",
@@ -1888,7 +1888,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Paldea variant, the quest fails. At the start of a run: unless only Paldea Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Paldea variant, the quest fails. At the start of a run: unless only Paldea Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Capsakid (level 10)",
@@ -1950,7 +1950,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Sinnoh variant, the quest fails. At the start of a run: unless only Sinnoh Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Sinnoh variant, the quest fails. At the start of a run: unless only Sinnoh Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Carnivine (level 10)",
@@ -1971,7 +1971,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "At the start of a run: unless a Standard run is active, the quest fails. At the start of a run: unless the Pokédex is set to a Unova variant, the quest fails. At the start of a run: unless only Unova Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless a Classic run is active, the quest fails. At the start of a run: unless the Pokédex is set to an Unova variant, the quest fails. At the start of a run: unless only Unova Trainers are enabled, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥2,000",
         "a special Klink (level 10)",
@@ -1991,7 +1991,7 @@
         "Challenge",
         "Active in runs"
       ],
-      "trigger": "At the start of a run: unless the Pokédex is set to one of: Legend's Z-A and Legend's Z-A (Full DLC), the quest fails. At the start of a run: unless trainer order is set to Rainbow, the quest fails. When you enter the Hall of Fame: the quest completes.",
+      "trigger": "At the start of a run: unless the Pokédex is set to Legend's Z-A or Legend's Z-A (Full DLC), the quest fails. At the start of a run: unless trainer order is set to Rainbow, the quest fails. When you enter the Hall of Fame: the quest completes.",
       "rewards": [
         "¥5,000",
         "a special Trapinch (level 10)",
@@ -2738,7 +2738,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Abra species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Abra then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Alakazite in the shop"
@@ -2772,7 +2772,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Absol species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Absol then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Absolite in the shop"
@@ -2806,7 +2806,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Aerodactyl species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Aerodactyl then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Aerodactylite in the shop"
@@ -2840,7 +2840,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Applin species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Applin then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -2860,7 +2860,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Arceus species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Arceus then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Fist Plate in the shop (hidden from the quest log)",
@@ -2896,7 +2896,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Aron species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Aron then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Aggronite in the shop"
@@ -2930,7 +2930,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Audino species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Audino then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Audinite in the shop"
@@ -2950,7 +2950,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Bagon species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Bagon then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Salamencite in the shop"
@@ -2984,7 +2984,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Beldum species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Beldum then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Metagrossite in the shop"
@@ -3018,7 +3018,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Bellsprout species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Bellsprout then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Victreebelite in the shop"
@@ -3052,7 +3052,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Binacle species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Binacle then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Barbaracite in the shop"
@@ -3072,7 +3072,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Blipbug species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Blipbug then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3092,7 +3092,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Bulbasaur species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Bulbasaur then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Venusaurite in the shop",
@@ -3128,7 +3128,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Buneary species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Buneary then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Lopunnite in the shop"
@@ -3148,7 +3148,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Capsakid species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Capsakid then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Scovillainite in the shop"
@@ -3168,7 +3168,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Carvanha species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Carvanha then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Sharpedonite in the shop"
@@ -3202,7 +3202,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Caterpie species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Caterpie then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3236,7 +3236,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Charmander species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Charmander then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Charizardite X in the shop",
@@ -3274,7 +3274,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Chespin species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Chespin then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Chesnaughtite in the shop"
@@ -3294,7 +3294,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Chewtle species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Chewtle then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3314,7 +3314,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Chikorita species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Chikorita then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Meganiumite in the shop"
@@ -3348,7 +3348,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Chingling species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Chingling then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Chimechite in the shop"
@@ -3368,7 +3368,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Cleffa species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Cleffa then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Clefablite in the shop"
@@ -3402,7 +3402,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Cosmog species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Cosmog then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Solganium Z in the shop",
@@ -3423,7 +3423,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Crabrawler species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Crabrawler then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Crabominite in the shop"
@@ -3443,7 +3443,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Cufant species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Cufant then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3463,7 +3463,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Deoxys species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Deoxys then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Meteorite"
@@ -3497,7 +3497,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Dialga species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Dialga then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Adamant Orb in the shop",
@@ -3518,7 +3518,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Diancie species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Diancie then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Diancite in the shop"
@@ -3538,7 +3538,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Drampa species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Drampa then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Drampanite in the shop"
@@ -3558,7 +3558,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Dratini species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Dratini then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Dragoninite in the shop"
@@ -3592,7 +3592,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Drilbur species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Drilbur then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Excadrite in the shop"
@@ -3612,7 +3612,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Duraludon species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Duraludon then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3632,7 +3632,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Eevee species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Eevee then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Eevium Z in the shop",
@@ -3668,7 +3668,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Electrike species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Electrike then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Manectite in the shop"
@@ -3702,7 +3702,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Espurr species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Espurr then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Meowsticite in the shop"
@@ -3722,7 +3722,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Falinks species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Falinks then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Falinksite in the shop"
@@ -3742,7 +3742,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Fennekin species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Fennekin then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Delphoxite in the shop"
@@ -3762,7 +3762,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Flabebe species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Flabebe then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Floettite in the shop"
@@ -3782,7 +3782,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Froakie species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Froakie then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Greninjite in the shop",
@@ -3803,7 +3803,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Gastly species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Gastly then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gengarite in the shop",
@@ -3839,7 +3839,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Genesect species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Genesect then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Shock Drive in the shop",
@@ -3862,7 +3862,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered any of these species lines: Tornadus, Thundurus, Landorus and Enamorus then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered any of Tornadus, Thundurus, Landorus and Enamorus then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Reveal Glass"
@@ -3882,7 +3882,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Gible species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Gible then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Garchompite in the shop"
@@ -3902,7 +3902,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Giratina species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Giratina then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Griseous Orb in the shop",
@@ -3923,7 +3923,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Glimmet species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Glimmet then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Glimmoranite in the shop"
@@ -3943,7 +3943,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Golett species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Golett then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Golurkite in the shop"
@@ -3963,7 +3963,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Grookey species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Grookey then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -3983,7 +3983,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Groudon species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Groudon then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Red Orb in the shop"
@@ -4017,7 +4017,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Hatenna species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Hatenna then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4037,7 +4037,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Hawlucha species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Hawlucha then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Hawluchanite in the shop"
@@ -4057,7 +4057,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Heracross species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Heracross then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Heracronite in the shop"
@@ -4091,7 +4091,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Hoopa species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Hoopa then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Prison Bottle"
@@ -4111,7 +4111,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Houndour species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Houndour then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Houndoominite in the shop"
@@ -4145,7 +4145,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Impidimp species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Impidimp then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4165,7 +4165,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Inkay species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Inkay then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Malamarite in the shop"
@@ -4185,7 +4185,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Jangmo-o species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Jangmo-o then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Kommonium Z in the shop"
@@ -4205,7 +4205,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Kangaskhan species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Kangaskhan then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Kangaskhanite in the shop"
@@ -4239,7 +4239,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Krabby species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Krabby then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4273,7 +4273,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Kubfu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Kubfu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4293,7 +4293,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Kyogre species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Kyogre then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Blue Orb in the shop"
@@ -4327,7 +4327,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Lapras species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Lapras then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4361,7 +4361,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Larvitar species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Larvitar then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Tyranitarite in the shop"
@@ -4395,7 +4395,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered any of these species lines: Latias and Latios then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered any of Latias and Latios then the quest completes, otherwise the quest fails.",
       "rewards": [
         "Unlocks Soul Dew in the shop"
       ],
@@ -4415,7 +4415,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Latias species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Latias then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Latiasite in the shop"
@@ -4435,7 +4435,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Latios species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Latios then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Latiosite in the shop"
@@ -4455,7 +4455,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Litleo species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Litleo then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Pyroarite in the shop"
@@ -4475,7 +4475,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Litten species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Litten then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Incinium Z in the shop"
@@ -4495,7 +4495,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Litwick species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Litwick then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Chandelurite in the shop"
@@ -4515,7 +4515,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Machop species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Machop then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4549,7 +4549,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Magearna species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Magearna then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Magearna Original Color (level 10)"
@@ -4569,7 +4569,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Magikarp species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Magikarp then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gyaradosite in the shop"
@@ -4603,7 +4603,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mareep species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mareep then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Ampharosite in the shop"
@@ -4637,7 +4637,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Marshadow species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Marshadow then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Marshadium Z in the shop"
@@ -4657,7 +4657,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mawile species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mawile then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Mawilite in the shop"
@@ -4691,7 +4691,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Meditite species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Meditite then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Medichamite in the shop"
@@ -4725,7 +4725,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Meltan species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Meltan then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4745,7 +4745,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Meowth species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Meowth then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4779,7 +4779,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mew species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mew then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Mewnium Z in the shop"
@@ -4813,7 +4813,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mewtwo species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mewtwo then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Mewtwonite X in the shop",
@@ -4851,7 +4851,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Milcery species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Milcery then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -4871,7 +4871,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mimikyu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mimikyu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Mimikium Z in the shop"
@@ -4891,7 +4891,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Mudkip species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Mudkip then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Swampertite in the shop"
@@ -4925,7 +4925,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Necrozma species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Necrozma then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Ultranecrozium Z in the shop"
@@ -4945,7 +4945,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Numel species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Numel then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Cameruptite in the shop"
@@ -4979,7 +4979,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Ogerpon species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Ogerpon then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Cornerstone Mask in the shop",
@@ -5001,7 +5001,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Onix species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Onix then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Steelixite in the shop"
@@ -5035,7 +5035,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Palkia species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Palkia then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Lustrous Orb in the shop",
@@ -5056,7 +5056,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Pichu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Pichu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Pikanium Z in the shop",
@@ -5098,7 +5098,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Pidgey species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Pidgey then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Pidgeotite in the shop"
@@ -5132,7 +5132,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Pinsir species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Pinsir then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Pinsirite in the shop"
@@ -5166,7 +5166,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Popplio species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Popplio then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Primarium Z in the shop"
@@ -5186,7 +5186,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Ralts species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Ralts then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gardevoirite in the shop",
@@ -5222,7 +5222,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Riolu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Riolu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Lucarionite in the shop"
@@ -5242,7 +5242,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Rockruff species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Rockruff then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Rockruff Own Tempo (level 10)",
@@ -5263,7 +5263,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Rolycoly species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Rolycoly then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5283,7 +5283,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Rookidee species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Rookidee then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5303,7 +5303,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Rotom species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Rotom then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks home decor: Appliances"
@@ -5323,7 +5323,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Rowlet species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Rowlet then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Decidium Z in the shop"
@@ -5343,7 +5343,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Sableye species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Sableye then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Sablenite in the shop"
@@ -5377,7 +5377,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Scorbunny species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Scorbunny then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5397,7 +5397,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Scraggy species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Scraggy then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Scraftinite in the shop"
@@ -5417,7 +5417,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Scyther species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Scyther then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Scizorite in the shop"
@@ -5451,7 +5451,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Shaymin species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Shaymin then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Gracidea"
@@ -5471,7 +5471,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Shuppet species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Shuppet then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Banettite in the shop"
@@ -5505,7 +5505,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Silicobra species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Silicobra then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5525,7 +5525,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Silvally species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Silvally then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Fire Memory in the shop (hidden from the quest log)",
@@ -5561,7 +5561,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Sizzlipede species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Sizzlipede then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5581,7 +5581,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Skarmory species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Skarmory then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Skarmorite in the shop"
@@ -5615,7 +5615,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Skrelp species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Skrelp then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Dragalgite in the shop"
@@ -5635,7 +5635,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Slowpoke species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Slowpoke then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Slowbronite in the shop"
@@ -5669,7 +5669,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Snorlax species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Snorlax then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Snorlium Z in the shop",
@@ -5705,7 +5705,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Snorunt species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Snorunt then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Glalitite in the shop",
@@ -5741,7 +5741,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Snover species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Snover then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Abomasite in the shop"
@@ -5761,7 +5761,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Sobble species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Sobble then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -5781,7 +5781,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Squirtle species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Squirtle then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Blastoisinite in the shop",
@@ -5817,7 +5817,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Starly species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Starly then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Staraptite in the shop"
@@ -5837,7 +5837,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Staryu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Staryu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Starminite in the shop"
@@ -5871,7 +5871,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Swablu species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Swablu then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Altarianite in the shop"
@@ -5905,7 +5905,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered any of these species lines: Tapu Koko, Tapu Lele, Tapu Bulu and Tapu Fini then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered any of Tapu Koko, Tapu Lele, Tapu Bulu and Tapu Fini then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Tapunium Z in the shop"
@@ -5925,7 +5925,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Tepig species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Tepig then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Emboarite in the shop"
@@ -5945,7 +5945,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Terapagos species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Terapagos then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Stellar Tera Shard in the shop"
@@ -5965,7 +5965,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Torchic species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Torchic then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Blazikenite in the shop"
@@ -5999,7 +5999,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Totodile species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Totodile then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Feraligite in the shop"
@@ -6033,7 +6033,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Toxel species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Toxel then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -6053,7 +6053,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Treecko species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Treecko then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Sceptilite in the shop"
@@ -6087,7 +6087,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Trubbish species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Trubbish then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Gmax Form (Perma Unlocked!)"
@@ -6107,7 +6107,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Tynamo species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Tynamo then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Eelektrossite in the shop"
@@ -6127,7 +6127,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Venipede species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Venipede then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Scolipite in the shop"
@@ -6147,7 +6147,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Weedle species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Weedle then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Beedrillite in the shop"
@@ -6181,7 +6181,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Zacian species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Zacian then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Rusted Sword in the shop"
@@ -6201,7 +6201,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Zamazenta species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Zamazenta then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Unlocks Rusted Shield in the shop"
@@ -6221,7 +6221,7 @@
         "Active in runs",
         "Unlocked from the start"
       ],
-      "trigger": "When you enter the Hall of Fame: if you have mastered the Zygarde species line then the quest completes, otherwise the quest fails.",
+      "trigger": "When you enter the Hall of Fame: if you have mastered Zygarde then the quest completes, otherwise the quest fails.",
       "rewards": [
         "¥1,000",
         "Zygarde Cube"
