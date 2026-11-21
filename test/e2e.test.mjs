@@ -95,9 +95,16 @@ test('build exits 0 and bundles every data file', () => {
 test('concurrent builds never expose a missing or half-written dist/', async () => {
   // ARRANGE — the build test above leaves dist/ in place; this mirrors the
   // CI condition where the e2e serve tests and the ui suites' builds hit
-  // dist/ at the same time a fresh build is swapping it in
+  // dist/ at the same time a fresh build is swapping it in. Snapshot the
+  // dist.tmp-* dirs that already exist: the residue assertion below only
+  // concerns dirs created by this test's own builds, so an unrelated stray
+  // dir (a stale local run, another process) is not this test's residue
+  // (issue #125)
   const indexFile = path.join(distDir, 'index.html');
   assert.ok(existsSync(indexFile), 'dist/index.html must exist before the concurrent builds');
+  const preExistingTmp = new Set(
+    readdirSync(root).filter((f) => f.startsWith('dist.tmp-'))
+  );
   const server = createStaticServer(distDir);
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const url = `http://127.0.0.1:${server.address().port}/index.html`;
@@ -106,7 +113,10 @@ test('concurrent builds never expose a missing or half-written dist/', async () 
     // ACT — 6 concurrent builds while the main thread hammers the live
     // server; every response must be a complete 200 (a directory swap —
     // rm + rename, or even a park + rename double rename — leaves dist/
-    // missing between the syscalls; the in-place per-file publish must not)
+    // missing between the syscalls; the in-place per-file publish must not).
+    // Every body is read to the end and kept for the completeness checks
+    // below — a partially written document served with status 200 must not
+    // pass (issue #128)
     const children = [];
     const exits = [];
     for (let i = 0; i < 6; i += 1) {
@@ -115,15 +125,16 @@ test('concurrent builds never expose a missing or half-written dist/', async () 
       child.on('close', (code) => exits.push(code));
     }
     const badStatus = [];
+    const bodies = [];
     const t0 = Date.now();
     while (exits.length < children.length) {
       try {
         const res = await fetch(url);
+        const body = await res.text();
         if (res.status !== 200) {
           badStatus.push(res.status);
-          await res.body?.cancel();
         } else {
-          await res.body?.cancel();
+          bodies.push(body);
         }
       } catch {
         badStatus.push('error');
@@ -135,9 +146,30 @@ test('concurrent builds never expose a missing or half-written dist/', async () 
     assert.ok(exits.length === children.length, 'all builds must finish');
     for (const code of exits) assert.equal(code, 0, `a concurrent build exited ${code}`);
     assert.equal(badStatus.length, 0, `GET /index.html was not 200 during concurrent builds: ${badStatus.slice(0, 5).join(', ')} (${badStatus.length} bad)`);
+    assert.ok(bodies.length >= 1, 'at least one response body must have been read during the concurrent builds');
+    // the single-build body: fetched once now that all builds have
+    // finished. The build is deterministic for a given site/ + data/
+    // state, so it is what every concurrent build published — a
+    // half-written or mixed-up body observed mid-build differs from it
+    const expected = await (await fetch(url)).text();
+    assert.ok(
+      expected.length > 0 && expected.trimEnd().endsWith('</html>'),
+      'the single-build index.html is not a complete document'
+    );
+    for (let i = 0; i < bodies.length; i += 1) {
+      const body = bodies[i];
+      assert.ok(body.length > 0, `response body ${i} during concurrent builds was empty`);
+      assert.ok(
+        body.trimEnd().endsWith('</html>'),
+        `response body ${i} during concurrent builds is truncated (missing the closing </html>)`
+      );
+      assert.equal(body, expected, `response body ${i} during concurrent builds does not match the single-build body`);
+    }
     assert.ok(existsSync(indexFile), 'dist/index.html must exist after the concurrent builds');
-    // the publish leaves no temp residue behind
-    const residue = readdirSync(root).filter((f) => f.startsWith('dist.tmp-'));
+    // the publish leaves no temp residue behind — scoped to the dirs this
+    // test's own builds created (pre-existing ones were snapshotted above;
+    // issue #125)
+    const residue = readdirSync(root).filter((f) => f.startsWith('dist.tmp-') && !preExistingTmp.has(f));
     assert.deepEqual(residue, [], `build residue left in the repo root: ${residue.join(', ')}`);
   } finally {
     await new Promise((resolve) => server.close(resolve));
