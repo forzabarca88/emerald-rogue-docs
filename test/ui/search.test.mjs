@@ -25,10 +25,14 @@
  * while a text entry holds focus, and while open it simply types "/" into the
  * already-focused input); ArrowUp/Down move the active row with wrap-around;
  * Enter on a cross-page entry sets location.href to the relative
- * "page.html#rec-…" (the per-card deep link, issue #45), on the SAME page
- * it scrolls to the CARD (the element with the anchor id) without a reload
- * or URL change — falling back to the entry's section anchor only when the
- * card element is absent; Escape / backdrop / trigger / a successful Enter close
+ * "page.html?version=<active>#rec-…" (the per-card deep link, issue #45,
+ * with the active version preserved via ?version=, issue #122 — the stored
+ * preference is untouched), on the SAME page it scrolls to the CARD (the
+ * element with the anchor id) without a reload or URL change — falling back
+ * to the entry's section anchor only when the card element is absent, EXCEPT
+ * a Pokédex species deep link with no selection open, whose deep-link hash
+ * OPENS the species detail (issue #123); Escape / backdrop / trigger / a
+ * successful Enter close
  * (resetting the query and restoring focus to the element focused before the
  * open — the trigger in every session this suite drives: a trigger click, or
  * the "/" shortcut with the body focus, which falls back to the trigger);
@@ -691,7 +695,7 @@ test('index.html: ArrowDown/ArrowUp move the active row with wrap-around; Escape
   }
 });
 
-test('index.html: Enter on a CROSS-page entry navigates to the relative page.html#anchor', async (t) => {
+test('index.html: Enter on a CROSS-page entry navigates to the relative page.html?version=<active>#anchor', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'index.html' });
   try {
@@ -704,11 +708,16 @@ test('index.html: Enter on a CROSS-page entry navigates to the relative page.htm
 
     await page.keyboard.press('Enter');
 
-    // row 0 = the EX-only quest → relative './quests.html' + '#rec-quests-MEGA_EVOLUTION'
-    await page.waitForFunction(() => /quests\.html#rec-quests-MEGA_EVOLUTION$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    // row 0 = the EX-only quest → relative './quests.html' + '?version=ex'
+    // (the active version, issue #122) + '#rec-quests-MEGA_EVOLUTION'
+    await page.waitForFunction(
+      () => /quests\.html\?version=ex#rec-quests-MEGA_EVOLUTION$/.test(window.location.href),
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
     assert.ok(
-      page.url().endsWith(`quests.html${EX_ONLY_QUEST_ANCHOR}`),
-      `location.href should end with the relative "quests.html${EX_ONLY_QUEST_ANCHOR}", got ${page.url()}`
+      page.url().endsWith(`quests.html?version=${site.defaultVersion}${EX_ONLY_QUEST_ANCHOR}`),
+      `location.href should end with the relative "quests.html?version=${site.defaultVersion}${EX_ONLY_QUEST_ANCHOR}" (the active version rides along, issue #122), got ${page.url()}`
     );
     // the target page rendered cleanly
     await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
@@ -834,10 +843,14 @@ test('hub.html: after a Vanilla re-render, a CROSS-page deep link still lands on
     assert.equal(f.rows[0].meta, site.pages.mechanics.title, 'its page label is the Mechanics nav title — a cross-page target');
 
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => /mechanics\.html#rec-campaigns-campaign-bst-cup$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    await page.waitForFunction(
+      () => /mechanics\.html\?version=vanilla#rec-campaigns-campaign-bst-cup$/.test(window.location.href),
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
     assert.ok(
-      page.url().endsWith('mechanics.html#rec-campaigns-campaign-bst-cup'),
-      `location.href should end with the relative cross-page deep link, got ${page.url()}`
+      page.url().endsWith('mechanics.html?version=vanilla#rec-campaigns-campaign-bst-cup'),
+      `location.href should end with the relative cross-page deep link — the Vanilla choice rides along via ?version= (issue #122), got ${page.url()}`
     );
     // the target page rendered cleanly and the CARD is in view
     await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
@@ -886,7 +899,7 @@ test('pokedex.html: the palette indexes the dex (the lazy-chunk page) — "pikac
   }
 });
 
-test('pokedex.html: Enter on a SAME-page entry scrolls to the CARD — or the overview section when no selection is open — without a reload or URL change', async (t) => {
+test('pokedex.html: Enter on a SAME-page species entry OPENS THE DETAIL when no selection is open (issue #123) and scrolls to the CARD when one is', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html' });
   try {
@@ -900,43 +913,50 @@ test('pokedex.html: Enter on a SAME-page entry scrolls to the CARD — or the ov
       }, id);
 
     // 1. no selection: the species card is absent from the DOM (the detail
-    // panel renders only while a selection exists) → the entry's section
-    // fallback (#dex-overview) is the scroll target
+    // panel renders only while a selection exists) → Enter sets the
+    // species' deep-link hash and the detail OPENS (issue #123) — no more
+    // #dex-overview section fallback
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'pokedex.html (trigger open)');
     await typeQuery(page, 'pikachu');
     await waitForCount(page, COUNT(3, 'pikachu'), 'pokedex.html (same-page Enter, no selection)');
-    await page.evaluate(() => window.scrollBy(0, 500));
-    await page.waitForFunction(() => window.scrollY > 200, null, { timeout: SETTLE_TIMEOUT_MS });
     const urlBefore1 = page.url();
-    let navigations = 0;
-    page.on('framenavigated', () => {
-      navigations += 1;
-    });
+    assert.equal(new URL(urlBefore1).hash, '', 'no selection at load — the URL carries no hash');
 
     await page.keyboard.press('Enter');
     await page.waitForFunction(
-      () => {
-        const el = document.getElementById('dex-overview');
-        if (!el) return false;
-        const r = el.getBoundingClientRect();
-        // the scroll must land AT the overview's top (scrollIntoView; the
-        // element carries no scroll-margin) — measured, not a hardcoded
-        // scrollY bound (issue #90 made the header two rows at every
-        // width, moving the overview's document position)
-        return r.top >= -1 && r.top <= 1;
-      },
+      () => window.location.hash === '#rec-pokedex-pikachu' && document.getElementById('rec-pokedex-pikachu') !== null,
       null,
       { timeout: SETTLE_TIMEOUT_MS }
     );
-    assert.ok(await inViewport('dex-overview'), 'the section fallback (#dex-overview) is in view after same-page Enter');
-    assert.equal(navigations, 0, 'same-page activation must not navigate (no framenavigated event)');
-    assert.equal(page.url(), urlBefore1, 'same-page activation must not change the URL (no hash added)');
+    assert.equal(
+      new URL(page.url()).hash,
+      '#rec-pokedex-pikachu',
+      'same-page Enter on an absent species card sets the deep-link hash instead of the #dex-overview fallback (issue #123)'
+    );
+    assert.ok(
+      await inViewport('rec-pokedex-pikachu'),
+      'the detail panel is rendered and in view (pokedex.js re-renders on hashchange and scrolls the panel into view)'
+    );
+    const detail = await page.evaluate(() => ({
+      panel: !!document.querySelector('.dex-species'),
+      name: document.querySelector('.dex-species h2')?.textContent.trim() ?? null,
+      overviewHidden: document.getElementById('dex-overview')?.hidden === true,
+    }));
+    assert.equal(detail.panel, true, 'the .dex-species detail panel is open');
+    assert.equal(detail.name, 'Pikachu', 'the detail head shows the species name (data/pokedex.json)');
+    assert.equal(detail.overviewHidden, true, 'the overview is hidden while the detail is open');
     assert.equal((await page.evaluate(paletteFacts)).open, false, 'the palette closes on Enter');
     assert.equal((await page.evaluate(paletteFacts)).activeElementId, 'site-search-trigger', 'focus returns to the trigger');
 
-    // 2. deep link: the detail panel's root carries the card id → Enter
-    // scrolls to the CARD itself
+    // 2. deep link with a selection open: the detail panel's root carries
+    // the card id → Enter scrolls to the CARD itself without a URL change.
+    // Part 1 left the deep-link hash set — clear it first so the re-link
+    // below is a real hashchange.
+    await page.evaluate(() => {
+      window.location.hash = '#dex-overview';
+    });
+    await page.waitForFunction(() => document.querySelector('.dex-species') === null, null, { timeout: SETTLE_TIMEOUT_MS });
     await page.evaluate(() => {
       window.location.hash = '#rec-pokedex-pikachu';
     });
@@ -948,7 +968,7 @@ test('pokedex.html: Enter on a SAME-page entry scrolls to the CARD — or the ov
     await typeQuery(page, 'pikachu');
     await waitForCount(page, COUNT(3, 'pikachu'), 'pokedex.html (same-page Enter, selection open)');
     const urlBefore2 = page.url();
-    navigations = 0;
+    let navigations = 0;
     page.on('framenavigated', () => {
       navigations += 1;
     });
@@ -1203,9 +1223,9 @@ test('360×640: the open/type/navigate/close cycle with no horizontal overflow a
     assert.equal(f.rows.length, 4, 'the result is viewport-independent (the index depends on the version, not the viewport size)');
     await assertNoOverflow(page, '360×640 (palette open, 4 rows)');
 
-    // navigate (cross-page Enter)
+    // navigate (cross-page Enter — the active version rides along, issue #122)
     await page.keyboard.press('Enter');
-    await page.waitForFunction(() => /quests\.html#rec-quests-MEGA_EVOLUTION$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
+    await page.waitForFunction(() => /quests\.html\?version=ex#rec-quests-MEGA_EVOLUTION$/.test(window.location.href), null, { timeout: SETTLE_TIMEOUT_MS });
     await page.waitForFunction(() => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0, null, { timeout: SETTLE_TIMEOUT_MS });
     await waitForAnchorInViewport(page, 'rec-quests-MEGA_EVOLUTION', '360×640 (cross-page Enter)');
     await assertNoOverflow(page, '360×640 (target page loaded)');

@@ -56,7 +56,7 @@
     }
   }
 
-  // ?version= is an intentional one-time override: it takes precedence for this load only and is never persisted to localStorage.
+  // ?version= is an intentional one-time override: it takes precedence for this load only and is never persisted to localStorage — an EXPLICIT click on the (already-active) version button is what persists the choice (issue #124).
   var state = paramVersion() || storedVersion() || siteDefault();
 
   Object.defineProperty(ROGUE, 'version', {
@@ -67,10 +67,15 @@
     }
   });
 
-  /** Set the active version. Persists to localStorage + ?version=, notifies onChange listeners. */
+  /** Set the active version. Persists the choice to localStorage + ?version=
+   *  — even when the version is ALREADY active (issue #124: the click is an
+   *  explicit choice, while a ?version= load is a one-time override — and
+   *  the stored preference must not depend on which came first). Notifies
+   *  onChange listeners only on an actual change (a same-version click
+   *  needs no re-render). */
   ROGUE.setVersion = function (v) {
     if (!valid(v)) return false;
-    if (v === state) return true;
+    var changed = v !== state;
     state = v;
     try {
       window.localStorage.setItem(STORAGE_KEY, v);
@@ -78,13 +83,15 @@
       // best effort
     }
     writeUrl(v);
-    listeners.slice().forEach(function (fn) {
-      try {
-        fn(v);
-      } catch (err) {
-        window.console.error(err);
-      }
-    });
+    if (changed) {
+      listeners.slice().forEach(function (fn) {
+        try {
+          fn(v);
+        } catch (err) {
+          window.console.error(err);
+        }
+      });
+    }
     return true;
   };
 

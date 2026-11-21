@@ -40,16 +40,21 @@
  *   5. keyboard: ArrowDown/ArrowUp move the active row (WRAP-AROUND, via
  *      aria-activedescendant + [data-active]); Enter navigates to
  *      entry.page + entry.anchor as a RELATIVE url (./quests.html#rec-…
- *      form — the per-card deep link, issue #45; plain relative
- *      navigation, so the active version rides along via localStorage,
- *      never the URL). When the target IS the current page it scrolls to
- *      the CARD (the element with the anchor id) WITHOUT a reload or URL
- *      change; if the card element is absent (a re-render race, or the
- *      card hidden by an on-page filter) it falls back to the entry's
- *      `section` anchor (the containing section), else the page top.
- *      Prose entries anchor at their section id directly. Cross-page
- *      targets set location.href (the browser scrolls to the anchor on
- *      load). Escape closes.
+ *      form — the per-card deep link, issue #45). Cross-page targets
+ *      additionally keep the active version (issue #122): the url gains
+ *      ?version=<active>, so a one-time ?version= URL override does not
+ *      drop when the target page loads — the stored preference stays
+ *      untouched (?version= is never persisted). When the target IS the
+ *      current page it scrolls to the CARD (the element with the anchor
+ *      id) WITHOUT a reload or URL change; if the card element is absent
+ *      (a re-render race, or the card hidden by an on-page filter) it
+ *      falls back to the entry's `section` anchor (the containing
+ *      section), else the page top — EXCEPT a Pokédex species deep link
+ *      whose detail panel is not rendered (no selection): it sets the
+ *      deep-link hash and lets pokedex.js open the detail on hashchange
+ *      (issue #123). Prose entries anchor at their section id directly.
+ *      Cross-page targets set location.href (the browser scrolls to the
+ *      anchor on load). Escape closes.
  *      While open, Tab is swallowed — the APG dialog focus trap: the input
  *      is the dialog's only focusable control, so keyboard focus can never
  *      leave the palette while it is open. The header is therefore
@@ -370,6 +375,23 @@
       return r.width > 0 || r.height > 0 ? el : null;
     }
 
+    /** A Pokédex species deep link (#rec-pokedex-<id> — pokedex.js's
+     *  REC_HASH): the species detail's root is in the DOM only while a
+     *  selection is open, so an absent card means "no selection", not a
+     *  hidden one. */
+    var DEX_SPECIES_ANCHOR = /^#rec-pokedex-/;
+
+    /** The cross-page target WITH the active version (issue #122): the
+     *  page + anchor plus ?version=<active> — ? when the page carries no
+     *  query, & when it does — inserted before any # fragment. */
+    function crossPageUrl(result) {
+      var url = result.page + (result.anchor || '');
+      var hashIdx = url.indexOf('#');
+      var head = hashIdx === -1 ? url : url.slice(0, hashIdx);
+      var tail = hashIdx === -1 ? '' : url.slice(hashIdx);
+      return head + (head.indexOf('?') === -1 ? '?' : '&') + 'version=' + ROGUE.version + tail;
+    }
+
     function navigate(result) {
       var targetFile = String(result.page || '').replace(/^\.\//, '');
       var segments = window.location.pathname.split('/');
@@ -378,16 +400,24 @@
       if (targetFile === currentFile) {
         // same page: scroll to the per-card anchor (issue #45) without a
         // reload or URL change; fall back to the containing section
-        // anchor (re-render race / card hidden), else the page top
+        // anchor (re-render race / card hidden), else the page top —
+        // EXCEPT a Pokédex species deep link whose detail panel is not
+        // rendered (no selection): open the detail through its deep-link
+        // hash (pokedex.js re-renders on hashchange) instead of the
+        // #dex-overview fallback (issue #123)
         var id = result.anchor ? result.anchor.slice(1) : null;
         var el = id ? anchorEl(id) : null;
         var sectionId = result.section ? result.section.slice(1) : null;
         var section = sectionId ? anchorEl(sectionId) : null;
         if (el) el.scrollIntoView();
+        else if (result.anchor && DEX_SPECIES_ANCHOR.test(result.anchor)) window.location.hash = result.anchor;
         else if (section) section.scrollIntoView();
         else window.scrollTo(0, 0);
       } else {
-        window.location.href = result.page + (result.anchor || '');
+        // cross-page: the relative deep link (issue #45) — the active
+        // version rides along via ?version= so a one-time URL override
+        // survives the navigation (issue #122)
+        window.location.href = crossPageUrl(result);
       }
     }
 

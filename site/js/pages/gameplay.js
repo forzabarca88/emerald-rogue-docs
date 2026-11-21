@@ -65,17 +65,23 @@
      * page's screenshots stay deterministic.
      *
      * `rooms` reads left to right, the in-game board layout (columns ×
-     * lanes): the spawn column, then two more room columns; each column
-     * is a list of 1–3 lane cells, top to bottom. A cell is a room key —
-     * `gap` is the in-game empty-sand lane (ADVPATH_ROOM_NONE: no
-     * object, just path). `splitLanes` is the 2–3-lane fan-out from the
-     * last column into the boss through the always-empty column in front
-     * of the gym. `links` is the lane wiring, one [fromCol, fromLane,
-     * toCol, toLane] each — column -1 is the start line, column 3 the
-     * boss: one legal roll (every cell reachable from the start line
-     * and reaching the boss, each cell at most 3 exits, the boss
-     * fan-in = splitLanes). The minimum-route retention keeps 3 of the
-     * 4 routes plain — one of them is the den.
+     * lanes): the spawn column (the FIRST column, game x = pathLength −
+     * 1), then two more room columns down to x = 2 (the always-empty
+     * column in front of the gym is x = 1); each column is a list of
+     * 1–3 lane cells, top to bottom. A cell is a room key — `gap` is the
+     * in-game empty-sand lane (ADVPATH_ROOM_NONE: no object, just
+     * path). The rest stop sits in the rightmost (near-boss) column:
+     * the generator's rest-stop weight clamps to zero in the first
+     * column (a length-5 Classic path: base 10 − 40 first-column
+     * penalty → 0, rogue_adventurepaths.c L499–514/L593), so the
+     * leftmost column can never carry one. `splitLanes` is the 2–3-lane
+     * fan-out from the last column into the boss through the
+     * always-empty column in front of the gym. `links` is the lane
+     * wiring, one [fromCol, fromLane, toCol, toLane] each — column -1
+     * is the start line, column 3 the boss: one legal roll (every cell
+     * reachable from the start line and reaching the boss, each cell at
+     * most 3 exits, the boss fan-in = splitLanes). The minimum-route
+     * retention keeps 3 of the 4 routes plain — one of them is the den.
      * test/gameplay-run-data.test.mjs re-validates the board against
      * the same rules. */
     var EXAMPLE_BOARD = {
@@ -83,9 +89,9 @@
       boss: 'Gym 2',
       splitLanes: 2,
       rooms: [
-        ['route', 'rest'],
+        ['route', 'route'],
         ['den', 'route', 'gap'],
-        ['show', 'route']
+        ['show', 'rest']
       ],
       links: [
         [-1, 0, 0, 0],
