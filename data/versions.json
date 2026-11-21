@@ -75,7 +75,7 @@
       "name": "Fairy typing on six routes",
       "category": "roster",
       "versions": ["vanilla", "ex"],
-      "description": "Six routes swap one of their three wild typing slots to Fairy in EX (Hoenn Mountain 1, Hoenn Urban 1, Kanto Urban 0, Johto Cave 0, Sinnoh 209 and Sinnoh 210), so Fairy-type wilds (and Fairy-type weather) appear on those routes in EX only. The per-route tables are on the Routes page.",
+      "description": "Six routes swap one of their three wild typing slots to Fairy in EX (Hoenn Mountain 1, Hoenn Urban 1, Kanto Urban 0, Johto Cave 0, Sinnoh 209 and Sinnoh 210), so in EX only those routes' grass tables can include Fairy species — the slot is still a pool and a hint, not a guaranteed spawn — and the route's themed-weather roll can land on Fairy (in EX, Fairy maps to Misty Fog). The per-route tables are on the Routes page.",
       "source": "src/data/rogue_routes.h @vanilla L50, L84, L106, L146, L203, L222 (six #ifdef ROGUE_EXPANSION wildTypeTable swaps to Fairy) (identical @origin/expansion); data/routes.json (the six route records with differences) (site data)"
     },
     {

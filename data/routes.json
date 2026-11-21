@@ -2,7 +2,7 @@
   "meta": {
     "id": "routes",
     "title": "Routes",
-    "description": "The 36 route maps that adventure paths are built from: the ROGUE_ROUTE naming scheme, the six terrain types, each route's three-type wild Pokémon table, forest/cave item drop rarity bonuses, the calm/average/tough route sub-types, and the six FAIRY typing swaps EX makes. The route table itself is byte-identical between Vanilla and EX — all 36 routes (including Sinnoh's) exist in both versions."
+    "description": "The 36 route maps that adventure paths are built from: the ROGUE_ROUTE naming scheme, the six terrain types, each route's three-type wild table, forest/cave item drop rarity bonuses, the calm/average/tough route sub-types, and the six FAIRY typing swaps EX makes. The route table itself is byte-identical between Vanilla and EX — all 36 routes (including Sinnoh's) exist in both versions."
   },
   "prose": [
     {
@@ -13,13 +13,13 @@
     {
       "id": "type-taxonomy",
       "heading": "Route types and wild Pokémon",
-      "text": "Each route carries a wild type table of exactly three types (for example, Hoenn Forest 0: Bug, Ghost, Poison), but the wild Pokémon on a route are not filtered by those three as a set: each route room picks a single hint type (cycling through the route's three), and only the very first wild encounter must match it — if no valid species has that type, the game falls back to any species — while the rest of the encounters roll unfiltered. Each route can also define an item drop rarity bonus, which is added to every item drop it makes — forests and caves are therefore the best routes for item hunting.",
+      "text": "Each route carries a wild type table of exactly three types (for example, Hoenn Forest 0: Bug, Ghost, Poison) — a pool the encounters draw from, not a roster you can count on. When a route room is placed, the game builds a candidate pool of non-legendary species matching any of those three types (directly, or through an evolution), then fills the grass encounter table from it (5 slots on Calm routes, 3 on Average, 2 on Tough — wild-encounter Charms and Curses can add or subtract slots). The first slot is reserved for the room's hint type — one of the table's three, cycled by the room's position on the path board — so if the pool has a species of that type the slot is guaranteed to be it, and if not it falls back to a random pool species, while the remaining slots fill with other random species from the same pool. The battle you actually face draws a random slot from the table (recent repeats are skipped), so the hint type biases the table but never guarantees a particular encounter. Water encounters (2 on Calm, 1 on Average and Tough) are separate: they come from a Water-type-only table fixed at the start of the run, never from the route's three types. Those same three types also drive the route's themed weather: the sub-type's weather roll (5%, 25% or 45% — never rolled at the first ladder stage, before your first badge) picks one of the three types at random, and only types with a weather (Normal, Flying and Dragon have none) change it. Each route can also define an item drop rarity bonus, which is added to every item drop it makes — forests and caves are therefore the best routes for item hunting.",
       "terrains": ["Field", "Forest", "Cave", "Mountain", "WaterFront", "Urban"]
     },
     {
       "id": "calm-average-tough",
       "heading": "Calm, Average and Tough routes",
-      "text": "Every Route room on a generated path rolls a difficulty sub-type — calm, average or tough — and the sub-type tunes what the route offers, from encounter counts and trainer spawns to item drops and themed weather (matched to one of the route's three wild types). The roll itself shifts late in the run: from difficulty 9, the second Elite Four path, tough routes dominate.",
+      "text": "Every Route room on a generated path rolls a difficulty sub-type — calm, average or tough — and the sub-type tunes what the route offers, from encounter counts and trainer spawns to item drops and themed weather (what the roll does with the chosen type is in the Route types section above). The roll itself shifts late in the run: from difficulty 9, the second Elite Four path, tough routes dominate.",
       "roll": [
         { "phase": "Difficulty 0–8", "calm": 3, "average": 4, "tough": 1 },
         { "phase": "Difficulty 9+ (from the second Elite Four path)", "calm": 0, "average": 1, "tough": 8 }
@@ -36,7 +36,7 @@
     {
       "id": "on-the-path",
       "heading": "How routes appear on the adventure path",
-      "text": "A Route room is one of the 16 room types a generated adventure path can contain, alongside rest stops, team hideouts, honey trees, labs, shrines, signs and the final boss room. When a Route room is placed, the game picks a route from the full 36-route table with a seeded weighted roll: every route has a fixed delay seed (one of three), and for the current boss-difficulty tier only routes whose seed matches that tier are eligible — a pacing rule that brings different route groups into play as the ladder climbs (if none match, every route becomes eligible again as a fallback). Repetition is handled separately: an 18-slot history buffer remembers every route already placed on the current path, and those routes get zero weight, so the same route can never appear twice on one path. The room's warp then leads into the chosen route map. A route's region flag also sets its battle music: Kanto routes play Red/Green (Gen 1) tracks, Johto routes HeartGold/SoulSilver-style, Sinnoh routes Diamond/Pearl-style, and Hoenn routes keep the default Emerald themes."
+      "text": "A Route room is one of the 16 room types a generated adventure path can contain, alongside rest stops, team hideouts, honey trees, labs, shrines, signs and the final boss room. When a Route room is placed, the game picks a route from the full 36-route table with a weighted roll whose eligibility rotates per run: each route is assigned one of three delay-seed groups from the run's random base seed and the route's own id (so which routes land in which group changes every run), and for the current ladder stage only routes in the group matching that stage (the stage count modulo three) are eligible — a pacing rule that brings different route groups into play as the ladder climbs (if none of the unplaced routes match, every unplaced route becomes eligible again as a fallback). Repetition is handled separately: an 18-slot history buffer remembers every route already placed on the current path, and those routes get zero weight, so the same route can never appear twice on one path. The room's warp then leads into the chosen route map. A route's region flag also sets its battle music: Kanto routes play Red/Green (Gen 1) tracks, Johto routes HeartGold/SoulSilver-style, Sinnoh routes Diamond/Pearl-style, and Hoenn routes keep the default Emerald themes."
     }
   ],
   "records": [
@@ -48,7 +48,7 @@
       "terrain": "Field",
       "type": ["Grass", "Normal", "Flying"],
       "versions": ["vanilla", "ex"],
-      "description": "Open grassland with wild Grass, Normal and Flying-type Pokémon.",
+      "description": "Open grassland. Wild Pokémon come from a Grass, Normal and Flying table.",
       "source": "src/data/rogue_routes.h @vanilla L20-24 (identical @origin/expansion)"
     },
     {
@@ -59,7 +59,7 @@
       "terrain": "Field",
       "type": ["Electric", "Steel", "Ice"],
       "versions": ["vanilla", "ex"],
-      "description": "Open grassland with wild Electric, Steel and Ice-type Pokémon.",
+      "description": "Open grassland. Wild Pokémon come from an Electric, Steel and Ice table.",
       "source": "src/data/rogue_routes.h @vanilla L26-29 (identical @origin/expansion)"
     },
     {
@@ -71,7 +71,7 @@
       "type": ["Bug", "Ghost", "Poison"],
       "dropRarity": 1,
       "versions": ["vanilla", "ex"],
-      "description": "Dense forest with wild Bug, Ghost and Poison-type Pokémon; item drops roll at +1 rarity.",
+      "description": "Dense forest. Wild Pokémon come from a Bug, Ghost and Poison table. Item drops roll at +1 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L31-35 (identical @origin/expansion)"
     },
     {
@@ -83,7 +83,7 @@
       "type": ["Rock", "Ice", "Dragon"],
       "dropRarity": 2,
       "versions": ["vanilla", "ex"],
-      "description": "Cave with wild Rock, Ice and Dragon-type Pokémon; item drops roll at +2 rarity.",
+      "description": "Cave. Wild Pokémon come from a Rock, Ice and Dragon table. Item drops roll at +2 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L37-41 (identical @origin/expansion)"
     },
     {
@@ -94,7 +94,7 @@
       "terrain": "Mountain",
       "type": ["Ground", "Fire", "Fighting"],
       "versions": ["vanilla", "ex"],
-      "description": "Mountain terrain with wild Ground, Fire and Fighting-type Pokémon.",
+      "description": "Mountain terrain. Wild Pokémon come from a Ground, Fire and Fighting table.",
       "source": "src/data/rogue_routes.h @vanilla L43-46 (identical @origin/expansion)"
     },
     {
@@ -120,7 +120,7 @@
       "terrain": "Mountain",
       "type": ["Ground", "Ghost", "Fire"],
       "versions": ["vanilla", "ex"],
-      "description": "Mountain terrain with wild Ground, Ghost and Fire-type Pokémon.",
+      "description": "Mountain terrain. Wild Pokémon come from a Ground, Ghost and Fire table.",
       "source": "src/data/rogue_routes.h @vanilla L57-60 (identical @origin/expansion)"
     },
     {
@@ -131,7 +131,7 @@
       "terrain": "Mountain",
       "type": ["Rock", "Dragon", "Poison"],
       "versions": ["vanilla", "ex"],
-      "description": "Mountain terrain with wild Rock, Dragon and Poison-type Pokémon.",
+      "description": "Mountain terrain. Wild Pokémon come from a Rock, Dragon and Poison table.",
       "source": "src/data/rogue_routes.h @vanilla L62-65 (identical @origin/expansion)"
     },
     {
@@ -142,7 +142,7 @@
       "terrain": "WaterFront",
       "type": ["Water", "Flying", "Grass"],
       "versions": ["vanilla", "ex"],
-      "description": "Coastal terrain with wild Water, Flying and Grass-type Pokémon.",
+      "description": "Coastal terrain. Wild Pokémon come from a Water, Flying and Grass table.",
       "source": "src/data/rogue_routes.h @vanilla L67-70 (identical @origin/expansion)"
     },
     {
@@ -153,7 +153,7 @@
       "terrain": "WaterFront",
       "type": ["Normal", "Fighting", "Dark"],
       "versions": ["vanilla", "ex"],
-      "description": "Coastal terrain with wild Normal, Fighting and Dark-type Pokémon.",
+      "description": "Coastal terrain. Wild Pokémon come from a Normal, Fighting and Dark table.",
       "source": "src/data/rogue_routes.h @vanilla L72-75 (identical @origin/expansion)"
     },
     {
@@ -164,7 +164,7 @@
       "terrain": "Urban",
       "type": ["Steel", "Electric", "Psychic"],
       "versions": ["vanilla", "ex"],
-      "description": "Urban terrain with wild Steel, Electric and Psychic-type Pokémon.",
+      "description": "Urban terrain. Wild Pokémon come from a Steel, Electric and Psychic table.",
       "source": "src/data/rogue_routes.h @vanilla L77-80 (identical @origin/expansion)"
     },
     {
@@ -190,7 +190,7 @@
       "terrain": "Field",
       "type": ["Normal", "Flying", "Grass"],
       "versions": ["vanilla", "ex"],
-      "description": "Kanto-styled open grassland with wild Normal, Flying and Grass-type Pokémon; battles use Red/Green (Gen 1) music.",
+      "description": "Kanto-styled open grassland. Wild Pokémon come from a Normal, Flying and Grass table. Battles use Red/Green (Gen 1) music.",
       "source": "src/data/rogue_routes.h @vanilla L93-97 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Kanto → MUS_RG_*); include/constants/songs.h @vanilla L418-493 / @origin/expansion L418-493 (the 'FRLG Music' section: Gen 1 Red/Green tracks)"
     },
     {
@@ -201,7 +201,7 @@
       "terrain": "Mountain",
       "type": ["Fighting", "Rock", "Electric"],
       "versions": ["vanilla", "ex"],
-      "description": "Kanto-styled mountain with wild Fighting, Rock and Electric-type Pokémon.",
+      "description": "Kanto-styled mountain. Wild Pokémon come from a Fighting, Rock and Electric table.",
       "source": "src/data/rogue_routes.h @vanilla L99-102 (identical @origin/expansion)"
     },
     {
@@ -228,7 +228,7 @@
       "type": ["Bug", "Poison", "Dark"],
       "dropRarity": 1,
       "versions": ["vanilla", "ex"],
-      "description": "Kanto-styled forest with wild Bug, Poison and Dark-type Pokémon; item drops roll at +1 rarity.",
+      "description": "Kanto-styled forest. Wild Pokémon come from a Bug, Poison and Dark table. Item drops roll at +1 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L113-117 (identical @origin/expansion)"
     },
     {
@@ -240,7 +240,7 @@
       "type": ["Ground", "Fire", "Dragon"],
       "dropRarity": 2,
       "versions": ["vanilla", "ex"],
-      "description": "Kanto-styled cave with wild Ground, Fire and Dragon-type Pokémon; item drops roll at +2 rarity.",
+      "description": "Kanto-styled cave. Wild Pokémon come from a Ground, Fire and Dragon table. Item drops roll at +2 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L119-123 (identical @origin/expansion)"
     },
     {
@@ -251,7 +251,7 @@
       "terrain": "Urban",
       "type": ["Ghost", "Ice", "Psychic"],
       "versions": ["vanilla", "ex"],
-      "description": "Kanto-styled urban route with wild Ghost, Ice and Psychic-type Pokémon.",
+      "description": "Kanto-styled urban route. Wild Pokémon come from a Ghost, Ice and Psychic table.",
       "source": "src/data/rogue_routes.h @vanilla L125-128 (identical @origin/expansion)"
     },
     {
@@ -262,7 +262,7 @@
       "terrain": "Field",
       "type": ["Electric", "Grass", "Dark"],
       "versions": ["vanilla", "ex"],
-      "description": "Johto-styled open grassland with wild Electric, Grass and Dark-type Pokémon; battles use HeartGold/SoulSilver-style music.",
+      "description": "Johto-styled open grassland. Wild Pokémon come from an Electric, Grass and Dark table. Battles use HeartGold/SoulSilver-style music.",
       "source": "src/data/rogue_routes.h @vanilla L133-136 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Johto → MUS_HG_*); include/constants/songs.h @vanilla L548-615 / @origin/expansion L549-616 (MUS_HG_* HeartGold tracks)"
     },
     {
@@ -273,7 +273,7 @@
       "terrain": "Field",
       "type": ["Bug", "Normal", "Poison"],
       "versions": ["vanilla", "ex"],
-      "description": "Johto-styled open grassland with wild Bug, Normal and Poison-type Pokémon.",
+      "description": "Johto-styled open grassland. Wild Pokémon come from a Bug, Normal and Poison table.",
       "source": "src/data/rogue_routes.h @vanilla L138-141 (identical @origin/expansion)"
     },
     {
@@ -300,7 +300,7 @@
       "terrain": "WaterFront",
       "type": ["Water", "Dragon", "Ghost"],
       "versions": ["vanilla", "ex"],
-      "description": "Johto-styled coast with wild Water, Dragon and Ghost-type Pokémon.",
+      "description": "Johto-styled coast. Wild Pokémon come from a Water, Dragon and Ghost table.",
       "source": "src/data/rogue_routes.h @vanilla L153-156 (identical @origin/expansion)"
     },
     {
@@ -311,7 +311,7 @@
       "terrain": "Urban",
       "type": ["Steel", "Psychic", "Flying"],
       "versions": ["vanilla", "ex"],
-      "description": "Johto-styled urban route with wild Steel, Psychic and Flying-type Pokémon.",
+      "description": "Johto-styled urban route. Wild Pokémon come from a Steel, Psychic and Flying table.",
       "source": "src/data/rogue_routes.h @vanilla L158-161 (identical @origin/expansion)"
     },
     {
@@ -322,7 +322,7 @@
       "terrain": "Mountain",
       "type": ["Fire", "Rock", "Fighting"],
       "versions": ["vanilla", "ex"],
-      "description": "Johto-styled mountain with wild Fire, Rock and Fighting-type Pokémon.",
+      "description": "Johto-styled mountain. Wild Pokémon come from a Fire, Rock and Fighting table.",
       "source": "src/data/rogue_routes.h @vanilla L163-166 (identical @origin/expansion)"
     },
     {
@@ -332,7 +332,7 @@
       "region": "Sinnoh",
       "type": ["Normal", "Bug", "Flying"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (201, Lake Valor), with wild Normal, Bug and Flying-type Pokémon; battles use Diamond/Pearl-style music.",
+      "description": "Sinnoh route named for its real region route number (201, Lake Valor). Wild Pokémon come from a Normal, Bug and Flying table. Battles use Diamond/Pearl-style music.",
       "source": "src/data/rogue_routes.h @vanilla L210-213 (identical @origin/expansion); src/rogue_controller.c @vanilla L811-861 / @origin/expansion L811-861 (Sinnoh → MUS_DP_*); include/constants/songs.h @vanilla L617-671 / @origin/expansion L618-672 (MUS_DP_* Diamond/Pearl tracks)"
     },
     {
@@ -342,7 +342,7 @@
       "region": "Sinnoh",
       "type": ["Flying", "Water", "Rock"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (205, Lake Veronia), with wild Flying, Water and Rock-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (205, Lake Veronia). Wild Pokémon come from a Flying, Water and Rock table.",
       "source": "src/data/rogue_routes.h @vanilla L171-174 (identical @origin/expansion)"
     },
     {
@@ -352,7 +352,7 @@
       "region": "Sinnoh",
       "type": ["Rock", "Fire", "Dragon"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (207, Snowpoint Pass), with wild Rock, Fire and Dragon-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (207, Snowpoint Pass). Wild Pokémon come from a Rock, Fire and Dragon table.",
       "source": "src/data/rogue_routes.h @vanilla L181-184 (identical @origin/expansion)"
     },
     {
@@ -390,7 +390,7 @@
       "region": "Sinnoh",
       "type": ["Water", "Poison", "Ground"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (212, the Canyon), with wild Water, Poison and Ground-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (212, the Canyon). Wild Pokémon come from a Water, Poison and Ground table.",
       "source": "src/data/rogue_routes.h @vanilla L191-194 (identical @origin/expansion)"
     },
     {
@@ -400,7 +400,7 @@
       "region": "Sinnoh",
       "type": ["Dark", "Fighting", "Grass"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (214, Valor Village), with wild Dark, Fighting and Grass-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (214, Valor Village). Wild Pokémon come from a Dark, Fighting and Grass table.",
       "source": "src/data/rogue_routes.h @vanilla L215-218 (identical @origin/expansion)"
     },
     {
@@ -410,7 +410,7 @@
       "region": "Sinnoh",
       "type": ["Poison", "Normal", "Ice"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (215, Canalave), with wild Poison, Normal and Ice-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (215, Canalave). Wild Pokémon come from a Poison, Normal and Ice table.",
       "source": "src/data/rogue_routes.h @vanilla L186-189 (identical @origin/expansion)"
     },
     {
@@ -420,7 +420,7 @@
       "region": "Sinnoh",
       "type": ["Ice", "Fighting", "Dark"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh route named for its real region route number (217, Canalave coastal area), with wild Ice, Fighting and Dark-type Pokémon.",
+      "description": "Sinnoh route named for its real region route number (217, Canalave coastal area). Wild Pokémon come from an Ice, Fighting and Dark table.",
       "source": "src/data/rogue_routes.h @vanilla L196-199 (identical @origin/expansion)"
     },
     {
@@ -431,7 +431,7 @@
       "terrain": "Forest",
       "type": ["Grass", "Bug", "Ghost"],
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh's named forest route (Eterna Forest), with wild Grass, Bug and Ghost-type Pokémon. Unlike the Hoenn and Kanto forests it has no item drop rarity bonus.",
+      "description": "Sinnoh's named forest route (Eterna Forest). Wild Pokémon come from a Grass, Bug and Ghost table. Unlike the Hoenn and Kanto forests it has no item drop rarity bonus.",
       "source": "src/data/rogue_routes.h @vanilla L176-179 (identical @origin/expansion)"
     },
     {
@@ -443,7 +443,7 @@
       "type": ["Psychic", "Ground", "Steel"],
       "dropRarity": 2,
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh's named mountain route (Mt. Coronet), with wild Psychic, Ground and Steel-type Pokémon; item drops roll at +2 rarity.",
+      "description": "Sinnoh's named mountain route (Mt. Coronet). Wild Pokémon come from a Psychic, Ground and Steel table. Item drops roll at +2 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L229-233 (identical @origin/expansion)"
     },
     {
@@ -455,7 +455,7 @@
       "type": ["Steel", "Electric", "Fire"],
       "dropRarity": 2,
       "versions": ["vanilla", "ex"],
-      "description": "Sinnoh's named island route (Iron Island), with wild Steel, Electric and Fire-type Pokémon; item drops roll at +2 rarity.",
+      "description": "Sinnoh's named island route (Iron Island). Wild Pokémon come from a Steel, Electric and Fire table. Item drops roll at +2 rarity.",
       "source": "src/data/rogue_routes.h @vanilla L235-239 (identical @origin/expansion)"
     }
   ]

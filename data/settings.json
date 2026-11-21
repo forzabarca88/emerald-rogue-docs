@@ -448,7 +448,7 @@
       "category": "range",
       "menu": "Trainers",
       "versions": ["vanilla", "ex"],
-      "description": "How the bosses and key trainers are selected as you climb the run's difficulty ladder.",
+      "description": "How trainers are drawn as you climb the run's boss ladder. For the boss stages the ladder itself — which step, which arena — is always fixed by your badge count (see the boss ladder on the Gameplay page); this option decides which trainer classes are eligible to be drawn into each boss stage (and, in Rainbow order, which trainers are excluded from the regular route-trainer pool — see the note).",
       "options": ["Default", "Rainbow", "Official"],
       "optionValues": [0, 1, 2],
       "optionDescriptions": {
@@ -456,7 +456,7 @@
         "Rainbow": "Trainers appear randomly without repeating types e.g. E4 can be Gyms",
         "Official": "Trainers appear in the order they appear in official games. (Disables Challenges)"
       },
-      "note": "In Rainbow order, boss trainers of any class (gym, Elite or champion) can appear at any stage, Rogue-region trainers are excluded, and trainers flagged rainbow-excluded are skipped. In Official order the stage is locked to the canonical order (Gym 1, Gym 2, … Elite 4, Champion) and challenge quests are disabled for the run.",
+      "note": "In Default order the eight gym stages draw from all enabled gym classes (any enabled gym trainer can stand in any gym stage), the four elite stages from all elite classes, and the Champion stage from the champion class. In Rainbow order, boss trainers of any class (gym, Elite or champion) can appear at any stage, Rogue-region trainers are excluded, and trainers flagged rainbow-excluded are skipped. In Official order the stage is locked to the canonical order (Gym 1, Gym 2, … Elite 4, Champion) and challenge quests are disabled for the run.",
       "source": "src/rogue_settings_ui.c @vanilla L111-114, L221-242 (identical @origin/expansion); include/constants/rogue.h @vanilla L649-652 / @origin/expansion L651-654; src/rogue_trainers.c @vanilla L890, L926-930, L1033-1060 (identical @origin/expansion); src/rogue_settings.c @vanilla L289-292 (identical @origin/expansion)"
     },
     {
