@@ -2,23 +2,23 @@
   "meta": {
     "id": "gameshow",
     "title": "Game Show",
-    "description": "Mr. Randoman's Game Show room: choose a Game of Skill or a Game of Luck, play through up to six rounds of trivia, memory and pure luck, and decide after every round whether to bank your prizes or risk them for a better one. It's all or nothing — lose a round and the whole shelf vanishes. The room and its games are the same in both versions, with only a cosmetic difference in how the prize shelf behaves."
+    "description": "Mr. Randoman's Game Show room: choose a Game of Skill or a Game of Luck, play through its rounds — six in most games, three boards in Voltorb Flip — and decide after every round whether to bank your prizes or risk them for a better one. It's all or nothing — lose a round and the whole shelf vanishes. The room and its games are the same in both versions, with only a cosmetic difference in how the prize shelf behaves."
   },
   "prose": [
     {
       "id": "how-it-works",
       "heading": "Meet Mr. Randoman",
-      "text": "The Game Show is one of the special rooms that can appear on your adventure path. The host, Randoman (you'll recognize him from the random-trade encounters — he's a WAHEY person), lays out a shelf of six prizes that were pre-rolled for your visit. You pick a category: a Game of Skill (guessing games based on Pokémon knowledge) or a Game of Luck (coin flips and number guessing). A specific game is then chosen for you, and you play through its rounds."
+      "text": "The Game Show is one of the special rooms that can appear on your adventure path. The host, Randoman (you'll recognize him from the random-trade encounters — he's a WAHEY person), lays out a shelf of six prizes that were pre-rolled for your visit. You pick a category: a Game of Skill (three live games — the silhouette quiz, the cry quiz and Voltorb Flip) or a Game of Luck (two live games — coin flip and higher-or-lower). A specific game is then chosen for you, and you play through its rounds: six rounds in most games, three boards in Voltorb Flip."
     },
     {
       "id": "rounds-and-rewards",
       "heading": "Risk it or bank it",
-      "text": "Each game runs up to six rounds (Voltorb Flip is three). After every correct round the next prize on the shelf lights up and Randoman asks you to choose: stop now and take the prizes you've earned, or risk it for the bigger prize on offer. The answer options get harder each round — the first round offers four choices, the second five, and so on (3 + the round number). If you ever answer wrong, the game ends immediately and the entire shelf is hidden: it's all or nothing, and you leave empty-handed. Bank it, and you walk up to the shelf and collect your prizes one by one."
+      "text": "Most games run six rounds; Voltorb Flip runs three boards, each worth two prizes. After every correct round the next prize on the shelf lights up and Randoman asks you to choose: stop now and bank what you've earned, or risk it for the bigger prize on offer. The option count depends on the game: the silhouette and cry quizzes grow their answer list as the game goes (3 + the round number — four choices in round one, nine by round six), while coin flip and higher-or-lower always offer two choices. If you ever answer wrong, the game ends immediately and the entire shelf is hidden: it's all or nothing, and you leave empty-handed. Banking doesn't auto-collect anything — the lit prizes stay on the shelf and you pick them up one by one."
     },
     {
       "id": "winning-and-cheating",
       "heading": "Winning big (and what happens if you cheat)",
-      "text": "Clear all the rounds and the game ends on a high note: every prize is yours, and finishing the Game Show with a perfect run fires a special quest event. One more thing: the prize counter keeps a grudge. Interact with it when there's no active prize — Randoman takes it as cheating, a note appears ('Cheaters never prosper ke ke ke - Randoman'), and an Electrode is sent after you. The battle is treated like a legendary encounter, so it's the one thing in the Game Show you cannot catch."
+      "text": "Clear all the rounds and the game ends on a high note: all six prizes are lit on the shelf and a special quest event fires, and you still collect them yourself — same shelf, one by one. One more thing: the prize counter keeps a grudge. Interact with it when there's no active prize — Randoman takes it as cheating, a note appears ('Cheaters never prosper ke ke ke - Randoman'), and an Electrode is sent after you. The battle is treated like a legendary encounter, so it's the one thing in the Game Show you cannot catch."
     }
   ],
   "records": [
@@ -59,7 +59,7 @@
       "name": "Team Trivia (currently disabled)",
       "category": "gameshow-game",
       "versions": ["vanilla", "ex"],
-      "description": "A sixth skill game where you answer questions about your own party ('Which of your Pokémon has the highest HP?' and similar). The game is fully scripted with stat-based questions, but the validity check that gates it is hard-coded to fail with a TODO comment, so the game is never actually offered — the random(5) selection branch that would include it is dead code, and the live skill-game pool contains only the three games above (weighted 1/4, 2/4, 1/4).",
+      "description": "A scripted skill game where you answer questions about your own party ('Which of your Pokémon has the highest HP?' and similar) — but it's currently unavailable: the validity check that gates it is hard-coded to fail with a TODO comment, so the game is never offered and the random(5) selection branch that would include it is dead code. It's not counted in the lineup: the live pool is three Skill games (weighted 1/4, 2/4, 1/4) and two Luck games (coin flip, higher-or-lower).",
       "source": "src/rogue_gameshow.c @vanilla L163-167 (GameShow_IsTeamTriviaRoundValid hard-coded FALSE with TODO), L179-243 (stat-based trivia question buffers) / @origin/expansion L130-134, L146-210; data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L98-125 (selection: the validity-gated random(5) branch, whose case 4 is dead code), L348-404 (scripted game) (identical @origin/expansion)"
     },
     {
@@ -83,20 +83,20 @@
       "name": "Rounds and escalating options",
       "category": "gameshow-overview",
       "versions": ["vanilla", "ex"],
-      "description": "Skill and luck games run six rounds (Voltorb Flip three). The silhouette/cry guessing games build their answer list dynamically with 3 + round number options — four choices in round one, nine by round six — so the odds of guessing right drift against you as the shelf fills.",
-      "source": "src/rogue_gameshow.c @vanilla L71-108 / @origin/expansion L70-107 (GameShow_AppendSpeciesMultichoiceOptions: 3 + currentRound options, correct answer included once); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L191-310 (round loops) (identical @origin/expansion)"
+      "description": "Most games run six rounds; Voltorb Flip runs three boards (each worth two prizes). Only the silhouette/cry quizzes grow their answer list — 3 + round number options, four choices in round one, nine by round six, so the odds of guessing right drift against you as the shelf fills; coin flip and higher-or-lower always offer two choices.",
+      "source": "src/rogue_gameshow.c @vanilla L71-108 / @origin/expansion L70-107 (GameShow_AppendSpeciesMultichoiceOptions: 3 + currentRound options, correct answer included once); data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L194-308 (silhouette/cry round loops), L478-529 (coin flip: 6 rounds, 2 choices), L531-607 (higher or lower: 6 rounds, 2 choices) (identical @origin/expansion)"
     },
     {
       "id": "gameshow-rewards",
       "name": "All-or-nothing rewards",
       "category": "gameshow-overview",
       "versions": ["vanilla", "ex"],
-      "description": "Each of the six shelf prizes is a distinct pre-rolled item. A correct round lights up the next prize and offers you the choice to stop and collect, or risk it for the next (better) prize. A wrong answer hides the whole shelf — everything you had earned is gone. If you clear every round the game ends automatically, all prizes are collected, and a map-specific quest event is triggered. Item quantities are adjusted by the run's pickup rules when you collect.",
+      "description": "Each of the six shelf prizes is a distinct pre-rolled item. A correct round lights up the next prize and offers you the choice to stop and collect, or risk it for the next (better) prize — Voltorb Flip lights two per board. A wrong answer hides the whole shelf — everything you had earned is gone. Prizes are only earned, never auto-collected: whether you stop early or clear every round (which fires a map-specific quest event and lights all six), you walk up to the shelf and pick the lit prizes up one by one. Item quantities are adjusted by the run's pickup rules when you collect.",
       "differences": {
         "vanilla": "The prize sprites are physically repositioned every time the shelf updates: lit prizes are snapped back to their shelf spots and hidden prizes are moved off to (0,0), so the shelf visibly reshuffles as the game plays.",
         "ex": "Only the visibility of the prize sprites is toggled — the shelf items stay in place and simply appear and disappear."
       },
-      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L431-476 (risk/stop choice, all-rounds-clear quest trigger), L478-529 (failure hides rewards via FAIL_ROUND_COUNTER) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L138-161 (UpdateRewardVisibility: all hidden on failure) / @origin/expansion L117-128 (visibility toggle only; Vanilla additionally repositions sprites via TryGetRewardOriginalCoords); data/scripts/Rogue/Rogue_Manager.pory @vanilla L1474-1508 (per-shelf pickup scripts with adjusted quantities) (identical @origin/expansion)"
+      "source": "data/maps/Rogue_Encounter_GameShow/scripts.pory @vanilla L431-476 (risk/stop choice, all-rounds-clear quest trigger), L478-607 (each game sets FAIL_ROUND_COUNTER on a wrong answer) (identical @origin/expansion); src/rogue_gameshow.c @vanilla L138-161 (UpdateRewardVisibility: all hidden on failure) / @origin/expansion L117-128 (visibility toggle only; Vanilla additionally repositions sprites via TryGetRewardOriginalCoords); data/scripts/Rogue/Rogue_Manager.pory @vanilla L1474-1508 (per-shelf pickup scripts with adjusted quantities) (identical @origin/expansion)"
     },
     {
       "id": "gameshow-cheating",
