@@ -13,7 +13,7 @@
     {
       "id": "the-pool",
       "heading": "The 60-slot pool",
-      "text": "Beyond the 60 slots, 16 additional “custom” slots let unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” (the code reuses the Marine ribbon slot) is what gates every push into the pool: a mon is only added if it does not carry the ribbon, and every successful push stamps it — so the same mon can't be added twice. The ribbon is also stamped on every member of your pre-run party and every Day Care mon at the start of every run — that is what keeps your home team out of the pool (see The run-start illegal ribbon). (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.)"
+      "text": "Beyond the 60 slots, a 16-entry “custom data” table — not 16 additional Pokémon slots — lets unique/gift Pokémon keep their special sets while they sit in the pool. A temporary “illegal ribbon” (the code reuses the Marine ribbon slot) is what gates every push into the pool: a mon is only added if it does not carry the ribbon, and every successful push stamps it — so the same mon can't be added twice. The ribbon is also stamped on every member of your pre-run party and every Day Care mon at the start of every run — that is what keeps your home team out of the pool (see The run-start illegal ribbon). (An outdated comment in the constants says “45–49 are for legends”, but every allocation and reset loop in the code uses the full 45–59 range.)"
     },
     {
       "id": "entry-criteria",
@@ -23,12 +23,12 @@
     {
       "id": "priority-eviction",
       "heading": "Priority and eviction",
-      "text": "A mon that has only been caught and immediately released scores 0 — and a discarded mon enters at that same 0, so discards are the first out unless they are shiny, in which case the +30 bonus makes them as safe as any long-kept mon."
+      "text": "Eviction is not a fixed batch size: when a range is full, the code finds the lowest priority value, evicts every mon sitting on it, and subtracts that same value from every survivor's priority. A 0-minimum therefore evicts the 0-priority entrants and leaves everything else unchanged, and with priorities 5, 5 and 30 the two 5s go while the 30 becomes 25. A discarded catch — caught and immediately released — enters at 0, the same score a mon released without gaining a level earns, so they share the eviction line; a shiny's +30 is no guarantee either, because a mon that has gained 78 or more levels already scores above it."
     },
     {
       "id": "legends-cave",
       "heading": "The Legends Cave",
-      "text": "Completing the “True Legend” quest (catch a legendary during an adventure) grants the hidden “Legend Cave” upgrade, which puts a cave entrance on the Safari Area. From there, 10 of a liked-flavor Pokéblock can be turned into a wild, catchable battle with a pooled legendary."
+      "text": "Completing the “True Legend” quest (catch a legendary during an adventure) grants the hidden “Legend Cave” upgrade, which puts a cave entrance on the Safari Area. From there, 10 Pokéblocks of a single standard type the pooled legendary has — ten of the same block, not ten assorted ones — are turned into a wild, catchable battle with that legendary, and the statue deducts them the moment you pick the block to spend."
     }
   ],
   "records": [
@@ -65,7 +65,7 @@
       "short": "Per catch — a discarded catch enters at priority 0.",
       "category": "entry-criterion",
       "versions": ["vanilla", "ex"],
-      "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at low priority (0) — it is evicted before any normally-added mon unless it is shiny, where it earns the +30 shiny bonus. (During a catching contest, non-shiny discards are skipped entirely.)",
+      "description": "If you catch a wild Pokémon and choose to discard it instead of keeping it, it is pushed into the pool at priority 0 — the same score a mon released without gaining a level earns, so a discard shares the eviction line with any other 0-priority mon and goes out with the first eviction its range sees. A shiny discard earns the +30 shiny bonus instead, though even that is no guarantee of outranking a mon that has gained 78 or more levels. (During a catching contest, non-shiny discards are skipped entirely.)",
       "source": "src/battle_script_commands.c @vanilla L10283-10300 (rogue_caughtmon battle command) / @origin/expansion L15521-15538; src/rogue_controller.c @vanilla L1335-1350 / @origin/expansion L1335-1350 (Rogue_DiscardedCaughtMon, push at L1343); src/rogue_safari.c @vanilla L107-118 / @origin/expansion L107-118 (RogueSafari_PushLowPriorityMon)"
     },
     {
@@ -82,7 +82,7 @@
       "name": "Slot layout (60 pool slots)",
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "The pool is exactly 60 slots: 0–44 are regular slots (45 total — the only slots the open zone spawns from, cycling through them in order), and 45–59 are legendary slots (15 total — reachable only via the Legends Cave). A separate table of 16 “custom” slots maps unique/gift Pokémon so they keep their special sets while pooled. (The in-code comment “45-49 are for legends” is outdated; the allocation, reset and any-legends loops all use 45–59.)",
+      "description": "The pool is exactly 60 slots: 0–44 are regular slots (45 total — the only slots the open zone spawns from, cycling through them in order), and 45–59 are legendary slots (15 total — reachable only via the Legends Cave). A separate 16-entry “custom data” table — not 16 extra Pokémon slots — maps unique/gift Pokémon so they keep their special sets while pooled. (The in-code comment “45-49 are for legends” is outdated; the allocation, reset and any-legends loops all use 45–59.)",
       "source": "include/constants/rogue.h @vanilla L806-810 / @origin/expansion L808-812 (ROGUE_SAFARI_TOTAL_MONS 60, LEGENDS_START_INDEX 45, TOTAL_CUSTOM_MONS 16); src/rogue_safari.c @vanilla L313-375 / @origin/expansion L313-375 (AllocSafariMonSlotFor: regular → 0..44, legendary → 45..59)"
     },
     {
@@ -90,7 +90,7 @@
       "name": "Priority and eviction",
       "category": "pool-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "Each entry's priority is (levels gained since capture × 2) ÷ 5 — a freshly caught-and-released mon scores 0; shinies add a flat +30 (half the pool size); and any IV bonus from IV-boosting charms is stripped before the mon is stored. When a range (regular or legendary) is full, all mons sharing the lowest priority are evicted together as a batch, the survivors' priorities are each decremented by the batch count, and one freed slot takes the new arrival. Regular and legendary ranges never evict each other.",
+      "description": "Each entry's priority is (levels gained since capture × 2) ÷ 5; a discarded catch enters at 0; shinies add a flat +30 (half the 60-slot pool size); and any IV bonus from IV-boosting charms is stripped before the mon is stored. When a range (regular or legendary) is full, the code evicts every mon sharing the lowest priority value — a batch whose size depends on the tie — and subtracts that lowest value, not the batch size, from every surviving priority: with priorities 5, 5 and 30, both 5s go and the 30 becomes 25, while a 0-minimum costs survivors nothing. Regular and legendary ranges evict independently and never evict each other. Custom-data eviction is separate: the shared 16-entry custom-data table (not 16 extra pool slots) keeps the special sets of unique and gift mons, and when it is full, admitting another custom set evicts the lowest-priority mon already holding a custom entry — which can sit in the other range even when the destination range has a free slot.",
       "score": {
         "terms": [
           { "label": "(levels gained × 2) ÷ 5" },
@@ -101,11 +101,11 @@
       },
       "eviction": [
         "A range (regular or legendary) is full",
-        "Every mon sharing the lowest priority is evicted as a batch",
-        "Every survivor's priority drops by the batch count",
+        "Every mon sharing the lowest priority value is evicted as a batch",
+        "Every survivor's priority drops by that lowest value, not the batch size",
         "One freed slot takes the new arrival"
       ],
-      "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88) and L313-375 (eviction batching in AllocSafariMonSlotFor) / @origin/expansion L37-92, L313-375"
+      "source": "src/rogue_safari.c @vanilla L37-92 (PushBoxMonInternal: priority at L82, charm strip at L48, shiny +30 at L88), L313-375 (eviction batching in AllocSafariMonSlotFor) and L376-440 (custom-data eviction in AllocCustomMonSafariSlot) / @origin/expansion L37-92, L313-375, L376-440"
     },
     {
       "id": "legends-cave",
@@ -117,12 +117,12 @@
         "Enter the cave and talk to the odd statue. If no legendaries are in the pool, “the cave is silent.”",
         "Choose “Make Offering” from the statue menu.",
         "Pick the legendary you want from the special Pokédex view of your pooled legendaries.",
-        "Choose a Pokéblock to offer. Its flavor type must match one of the legendary's two types, or it “won't like that type of Pokéblock.”",
-        "Confirm the cost of 10 of that Pokéblock and scatter them near the statue.",
-        "The cave shakes, the legendary-appears theme plays, the cry rings out — and a wild battle with that legendary begins (safari-style, catchable).",
-        "Alternatively, “Dismiss Pokémon” clears every legendary out of the cave at once."
+        "The offering is 10 Pokéblocks of a single standard type, and that type must be one of the legendary's two types — ten Water Pokéblocks for a Water-type legendary. It takes ten of the same block, not ten assorted blocks.",
+        "Choose the block to offer from your bag. If its type isn't one the legendary has, it “won't like that type of Pokéblock.”",
+        "The statue deducts the 10 the moment you pick an eligible block with enough stock and scatters them near the statue — there is no confirmation step, and if you have fewer than 10 it says 10 are needed in order to make an offering and spends nothing.",
+        "The cave shakes, the legendary-appears theme plays, the cry rings out — and a wild battle with that legendary begins (safari-style, catchable)."
       ],
-      "description": "The Legends Cave is how legendaries in the pool (slots 45–59) become re-encounterable: a statue that turns 10 of a liked-flavor Pokéblock into a wild battle with the legendary you pick. The whole flow is identical between versions — what differs is the roster of legendaries that can exist in the pool, since EX adds every Gen 4–9 legendary, their alternate forms, and the Z-A Floettes on top of Vanilla's Gen 1–3 set.",
+      "description": "The Legends Cave is how legendaries in the pool (slots 45–59) become re-encounterable: a statue that spends 10 Pokéblocks of a single standard type the legendary likes into a wild battle with the legendary you pick. The offering is a plain spend with no confirmation — the statue deducts the blocks the moment an eligible one is picked — while the statue's other option, “Dismiss Pokémon”, is the destructive one: it asks a final confirm question, and if you agree it empties the entire legendary pool at once. The whole flow is identical between versions — what differs is the roster of legendaries that can exist in the pool, since EX adds every Gen 4–9 legendary, their alternate forms, and the Z-A Floettes on top of Vanilla's Gen 1–3 set.",
       "differences": {
         "vanilla": "Mechanically identical cave; the catchable legendaries are limited to the Gen 1–3 legendary species (and forms) that exist in the Vanilla build.",
         "ex": "Same cave and flow, but the legendary encounter roster adds all Gen 4–9 legendaries, alternate forms and the Z-A Floettes — so far more species can fill slots 45–59."
