@@ -2,23 +2,23 @@
   "meta": {
     "id": "unique-mons",
     "title": "Unique Pokémon",
-    "description": "The hub's Unique Lab: five rotating slots of 'unique' Pokémon — species in your Pokédex reborn with bonus moves, special abilities or swapped types, rolled across four rarities. A 'Unique Pokémon detected nearby' alert tells you one is in the wild, and catching one converts it (keeping its IVs and shiny) and consumes the slot. The system is the same in both versions; EX enriches it with a bigger bonus-ability pool (44 to 63 abilities) and a different set of default exotic species."
+    "description": "The hub's Unique Lab: five rotating slots of 'unique' Pokémon — species from the game's base-stage, non-legendary roster (rolled under the default Pokédex, not your active one) reborn with bonus moves, special abilities or swapped types, rolled across four rarities. A 'Unique Pokémon detected nearby' alert tells you one is in the wild, and catching one converts it (keeping its IVs and shiny) and consumes the slot. The system is the same in both versions; EX enriches it with a bigger bonus-ability pool (44 to 63 abilities) and a different set of default exotic species."
   },
   "prose": [
     {
       "id": "what-they-are",
       "heading": "Pokémon no one else can get",
-      "text": "A unique Pokémon is a normal species from your Pokédex, reborn with extras: bonus moves drawn from a curated pool, a special ability, or even a swapped type. They are 'dynamic' — the same species can produce a different unique mon every time it is rolled — and they are tracked through five lab slots in your save. When one is out in the wild on your current route, a 'Unique Pokémon — Detected nearby!' alert pops up, and if you catch it, it joins your party as that special set with a 'Unique Pokémon' ceremony."
+      "text": "A unique Pokémon is a normal base-stage species — from the game's full roster with legendaries excluded, and rolled with the Pokédex temporarily forced to its default variant, so which dex you have active never changes the pool — reborn with extras: bonus moves drawn from a curated pool, a special ability, or even a swapped type. They are 'dynamic' — the same species can produce a different unique mon every time it is rolled — and they are tracked through five lab slots in your save, which are re-rolled when a run begins and when it ends. When one is out in the wild on your current route, a 'Unique Pokémon — Detected nearby!' alert pops up, and if you catch it, it joins your party as that special set with a 'Unique Pokémon' ceremony."
     },
     {
       "id": "the-lab",
       "heading": "How the lab works",
-      "text": "The Unique Lab hub upgrade unlocks the first three of five slots; two further slot upgrades add the rest. Each slot rolls a rarity — Common, Rare, Epic or Exotic — and a species, then counts down in in-game minutes (slot one expires fastest, the fifth slowest). When the clock hits zero the slot empties and is re-rolled at the start of your next run, so the lab is always churning. Higher rarities need higher lab upgrades: without the Epic upgrade, an Epic roll downgrades to Rare, and so on."
+      "text": "The Unique Lab hub upgrade unlocks the first three of five slots; two further slot upgrades add the rest. Each slot rolls a rarity — Common, Rare, Epic or Exotic — and a species (a flat-random pick from the roster, never duplicating a species already active in another slot), then counts down in in-game minutes (slot one expires fastest, the fifth slowest). When the clock hits zero the slot goes empty and is re-rolled at the next run boundary — a run's start or end — so the lab is always churning. Higher rarities need higher lab upgrades: without the Epic upgrade, an Epic roll downgrades to Rare, and so on."
     },
     {
       "id": "finding-them",
       "heading": "Hunting a unique",
-      "text": "The detection alert fires on routes only: step into a route whose wild table includes one of your active unique species and a 'Unique Pokémon — Detected nearby!' alert pops up — wild dens and legendary rooms stay quiet, but a unique can still turn up there. There's a 50/50 chance the matching wild battle is actually the unique form — it fights with its bonus moves and ability, gets the slow 'important battle' intro, and keeps whatever shiny state it had. Catch it and the conversion is respectful of your luck: IVs, shiny, gender and nickname all carry over, the mon is healed to at least half health and cured of status, your Strength Charms/Curses adjust its IVs, and the slot it came from is consumed."
+      "text": "The detection alert fires on routes only: step into a route whose wild table includes one of your active unique species and a 'Unique Pokémon — Detected nearby!' alert pops up — it only warns that a match is possible, it never guarantees the encounter. Wild dens stay quiet for the alert but can still roll a unique (the same 50/50 conversion); legendary rooms never do — the game's hook there is a commented-out TODO. There's a 50/50 chance a matching wild battle on a route or in a den is actually the unique form — it fights with its bonus moves and ability, gets the slow 'important battle' intro, and keeps whatever shiny state it had. Catch it and the conversion is respectful of your luck: IVs, shiny, gender and nickname all carry over, the mon is healed to at least half health and cured of status, your Strength Charms/Curses adjust its IVs, and the slot it came from is consumed."
     }
   ],
   "records": [
@@ -27,16 +27,16 @@
       "name": "Unique Pokémon (system)",
       "category": "unique-mon-overview",
       "versions": ["vanilla", "ex"],
-      "description": "Five save slots (DYNAMIC_UNIQUE_MON_COUNT 5) hold 'dynamic' custom mons: species rolled from your active Pokédex, each with a rarity and a countdown. The slots are refreshed when a run begins and ends, and any species currently on your route triggers the detection alert. The system is identical in both versions; the pools of bonus abilities and default exotic species differ.",
-      "source": "include/constants/rogue.h @vanilla L814 / @origin/expansion L816 (DYNAMIC_UNIQUE_MON_COUNT 5); src/rogue_gifts.c @vanilla L1222-1330 / @origin/expansion L1228-1336 (slot fill/refresh logic); src/rogue_controller.c @vanilla L4649 (refresh at run start), L4895 (refresh at run end), L3482-3484 (countdown ticks every in-game minute) / @origin/expansion L4640, L4886, L3473-3475"
+      "description": "Five save slots (DYNAMIC_UNIQUE_MON_COUNT 5) hold 'dynamic' custom mons: species rolled from the game's base-stage, non-legendary roster — the roll forces the Pokédex to its default variant, so your active dex never changes the pool — each with a rarity and a countdown. The slots are refreshed when a run begins and when it ends (the same refresh re-rolls any slot whose countdown has expired), and any species on your current route's wild table triggers the detection alert. The system is identical in both versions; the pools of bonus abilities and default exotic species differ.",
+      "source": "include/constants/rogue.h @vanilla L814 / @origin/expansion L816 (DYNAMIC_UNIQUE_MON_COUNT 5); src/rogue_gifts.c @vanilla L1222-1324 (slot fill/refresh: dex variant forced to default L1231-1232, roster query L1234-1237, variant restored L1265) / @origin/expansion L1228-1330 (L1237-1238, L1240-1243, L1271); src/rogue_controller.c @vanilla L4649 (refresh at run start), L4895 (refresh at run end), L3482-3484 (countdown ticks every in-game minute) / @origin/expansion L4640, L4886, L3473-3475"
     },
     {
       "id": "lab-slots",
       "name": "Lab slots and upgrades",
       "category": "unique-mon-overview",
       "versions": ["vanilla", "ex"],
-      "description": "The base Unique Lab hub upgrade unlocks slots 1–3; two further upgrades ('Lab Slots') unlock slot 4 and slot 5. Each active slot counts down in in-game minutes, starting faster for lower slots: slot 1 starts at 60 minutes and each higher slot starts 30 minutes later (60, 90, 120, 150, 180 for slots 1–5), so slots expire on a rolling basis and are re-rolled at the start of your next run. Expired slots are compacted so the active unique mons always sit in the first slots.",
-      "source": "src/rogue_gifts.c @vanilla L1150-1165 (slot unlock: base lab → slots 0–2, slot 3 → SLOTS0 upgrade, slot 4 → SLOTS1 upgrade), L1301 (countdown 60 + 30 × slot), L1265-1283 (invalid slots compacted and re-rolled) / @origin/expansion L1156-1171, L1307, L1271-1289"
+      "description": "The base Unique Lab hub upgrade unlocks slots 1–3; two further upgrades ('Lab Slots') unlock slot 4 and slot 5. Each active slot counts down in in-game minutes, starting faster for lower slots: slot 1 starts at 60 minutes and each higher slot starts 30 minutes later (60, 90, 120, 150, 180 for slots 1–5), so slots expire on a rolling basis and are re-rolled at the next run boundary (a run's start or end). Expired slots are compacted so the active unique mons always sit in the first slots.",
+      "source": "src/rogue_gifts.c @vanilla L1150-1166 (slot unlock: base lab → slots 0–2, slot 3 → SLOTS0 upgrade, slot 4 → SLOTS1 upgrade), L1299 (countdown 60 + 30 × slot), L1268-1286 (expired/empty slots compacted) / @origin/expansion L1156-1172, L1305, L1274-1292"
     },
     {
       "id": "rarity-roll",
@@ -76,7 +76,7 @@
       "category": "unique-mon-rarity",
       "versions": ["vanilla", "ex"],
       "description": "The jackpot roll (1 in 7): instead of a random bonus set, the slot holds a bespoke 'Exotic' mon from the static custom pool — the special mons tied to quests and default spawns. An Exotic slot picks an unused unlocked Exotic mon, and if every one is already in play it falls back to an Epic roll. Requires the Exotic lab upgrade or it downgrades.",
-      "source": "src/rogue_gifts.c @vanilla L1107-1129 (1/7 Exotic), L1303-1314 (Exotic slot: unused unlocked exotic mon, Epic fallback), L1138-1139 (Exotic requires the Exotic lab upgrade) / @origin/expansion L1113-1135, L1309-1320, L1144-1145; src/rogue_gifts.c @vanilla L1181-1220 / @origin/expansion L1187-1226 (SelectUnusedUnlockedExoticMon: default-spawn custom mons + unlocked quest mons)"
+      "source": "src/rogue_gifts.c @vanilla L1107-1148 (1/7 Exotic + the downgrade chain), L1301-1317 (Exotic slot: unused unlocked exotic mon, Epic fallback) / @origin/expansion L1113-1154, L1307-1323; src/rogue_gifts.c @vanilla L1181-1220 / @origin/expansion L1187-1226 (SelectUnusedUnlockedExoticMon: default-spawn custom mons + unlocked quest mons)"
     },
     {
       "id": "bonus-moves",
@@ -111,7 +111,7 @@
       "name": "'Unique Pokémon — Detected nearby!'",
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
-      "description": "When you enter a route, the game checks the route's wild encounter table against your active unique slots, and any match fires the 'Unique Pokémon — Detected nearby!' alert so you know a catchable unique is in the area. The check is route-only — wild dens and legendary rooms are never checked, though a unique can still appear there. Shiny and unique wilds also get the slow 'important battle' intro when you engage them.",
+      "description": "When you enter a route, the game checks the route's wild encounter table against your active unique slots, and any match fires the 'Unique Pokémon — Detected nearby!' alert — it warns that a match is possible, it never guarantees the encounter. The check is route-only: wild dens and legendary rooms never fire the alert, though a den can still roll a unique (the same 50% conversion, silently); legendary rooms never do, since the game's hook there is a commented-out TODO. Shiny and unique wilds also get the slow 'important battle' intro when you engage them.",
       "source": "src/rogue_controller.c @vanilla L5843-5883 / @origin/expansion L5834-5874 (route room-entry case: wild encounter table vs active unique slots, popup pushed on match — the den and legendary room cases have no such check); src/rogue_popup.c @vanilla L298-299 (alert text), L1793-1801 (popup push) (identical @origin/expansion); src/rogue_controller.c @vanilla L543-547 / @origin/expansion L543-547 (shiny/unique wilds are 'important battles')"
     },
     {
@@ -119,8 +119,8 @@
       "name": "The 50% unique wild",
       "category": "unique-mon-detail",
       "versions": ["vanilla", "ex"],
-      "description": "Not every matching wild is the unique one: when a wild mon's species matches an active unique slot, there's a 50% chance the battle uses the custom set (bonus moves/ability/type) — otherwise it fights as a normal wild. The conversion happens in place and deliberately preserves the mon's shiny state.",
-      "source": "src/rogue_controller.c @vanilla L8470-8505 / @origin/expansion L8461-8496 (TryApplyCustomMon: only in Route/Wild Den/Legendary rooms, 1-in-2 chance, shiny preserved, wildBattleCustomMonId set)"
+      "description": "Not every matching wild is the unique one: on routes and in wild dens, when a wild mon's species matches an active unique slot, there's a 50% chance the battle uses the custom set (bonus moves/ability/type) — otherwise it fights as a normal wild. The conversion happens in place and deliberately preserves the mon's shiny state. The function's gate also admits legendary rooms, but the game's call there is a commented-out TODO — so a legendary-room wild is never unique.",
+      "source": "src/rogue_controller.c @vanilla L8469-8506 (TryApplyCustomMon: Room gate, 1-in-2 chance at L8489, shiny preserved) / @origin/expansion L8460-8497 (chance at L8480); src/rogue_controller.c @vanilla L8630-8662 (wild-den call L8661) and L8687-8690 (routes, the default branch L8689) — the legendary room's call L8669 is commented out / @origin/expansion L8621-8653 (call L8652), L8678-8681 (call L8680), commented call L8660"
     },
     {
       "id": "catching-unique-mons",
