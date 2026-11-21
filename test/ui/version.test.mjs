@@ -11,7 +11,10 @@
  * ROGUE.onChange (version.js). A ?version= URL param on load is a one-time
  * override: it wins for that load only and is never stored, so a subsequent
  * navigation without the param falls back to the stored choice / the site
- * default (data/site.json defaultVersion, currently "ex").
+ * default (data/site.json defaultVersion, currently "ex"). Clicking a
+ * version option that is ALREADY active (e.g. one made active by a
+ * ?version= override) still stores the choice — the explicit click is what
+ * saves the preference (issue #124).
  *
  * Every expectation below is a literal derived from the cited data file and
  * the page's rendering code (same style as smoke.test.mjs):
@@ -408,6 +411,81 @@ test('routes.html: a ?version= URL param is a one-time override that never persi
       ['Differs in Vanilla'],
       'safari.html re-rendered in the EX variant — the ?version= override did not persist to the next page'
     );
+  } finally {
+    await close();
+  }
+});
+
+test('index.html: clicking the ALREADY-active version (a ?version= override) persists the choice (issue #124)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'index.html', version: 'ex' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    // The ?version=ex override makes EX active for this load — the stored
+    // preference is still unset
+    await assertToggle(page, 'ex', 'index.html (?version=ex)');
+    assert.equal(
+      await page.evaluate(() => window.localStorage.getItem('emerald-rogue-version')),
+      null,
+      'the ?version= override alone never stores (the one-time-override contract)'
+    );
+
+    // Clicking the ALREADY-active EX option is an explicit choice — it must
+    // store the preference even though the active version does not change
+    // (issue #124: the same-version early return skipped the write)
+    await page.click('.version-toggle__option[data-version="ex"]');
+    assert.equal(
+      await page.evaluate(() => window.localStorage.getItem('emerald-rogue-version')),
+      'ex',
+      'clicking the active version stores the choice (issue #124)'
+    );
+    await assertToggle(page, 'ex', 'index.html (after the same-version click)');
+
+    // reload WITHOUT the param: EX must come from the stored choice
+    await page.goto(`${server.url}/index.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      () => typeof window.ROGUE !== 'undefined' && (document.querySelector('main')?.textContent || '').trim().length > 0,
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    await assertToggle(page, 'ex', 'index.html (reloaded without ?version)');
+    assert.equal(
+      new URL(page.url()).searchParams.get('version'),
+      null,
+      'the reloaded url carries no ?version= — EX is the stored choice, not an override'
+    );
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('index.html: a ?version=vanilla override clicked on the active Vanilla persists to the next page (issue #124)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'index.html', version: 'vanilla' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    await assertToggle(page, 'vanilla', 'index.html (?version=vanilla)');
+
+    // the issue's repro: click the active Vanilla button — the explicit
+    // choice must persist past the URL override's one-time scope
+    await page.click('.version-toggle__option[data-version="vanilla"]');
+
+    // navigate to the Pokédex without the param: the stored Vanilla choice
+    // — not the site default — must drive the render
+    await page.goto(`${server.url}/pokedex.html`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(
+      () => (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 17',
+      null,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    await assertToggle(page, 'vanilla', 'pokedex.html (persisted Vanilla choice)');
+    assert.equal(
+      new URL(page.url()).searchParams.get('version'),
+      null,
+      'pokedex.html reached without ?version= — the 386-species Vanilla state must come from the stored choice, not a URL override'
+    );
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();
   }

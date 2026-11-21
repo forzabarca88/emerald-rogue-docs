@@ -2,12 +2,17 @@
  * The gameplay page's example path board (issue #119) — one static
  * Classic segment for badge 1, heading for Gym 2 — must stay a legal
  * draw of the generator: every cell a room type the `placement` rules
- * in data/adventure.json allow at badge 1, the layout the generator's
- * shape (3 room columns × 1–3 lanes, the 2–3-lane split in front of
- * the gym, the minimum regular routes kept), and the lane wiring one
- * legal board (every cell reachable from the start line and reaching
- * the boss, at most 3 exits per cell, the boss fan-in = the split's
- * lane count).
+ * in data/adventure.json allow at badge 1, every rest stop in a column
+ * the generator can actually place it in (issue #129 — the rest-stop
+ * weight, re-verified against references/pokeemerald-rogue
+ * src/rogue_adventurepaths.c: a length-5 Classic path (L1191), base 10
+ * (L503), +90 near the boss (L509–510), −40 in the first column
+ * (L513–514), clamped 0..255 (L593), zero = never placed (L611)), the
+ * layout the generator's shape (3 room columns × 1–3 lanes, the 2–3-
+ * lane split in front of the gym, the minimum regular routes kept), and
+ * the lane wiring one legal board (every cell reachable from the start
+ * line and reaching the boss, at most 3 exits per cell, the boss
+ * fan-in = the split's lane count).
  */
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
@@ -69,6 +74,29 @@ function tierBadges(label) {
 
 const badge = BOARD.badge;
 
+/* The generator's rest-stop placement weight for a board column
+   (issue #129) — re-verified against references/pokeemerald-rogue
+   src/rogue_adventurepaths.c: the Classic segment is a length-5 path
+   (L1191: totalLength = 3 + 2; the +2 is the initial split + the final
+   encounter), rooms only exist at x > 1 (L654–655: routes never fill
+   the column in front of the gym, so x = 1 is always empty sand), and
+   the board's columns read left→right from the FIRST column — the
+   spawn column, x = pathLength − 1 (L1665/L2002: the start line is
+   drawn in front of the x == pathLength − 1 rooms) — down to x = 2.
+   The rest-stop weight (ReplaceRoomEncounters_CalculateWeight,
+   L499–514) is base 10 (L503), +90 when x ≤ 2 (L509–510), −40 in the
+   first column (L513–514), clamped to 0..255 (L593) — at zero the room
+   is never selected (L611: RogueWeightQuery_HasAnyWeights). In the
+   length-5 Classic path the leftmost board column is x = 4: 10 − 40 =
+   −30 → 0, so a Rest Stop there is an impossible draw. */
+function restStopWeight(siteColumn, pathLength) {
+  const x = pathLength - 1 - siteColumn; // board column 0 = first column = x pathLength − 1
+  let weight = 10; // L503
+  if (x <= 2) weight += 90; // L509–510 (near the boss)
+  if (x + 1 === pathLength) weight -= 40; // L513–514 (the first column)
+  return Math.min(255, Math.max(0, weight)); // L593
+}
+
 test('the example board is one Classic segment on the badge 1 ladder step', () => {
   assert.equal(badge, 1, 'the example board is badge 1 — right after the first badge');
   assert.deepEqual(
@@ -113,6 +141,27 @@ test('every board cell is a room type the placement rules allow at badge 1', () 
     /* the gap (room-none): "never badge 0" */
     if (key === 'gap') assert.notEqual(badge, 0, 'a gap is never placed at badge 0');
   }
+});
+
+test('a Rest Stop never sits in a zero-weight column (issue #129: the leftmost column at badge 1)', () => {
+  const pathLength = 5; // Classic segment: totalLength = 3 + 2 (L1191)
+  let sawRest = false;
+  for (let c = 0; c < BOARD.rooms.length; c++) {
+    BOARD.rooms[c].forEach((key, l) => {
+      if (key !== 'rest') return;
+      sawRest = true;
+      const x = pathLength - 1 - c;
+      const w = restStopWeight(c, pathLength);
+      assert.ok(
+        w > 0,
+        `rest stop at column ${c} (lane ${l}) sits in the game's column x=${x} — base 10` +
+          (x <= 2 ? ' + 90 near the boss' : ', no near-boss bonus') +
+          (x + 1 === pathLength ? ' − 40 first-column penalty' : '') +
+          ` → clamped to ${w}: the generator can never place a rest stop there (L499–514, L593, L611)`
+      );
+    });
+  }
+  assert.ok(sawRest, 'the example board keeps a rest stop on the path (the badge-1 pedagogy: a full rest stop in play)');
 });
 
 test('the board layout obeys the generator shape at badge 1', () => {
