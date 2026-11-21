@@ -35,8 +35,8 @@
         {
           "id": "classic-default-rules",
           "label": "No rule overrides",
-          "detail": "Classic is the baseline rule set: its entry in the rule table is intentionally empty, so every mode flag defaults to off and the standard adventure generator produces paths of the usual length (three columns plus the opening split and the final boss column) with the normal mix of routes, rest stops and special encounters.",
-          "source": "src/rogue_settings.c @vanilla L46 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1189-1191 (identical @origin/expansion)"
+          "detail": "Classic is the baseline rule set: its entry in the rule table is intentionally empty, so every mode flag defaults to off and the standard adventure generator produces paths of the usual length (three room columns, the empty pre-boss split, and the final boss column) with the normal mix of routes, rest stops and special encounters.",
+          "source": "src/rogue_settings.c @vanilla L46 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1190-1191 (identical @origin/expansion)"
         }
       ]
     },
@@ -46,7 +46,7 @@
       "code": "ROGUE_GAME_MODE_GAUNTLET",
       "category": "game-mode",
       "versions": ["vanilla", "ex"],
-      "description": "Prepare your team and then fight Mighty Trainers back to back without a chance to catch any Pokémon. (Disables Challenges)",
+      "description": "Prepare your team and then fight Mighty Trainers back to back without a chance to catch any Pokémon. (Disables Challenges) — the in-game wording; the one exception is the badge-0 prep board, where some routes can roll into catchable wild dens and a Catching Contest can rarely appear (see below), and from badge 1 on there is no catching loop at all.",
       "source": "src/rogue_settings.c @vanilla L47-63 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L117, L342-347",
       "rules": [
         {
@@ -76,8 +76,8 @@
         {
           "id": "gauntlet-boss-rhythm",
           "label": "Short runs between bosses",
-          "detail": "A dedicated adventure generator builds the first path (difficulty 0) as a seven-column path — five route columns plus the opening split and the final boss column — generated under late-game difficulty balance (so you can prepare), with the early routes turned into full rest stops. Every subsequent path is only two columns long — the opening split and the boss column — so the Mighty Trainer battles come back to back. A shrine is always offered, and honey trees, mysterious signs, battle sims, labs and game shows are excluded from the path.",
-          "source": "src/rogue_settings.c @vanilla L62 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L1173-1181 (totalLength: 7, then 2), L665-676 (early routes become full rest stops), L740-741 (shrine always offered), L786-791 (labs and game shows off, dark deal always allowed) (identical @origin/expansion)"
+          "detail": "A dedicated adventure generator opens the run with a prep board (badge 0) built as a seven-column path — five route columns, the empty pre-boss split, and the final boss column — rolled at difficulty 7 (the last gym stage, just below the Elite Four), so the board is survivable prep rather than endgame gauntlet; the route column closest to the boss is always converted into a Full Rest Stop, giving one guaranteed heal right before the split. Every subsequent board is only two columns long — the pre-boss split and the boss column — so the Mighty Trainer battles come back to back. A shrine is always offered, and honey trees, mysterious signs, battle sims, labs and game shows are excluded from the paths.",
+          "source": "src/rogue_settings.c @vanilla L62 (identical @origin/expansion); src/rogue_adventurepaths.c @vanilla L136-144 (badge-0 board rolled at difficulty 7), L665-676 (gauntlet: the route column closest to the boss becomes a rest stop), L1012-1016 (gauntlet rest stops are always Full), L1173-1193 (totalLength: 7 on badge 0, then 2), L739-741 (shrine always offered), L786-791 (labs and game shows off, dark deal always allowed) (identical @origin/expansion)"
         },
         {
           "id": "gauntlet-route-trainers",
