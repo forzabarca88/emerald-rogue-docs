@@ -15,10 +15,11 @@
  *   5. The 36 routes — a region × terrain count matrix above the
  *      region-grouped card grids with an All / region filter (the
  *      selection survives a version re-render); each card carries its
- *      terrain, its active version's wild types as .chip tags (the six
- *      FAIRY-swap routes re-read the Vanilla variant from their
- *      `differences`), its drop rarity, its version badge and a
- *      per-version difference note
+ *      terrain, its active version's wild type table as .chip tags — the
+ *      three types its encounters and weather can use, a pool rather than
+ *      a guaranteed roster (issue #145; the six FAIRY-swap routes re-read
+ *      the Vanilla variant from their `differences`) — its drop rarity,
+ *      its version badge and a per-version difference note
  *   6. How routes appear on the adventure path (prose)
  */
 (function () {
@@ -53,9 +54,10 @@
     }
 
     /**
-     * Active version's wild types. The record's top-level `type` is the
-     * EX variant; for Vanilla the FAIRY-swap routes re-read their variant
-     * from the differences.vanilla STRING note ("Wild types: A, B, C.").
+     * Active version's wild type table (the three types its encounters and
+     * weather can use). The record's top-level `type` is the EX variant;
+     * for Vanilla the FAIRY-swap routes re-read their variant from the
+     * differences.vanilla STRING note ("Wild types: A, B, C.").
      * This string parse is route-specific — generic structured-
      * difference resolution lives in ROGUE.effective (site/js/render.js).
      */
@@ -514,7 +516,7 @@
           'The ' + kept.length + ' routes',
           'The matrix counts each region’s routes by terrain, then the routes are grouped by region. The chips on each card are its terrain, its ' +
             ROGUE.versionLabel(ROGUE.version) +
-            ' wild types and its item drop rarity bonus.',
+            ' wild type table — the three types its grass encounters and themed weather can use, a pool rather than a guaranteed roster (see the Route types section above) — and its item drop rarity bonus.',
           routeMatrix(matrixTerrains) +
             '<div class="routes-filter" role="group" aria-label="Filter routes by region">' +
             filterBtns +
@@ -558,8 +560,8 @@
       }
     }
 
-    /* Version changes re-render (wild types + difference notes follow the
-     * active version); the region filter is kept. */
+    /* Version changes re-render (wild type table + difference notes follow
+     * the active version); the region filter is kept. */
     render();
     ROGUE.onChange(render);
   });
