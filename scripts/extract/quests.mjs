@@ -555,6 +555,29 @@ function humanList(values) {
   return `${list.slice(0, -1).join(', ')} and ${list.at(-1)}`;
 }
 
+/** Plain-language "A or B" / "A, B or C" list (a single value passes through). */
+function humanListOR(values) {
+  const list = [...values];
+  if (list.length <= 1) return list.join('');
+  return `${list.slice(0, -1).join(', ')} or ${list.at(-1)}`;
+}
+
+/** "a"/"an" for a rendered noun phrase ("a Kanto variant", "an Alola variant", "an Escape Rope"). */
+function articleFor(word) {
+  return /^[aeiou]/i.test(String(word)) ? 'an' : 'a';
+}
+
+/** Whole minutes as "2 hours 30 minutes" / "1 hour" / "45 minutes" (the run play-time limit). */
+function formatMins(value) {
+  const mins = Number(value);
+  if (!Number.isFinite(mins)) return String(value);
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (hours === 0) return `${rest} minutes`;
+  const hoursText = `${hours} hour${hours === 1 ? '' : 's'}`;
+  return rest === 0 ? hoursText : `${hoursText} ${rest} minutes`;
+}
+
 function stripTextTags(text) {
   return text.replaceAll(/\{[A-Z_ ]+\}/g, '').trim();
 }
@@ -579,7 +602,7 @@ function describeCondition(trigger, version) {
     case 'Always': return 'always';
     case 'DifficultyGreaterThan': return `difficulty is above ${evalDifficultyExpr(p[0])}`;
     case 'DifficultyLessThan': return `difficulty is below ${evalDifficultyExpr(p[0])}`;
-    case 'IsStandardRunActive': return 'a Standard run is active';
+    case 'IsStandardRunActive': return 'a Classic run is active';
     case 'HasCompletedQuestAND': return `all of these quests are complete: ${humanList(p.map(humanQuestRef))}`;
     case 'HasCompletedQuestOR': return `any of these quests is complete: ${humanList(p.map(humanQuestRef))}`;
     case 'PartyContainsType': return `your party contains a ${TYPE_NAMES[p[0].replace(/^TYPE_/, '')] ?? p[0]} type Pokémon`;
@@ -590,44 +613,81 @@ function describeCondition(trigger, version) {
     case 'PartyContainsOnlyStarters': return 'your party contains only Starter Pokémon';
     case 'PartyContainsOnlyUniqueTypes': return 'no two Pokémon in your party share a type';
     case 'PartyContainsInitialPartner': return 'your original Partner Pokémon is in your party';
-    case 'PartyContainsSpecies': return `your party contains any of: ${humanList(p.map(humanSpecies))}`;
-    case 'PartyContainsAllSpecies': return `your party contains all of: ${humanList(p.map(humanSpecies))}`;
+    case 'PartyContainsSpecies': return `your party contains ${humanListOR(p.map(humanSpecies))}`;
+    case 'PartyContainsAllSpecies': {
+      const names = p.map(humanSpecies);
+      return names.length === 2 ? `your party contains both ${names[0]} and ${names[1]}` : `your party contains all of ${humanList(names)}`;
+    }
     case 'PartyMaxBSTLessThan': return `the highest Base Stat Total in your party is below ${p[0]}`;
     case 'CurrentlyInMap': return `you are in ${MAP_TEXT[p[0]] ?? humanizeSegments(p[0].replace(/^MAP_/, '').split('_'))}`;
     case 'CurrentlyInRoomType': return `you are in a ${ROOM_TYPES[p[0]] ?? p[0]}`;
     case 'AreOnlyTheseTrainersActive': return `only ${humanTrainerRegion(p[0])} Trainers are enabled`;
-    case 'IsPokedexRegion': return `the Pokédex is set to a ${DEX_REGIONS[p[0].replace(/^POKEDEX_REGION_/, '')] ?? p[0]} variant`;
-    case 'IsPokedexVariant': return `the Pokédex is set to one of: ${humanList(p.map((v) => DEX_VARIANTS[v] ?? humanizeSegments(v.replace(/^POKEDEX_VARIANT_/, '').split('_'))))}`;
+    case 'IsPokedexRegion': {
+      const region = DEX_REGIONS[p[0].replace(/^POKEDEX_REGION_/, '')] ?? p[0];
+      return `the Pokédex is set to ${articleFor(region)} ${region} variant`;
+    }
+    case 'IsPokedexVariant': return `the Pokédex is set to ${humanListOR(p.map((v) => DEX_VARIANTS[v] ?? humanizeSegments(v.replace(/^POKEDEX_VARIANT_/, '').split('_'))))}`;
     case 'CanUnlockFinalQuest': return 'every other Main Quest is completed and its rewards collected';
     case 'HasBuiltAllAreas': return 'every hub area has been built';
-    case 'IsFinalQuestConditionMet': return 'the Final Quest settings are met (only Rogue Trainers enabled, Standard game mode, and the matching National Pokédex)';
+    case 'IsFinalQuestConditionMet': return 'the Final Quest settings are met (only Rogue Trainers enabled, Classic game mode, and the matching National Pokédex)';
     case 'PokedexEntryCountGreaterThan': return `you have caught more than ${p[0]} Pokémon in the Pokédex`;
     case 'PokedexShinyEntryCountGreaterThan': return `you have more than ${p[0]} Shiny Pokémon in the Pokédex`;
-    case 'InAdventureEncounterType': return `the current adventure room is one of: ${humanList(p.map((v) => ROOM_TYPES[v] ?? v))}`;
+    case 'InAdventureEncounterType': {
+      const rooms = p.map((v) => ROOM_TYPES[v] ?? v);
+      return rooms.length === 1 ? `the current adventure room is ${articleFor(rooms[0])} ${rooms[0]}` : `the current adventure room is ${humanListOR(rooms)}`;
+    }
     case 'TotalMoneySpentGreaterThan': return `you have spent more than ¥${Number(p[0]).toLocaleString('en-US')} on the current map`;
     case 'PlayerMoneyGreaterThan': return `you have more than ¥${Number(p[0]).toLocaleString('en-US')} in your pocket`;
     case 'RandomanWasUsed': return 'you used a Mr. Randoman trade here';
     case 'RandomanWasActive': return 'a Mr. Randoman trade was available during this run';
     case 'LastRandomanWasFullParty': return 'your last Mr. Randoman trade used your full party';
-    case 'LastItemWasAny': return `the item you just used is one of: ${humanList(p.map((v) => humanItem(v, version)))}`;
+    case 'LastItemWasAny': {
+      const items = p.map((v) => humanItem(v, version));
+      return items.length === 1 ? `the item you just used is ${articleFor(items[0])} ${items[0]}` : `the item you just used is ${humanListOR(items)}`;
+    }
     case 'BagContainsItemsOR': return `you have any of these items in your bag: ${humanList(p.map((v) => humanItem(v, version)))}`;
     case 'FlagGet': return `the "${FLAG_TEXT[p[0]] ?? humanizeSegments(p[0].replace(/^FLAG_/, '').split('_'))}" flag is set`;
     case 'VarGetEqual': return `the ${VAR_TEXT[p[0]] ?? humanizeSegments(p[0].replace(/^VAR_/, '').split('_'))} equals ${p[1]}`;
     case 'VarGetLessThan': return `the ${VAR_TEXT[p[0]] ?? humanizeSegments(p[0].replace(/^VAR_/, '').split('_'))} is less than ${p[1]}`;
     case 'VarGetGreaterThan': return `the ${VAR_TEXT[p[0]] ?? humanizeSegments(p[0].replace(/^VAR_/, '').split('_'))} is more than ${p[1]}`;
-    case 'RunTimerLessThanMins': return `your in-game run time is under ${p[0]} minutes`;
+    // gSaveBlock2Ptr->playTimeHours/Minutes: the RUN PLAY-TIME counter
+    // (PlayTimeCounter, reset + started in BeginRogueRun) — real elapsed time
+    // since the run started, NOT the world clock (see issue #133).
+    case 'RunTimerLessThanMins': return `your run play time is under ${formatMins(p[0])}`;
     case 'IsConfigRangeEqualToAny': {
       const range = CONFIG_RANGES[p[0]] ?? p[0];
       const values = p.slice(1).map((v) => CONFIG_VALUES[v] ?? humanizeSegments(String(v).split('_')));
-      return values.length === 1 ? `${range} is set to ${values[0]}` : `${range} is set to one of: ${humanList(values)}`;
+      return values.length === 1 ? `${range} is set to ${values[0]}` : `${range} is set to ${humanListOR(values)}`;
     }
-    case 'SpeciesMasteryComplete':
+    case 'SpeciesMasteryComplete': {
+      // The goal card (name + description) already says what mastering the
+      // line means, so the trigger just names the mastery state (issue #135).
       return p.length === 1
-        ? `you have mastered the ${humanSpecies(p[0])} species line`
-        : `you have mastered any of these species lines: ${humanList(p.map(humanSpecies))}`;
-    case 'CurrentEvilTeamIs': return `your run's Evil Team is one of: ${humanList(p.map((v) => TEAMS[v] ?? v))}`;
+        ? `you have mastered ${humanSpecies(p[0])}`
+        : `you have mastered any of ${humanList(p.map(humanSpecies))}`;
+    }
+    case 'CurrentEvilTeamIs': {
+      const teams = p.map((v) => TEAMS[v] ?? v);
+      return teams.length === 1 ? `your run's Evil Team is ${teams[0]}` : `your run's Evil Team is ${humanListOR(teams)}`;
+    }
     default:
       fail(`Unrecognised quest condition callback: ${JSON.stringify(trigger.condition)}`);
+  }
+}
+
+/**
+ * The player-facing text of one trigger outcome state. The game can attach
+ * an action to EITHER side of a condition check (issue #134): `fail: SUCCESS`
+ * means the quest completes when the condition is NOT met, and `BREAK`
+ * means the event is ignored (the quest is left exactly as it was) instead
+ * of completing or failing it.
+ */
+function outcomeText(state) {
+  switch (state) {
+    case 'SUCCESS': return 'the quest completes';
+    case 'FAIL': return 'the quest fails';
+    case 'BREAK': return 'nothing happens';
+    default: return null; // PENDING — no action on this side
   }
 }
 
@@ -635,18 +695,20 @@ function describeTrigger(trigger, version) {
   // TRIGGER_FLAGS phrases already start with "When/At/On" — use them as-is.
   const when = trigger.on.map((flag) => TRIGGER_FLAGS[flag] ?? flag).join(' or ');
   const cond = describeCondition(trigger, version);
-  const passText = trigger.pass === 'SUCCESS' ? 'the quest completes' : trigger.pass === 'FAIL' ? 'the quest fails' : null;
-  const failText = trigger.fail === 'FAIL' ? 'the quest fails' : trigger.fail === 'BREAK' ? 'further trigger checks are skipped' : null;
+  const passText = outcomeText(trigger.pass);
+  const failText = outcomeText(trigger.fail);
 
-  if (cond === 'always') {
-    if (passText && !failText) return `${when}: ${passText}.`;
-    if (!passText && failText) return `${when}: ${failText}.`;
-    if (passText && failText) return `${when}: ${passText} (${failText}).`;
-    return `${when}: ${cond} (no action).`;
+  if (passText && failText) {
+    return cond === 'always'
+      ? `${when}: ${passText}, otherwise ${failText}.`
+      : `${when}: if ${cond} then ${passText}, otherwise ${failText}.`;
   }
-  if (passText && failText) return `${when}: if ${cond} then ${passText}, otherwise ${failText}.`;
-  if (passText && !failText) return `${when}: if ${cond} then ${passText}.`;
-  if (!passText && failText) return `${when}: unless ${cond}, ${failText}.`;
+  const text = passText ?? failText;
+  if (text) {
+    if (cond === 'always') return `${when}: ${text}.`;
+    // pass-side: "if C then …"; fail-side (incl. fail:SUCCESS): "unless C, …"
+    return passText ? `${when}: if ${cond} then ${text}.` : `${when}: unless ${cond}, ${text}.`;
+  }
   return `${when}: ${cond} (no action).`;
 }
 
@@ -654,6 +716,14 @@ function describeTriggers(entry, version) {
   if (entry.triggers.length === 0) return 'No triggers (unlocks but never completes on its own).';
   return entry.triggers.map((trigger) => describeTrigger(trigger, version)).join(' ');
 }
+
+// Flag requirements the game's own quest text names as a player action
+// (e.g. the "Random Starter" of the new-game starter choice —
+// VAR_STARTER_SWAP_SPECIES, set at run start in BeginRogueRun_ModifyParty),
+// rendered as that action instead of a raw flag read (issue #135).
+const FLAG_REQUIREMENT_ACTIONS = {
+  FLAG_ROGUE_HAS_RANDOM_STARTER: 'you received a random starter',
+};
 
 function describeRequirement(requirement, version) {
   if (requirement.item !== undefined) {
@@ -663,6 +733,9 @@ function describeRequirement(requirement, version) {
   }
   if (requirement.flag !== undefined) {
     const state = requirement.state === false || requirement.state === 'FALSE' ? 'unset' : 'set';
+    if (state === 'set' && FLAG_REQUIREMENT_ACTIONS[requirement.flag] !== undefined) {
+      return FLAG_REQUIREMENT_ACTIONS[requirement.flag];
+    }
     return `the "${FLAG_TEXT[requirement.flag] ?? humanizeSegments(requirement.flag.replace(/^FLAG_/, '').split('_'))}" flag is ${state}`;
   }
   if (requirement.config_toggle !== undefined) {
@@ -829,26 +902,31 @@ const META = {
   description: 'Every quest in Pokémon Emerald Rogue — main quests, challenges and mon masteries — with plain-language triggers, rewards and Vanilla/EX availability.',
 };
 
+// Player-facing intro (issue #135): lead with what players can do — the
+// filter, how objectives unlock, how requirements/checklists, repeatable
+// challenges, reward tiers and masteries work. Implementation detail
+// (JSON includes, the C exporter, "#if" gates, template params) stays in
+// the per-card source citations, not the page opening.
 const PROSE = [
   {
     id: 'system',
-    heading: 'A data-driven quest system',
-    text: 'Every quest is defined in JSON, not code: src/data/rogue/quests.json pulls in 13 of the 14 files in src/data/rogue/quests/ via "includes" (template.json is included by nothing), and each file\'s top-level "defaults" object supplies shared fields (display group, flags, triggers) that individual quests override per-key. At build time the CustomJson tool (quests_c exporter in tools/Pokabbie/Build/CustomJson/QuestExporter.cpp) compiles all of it into one C table consumed by src/rogue_quest.c. The quest files are byte-identical between the two branches — the Vanilla/EX split is done with "#if defined(ROGUE_EXPANSION)" gates on individual quests and rewards, so 94 quests (plus several extra rewards on shared quests) exist only in EX. Names, descriptions and trigger parameters support %TEMPLATE% placeholders (e.g. every mon mastery is one template entry), and the quest log text keeps the game\'s {PKMN}/{POKEBLOCK} placeholders for "Pokémon"/"Pokéblock".',
+    heading: 'How to use this page',
+    text: 'Every quest the game can hand you — a main quest, a challenge or a mastery quest — is listed below, in the nine display groups the in-game Quest Log uses. The search box in the quest log filters all groups at once by name, description, trigger, requirement or reward (it matches what the cards display, so searching "Pokémon" finds every card that shows it), the strip above it jumps to a group, and the site-wide search (press / on any page) reaches the same cards. Objectives reach you two ways: quests flagged "Unlocked from the start" are in the log from the new game, and the rest arrive as another quest\'s "Unlocks quest: …" reward — clearing "Post Game?" at the Challenge Frontier opens up most of the postgame content. The challenge and mastery quests themselves stay out of the log until you unlock their feature in the Challenge Frontier (talk to the NPCs there), and each card\'s source line cites the quest\'s game file and build.',
   },
   {
     id: 'display-groups',
     heading: 'The nine display groups',
-    text: 'The Quest Log groups quests into nine display groups, in this order: Final Quests, Starter Quests, Default Quests, Starter Challenges, Default Challenges, Evil Team Challenges, Region Challenges, Type Challenges and Mon Masteries. Each quest carries a display_group (usually inherited from its file\'s defaults; a few quests, like the "Final Run" in EX, sit in a different group per version). Only Type Challenges is sorted alphabetically in the in-game UI. Starter Challenges is defined in the source but currently holds no quests.',
+    text: 'The Quest Log groups quests into nine display groups, in this order: Final Quests, Starter Quests, Default Quests, Starter Challenges, Default Challenges, Evil Team Challenges, Region Challenges, Type Challenges and Mon Masteries. A quest sits in whatever group the game assigns it — a few, like the "Final Run" in EX, sit in a different group per version — and only Type Challenges is sorted alphabetically in the in-game UI. Starter Challenges is defined in the source but currently holds no quests. The strip above the log jumps to any group, and each group heading counts the quests currently visible in it.',
   },
   {
     id: 'quest-classes',
     heading: 'Main quests, challenges and mon masteries',
-    text: 'There are three quest classes. Main quests (IS_MAIN_QUEST) are one-shot story objectives — once completed they cannot be repeated. Challenges (IS_CHALLENGE) are repeatable: completing one at a higher difficulty unlocks that tier\'s additional rewards, and challenges stay hidden ("suppressed") until the challenges feature itself is unlocked. Mon masteries (IS_MON_MASTERY) track a species line automatically and keep progressing in the background even while suppressed. Each quest is ACTIVE_IN_RUN, ACTIVE_IN_HUB or both (ACTIVE_ALWAYS). A quest that is not handed over by another quest\'s reward is UNLOCKED_BY_DEFAULT (unlocked at new game); the rest chain off a "quest unlock" reward — e.g. "Post Game?" unlocks most of the challenge content.',
+    text: 'There are three quest classes. Main quests are one-shot story objectives — once completed they cannot be repeated. Challenges are repeatable: the game remembers the difficulty you last completed them at, and a reward marked for a harder tier is only granted once you have beaten the challenge at that difficulty — so a challenge is worth replaying at a higher difficulty (chosen in the Config Lab) to collect the remaining rewards. Mon masteries track a species line: when you enter the Hall of Fame, every line in your party is marked mastered, each line\'s mastery quest then completes, and in EX the mastery NPC at the Challenge Frontier starts selling you that line\'s special item. Each quest is active in runs, in the hub, or both; the quests flagged "Unlocked from the start" are in the log from the new game, the rest arrive as another quest\'s reward.',
   },
   {
     id: 'triggers-rewards',
     heading: 'How triggers, requirements and rewards work',
-    text: 'A quest completes or fails when a trigger event fires — run start/end, earning a badge, entering the Hall of Fame, catching a Pokémon, using a field item, a map event, a battle event — and the trigger\'s condition passes. Conditions check the current difficulty, party composition, config settings, Pokédex progress, money and more; each record\'s "trigger" field summarises them in plain language. Active quests can also carry requirements: the quest silently fails if one stops being met (e.g. a required item runs out or a setting changes). Rewards are difficulty-tiered: a reward marked HARD is only granted once the quest has been completed at Hard difficulty or above, which is why challenges are worth repeating. {PKMN} and {POKEBLOCK} in names/descriptions are the game\'s text placeholders for "Pokémon" and "Pokéblock".',
+    text: 'A quest completes or fails when a trigger event fires — run start/end, earning a badge, entering the Hall of Fame, catching a Pokémon, using a field item, a battle or a map event — and the game can attach a result to either side of the check: most quests complete when their condition holds, but some complete when it does not ("Not Today!" finishes when the item used is an Escape Rope and the rival-battle-disabled flag is NOT set). Each card\'s "Trigger" line summarises the events and conditions in plain language. Active quests can also carry requirements: the quest silently fails if one stops being met (a required item runs out or a setting changes), so the "Requirements" line is your checklist for keeping a quest alive. Rewards are difficulty-tiered: a reward marked Hard is only granted once the quest has been completed at Hard difficulty or above, which is why challenges are worth repeating.',
   },
 ];
 
