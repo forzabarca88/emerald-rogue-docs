@@ -8,12 +8,12 @@
     {
       "id": "what-the-hub-is",
       "heading": "What the hub is",
-      "text": "The hub (named “Pokémon Hub” on your save) is the persistent town you live in between runs — it never resets. It is laid out as a grid of connected areas that you grow yourself: when you start, four areas are already built in a fixed chain (Town Square — Labs — Town Exit — Safari Area), with only their grid positions randomized, and everything else is constructed by the player. A run always starts at the Town Exit; when the run ends, your remaining party and Day Care Pokémon are added to the Safari Zone, and the run's rewards (money, Build Parts, items and decorations) come home with you to fund the next round of construction."
+      "text": "The hub (named “Pokémon Hub” on your save) is the persistent town you live in between runs — it never resets. It is laid out as a grid of connected areas that you grow yourself: when you start, four areas are already built in a fixed chain (Town Square — Labs — Town Exit — Safari Area), with only their grid positions randomized, and everything else is constructed by the player. A run always starts at the Town Exit; when the run ends, the Pokémon you acquired during the run are added to the Safari Zone's pool — the Safari Zone page owns the full entry rules — your pre-run party and Day Care are returned as they were, and the run's rewards (money, Build Parts, items and decorations) come home with you to fund the next round of construction."
     },
     {
       "id": "building-areas-and-upgrades",
       "heading": "Building areas and upgrades",
-      "text": "Every area contains a workbench that opens the hub build shop — the Areas and Upgrades menus — both paid for with Build Parts, an item you earn from quest rewards. New areas must be built on a free connection of an area you already own, and the Challenge Area additionally requires you to have met the game's developer in the hub. Upgrades live in one target area and can require that area plus up to two prerequisite upgrades — the cards list each requirement, and a few reserved placeholders require themselves, so they can never be built."
+      "text": "Building starts with the Builder in the Town Square: once the hub intro is done, talking to him unlocks the workbenches and he hands you a Town Map (to view the hub's layout) and your first Building Supplies. Every area contains a workbench that opens the hub build shop — the Areas and Upgrades menus — both paid for with Build Parts, an item you earn from quest rewards. New areas must be built on a free connection of an area you already own, and the Challenge Area additionally requires you to have met the game's developer in the hub. Upgrades live in one target area and can require that area plus up to two prerequisite upgrades — the cards list each requirement, and a few reserved placeholders require themselves, so they can never be built."
     },
     {
       "id": "wander-mons",
@@ -35,7 +35,7 @@
     {
       "id": "hub-in-the-loop",
       "heading": "The hub in the run loop",
-      "text": "Everything you earn in a run feeds back into the hub: Build Parts unlock the areas and upgrades above, berries keep growing in the Berry Fields while you are away, your leftover Pokémon keep the Safari Zone stocked for catch practice, and upgrades progressively open the meta-game's depth — Unique Lab tracking of your special catches, Day Care expansion, market blending, the Challenge Area's postgame quests, and the Legends Cave for re-battling your legendaries. The hub is where “one more run” gets funded and justified."
+      "text": "Everything you earn in a run feeds back into the hub: Build Parts unlock the areas and upgrades above, berries keep growing in the Berry Fields while you are away, the Pokémon you picked up during the run join the Safari Zone's pool for catch practice (your pre-run team comes home with you), and upgrades progressively open the meta-game's depth — the Unique Lab rolling special candidates for future encounters, Day Care expansion, market blending, the Challenge Area's postgame quests, and the Legends Cave for re-battling your legendaries. The hub is where “one more run” gets funded and justified."
     }
   ],
   "records": [
@@ -47,7 +47,7 @@
       "initiallyPresent": true,
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
-      "description": "The hub's research district, present from the start: Professor Elm's Lab — the Config Lab where you adjust run settings — plus a dilapidated “Unique Lab” that tracks your special Unique Pokémon and the sets they can run. Its in-game sign text is still a development placeholder in both versions.",
+      "description": "The hub's research district, present from the start: Professor Elm's Lab — the Config Lab where you adjust run settings — plus a dilapidated “Unique Lab” that rolls new “Unique” Pokémon candidates for future wild encounters (it never catalogues the Pokémon you have caught). Its in-game sign text is still a development placeholder in both versions.",
       "source": "src/data/rogue_hub.h @vanilla L73-90 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L376-380 (identical @origin/expansion); src/rogue_hub.c @vanilla L319-347 / @origin/expansion L319-347 (initial layout)"
     },
     {
@@ -59,7 +59,7 @@
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
       "description": "Present from the start — the gateway where every adventure begins. Its workbench hosts the entrance upgrades (randomised starter bag, and saving/replaying adventures), and it is the warp target when your run ends or is abandoned.",
-      "source": "src/data/rogue_hub.h @vanilla L91-107 (identical @origin/expansion); src/rogue_controller.c @vanilla L381-389 / @origin/expansion L381-389 (run end → hub Town Exit)"
+      "source": "src/data/rogue_hub.h @vanilla L91-107 (identical @origin/expansion); src/rogue_controller.c @vanilla L5669-5672 / @origin/expansion L5660-5663 (Rogue_OnWarpIntoMap: warping into the Adventure Entrance with a run active ends the run → hub)"
     },
     {
       "id": "area-home-base",
@@ -91,7 +91,7 @@
       "initiallyPresent": true,
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
-      "description": "Present from the start — the home of the hub's Safari Zone, where Pokémon you release or lose in runs come back as catchable encounters. Contains the “View / Dismiss Pokémon” sign and, once unlocked by the “True Legend” quest, the Legends Cave entrance.",
+      "description": "Present from the start — the home of the hub's Safari Zone, where the Pokémon removed from your party during a run come back as catchable encounters; the Safari Zone page owns the full entry rules. Contains the “View / Dismiss Pokémon” sign and, once unlocked by the “True Legend” quest, the Legends Cave entrance.",
       "source": "src/data/rogue_hub.h @vanilla L146-162 (identical @origin/expansion); data/maps/Rogue_Area_SafariZone/scripts.pory @vanilla (identical @origin/expansion); src/rogue_hub.c @vanilla L1316-1320 / @origin/expansion L1316-1320"
     },
     {
@@ -124,8 +124,8 @@
       "initiallyPresent": true,
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
-      "description": "Present from the start — the hub's central plaza. It hosts the Trainer School building (tips and tricks for adventures), the Move Tutor, and a workbench. Its in-game sign text is still a development placeholder in both versions.",
-      "source": "src/data/rogue_hub.h @vanilla L201-222 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L376-380 (identical @origin/expansion)"
+      "description": "Present from the start — the hub's central plaza and where building begins: its Builder unlocks the hidden workbenches and hands out the Town Map and your first Building Supplies, and the plaza hosts a workbench for ordering builds. The Trainer School (free) and Move Tutor (5 Build Parts) are separate upgrades you build in the plaza — they do not come with the starting layout. Its in-game sign text is still a development placeholder in both versions.",
+      "source": "src/data/rogue_hub.h @vanilla L201-222 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L376-380 (identical @origin/expansion); data/maps/Rogue_Area_TownSquare/scripts.pory @vanilla L145-215 (Rogue_Area_TownSquare_TalkBuilder: workbench tutorial + FLAG_ROGUE_HIDE_WORKBENCHES clear L159-161, Town Map L163-169, Building Supplies L171-172) (identical @origin/expansion); src/rogue_controller.c @vanilla L3300 / @origin/expansion L3287 (new game sets FLAG_ROGUE_HIDE_WORKBENCHES)"
     },
     {
       "id": "area-challenge",
@@ -135,8 +135,8 @@
       "initiallyPresent": false,
       "buildCost": 0,
       "versions": ["vanilla", "ex"],
-      "description": "“Access various new quests and items…” A free-to-build postgame area that only becomes available after meeting the game's developer in the hub; it is the hub's home for Challenge-based quests (such as the region-style battles and, in EX, the Z-A Royale).",
-      "source": "src/data/rogue_hub.h @vanilla L223-241 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L381-385 (identical @origin/expansion); src/rogue_hub.c @vanilla L493-503 / @origin/expansion L493-503 (postgame meet requirement)"
+      "description": "“Access various new quests and items…” A free-to-build postgame area that only becomes available after meeting the game's developer in the hub — he appears in the Adventure Entrance once you are Champion — and its build gate is the only one: no cost, no prerequisites, just the conversation. It is the hub's home for Challenge-based quests (such as the region-style battles and, in EX, the Z-A Royale).",
+      "source": "src/data/rogue_hub.h @vanilla L223-241 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L381-385 (identical @origin/expansion); src/rogue_hub.c @vanilla L493-503 / @origin/expansion L493-503 (build gate: FLAG_ROGUE_MET_POKABBIE); data/maps/Rogue_Area_AdventureEntrance/scripts.pory @vanilla L68, L145-148, L677-679 (Pokabbie appears once FLAG_IS_CHAMPION is set; meeting him sets FLAG_ROGUE_MET_POKABBIE) (identical @origin/expansion)"
     },
     {
       "id": "area-day-care",
@@ -181,6 +181,7 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
+      "availability": "unavailable",
       "description": "Reserved — not yet functional in either version (it requires itself, so it can never be built). Planned: “a 2nd floor with a bed allowing you to rest until a specific time.”",
       "source": "src/data/rogue_hub.h @vanilla L297-303 (identical @origin/expansion, marked “reserved”); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L421-425 (identical @origin/expansion)"
     },
@@ -205,7 +206,8 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
-      "description": "Hidden upgrade — it cannot be bought and is only granted as a quest reward (the regional-style quest chain). It is the foundation of the Unique Lab: the dilapidated lab that tracks the special “Unique” Pokémon you catch.",
+      "availability": "quest",
+      "description": "Hidden upgrade — it cannot be bought and is only granted as a quest reward (the regional-style quest chain). It is the foundation of the Unique Lab: the dilapidated lab where new “Unique” Pokémon candidates are rolled for future wild encounters — catching one consumes the slot it came from, it does not catalogue what you have caught.",
       "source": "src/data/rogue_hub.h @vanilla L316-322 (isHidden, identical @origin/expansion); src/data/rogue/quests/region_style.json @vanilla L78 (identical @origin/expansion, quest reward)"
     },
     {
@@ -217,7 +219,8 @@
       "cost": 9,
       "requirements": ["Exotic Unique Pokémon"],
       "versions": ["vanilla", "ex"],
-      "description": "“Unique Pokémon can have alternative typing.” How you obtain it differs by version: Vanilla sells it; EX hides it and grants it as a quest reward from the Z-A Royale challenge instead.",
+      "availability": { "ex": "quest" },
+      "description": "“Unique Pokémon can have alternative typing” — with it, a rolled unique can take a swapped type instead of the bonus-move format (the Unique Pokémon page covers the formats). How you obtain it differs by version: Vanilla sells it; EX hides it and grants it as a quest reward from the Z-A Royale challenge instead.",
       "differences": {
         "vanilla": "Purchasable for 9 Build Parts in the Labs, requiring “Exotic Unique Pokémon”.",
         "ex": "Hidden (not purchasable); granted as a quest reward by the “Z-A Royale” challenge (2.1.0_region_style.json)."
@@ -233,7 +236,7 @@
       "cost": 5,
       "requirements": ["Unique Lab"],
       "versions": ["vanilla", "ex"],
-      "description": "“Increase number of Unique Pokémon that can be tracked.”",
+      "description": "“Increase number of Unique Pokémon that can be tracked” — unlocks the fourth of the lab's five candidate slots.",
       "source": "src/data/rogue_hub.h @vanilla L340-346 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L451-455 (identical @origin/expansion)"
     },
     {
@@ -245,7 +248,7 @@
       "cost": 7,
       "requirements": ["Unique Pokémon Slots"],
       "versions": ["vanilla", "ex"],
-      "description": "“Increase number of Unique Pokémon that can be tracked.” (Second increment.)",
+      "description": "“Increase number of Unique Pokémon that can be tracked” — unlocks the fifth and final candidate slot.",
       "source": "src/data/rogue_hub.h @vanilla L348-354 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L456-460 (identical @origin/expansion)"
     },
     {
@@ -257,7 +260,7 @@
       "cost": 3,
       "requirements": ["Unique Lab"],
       "versions": ["vanilla", "ex"],
-      "description": "“Allows Rare Unique Pokémon to be tracked. (+Abilities)” — the Unique Lab starts recording ability variants of your catches.",
+      "description": "“Allows Rare Unique Pokémon to be tracked. (+Abilities)” — without it, a Rare roll downgrades to Common; with it, the lab can roll rare candidates — one bonus move plus a special ability.",
       "source": "src/data/rogue_hub.h @vanilla L357-363 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L461-465 (identical @origin/expansion)"
     },
     {
@@ -269,7 +272,7 @@
       "cost": 5,
       "requirements": ["Rare Unique Pokémon"],
       "versions": ["vanilla", "ex"],
-      "description": "“Allows Epic Unique Pokémon to be tracked. (+Moves)” — the lab also starts recording move variants.",
+      "description": "“Allows Epic Unique Pokémon to be tracked. (+Moves)” — without it, an Epic roll downgrades to the highest rarity you have built (Rare, or Common); with it, the lab can roll epic candidates — three bonus moves plus a special ability.",
       "source": "src/data/rogue_hub.h @vanilla L365-371 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L466-470 (identical @origin/expansion)"
     },
     {
@@ -281,7 +284,7 @@
       "cost": 7,
       "requirements": ["Epic Unique Pokémon"],
       "versions": ["vanilla", "ex"],
-      "description": "“Allows Exotic Unique Pokémon to be tracked. (+Designed Sets)” — the lab records full designed sets for your catches.",
+      "description": "“Allows Exotic Unique Pokémon to be tracked. (+Designed Sets)” — without it, an Exotic roll downgrades to the highest rarity you have built; with it, the lab can roll the bespoke Exotic mons. Also the prerequisite for the Unique Typings and slot upgrades.",
       "source": "src/data/rogue_hub.h @vanilla L373-379 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L471-475 (identical @origin/expansion)"
     },
     {
@@ -293,7 +296,8 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
-      "description": "Reserved placeholder for tracking legendary Unique Pokémon — not yet functional in either version (it requires itself, so it can never be built).",
+      "availability": "unavailable",
+      "description": "Reserved placeholder — not yet functional in either version (it requires itself, so it can never be built); it would unlock legendary Unique Pokémon.",
       "source": "src/data/rogue_hub.h @vanilla L381-388 (identical @origin/expansion, marked “placeholder”); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L476-480 (identical @origin/expansion)"
     },
     {
@@ -341,6 +345,7 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
+      "availability": "unavailable",
       "description": "Reserved — not yet functional in either version (it requires itself, so it can never be built).",
       "source": "src/data/rogue_hub.h @vanilla L419-425 (identical @origin/expansion, marked “reserved”)"
     },
@@ -425,6 +430,7 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
+      "availability": "quest",
       "description": "Hidden upgrade — it cannot be bought and is only granted as a quest reward: complete “True Legend” (catch a legendary during an adventure). It opens the Legends Cave entrance on the Safari Area, where you can re-battle legendaries you have caught by offering them Pokéblocks they like.",
       "source": "src/data/rogue_hub.h @vanilla L480-486 (isHidden, identical @origin/expansion); src/data/rogue/quests/default_quests.json @vanilla L647-666 (identical @origin/expansion, “True Legend” quest reward); src/rogue_hub.c @vanilla L1316-1320 / @origin/expansion L1316-1320"
     },
@@ -593,6 +599,7 @@
       "cost": 0,
       "requirements": [],
       "versions": ["vanilla", "ex"],
+      "availability": "unavailable",
       "description": "Reserved placeholder (hidden in both versions, requires itself, so it can never be built) — intended to unlock breeding involving legendaries.",
       "source": "src/data/rogue_hub.h @vanilla L601-608 (identical @origin/expansion, marked “reserved”)"
     },
@@ -730,6 +737,7 @@
       "requirements": ["Treat Shop"],
       "versions": ["vanilla", "ex"],
       "description": "Extends the Treat Shop — functional in EX, but unobtainable in Vanilla.",
+      "availability": { "vanilla": "unavailable" },
       "differences": {
         "vanilla": "Unobtainable: it requires itself, so it can never be built (the Vanilla Treat Shop already sells Pokéblocks directly).",
         "ex": "Costs 5 Build Parts and requires “Treat Shop”; “Treat shop will now also sell Pokéblocks.”"

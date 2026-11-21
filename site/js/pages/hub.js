@@ -69,6 +69,23 @@
       return html + '</article>';
     }
 
+    /**
+     * A shop entry's availability for the ACTIVE version (issue #156):
+     * the record's `availability` field — a plain string applies to both
+     * versions, a per-version object resolves against the active one.
+     * 'quest' = hidden, granted only as a quest reward; 'unavailable' =
+     * reserved placeholder (requires itself, can never be built). Absent
+     * = purchasable at the workbench. The card wears a matching chip so
+     * the 48-card grid never implies all 48 are sold.
+     */
+    function availabilityOf(record) {
+      var a = record.availability;
+      if (!a) return '';
+      if (typeof a === 'string') return a;
+      if (typeof a === 'object') return a[ROGUE.version] || '';
+      return '';
+    }
+
     function upgradeCard(record) {
       var diff = record.differences && typeof record.differences === 'object' ? record.differences : null;
       var meta = [];
@@ -78,6 +95,9 @@
       } else if (typeof record.cost === 'number' && record.cost > 0) {
         meta.push(ROGUE.chip(record.cost + ' Build Parts'));
       }
+      var avail = availabilityOf(record);
+      if (avail === 'quest') meta.push(ROGUE.chip('Quest-only \u2014 not sold'));
+      else if (avail === 'unavailable') meta.push(ROGUE.chip('Unavailable \u2014 reserved'));
       if (record.code) meta.push(ROGUE.chip(record.code));
 
       var html =
@@ -145,10 +165,16 @@
           : r.buildCost
             ? r.buildCost + ' Build Parts'
             : 'free';
+        /* the postgame gate sits right under 'free' on the block
+         * (issue #156) — same mono style as the cost line */
+        var gate = gatedNames[r.name]
+          ? '<span class="hub-map__cost hub-map__gate">after meeting the game\u2019s developer</span>'
+          : '';
         return (
           '<div class="hub-map__block' + (extra ? ' ' + extra : '') + '">' +
           '<span class="hub-map__name">' + ROGUE.esc(r.name) + '</span>' +
           '<span class="hub-map__cost">' + ROGUE.esc(tag) + '</span>' +
+          gate +
           '</div>'
         );
       }
@@ -163,6 +189,15 @@
           '</div>'
         );
       }
+
+      /* the gate is data-driven: only a free area whose own record
+       * states the developer-meeting requirement earns it (issue #156) —
+       * matched on the data's phrasing (the developer name itself is
+       * hygiene-banned from user-facing copy), shown next to 'free' on
+       * the block and repeated in the caption */
+      var gated = free.filter(function (a) { return /the game's developer/.test(a.description || ''); });
+      var gatedNames = {};
+      gated.forEach(function (a) { gatedNames[a.name] = true; });
 
       var html = '<div class="hub-map"><div class="hub-map__tiers" aria-hidden="true">';
       html +=
@@ -181,13 +216,10 @@
       if (paid.length) html += tier('Build Parts', paid.map(function (r) { return block(r); }).join(''));
       html += '</div>';
 
-      /* the gate note is data-driven: only a free area whose own record
-       * states the Pokabbie requirement earns it */
-      var gated = free.filter(function (a) { return /Pokabbie/.test(a.description || ''); });
       var gateNote = gated.length
         ? '; ' +
           joinNames(gated.map(function (a) { return ROGUE.esc(a.name); })) +
-          ' is free, but only after you have met Pokabbie'
+          ' is free, but only after you have met the game\u2019s developer in the hub (postgame)'
         : '';
       html +=
         '<p class="hub-map__caption">All ' +
@@ -366,14 +398,19 @@
           areaMap(areas) + '<div class="grid">' + areas.map(areaCard).join('') + '</div>'
         );
 
-      /* The workbench upgrades (searchable), with the per-area count bars. */
+      /* The workbench upgrades (searchable), with the per-area count bars.
+       * Not every card is sold (issue #156): the quest-only and reserved
+       * entries are labelled by chip, and the section lead says how many
+       * the shop actually sells for the active version. */
       var upgrades = ROGUE.filter(ROGUE.byCategory(records, 'hub-upgrade'));
+      var soldUpgrades = upgrades.filter(function (u) { return !availabilityOf(u); }).length;
       html +=
         ROGUE.section(
           'hub-upgrades',
           'Build shop',
           'Workbench upgrades (' + upgrades.length + ')',
-          'Everything the build shop\u2019s Areas and Upgrades menus offer, searchable by name, description or area.',
+          'All ' + upgrades.length + ' workbench upgrades \u2014 ' + soldUpgrades +
+          ' the build shop actually sells, the rest quest-only rewards or reserved placeholders that can never be built. Searchable by name, description or area.',
           upgradeBars(areas, upgrades) +
           '<div class="search hub-search"><input type="search" id="hub-search" placeholder="Search upgrades by name, description or area" aria-label="Search upgrades by name, description or area"></div>' +
           '<p class="hub-result" id="hub-result" role="status">' + upgrades.length + ' upgrades</p>' +
