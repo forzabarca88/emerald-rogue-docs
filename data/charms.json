@@ -2,13 +2,13 @@
   "meta": {
     "id": "charms",
     "title": "Charms & Curses",
-    "description": "The 17 Charms and 26 Curses you can hold during a run: what each one does, how effects scale with the number of items you hold, and where the items come from (Dark Deals, Minibosses, the Shrine and the Lab). The systems are identical between Vanilla and EX apart from one cap on the Grace pair and the all-caps item names in Vanilla."
+    "description": "The 17 Charms and 26 Curses you can hold during a run: what each one does, how effects scale with the number of items you hold, and where the items come from (the Dark Deal, the Shrine and the Lab). The systems are identical between Vanilla and EX apart from one cap on the Grace pair and the all-caps item names in Vanilla."
   },
   "prose": [
     {
       "id": "what-they-are",
       "heading": "Passive items with a twist",
-      "text": "Charms and Curses are passive items that sit in your bag and modify your run — you never 'equip' them. Charms point the effect at you; Curses are its mirror image, pointed at your opponents. When you hold both sides of the same effect, they net against each other — the diagram below works the Catching pair through the math."
+      "text": "Charms and Curses are passive items that sit in your bag and modify your run — you never 'equip' them. Not every Charm is a Curse's mirror image, and not every pair cancels, so read them in three groups. Netted pairs — Catching, Strength (caught IVs), Wild encounter count and the shop-price items: when you hold both sides, the smaller total is subtracted from the larger, each effect with its own arithmetic; the diagram below works the Catching pair through its 100% base. Independent pairs — the battle chances (Flinch, Crit, Shed Skin, Grace, Priority and Endure), Adaptability and the status pairs (Torment, Pressure and Unaware): the Charm side affects your side of the fight and the Curse side the opponent's; holding both simply keeps both in play, nothing cancels. Direct restrictions — the Curses with no Charm counterpart (Capacity, Embargo, the Species clause and friends): they bend the rules of your run outright."
     },
     {
       "id": "scaling",
@@ -22,10 +22,9 @@
       "list": [
         "Dark Deal (graveyard), the main source: three random Charms on offer, take one, and the salesman 'afflicts' you with a random Curse as the price.",
         "Mysterious Shrine: trades the one-time Sacred Ash for a Capacity Curse.",
-        "Miniboss encounters: normal random items only — the random pool never holds a Charm or a Curse.",
         "The Lab: one of Birch's rescued Pokémon may be holding a random Curse — a quarter early on, 40% by the mid-Gyms, 60% in the Elite Four phase, certain at Champion difficulty."
       ],
-      "trailing": "Vanilla builds show all of these item names in ALL CAPS (e.g. GRACE CHARM); EX shows them in title case."
+      "trailing": "The Miniboss room is not a source in the current build — it is reserved (the path generator never places it), so although its reward flow is wired to hand out a Charm, it cannot drop one yet. Item names are ALL CAPS in Vanilla builds (e.g. GRACE CHARM) and title case in EX."
     }
   ],
   "records": [
@@ -34,21 +33,21 @@
       "name": "Discount Charm",
       "category": "charm",
       "versions": ["vanilla", "ex"],
-      "description": "Reduces shop prices by 50% per item held (stacking, so two make everything nearly free).",
-      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE: count × 50); src/data/rogue_items.h @vanilla L777-791 (item name, ALL CAPS in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L177-179 (player-facing description) (identical @origin/expansion)"
+      "description": "Reduces shop prices by 50% per item held, netted against any Discount Curses on a 100% base — with two charms and no offsetting curse, every paid item drops to the $10 floor (items that are free stay free).",
+      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE: count × 50); src/shop.c @vanilla L907-935 (Mart_GetItemPrice: price × (100 + curses − charms) / 100 on a 100% base, clamped to $10–$99,999; items priced at 0 stay free) (identical @origin/expansion); src/data/rogue_items.h @vanilla L777-791 (item name, ALL CAPS in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L177-179 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-flinch",
       "name": "Flinch Charm",
       "category": "charm",
       "versions": ["vanilla", "ex"],
-      "description": "Your Pokémon's moves have up to a 20% chance per item to make the opponent flinch, capped at 90%.",
+      "description": "Your Pokémon's moves have up to a 20% chance per item to make the opponent flinch, capped at 90%. Applied independently of any Flinch Curse — that one raises the opponent's chance to flinch you, and the two never net.",
       "stack": {
         "per": 20,
         "cap": 90,
         "unit": "%"
       },
-      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE: min(count × 20, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L186-188 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE: min(count × 20, 90)); src/battle_util.c @vanilla L3877-3880 (per-side application: your attacks read the Charm value, the opponent's attacks read the Curse value — no cancellation) / @origin/expansion L8080-8083; data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L186-188 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "charm-crit",
@@ -166,7 +165,7 @@
       "name": "Unaware Charm",
       "category": "charm",
       "versions": ["vanilla", "ex"],
-      "description": "Opponent Pokémon's stat increases are ignored by your side — their Swords Dance and Nasty Plot simply don't land. A status effect — one is all you need.",
+      "description": "Your side ignores opponent Pokémon's stat increases: a Swords Dance or Nasty Plot may raise the stage, but the stat behaves as if it never rose — the move still lands, only the boost is nullified. A status effect — one is all you need.",
       "source": "src/pokemon.c @vanilla L3271-3287 (ModifyStatStage: positive stat stages clamped to zero on the charmed side); src/battle_util.c @origin/expansion L9663-9678 (EX equivalent: ApplyUnawareCurse predicate, clamp applied at battle_util.c L9725, L9934 and battle_script_commands.c L1707, L1712); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L285-287 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -206,25 +205,25 @@
       "name": "Discount Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "Shop prices are increased by 40% per item held — the exact opposite of the Discount Charm.",
+      "description": "Raises shop prices by 40% per item held, netted against any Discount Charms on a 100% base — prices top out at $99,999, while the discount side can bottom them out at $10.",
       "differences": {
         "vanilla": "Item name reads 'DISCOUND CURSE' (a typo in the Vanilla build).",
         "ex": "Item name reads 'Discount Curse'."
       },
-      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE curse side: count × 40); src/data/rogue_items.h @vanilla L1131-1145 (item name, 'DISCOUND CURSE' in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L181-183 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L187-188 / @origin/expansion L187-188 (CalcValueInternal EFFECT_SHOP_PRICE curse side: count × 40); src/shop.c @vanilla L907-935 (Mart_GetItemPrice: price × (100 + curses − charms) / 100 on a 100% base, clamped to $10–$99,999) (identical @origin/expansion); src/data/rogue_items.h @vanilla L1131-1145 (item name, 'DISCOUND CURSE' in Vanilla builds) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L181-183 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-flinch",
       "name": "Flinch Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "Opponent moves have a 10% chance per item to flinch your Pokémon, capped at 90%.",
+      "description": "Opponent moves have a 10% chance per item to flinch your Pokémon, capped at 90%. Applied independently of any Flinch Charm — the two never net (see the Flinch Charm).",
       "stack": {
         "per": 10,
         "cap": 90,
         "unit": "%"
       },
-      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE curse side: min(count × 10, 90)); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L190-192 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L190-191 / @origin/expansion L190-191 (CalcValueInternal EFFECT_FLINCH_CHANCE curse side: min(count × 10, 90)); src/battle_util.c @vanilla L3877-3880 (per-side application: the opponent's attacks read the Curse value) / @origin/expansion L8080-8083; data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L190-192 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-crit",
@@ -260,13 +259,13 @@
       "name": "Catching Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "Ball effectiveness is decreased by 40% per item held — catches take noticeably more tries.",
+      "description": "Ball effectiveness is decreased by 40% per item held, netted against any Catching Charms on a 100% base — catches take noticeably more tries, and a net penalty of 100% or more blocks catching entirely.",
       "stack": {
         "per": 40,
         "unit": "%",
         "uncapped": true
       },
-      "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE curse side: count × 40); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L226-228 (player-facing description) (identical @origin/expansion)"
+      "source": "src/rogue_charms.c @vanilla L199-200 / @origin/expansion L199-200 (CalcValueInternal EFFECT_CATCH_RATE curse side: count × 40); src/rogue_controller.c @vanilla L1142-1172 (netted on a 100% base: the smaller total is subtracted from the larger, and a net curse penalty of 100% or more zeroes the ball multiplier) / @origin/expansion L1142-1172; data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L226-228 (player-facing description) (identical @origin/expansion)"
     },
     {
       "id": "curse-grace",
@@ -342,7 +341,7 @@
       "name": "Unaware Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "Opponent Pokémon ignore your stat increases — your Swords Dance and Nasty Plot don't land.",
+      "description": "Opponent Pokémon ignore your stat increases: your Swords Dance and Nasty Plot may raise the stage, but the stat behaves as if it never rose — the move still lands, only the boost is nullified. A status effect — one is all you need.",
       "source": "src/pokemon.c @vanilla L3271-3287 (ModifyStatStage: positive stat stages clamped to zero for the opponent); src/battle_util.c @origin/expansion L9663-9678 (EX equivalent: ApplyUnawareCurse predicate, clamp applied at battle_util.c L9725, L9934 and battle_script_commands.c L1707, L1712); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L289-291 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -358,7 +357,7 @@
       "name": "Capacity Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "Reduces the maximum number of Pokémon in your party by one. This is the price the Mysterious Shrine charges for the Sacred Ash — you can't take the Ash without carrying the curse.",
+      "description": "A direct restriction rather than a battle modifier — it reduces the maximum number of Pokémon in your party by one, and there is no Capacity Charm to net it. This is the price the Mysterious Shrine charges for the Sacred Ash — you can't take the Ash without carrying the curse.",
       "source": "src/rogue_charms.c @vanilla L142-143 / @origin/expansion L142-143 (EFFECT_PARTY_SIZE → Capacity Curse); data/maps/Rogue_Encounter_Shrine/scripts.pory @vanilla L43, L93 (shrine requires the Capacity Curse as the price) (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L312-314 (player-facing description) (identical @origin/expansion)"
     },
     {
@@ -382,7 +381,7 @@
       "name": "Species Curse",
       "category": "curse",
       "versions": ["vanilla", "ex"],
-      "description": "You can't catch a Pokémon if its species is already in your party — duplicate species become uncathable while you hold it.",
+      "description": "You can't catch a Pokémon of a species already in your party — the ball is blocked before it is thrown, so duplicate species are uncatchable while you hold it.",
       "source": "src/rogue_charms.c @vanilla L151-152 / @origin/expansion L151-152 (EFFECT_SPECIES_CLAUSE → Species Curse); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L327-329 (player-facing description) (identical @origin/expansion)"
     },
     {
