@@ -106,7 +106,10 @@
      * The netting example (issue #31): two bars — one of each Catching
      * item — above the `.equation` netting math. Values from the two
      * records' `stack.per` (their sources cite the CalcValueInternal
-     * EFFECT_CATCH_RATE line: count × 200 / count × 40).
+     * EFFECT_CATCH_RATE line: count × 200 / count × 40). The caption is
+     * labelled Catching-specific: only the netted pairs use this
+     * subtract-the-smaller-total arithmetic, and only Catching does it
+     * on a 100% base (issue #144).
      */
     function nettingHtml() {
       var charm = recordById(files.charms, 'charm-catching');
@@ -155,7 +158,7 @@
         '<span class="equation__result">' +
         netText +
         '</span>' +
-        '<p class="equation__note">The smaller total is subtracted from the larger on a 100% base — equal per-item values cancel item-for-item.</p>' +
+        '<p class="equation__note">Catching-specific netting: the smaller total is subtracted from the larger on a 100% base — equal per-item values cancel item-for-item.</p>' +
         '</div>' +
         '</div>'
       );
