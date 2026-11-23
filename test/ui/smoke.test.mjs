@@ -195,10 +195,10 @@ const PAGES = [
         expected: 14,
         why: 'data/settings.json difficulty-scale prose: ladder.stages spans 0–13 → 14 numbered stage cells (config.js difficultyLadder)',
       },
-      ruleAssemblySteps: {
-        sel: '#config-modes .step-strip__step',
+      ruleEligibilityItems: {
+        sel: '#rule-application .mode-rules li',
         expected: 4,
-        why: 'data/game-modes.json rule-application prose: 4 steps → 4 step-strip steps under the mode cards (config.js stepStrip)',
+        why: 'data/game-modes.json rule-application prose: `eligibility.fixed` (2 items) + `eligibility.live` (2 items) → 4 list items across the two eligibility lists (config.js ruleApplicationBlock; issue #136 replaced the step-strip diagram with this player-facing summary)',
       },
     },
   },

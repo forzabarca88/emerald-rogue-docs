@@ -7,18 +7,26 @@
  *      tier-colored, weather-onset caption) from its structured `ladder`
  *      field around the trimmed prose.
  *   2. Game modes — the three rule sets as cards with their full rule
- *      tables (data/game-modes.json), plus the cross-cutting rule
- *      assembly as a `.step-strip` numbered flow (from the prose
- *      block's `steps` field) over the trimmed prose.
- *   3. Difficulty — the 0–4 level range and the five preset records
- *      with their forced-toggle / forced-slider chips (data/settings.json).
+ *      tables (data/game-modes.json), plus the cross-cutting
+ *      quest-eligibility summary: a "fixed when the run starts" list and
+ *      a "checked while the run is active" list (from the prose block's
+ *      `eligibility` field) over the trimmed prose.
+ *   3. Difficulty — the preset selection as name-only chips (the
+ *      internal 0–4 save values stay with the slider's card in the
+ *      Ranges section) and the five preset records with their
+ *      forced-toggle / forced-slider chips; forced toggles that have no
+ *      menu entry in the active version (Affection FX under Vanilla) are
+ *      split into a "no menu control" line.
  *   4. Toggles — the on/off switches grouped by their settings submenu
  *      (Edit Difficulty / Adventure / Trainers). EX-only toggles (Affection
  *      FX, the Sinnoh–Paldea trainer regions) are filtered out of the
  *      Vanilla view via ROGUE.filter.
- *   5. Ranges — every slider with its option list and player-facing
- *      option descriptions; the Pokédex variant renders the active
- *      version's option list (7 Vanilla vs 37 EX).
+ *   5. Ranges — every slider with its option list (stored value · menu
+ *      label) and player-facing option descriptions; the Pokédex variant
+ *      renders the active version's option list (7 Vanilla vs 37 EX). The
+ *      hidden save fields (Items, Legendaries — written by presets, read
+ *      by the reward calculation, no menu entry) group under their own
+ *      subhead instead of the visible slider grid.
  *   6. Campaigns — a compact easter-egg callout listing the hidden
  *      unlock phrases, parsed from data/campaigns.json's trigger record
  *      and joined to the campaign-mode records.
@@ -129,6 +137,45 @@
       );
     }
 
+    /**
+     * The rule-application prose block: the quest-eligibility summary.
+     * Two lists — conditions fixed when the run starts (announced by the
+     * in-game 'Quests Inactive' popups) and live checks re-evaluated at
+     * each quest activation — rendered as .mode-rules lists under their
+     * own subheads, with the block's trailing note underneath. Every
+     * label/detail string comes from the block's `eligibility` field.
+     */
+    function ruleApplicationBlock(p) {
+      var html = '<div id="rule-application">';
+      html += '<h3 class="config-subhead">' + ROGUE.esc(p.heading) + '</h3>';
+      html += ROGUE.paragraphs(p.text);
+      var elig = p.eligibility && typeof p.eligibility === 'object' ? p.eligibility : null;
+      var groups = [
+        { key: 'fixed', label: 'Fixed when the run starts' },
+        { key: 'live', label: 'Checked while the run is active' }
+      ];
+      groups.forEach(function (g) {
+        var items = elig && Array.isArray(elig[g.key]) ? elig[g.key] : [];
+        if (!items.length) return;
+        html += '<p class="config-subhead rule-elig__label">' + ROGUE.esc(g.label) + '</p>';
+        html +=
+          '<ul class="mode-rules">' +
+          items
+            .map(function (it) {
+              return (
+                '<li><span class="mode-rules__label">' + ROGUE.esc(it.label) + '</span>' +
+                '<span class="mode-rules__detail">' + ROGUE.esc(it.detail) + '</span></li>'
+              );
+            })
+            .join('') +
+          '</ul>';
+      });
+      if (p.trailing) html += '<p class="set-note">' + ROGUE.esc(p.trailing) + '</p>';
+      html += '<p class="card__source">' + ROGUE.citeHtml(p.source) + '</p>';
+      html += '</div>';
+      return html;
+    }
+
     /* --- Game modes ------------------------------------------------------ */
 
     function modeCard(record) {
@@ -158,18 +205,31 @@
     /* --- Presets --------------------------------------------------------- */
 
     function presetCard(record) {
+      var version = ROGUE.version;
       var html = '<article class="card" id="' + ROGUE.esc(ROGUE.recId('settings', record.id)) + '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' + ROGUE.esc(record.name) +
         '</h3>' + ROGUE.badge(record) + '</div>';
+      html += '<p class="set-field"><span class="field-label">In-game description</span></p>';
       html += '<p class="card__desc">' + ROGUE.esc(record.description) + '</p>';
       var toggles = Array.isArray(record.forcedToggles) ? record.forcedToggles : [];
+      var inVersion = function (t) {
+        return !Array.isArray(t.versions) || t.versions.indexOf(version) !== -1;
+      };
+      var visibleToggles = toggles.filter(inVersion);
+      var foreignToggles = toggles.filter(function (t) { return !inVersion(t); });
       html += fieldBlock(
         'Forced toggles',
-        toggles.length
-          ? '<span class="chip-row">' + toggles.map(function (t) { return ROGUE.chip(t.name + ': ' + t.value); }).join('') + '</span>'
+        visibleToggles.length
+          ? '<span class="chip-row">' + visibleToggles.map(function (t) { return ROGUE.chip(t.name + ': ' + t.value); }).join('') + '</span>'
           : '<span class="set-none">none</span>'
       );
+      if (foreignToggles.length) {
+        html += fieldBlock(
+          'Also forced (no ' + ROGUE.versionLabel(version) + ' menu control)',
+          '<span class="chip-row">' + foreignToggles.map(function (t) { return ROGUE.chip(t.name + ': ' + t.value); }).join('') + '</span>'
+        );
+      }
       var ranges = Array.isArray(record.forcedRanges) ? record.forcedRanges : [];
       html += fieldBlock(
         'Forced sliders',
@@ -201,7 +261,10 @@
               '<span class="set-values__text">' + ROGUE.esc(values[k]) + '</span></div>';
           }
         });
-        if (rows) html += '<div class="set-values">' + rows + '</div>';
+        if (rows) {
+          html += '<p class="set-field"><span class="field-label">In-game on/off text (verbatim)</span></p>';
+          html += '<div class="set-values">' + rows + '</div>';
+        }
       }
       if (record.note) html += '<p class="set-note">' + ROGUE.esc(record.note) + '</p>';
       if (record.source) html += '<p class="card__source">' + ROGUE.citeHtml(record.source) + '</p>';
@@ -247,6 +310,7 @@
             );
           })
           .join('');
+        html += '<p class="set-field"><span class="field-label">In-game option descriptions (verbatim)</span></p>';
         html += '<ul class="set-descs">' + rows + '</ul>';
       }
 
@@ -353,22 +417,19 @@
           (modes.meta && modes.meta.title) || 'Game Modes',
           overview ? overview.text : (modes.meta && modes.meta.description) || '',
           '<div class="grid">' + modeCards + '</div>' +
-          (ruleApplication
-            ? '<h3 class="config-subhead">' + ROGUE.esc(ruleApplication.heading) + '</h3>' +
-              ROGUE.stepStrip(ruleApplication.steps, ruleApplication.heading) +
-              ROGUE.paragraphs(ruleApplication.text)
-            : '')
+          (ruleApplication ? ruleApplicationBlock(ruleApplication) : '')
         );
 
-      /* 2 — Difficulty: level range + preset cards (data/settings.json). */
+      /* 2 — Difficulty: the preset selection (names only) + preset cards.
+         The internal 0–4 save values stay with the slider's card in the
+         Ranges section, so the player-facing selection never blurs into
+         the stored values or the 0–13 boss stage. */
       var presetRange = findRecord(sRecords, 'range-difficulty-preset');
       var presets = ROGUE.filter(ROGUE.byCategory(sRecords, 'preset'));
-      var rangeChips = presetRange && Array.isArray(presetRange.options)
-        ? presetRange.options
-            .map(function (o, i) {
-              return ROGUE.chip(presetRange.optionValues ? presetRange.optionValues[i] + ' · ' + o : o);
-            })
-            .join('')
+      var nameChips = presetRange && Array.isArray(presetRange.options)
+        ? presetRange.options.map(function (o) {
+            return ROGUE.chip(o);
+          }).join('')
         : '';
       html +=
         ROGUE.section(
@@ -376,7 +437,10 @@
           'Difficulty',
           'Difficulty presets',
           presetRange ? presetRange.description : (settings.meta && settings.meta.description) || '',
-          (rangeChips ? fieldBlock('Level range', '<span class="chip-row">' + rangeChips + '</span>') : '') +
+          (nameChips
+            ? fieldBlock('Preset selection (as the menu shows it)', '<span class="chip-row">' + nameChips + '</span>') +
+              '<p class="set-note">The menu shows these names only; the save stores an internal index (the 0\u20134 values sit with the slider in the Ranges section). The selection is separate from the reward level \u2014 the menu\u2019s \"Reward Level:\" line \u2014 and from the run\u2019s 0\u201313 boss stage.</p>'
+            : '') +
           '<div class="grid set-grid">' + presets.map(presetCard).join('') + '</div>'
         );
 
@@ -404,15 +468,26 @@
           toggleBody
         );
 
-      /* 4 — Ranges (every slider, per-version option lists). */
+      /* 4 — Ranges (every slider, per-version option lists); the hidden
+         save fields (Items, Legendaries) group under their own subhead. */
       var ranges = ROGUE.filter(ROGUE.byCategory(sRecords, 'range'));
+      var visibleRanges = ranges.filter(function (r) { return !r.hidden; });
+      var hiddenRanges = ranges.filter(function (r) { return !!r.hidden; });
+      var rangesBody = '<div class="grid set-grid">' + visibleRanges.map(rangeCard).join('') + '</div>';
+      if (hiddenRanges.length) {
+        rangesBody += '<h3 class="config-subhead">Hidden sliders — set by the presets, no menu control</h3>';
+        rangesBody += '<div class="grid set-grid">' + hiddenRanges.map(rangeCard).join('') + '</div>';
+      }
       html +=
         ROGUE.section(
           'config-ranges',
           'Ranges',
           'Ranges & sliders',
-          ranges.length + ' sliders in ' + ROGUE.versionLabel(ROGUE.version) + ', each with its options and the player-facing description of every option.',
-          '<div class="grid set-grid">' + ranges.map(rangeCard).join('') + '</div>'
+          visibleRanges.length + ' sliders on the settings screen in ' + ROGUE.versionLabel(ROGUE.version) +
+          (hiddenRanges.length
+            ? ', plus ' + hiddenRanges.length + ' hidden fields in the save block (written by the presets, read by the reward calculation, with no menu control).'
+            : ', each with its options and the player-facing description of every option.'),
+          rangesBody
         );
 
       /* 5 — Campaigns easter-egg callout (data/campaigns.json). */

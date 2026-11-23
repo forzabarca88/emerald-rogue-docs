@@ -12,14 +12,32 @@
     },
     {
       "id": "rule-application",
-      "heading": "How a run's rules are assembled",
-      "text": "Two cross-cutting rules are layered on top of the selected mode's rule table when a run's rules are generated, in the order above. They hold for the whole run regardless of mode.",
-      "steps": [
-        "The selected mode's rule table is copied",
-        "Trainer Order: Official → challenge quests off for the run",
-        "Any charm active → main + challenge quests off",
-        "Gauntlet's rule set → challenge quests off anyway"
-      ]
+      "heading": "Which runs disable quest progress",
+      "text": "When a run starts, the game copies the selected mode's rule table, adds your chosen Trainer Order, and stores the result as the run's rules. Quest progress can then be switched off in two ways: conditions fixed when the run starts — the game announces these with its 'Quests Inactive' popups as the run begins — and live checks that are re-evaluated every time the game tries to activate a quest.",
+      "eligibility": {
+        "fixed": [
+          {
+            "label": "Trainer Order: Official",
+            "detail": "Challenge quests are off for the whole run: the run's stored rules carry the flag from the moment it starts, and the 'Challenge Inactive / Current Mode' popup appears as the run begins."
+          },
+          {
+            "label": "Replaying a remembered adventure",
+            "detail": "Both main and challenge quests are off, and the run even restores that adventure's saved settings before it starts — both 'Quests Inactive' popups appear."
+          }
+        ],
+        "live": [
+          {
+            "label": "Any charm active → challenge quests blocked",
+            "detail": "Checked at each quest activation, not at run start: charms only have values while a run is active, so the start-of-run popups never fire for charms, and equipping or removing a charm mid-run changes what can activate immediately. Main quests are not charm-gated."
+          },
+          {
+            "label": "Replaying a remembered adventure → quests stay blocked",
+            "detail": "The live check keeps both quest kinds off for the entire replay; the popups at run start are just the announcement."
+          }
+        ]
+      },
+      "trailing": "Quests that are disabled still keep their unlocked status — nothing is lost if the disabling condition goes away later (charm removed). The Quests page groups main quests and challenges separately.",
+      "source": "src/rogue_settings.c @vanilla L280-317 (rule generation: mode table copy, Official order bakes in disableChallengeQuests, charm branch), L319-329 (main-quest disable: baked flag or active replay), L332-349 (challenge-quest disable: baked flag, active replay, or any charm active) (identical @origin/expansion); src/rogue_quest.c @vanilla L205-240 (both checks gate quest activation) (identical @origin/expansion); src/rogue_controller.c @vanilla L4661-4663 (rules generated before the run becomes active), L4676-4699 (replay restores the remembered adventure's settings), L4817-4825 (the run-start 'Quests Inactive' popups) / @origin/expansion L4652-4654, L4675-4690, L4808-4816; src/rogue_popup.c @vanilla L381-383, L2099-2115 (popup title/subtitle strings) (identical @origin/expansion); src/rogue_charms.c @vanilla L245-266, L283-288 (charm values only exist while a run is active) / @origin/expansion L245-266, L283-288"
     }
   ],
   "records": [
