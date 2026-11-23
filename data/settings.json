@@ -13,7 +13,8 @@
     {
       "id": "difficulty-scale",
       "heading": "The 0–13 difficulty scale",
-      "text": "Each run climbs a fixed ladder of 14 boss stages, and trainer level caps rise with each stage. Difficulty 13 — the final champion stage — is the highest tier in the game: it is the tier that rules like Gauntlet's forced endgame trainers and endgame route items reference.",
+      "text": "Each run climbs a fixed ladder of 14 boss stages, numbered 0 to 13: every boss defeated advances the run one stage, trainer level caps rise with each stage, and key trainers apply their preferred weather from the stage the Trainers slider sets. Stage 13 — the final champion stage — is the game's highest: rules like Gauntlet's forced endgame trainers and endgame route items reference it.\n\nThis scale is run progress, not a setting — keep it separate from the Easy–Brutal presets and from the reward level derived from them. The game's own code calls this stage number 'difficulty' internally, which is why the word appears in both places.",
+      "source": "src/rogue_trainers.c @vanilla L288-351 (per-stage level caps and weather onset) (identical @origin/expansion); src/rogue_controller.c @vanilla L7096-7112 (the stage counter: +1 per boss defeated, capped at the 14th stage) / @origin/expansion L7090-7105; include/constants/rogue.h @vanilla L378-383 (14 bosses; stages 0–7 gym, 8–11 Elite Four, 12–13 Champion; final stage 13) / @origin/expansion L378-383",
       "ladder": {
         "stages": { "first": 0, "last": 13 },
         "tiers": [
@@ -26,8 +27,9 @@
     },
     {
       "id": "custom-and-rewards",
-      "heading": "Custom difficulty and reward level",
-      "text": "The four presets (Easy, Average, Hard, Brutal) each force a specific combination of difficulty toggles. The moment you change any of those toggles or the Trainers/Items/Legendaries sliders away from a preset's values, the difficulty is shown as Custom (\"Your rules, your way!\"). Your rewards are then based on the reward level: the highest preset whose forced toggles you still match exactly and whose slider values you meet at least. The Easy preset is the one true baseline — it forces nothing, so any setting combination is at least as hard as Easy."
+      "heading": "Presets, Custom, and the reward level",
+      "text": "Three things on this page all sound like 'difficulty' — they are not the same thing. The preset selection (Easy, Average, Hard, Brutal or Custom) is what the menu shows; the reward level is the tier the game calculates from your settings (the menu's 'Reward Level:' line next to the selection); and the boss stage is the 0–13 run progress on the ladder above. Selecting a named preset writes its forced toggles and slider values into your settings, and while it stays selected the reward level is that preset. Editing any difficulty toggle or the Trainers slider moves the selection to Custom — and it stays Custom: the game never re-detects a named preset, even if your settings match one exactly again, and in the menu the first arrow press from Custom starts the cycle at your current reward level. For a Custom selection the reward level is calculated: the highest preset whose forced toggles you still match exactly and whose three slider values (Trainers/Items/Legendaries — the last two are the hidden fields in the Ranges section) you meet at least. Easy is the floor, since it forces nothing. The reward level is what the game pays out with: post-run money scales with it (rooms entered, minus the first, plus victory-lap wins, at 200/250/300/350 per unit for Easy/Average/Hard/Brutal), quest reward tiers marked 'at Hard difficulty' mean a Hard reward level rather than a Trainers slider position, and the hall of fame records it too.\n\nWorking terms — Reward Level: the calculated Easy–Brutal tier, never chosen directly. Custom: the sticky marker that replaces a preset name the moment any difficulty toggle or slider is edited. Boss stage: the 0–13 run progress, one stage per boss defeated. Level Cap: the per-badge level ceiling your team stops at by default; it rises as the boss stage climbs, and Over Level lets it be exceeded. EV (Effort Value): hidden stat points gained only from trainer battles (based on the mon's nature) while EV Gain is on; the in-game tooltip notes trainers never have EVs.",
+      "source": "src/rogue_settings.c @vanilla L173-201 (the seven difficulty toggles and three difficulty ranges that make a selection Custom), L224-227, L253-254 (editing one of them switches the selection to Custom and it stays), L497-549 (the reward-level calculation: exact toggle match plus at-least slider values, Easy as the floor), L600-610 (the reward level: the selection itself while it is a named preset, the calculated level for Custom) (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L1945-1960 (first arrow press from Custom jumps to the reward level), L2343-2381 (the menu's 'Reward Level:' line) (identical @origin/expansion); src/rogue_controller.c @vanilla L4258-4288 (post-run money scales with the reward level) / @origin/expansion L4249-4278; src/rogue_quest.c @vanilla L219-231, L890-915 (quest reward tiers and the challenge-repeat gate key off the reward level) (identical @origin/expansion); src/hall_of_fame.c @vanilla L499 / @origin/expansion L499 (the hall-of-fame record stores the reward level)"
     }
   ],
   "records": [
@@ -301,10 +303,11 @@
       "category": "range",
       "menu": "Edit Difficulty (hidden slider)",
       "versions": ["vanilla", "ex"],
-      "description": "A reserved difficulty slider for item scaling. It is still set by the difficulty presets, but no game logic reads it yet — the header marks it unused and the in-game description is a placeholder (\"TODO. This needs a rework...\").",
+      "description": "A reserved difficulty slider for item scaling that the menu does not expose — its slider entries are commented out in the settings screen, so there is no player control for it. The presets still write a value for it (Easy through Brutal, matching the Trainers slider of the chosen preset), and the reward-level calculation reads it: a Custom selection must meet a preset's value here too for that preset to qualify. Nothing else in the game logic consumes it — the header marks it unused and the in-game description is a placeholder (\"TODO. This needs a rework...\").",
       "options": ["Easy", "Average", "Hard", "Brutal"],
       "optionValues": [0, 1, 2, 3],
-      "source": "include/constants/rogue.h @vanilla L577 / @origin/expansion L579 (\"// unused\"); src/data/rogue_strings.h @vanilla L111, L132-135 (placeholder description); src/rogue_settings.c @vanilla L93, L110, L129, L150 (identical @origin/expansion)"
+      "hidden": true,
+      "source": "include/constants/rogue.h @vanilla L577 / @origin/expansion L579 (\"// unused\"); src/data/rogue_strings.h @vanilla L111, L132-135 (placeholder description) / @origin/expansion L111, L132-135; src/rogue_settings.c @vanilla L93, L110, L129, L150 (the presets' values), L190-201, L253-254 (counted among the three difficulty ranges; editing it sets Custom), L497-549 (read by the reward-level calculation) (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L1130 (the slider's menu entry commented out) (identical @origin/expansion)"
     },
     {
       "id": "range-legendary",
@@ -313,10 +316,11 @@
       "category": "range",
       "menu": "Edit Difficulty (hidden slider)",
       "versions": ["vanilla", "ex"],
-      "description": "Intended to decrease the quality and quantity of Legendary Pokémon encounters. Like the Items slider it is only set by the difficulty presets and is not yet read by any game logic (marked unused in the header).",
+      "description": "Intended to decrease the quality and quantity of Legendary Pokémon encounters. Like the Items slider it is not exposed in the menu (its slider entries are commented out), so there is no player control for it: the presets still write a value, and the reward-level calculation reads it, but nothing else in the game logic consumes it (marked unused in the header).",
       "options": ["Easy", "Average", "Hard", "Brutal"],
       "optionValues": [0, 1, 2, 3],
-      "source": "include/constants/rogue.h @vanilla L578 / @origin/expansion L580 (\"// unused\"); src/data/rogue_strings.h @vanilla L112, L137-141; src/rogue_settings.c @vanilla L94, L111, L130, L151 (identical @origin/expansion)"
+      "hidden": true,
+      "source": "include/constants/rogue.h @vanilla L578 / @origin/expansion L580 (\"// unused\"); src/data/rogue_strings.h @vanilla L112, L137-141 (in-game description) / @origin/expansion L112, L137-141; src/rogue_settings.c @vanilla L94, L111, L130, L151 (the presets' values), L190-201, L253-254 (counted among the three difficulty ranges; editing it sets Custom), L497-549 (read by the reward-level calculation) (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L1131 (the slider's menu entry commented out) (identical @origin/expansion)"
     },
     {
       "id": "range-battle-format",
@@ -418,10 +422,10 @@
       "category": "range",
       "menu": "Top level",
       "versions": ["vanilla", "ex"],
-      "description": "The active difficulty preset. Editing any of the preset-controlled difficulty toggles or sliders moves the setting to Custom; the reward level shown next to it is the highest preset your configuration still qualifies for.",
+      "description": "The active difficulty preset, shown at the top of the settings screen. Selecting Easy, Average, Hard or Brutal writes that preset's forced toggles and slider values into the save; editing any of the seven difficulty toggles or any of the three difficulty sliders (Trainers, Items, Legendaries) instead switches the selection to Custom, where it stays — the game never re-detects a named preset. Next to the selection the menu shows 'Reward Level:': the selection itself while it is a named preset, or the highest preset your settings qualify for when it is Custom. From Custom, the first arrow press starts the cycle at the current reward level.",
       "options": ["Easy", "Average", "Hard", "Brutal", "Custom"],
       "optionValues": [0, 1, 2, 3, 4],
-      "source": "src/data/rogue_strings.h @vanilla L83, L93-97, L114-118 / @origin/expansion L83, L93-97, L114-118; include/constants/rogue.h @vanilla L537-545 / @origin/expansion L539-547; src/rogue_settings.c @vanilla L497-549, L600-607 (identical @origin/expansion)"
+      "source": "src/data/rogue_strings.h @vanilla L81, L83, L93-97, L114-118 (the menu label, the five option names, the 'Reward Level:' label, the Custom description) / @origin/expansion L81, L83, L93-97, L114-118; include/constants/rogue.h @vanilla L537-545 (the 0–4 save values and the game's own 'ignore custom' note) / @origin/expansion L539-547; src/rogue_settings.c @vanilla L224-227, L253-254 (editing a preset-controlled control switches the selection to Custom and it stays), L497-549, L600-610 (the reward level) (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L1110 (the top-level menu item), L1945-1960 (first arrow press from Custom jumps to the reward level), L2343-2381 (the 'Reward Level:' line) (identical @origin/expansion)"
     },
     {
       "id": "range-revision-mode",
@@ -474,7 +478,7 @@
         { "name": "Legendaries", "value": "Easy" }
       ],
       "note": "Easy forces no toggles at all — it is the baseline every configuration qualifies for, so its preset values are recommendations rather than requirements.",
-      "source": "src/rogue_settings.c @vanilla L83-96 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L139-143 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L93"
+      "source": "src/rogue_settings.c @vanilla L83-97 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L139-143 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L93 / @origin/expansion L93"
     },
     {
       "id": "preset-average",
@@ -486,7 +490,7 @@
       "description": "Recommended for those who have good Pokémon knowledge and enjoy a challenge.",
       "forcedToggles": [
         { "name": "Switch Mode", "value": "off" },
-        { "name": "Affection FX", "value": "off" },
+        { "name": "Affection FX", "value": "off", "versions": ["ex"] },
         { "name": "Release Fainted Pokémon", "value": "on" }
       ],
       "forcedRanges": [
@@ -494,7 +498,7 @@
         { "name": "Items", "value": "Average" },
         { "name": "Legendaries", "value": "Average" }
       ],
-      "source": "src/rogue_settings.c @vanilla L98-113 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L144-148 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L94"
+      "source": "src/rogue_settings.c @vanilla L98-114 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L144-148 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L94 / @origin/expansion L94"
     },
     {
       "id": "preset-hard",
@@ -508,7 +512,7 @@
         { "name": "Over Level", "value": "off" },
         { "name": "EV Gain", "value": "off" },
         { "name": "Switch Mode", "value": "off" },
-        { "name": "Affection FX", "value": "off" },
+        { "name": "Affection FX", "value": "off", "versions": ["ex"] },
         { "name": "Release Fainted Pokémon", "value": "on" }
       ],
       "forcedRanges": [
@@ -516,7 +520,7 @@
         { "name": "Items", "value": "Hard" },
         { "name": "Legendaries", "value": "Hard" }
       ],
-      "source": "src/rogue_settings.c @vanilla L115-132 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L149-153 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L95"
+      "source": "src/rogue_settings.c @vanilla L115-133 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L149-153 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L95 / @origin/expansion L95"
     },
     {
       "id": "preset-brutal",
@@ -530,7 +534,7 @@
         { "name": "Over Level", "value": "off" },
         { "name": "EV Gain", "value": "off" },
         { "name": "Switch Mode", "value": "off" },
-        { "name": "Affection FX", "value": "off" },
+        { "name": "Affection FX", "value": "off", "versions": ["ex"] },
         { "name": "Release Fainted Pokémon", "value": "on" },
         { "name": "Fresh Start", "value": "on" },
         { "name": "Diverse Trainer Pokémon", "value": "on" }
@@ -540,7 +544,7 @@
         { "name": "Items", "value": "Brutal" },
         { "name": "Legendaries", "value": "Brutal" }
       ],
-      "source": "src/rogue_settings.c @vanilla L134-154 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L154-158 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L96"
+      "source": "src/rogue_settings.c @vanilla L134-154 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L154-158 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L96 / @origin/expansion L96"
     },
     {
       "id": "preset-custom",
@@ -552,8 +556,8 @@
       "description": "Your rules, your way!",
       "forcedToggles": [],
       "forcedRanges": [],
-      "note": "Custom is not a preset you select — it appears whenever your toggles or sliders deviate from every preset's forced values. Your rewards use the highest preset you still match (toggles must match exactly, sliders must be at least that preset's value).",
-      "source": "src/rogue_settings.c @vanilla L173-229, L243-262, L497-549, L600-607 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L159-162 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L97, L114-118"
+      "note": "Custom is not a preset you select — it appears the moment you edit any difficulty toggle or slider, and it stays there even if your settings match a named preset exactly again (the game never re-detects one). Your rewards use the highest preset you still match (toggles must match exactly, sliders must be at least that preset's value).",
+      "source": "src/rogue_settings.c @vanilla L173-201, L224-227, L243-262, L497-549, L600-610 (identical @origin/expansion); src/rogue_settings_ui.c @vanilla L159-162 (identical @origin/expansion); src/data/rogue_strings.h @vanilla L97, L114-118 / @origin/expansion L97, L114-118"
     }
   ]
 }
