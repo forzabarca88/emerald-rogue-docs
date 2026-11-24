@@ -70,20 +70,26 @@
  *                       unlabeled. The on-page filter is edition-scoped
  *                       (issue #151): Vanilla "kingambit" → 0 cards /
  *                       "togepi" → 1 (Iron Kaizo); EX "togepi" → 0 cards.
- *   "the final run"   — 2 rows under BOTH versions, row 0 the shared quest
+ *   "the final run"   — 3 rows under BOTH versions (issue #153: the
+ *                       quest-availability record now names the quest, one
+ *                       more body match than the old 2), row 0 the shared quest
  *                       "The Final Run." (data/quests.json — its display
  *                       group differs per build, but its card id
  *                       #rec-quests-THE_FINAL_RUN is the same in both,
  *                       so the deep link lands on the card under either)
  *   "pokmon"          — the fuzzy tier (issue #46): one edit from
- *                       "pokemon". 339 index entries carry the whole token
+ *                       "pokemon". 338 index entries carry the whole token
  *                       "pokemon" under EX → the list caps at the 30-row
- *                       maxResults with the overflow suffix (309 more);
+ *                       maxResults with the overflow suffix (308 more);
  *                       every row is FUZZY (no exact substring) so NO row
  *                       carries a .search-palette__highlight mark, and row
  *                       0 is the first such entry in index order (the home
- *                       page, "Home"). The clean word "pokemon" (340
- *                       entries) is exact-only: capped too (310 more), and
+ *                       page, "Home"). The clean word "pokemon" (339
+ *                       entries) is exact-only: capped too (309 more), and
+ *                       (issue #153 copy: the unique-mon-pools record's
+ *                       phantom "Unique Pokémon page" reference became the
+ *                       real "Unique mons" section label — one fewer entry
+ *                       carries the token: 340→339 / 339→338), and
  *                       its tier-0 row 0 (the site hero, title "Pokémon
  *                       Emerald Rogue") highlights "Pokémon" in its
  *                       original casing. "zzzzqqqq" (beyond distance 1) →
@@ -545,14 +551,14 @@ test('index.html: a typo query ("pokmon") shows the fuzzy tier 3 — capped, unh
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'index.html (trigger open)');
 
-    // "pokmon" (one edit from "pokemon"): 339 index entries carry the
+    // "pokmon" (one edit from "pokemon"): 338 index entries carry the
     // whole token "pokemon" under EX (data-derived over the real index) →
-    // the list caps at 30 rows and the count line signposts the 309
+    // the list caps at 30 rows and the count line signposts the 308
     // hidden matches
     await typeQuery(page, 'pokmon');
-    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 309, 'pokmon'), 'index.html (EX, "pokmon" — fuzzy, capped)');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 308, 'pokmon'), 'index.html (EX, "pokmon" — fuzzy, capped)');
     let f = await page.evaluate(paletteFacts);
-    assert.equal(f.rows.length, MAX_RESULTS, 'the fuzzy result caps at exactly search.maxResults rows (339 pre-cap, data-derived)');
+    assert.equal(f.rows.length, MAX_RESULTS, 'the fuzzy result caps at exactly search.maxResults rows (338 pre-cap, data-derived)');
     assert.equal(f.rows[0].name, 'Home', 'tier 3 keeps the stable index order: the first "pokemon" entry (the home page) is row 0');
     assert.ok(f.rows.every((r) => r.snippet.length > 0), 'every fuzzy row carries a snippet centred on the aligned token');
     // the fuzzy rows are UNHIGHLIGHTED: the span centres the snippet but
@@ -563,11 +569,11 @@ test('index.html: a typo query ("pokmon") shows the fuzzy tier 3 — capped, unh
     assert.deepEqual(fuzzyMarks, new Array(MAX_RESULTS).fill(0), 'no fuzzy row carries a .search-palette__highlight mark');
 
     // and the exact rows of the same root word still highlight: "pokemon"
-    // (340 entries, data-derived) is exact-only — capped at 30 rows with
-    // the 310-more overflow, tier-0 row 0 (the site hero) highlighting
+    // (339 entries, data-derived) is exact-only — capped at 30 rows with
+    // the 309-more overflow, tier-0 row 0 (the site hero) highlighting
     // "Pokémon" in its original casing
     await typeQuery(page, 'pokemon');
-    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 310, 'pokemon'), 'index.html (EX, "pokemon" — exact, capped)');
+    await waitForCount(page, COUNT_OVERFLOW(MAX_RESULTS, 309, 'pokemon'), 'index.html (EX, "pokemon" — exact, capped)');
     f = await page.evaluate(paletteFacts);
     const exactHl = await page.evaluate(() => {
       const row = document.querySelector('.search-palette__row');
@@ -814,7 +820,7 @@ test('quests.html: after a Vanilla re-render, a same-page deep link still lands 
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'quests.html (post-toggle open)');
     await typeQuery(page, 'the final run');
-    await waitForCount(page, COUNT(2, 'the final run'), 'quests.html (Vanilla, "the final run")');
+    await waitForCount(page, COUNT(3, 'the final run'), 'quests.html (Vanilla, "the final run")');
     const f = await page.evaluate(paletteFacts);
     assert.equal(f.rows[0].name, VANILLA_PHRASE_QUEST, 'the tier-0 title match ranks first: "The Final Run." (shared by both builds)');
 

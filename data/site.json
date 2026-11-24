@@ -10,7 +10,7 @@
     "url": "https://forzabarca88.github.io/emerald-rogue-docs",
     "footer": {
       "text": "Pokémon Emerald Rogue is a fan-made Pokémon Emerald romhack. This is an independent AI generated guide based on its Github source code, and is not affiliated with the romhack's authors.",
-      "source": "Every fact is extracted from the pokeemerald-rogue source on its vanilla and expansion branches, with per-record citations."
+      "source": "Game facts are cited per record to the pokeemerald-rogue source on its vanilla and expansion branches; worked examples and commentary are the guide's own, and are labelled as such."
     }
   },
   "citations": {
@@ -56,7 +56,7 @@
     },
     "versions": {
       "title": "Versions",
-      "description": "How the Vanilla and EX branches differ, feature by feature."
+      "description": "What differs between the Vanilla and EX builds — and what was verified to stay the same."
     },
     "quests": {
       "title": "Quests",
@@ -104,9 +104,9 @@
     "dexIncluded": "It includes every Pokédex species."
   },
   "hero": {
-    "eyebrow": "Roguelite romhack · Pokémon Emerald",
+    "eyebrow": "Field guide · Pokémon Emerald romhack",
     "title": "Pokémon Emerald Rogue",
-    "subtitle": "Build your hub, run generated adventure paths, and fight through the boss ladder in the Vanilla and EX editions of the romhack.",
+    "subtitle": "A roguelite take on Pokémon Emerald: settle into your hub, then head out on a generated run and climb the boss ladder. The guide documents both builds — Vanilla (the gen 1–3 roster) and EX, the expansion build (gen 4–9 plus modern mechanics) — with their differences itemised on the Versions page. New here? Gameplay walks through a first run.",
     "stats": [
       { "value": "36", "label": "Routes" },
       { "value": "14", "label": "Bosses" },
@@ -118,7 +118,7 @@
     {
       "id": "about",
       "heading": "About these docs",
-      "text": "This site documents Pokémon Emerald Rogue, a roguelite romhack for Pokémon Emerald. It covers the core gameplay loop, every quest, all configuration options, and the game's unique mechanics — the hub, the Safari Zone, the routes, and more — with every fact cited to the game's source code on the vanilla and expansion branches."
+      "text": "This is an independent, fan-made field guide to Pokémon Emerald Rogue — an AI-generated reference to the romhack, not affiliated with the romhack's authors. It covers the run loop, the hub, quests, configuration, the Safari Zone, the routes and the mechanics, for both documented builds: Vanilla and EX (the expansion). Game facts are cited per record to the pokeemerald-rogue source on its vanilla and expansion branches; worked examples and commentary are the guide's own, and are labelled as such. New to the game? Gameplay explains a first run; Quests lists the nine quest groups ('Starter Challenges' is currently empty in both builds); Versions compares the two builds."
     }
   ],
   "quickLinks": {
