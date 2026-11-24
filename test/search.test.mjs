@@ -421,6 +421,146 @@ test('a {PKMN}-templated quest is found by its concrete species name in BOTH sur
   assert.ok(rogue.questSearchText(r).includes('pok\u00e9mon'), 'the on-page data-search carries the resolved {PKMN} word');
 });
 
+test('a Vanilla-scoped query never surfaces other-edition text unlabeled (issue #151)', () => {
+  // ARRANGE — the shared records whose REWARDS differ per edition, straight
+  // from the issue (data/quests.json): IRON_KAIZO's EX rewards name a Shiny
+  // Kingambit while its Vanilla rewards name a Shiny Togepi; CHARMANDER_
+  // MASTERY's EX rewards unlock the Charizardites (Mega Stones) while its
+  // Vanilla rewards are ¥1,000 only. Each word lives ONLY in one side's
+  // rewards — nowhere in the shared (top-level) fields.
+  const kaizo = data.quests.records.find((r) => r.id === 'IRON_KAIZO');
+  const charm = data.quests.records.find((r) => r.id === 'CHARMANDER_MASTERY');
+  assert.ok(kaizo && charm, 'fixture: the Iron Kaizo and Charmander Mastery quests are expected');
+  for (const r of [kaizo, charm]) assert.deepEqual([...r.versions], VERSIONS, `fixture: ${r.id} is shared by both editions`);
+  assert.ok(!/kingambit|togepi/i.test(JSON.stringify([kaizo.name, kaizo.description, kaizo.trigger, kaizo.requirements, kaizo.flags])), 'fixture: kingambit/togepi live only in IRON_KAIZO\'s per-side rewards');
+  assert.ok(!/charizard/i.test(JSON.stringify([charm.name, charm.description, charm.trigger, charm.requirements, charm.flags])), 'fixture: charizard lives only in CHARMANDER_MASTERY\'s per-side rewards');
+
+  // ACT — the issue's examples, in both directions
+  const kaizoUnderVanilla = rogue.searchQuery(entries, 'kingambit', 'vanilla').results.find((r) => r.id === 'rec-quests-IRON_KAIZO');
+  const togepiUnderVanilla = rogue.searchQuery(entries, 'togepi', 'vanilla').results.find((r) => r.id === 'rec-quests-IRON_KAIZO');
+  const kingambitUnderEx = rogue.searchQuery(entries, 'kingambit', 'ex').results.find((r) => r.id === 'rec-quests-IRON_KAIZO');
+  const togepiUnderEx = rogue.searchQuery(entries, 'togepi', 'ex').results.find((r) => r.id === 'rec-quests-IRON_KAIZO');
+  const charmUnderVanilla = rogue.searchQuery(entries, 'charizard', 'vanilla').results.find((r) => r.id === 'rec-quests-CHARMANDER_MASTERY');
+
+  // ASSERT — the #50 field coverage is preserved: every edition's reward
+  // word still finds the shared quest from either edition
+  for (const [row, label] of [
+    [kaizoUnderVanilla, 'kingambit under Vanilla'],
+    [togepiUnderVanilla, 'togepi under Vanilla'],
+    [kingambitUnderEx, 'kingambit under EX'],
+    [togepiUnderEx, 'togepi under EX'],
+    [charmUnderVanilla, 'charizard under Vanilla']
+  ]) assert.ok(row, `${label}: the quest must still match (issue #50 coverage is not narrowed)`);
+
+  // ASSERT — a match that lives ONLY in the other edition's text is
+  // explicitly labeled as a cross-version match (issue #151)
+  assert.equal(kaizoUnderVanilla.crossVersion, 'ex', '"kingambit" under Vanilla matches only the EX-side reward → labeled as an EX cross-version match');
+  assert.equal(togepiUnderEx.crossVersion, 'vanilla', '"togepi" under EX matches only the Vanilla-side reward → labeled as a Vanilla cross-version match');
+  assert.equal(charmUnderVanilla.crossVersion, 'ex', '"charizard" under Vanilla matches only the EX-side Charizardite rewards → labeled as an EX cross-version match');
+
+  // ASSERT — a match in the ACTIVE edition's text is never labeled, and the
+  // snippet source is the active-edition haystack: it carries the match and
+  // NONE of the other edition's reward words
+  assert.equal(togepiUnderVanilla.crossVersion, undefined, '"togepi" under Vanilla is the active edition\'s own reward → no label');
+  assert.ok(/togepi/i.test(togepiUnderVanilla.textCase) && !/kingambit/i.test(togepiUnderVanilla.textCase), 'the Vanilla snippet source carries the Vanilla reward and no EX-only reward text');
+  assert.equal(kingambitUnderEx.crossVersion, undefined, '"kingambit" under EX is the active edition\'s own reward → no label');
+  assert.ok(/kingambit/i.test(kingambitUnderEx.textCase) && !/togepi/i.test(kingambitUnderEx.textCase), 'the EX snippet source carries the EX reward and no Vanilla-only reward text');
+  // the labeled row's snippet source is the OTHER edition's text (where the
+  // match lives) — it still carries the matched word
+  assert.ok(/kingambit/i.test(kaizoUnderVanilla.textCase) && !/togepi/i.test(kaizoUnderVanilla.textCase), 'the labeled row shows the EX-side reward text (labeled, not hidden)');
+
+  // ASSERT — the ON-PAGE card haystack (the quests.js data-search) defaults
+  // to the ACTIVE edition: each card carries its own edition's reward text
+  // only
+  const kaizoV = rogue.questSearchText(kaizo, 'vanilla');
+  const kaizoE = rogue.questSearchText(kaizo, 'ex');
+  assert.ok(kaizoV.includes('togepi') && !kaizoV.includes('kingambit'), 'the on-page Vanilla Iron Kaizo haystack carries the Vanilla reward, not the EX one');
+  assert.ok(kaizoE.includes('kingambit') && !kaizoE.includes('togepi'), 'the on-page EX Iron Kaizo haystack carries the EX reward, not the Vanilla one');
+  const charmV = rogue.questSearchText(charm, 'vanilla');
+  assert.ok(charmV.includes('¥1,000') && !/charizardite/i.test(charmV), 'the on-page Vanilla Charmander Mastery haystack carries only the Vanilla reward');
+
+  // ASSERT — the PALETTE haystack (no edition argument) stays the union:
+  // every edition's field values remain indexed and searchable
+  const paletteHaystack = rogue.questSearchText(kaizo);
+  assert.ok(paletteHaystack.includes('kingambit') && paletteHaystack.includes('togepi'), 'the palette haystack keeps both editions\' rewards indexed');
+  assert.equal(byId.get('rec-quests-IRON_KAIZO').text, paletteHaystack, 'the palette entry text stays the union haystack (issue #50 parity)');
+});
+
+test('records with per-edition fields carry per-edition haystacks that keep other-edition text out (issue #151)', () => {
+  // ARRANGE — a shared species whose vanilla overlay rewrites its fields
+  // (data/pokedex.json — Pikachu's Vanilla learnset/description differ), and
+  // the one settings range with per-edition options (the Pokédex Variant
+  // slider: 7 Vanilla options vs 37 EX options)
+  const pikachu = data.pokedex.records.find((r) => r.id === 'pikachu');
+  assert.ok(pikachu && pikachu.vanilla, 'fixture: Pikachu carries a vanilla overlay');
+  const slider = data.settings.records.find((r) => r.optionsByVersion);
+  assert.ok(slider, 'fixture: a settings range with per-edition options is expected');
+  const exOnlyOption = slider.optionsByVersion.ex.find((o) => !slider.optionsByVersion.vanilla.includes(o));
+  assert.ok(exOnlyOption, 'fixture: an EX-only Pokédex Variant option is expected');
+
+  // a move Pikachu learns in EX that the Vanilla overlay drops (derived
+  // from the data, not hardcoded)
+  const movesOf = (m) => {
+    const out = [];
+    if (!m || typeof m !== 'object') return out;
+    for (const mv of Array.isArray(m.levelUp) ? m.levelUp : []) out.push(Array.isArray(mv) ? mv[0] : mv);
+    for (const k of ['tm', 'tutor']) for (const mv of Array.isArray(m[k]) ? m[k] : []) out.push(mv);
+    return out;
+  };
+  const exOnlyMoves = movesOf(pikachu.moves).filter((m) => !movesOf(pikachu.vanilla.moves).includes(m));
+  assert.ok(exOnlyMoves.length > 0, 'fixture: Pikachu learns an EX-only move the Vanilla overlay drops');
+
+  // ACT
+  const ePik = byId.get('rec-pokedex-pikachu');
+  const eSlider = byId.get('rec-settings-' + slider.id);
+  const exOnlyMove = exOnlyMoves[0];
+
+  // ASSERT — the entries carry BOTH edition haystacks, each the
+  // edition-scoped search text, while the entry text stays the union
+  assert.ok(ePik.editions && ePik.editions.vanilla && ePik.editions.ex, 'the Pikachu entry carries per-edition haystacks');
+  assert.ok(eSlider.editions && eSlider.editions.vanilla && eSlider.editions.ex, 'the Pokédex Variant entry carries per-edition haystacks');
+  assert.equal(ePik.editions.vanilla.text, rogue.pokedexSearchText(pikachu, 'vanilla'), 'the Vanilla edition haystack is the edition-scoped search text');
+  assert.equal(ePik.editions.ex.text, rogue.pokedexSearchText(pikachu, 'ex'), 'the EX edition haystack is the edition-scoped search text');
+  assert.equal(ePik.text, rogue.pokedexSearchText(pikachu), 'the entry text stays the union haystack (issue #50 parity)');
+  for (const ed of VERSIONS) {
+    for (const tok of tokensOf(ePik.editions[ed].text)) {
+      assert.ok(ePik.text.includes(tok), `Pikachu ${ed}: edition haystack token "${tok}" is a subset of the union haystack`);
+    }
+  }
+
+  // ASSERT — the edition haystacks keep the OTHER edition's text out, while
+  // the union keeps everything (the #50 learnset coverage)
+  assert.ok(!ePik.editions.vanilla.text.includes(exOnlyMove.toLowerCase()), 'the Pikachu Vanilla haystack carries no EX-only move');
+  assert.ok(ePik.editions.ex.text.includes(exOnlyMove.toLowerCase()), 'the Pikachu EX haystack carries the move');
+  assert.ok(ePik.text.includes(exOnlyMove.toLowerCase()), 'the Pikachu union haystack still indexes the EX-only move');
+  assert.ok(!eSlider.editions.vanilla.text.includes(String(exOnlyOption).toLowerCase()), 'the Vanilla slider haystack carries no EX-only option');
+  assert.ok(eSlider.editions.ex.text.includes(String(exOnlyOption).toLowerCase()), 'the EX slider haystack carries the EX-only option');
+
+  // ASSERT — query behavior: an other-edition match still surfaces the
+  // entry (#50 coverage) but is labeled as a cross-version match, and an
+  // active-edition match is never labeled
+  const exMoveUnderVanilla = rogue.searchQuery(entries, exOnlyMove, 'vanilla').results.find((r) => r.id === 'rec-pokedex-pikachu');
+  assert.ok(exMoveUnderVanilla, 'the EX-only move still finds Pikachu under Vanilla (issue #50 coverage)');
+  assert.equal(exMoveUnderVanilla.crossVersion, 'ex', '…and the match is labeled as an EX cross-version match');
+  // the slider's per-edition string notes ARE each build's variant text
+  // ("Thirty-seven variants: …" vs "Seven variants only: …") — a phrase
+  // from one note exists only in that edition's haystack (derived, not
+  // hardcoded: the first three words of each note)
+  const exNotePhrase = slider.differences.ex.split(' ').slice(0, 3).join(' ').toLowerCase();
+  const vaNotePhrase = slider.differences.vanilla.split(' ').slice(0, 3).join(' ').toLowerCase();
+  assert.ok(!eSlider.editions.vanilla.text.includes(exNotePhrase), 'the Vanilla slider haystack carries no EX-side note text');
+  assert.ok(!eSlider.editions.ex.text.includes(vaNotePhrase), 'the EX slider haystack carries no Vanilla-side note text');
+  const exNoteUnderVanilla = rogue.searchQuery(entries, exNotePhrase, 'vanilla').results.find((r) => r.id === 'rec-settings-' + slider.id);
+  assert.ok(exNoteUnderVanilla, 'the EX-side note text still finds the range under Vanilla (issue #50 coverage)');
+  assert.equal(exNoteUnderVanilla.crossVersion, 'ex', '…and the match is labeled as an EX cross-version match');
+  const exNoteUnderEx = rogue.searchQuery(entries, exNotePhrase, 'ex').results.find((r) => r.id === 'rec-settings-' + slider.id);
+  assert.ok(exNoteUnderEx, 'the EX-side note text finds the range under EX');
+  assert.equal(exNoteUnderEx.crossVersion, undefined, 'under EX the note is the active edition\'s own → no label');
+  const vaNoteUnderEx = rogue.searchQuery(entries, vaNotePhrase, 'ex').results.find((r) => r.id === 'rec-settings-' + slider.id);
+  assert.ok(vaNoteUnderEx, 'the Vanilla-side note text still finds the range under EX (issue #50 coverage)');
+  assert.equal(vaNoteUnderEx.crossVersion, 'vanilla', '…labeled as a Vanilla cross-version match');
+});
+
 test('the FAIRY-swap routes index BOTH the EX and the Vanilla wild types', () => {
   // ARRANGE — derive the swapped set from the data; parse the Vanilla note
   // the same way routes.js does ("Wild types: a, b, c" — three types or none)

@@ -57,6 +57,19 @@
  *                       campaign record (data/campaigns.json) →
  *                       ./mechanics.html#rec-campaigns-campaign-bst-cup.
  *                       Under "mega": 12 rows in EX.
+ *   "kingambit" /     — Iron Kaizo's per-edition rewards (data/quests.json
+ *   "togepi" /        IRON_KAIZO: the Vanilla reward is Shiny Togepi, the EX
+ *   "charizard"       reward Shiny Kingambit; CHARMANDER_MASTERY's
+ *                       Charizardite rewards are EX-only). quests.html (no
+ *                       pokedex chunk): under Vanilla "kingambit" → 1 row
+ *                       labeled "Match in EX" (the snippet is the EX
+ *                       edition's text), "togepi" → 1 row UNLABELED (the
+ *                       active Vanilla reward), "charizard" → 1 row labeled
+ *                       "Match in EX"; under EX the mirror — "togepi" → 1 row
+ *                       labeled "Match in Vanilla", "kingambit" → 1 row
+ *                       unlabeled. The on-page filter is edition-scoped
+ *                       (issue #151): Vanilla "kingambit" → 0 cards /
+ *                       "togepi" → 1 (Iron Kaizo); EX "togepi" → 0 cards.
  *   "the final run"   — 2 rows under BOTH versions, row 0 the shared quest
  *                       "The Final Run." (data/quests.json — its display
  *                       group differs per build, but its card id
@@ -833,14 +846,18 @@ test('hub.html: after a Vanilla re-render, a CROSS-page deep link still lands on
 
     // "mega evolution" under Vanilla: row 0 is the BST Cup campaign record
     // (data/campaigns.json — the EX-only quest drops out) — a CROSS-page
-    // entry (mechanics.html)
+    // entry (mechanics.html). Its only Vanilla-scope match lives in the
+    // record's EX-side diff note ("…the mega-evolution ratchet (a Mega
+    // Evolution would raise…)", data/campaigns.json), so the row carries
+    // the explicit cross-version label (issue #151 — a Vanilla-scoped
+    // query never surfaces EX-only text unlabeled)
     await page.click('#site-search-trigger');
     await waitForOpen(page, 'hub.html (post-toggle open)');
     await typeQuery(page, 'mega evolution');
     await waitForCount(page, COUNT(2, 'mega evolution'), 'hub.html (Vanilla, "mega evolution")');
     const f = await page.evaluate(paletteFacts);
     assert.equal(f.rows[0].name, 'BST Cup (Low BST)', 'row 0 under Vanilla is the BST Cup campaign record (data/campaigns.json)');
-    assert.equal(f.rows[0].meta, site.pages.mechanics.title, 'its page label is the Mechanics nav title — a cross-page target');
+    assert.equal(f.rows[0].meta, site.pages.mechanics.title + ' \u00B7 Match in EX', 'its page label is the Mechanics nav title — a cross-page target — with the cross-version label: the match exists only in the EX-side note (issue #151)');
 
     await page.keyboard.press('Enter');
     await page.waitForFunction(
@@ -1010,6 +1027,157 @@ test('quests.html: with focus inside the in-page quest search, "/" does NOT open
     assert.equal(f.questValue, '/', 'the "/" is typed into the in-page quest search instead (it keeps its own "/")');
   } finally {
     await close();
+  }
+});
+
+test('quests.html (Vanilla, issue #151): the palette labels other-edition-only matches; the on-page filter stays edition-scoped', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'quests.html', version: 'vanilla' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+
+    // the issue's own case: "kingambit" under Vanilla — Iron Kaizo's Vanilla
+    // reward is Shiny Togepi, the Kingambit wording lives ONLY in the EX
+    // reward. Matching stays on the union (issue #50 coverage) but the row
+    // is explicitly labeled and its snippet is the EX edition's text
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'quests.html (Vanilla) open');
+    await typeQuery(page, 'kingambit');
+    await waitForCount(page, COUNT(1, 'kingambit'), 'quests.html (Vanilla, "kingambit")');
+    let f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 1, 'one row — Iron Kaizo (quests.html loads no pokedex chunk)');
+    assert.equal(f.rows[0].name, 'Iron Kaizo', 'the row is Iron Kaizo (data/quests.json IRON_KAIZO)');
+    assert.equal(f.rows[0].meta, site.pages.quests.title + ' \u00B7 Match in EX', `the cross-version label (meta: ${JSON.stringify(f.rows[0].meta)})`);
+    assert.ok(f.rows[0].snippet.includes('Shiny Kingambit'), `the snippet carries the EX edition's reward text (got: ${JSON.stringify(f.rows[0].snippet)})`);
+
+    // the active direction: "togepi" under Vanilla IS the Vanilla reward —
+    // an active-edition match, never labeled, snippet from the vanilla text
+    await typeQuery(page, 'togepi');
+    await waitForCount(page, COUNT(1, 'togepi'), 'quests.html (Vanilla, "togepi")');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 1, 'one row — Iron Kaizo');
+    assert.equal(f.rows[0].name, 'Iron Kaizo', 'Iron Kaizo again');
+    assert.equal(f.rows[0].meta, site.pages.quests.title, 'active-edition match → no cross-version label');
+    assert.ok(f.rows[0].snippet.includes('Shiny Togepi'), `the snippet carries the Vanilla edition's reward text (got: ${JSON.stringify(f.rows[0].snippet)})`);
+
+    // "charizard" under Vanilla — the Charizardite rewards are EX-only
+    await typeQuery(page, 'charizard');
+    await waitForCount(page, COUNT(1, 'charizard'), 'quests.html (Vanilla, "charizard")');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 1, 'one row — Charmander Mastery (no pokedex chunk on this page)');
+    assert.equal(f.rows[0].name, 'Charmander Mastery', 'Charmander Mastery (data/quests.json CHARMANDER_MASTERY)');
+    assert.equal(f.rows[0].meta, site.pages.quests.title + ' \u00B7 Match in EX', 'the Charizardite rewards are EX-only → labeled');
+    assert.ok(f.rows[0].snippet.includes('Charizardite'), `the snippet carries the EX reward wording (got: ${JSON.stringify(f.rows[0].snippet)})`);
+
+    // the on-page filter over the VANILLA cards — the edition-scoped
+    // data-search haystacks carry no other-edition wording (issue #151)
+    await page.keyboard.press('Escape');
+    await waitForClosed(page, 'quests.html (Vanilla) close');
+    await page.fill('#quest-search', 'kingambit');
+    await page.waitForFunction(() => (document.getElementById('quest-result')?.textContent || '').includes('match'), null, { timeout: SETTLE_TIMEOUT_MS });
+    let s = await page.evaluate(() => ({
+      line: (document.getElementById('quest-result')?.textContent || '').trim(),
+      visible: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).length,
+    }));
+    assert.equal(s.line, `No quests match ${Q_OPEN}kingambit${Q_CLOSE}.`, 'no Vanilla card carries the EX-only reward text → the filter finds none (quests.js applyFilter empty state)');
+    assert.equal(s.visible, 0, 'zero cards for "kingambit" under Vanilla');
+
+    await page.fill('#quest-search', 'togepi');
+    await page.waitForFunction(() => (document.getElementById('quest-result')?.textContent || '').includes('match'), null, { timeout: SETTLE_TIMEOUT_MS });
+    s = await page.evaluate(() => ({
+      line: (document.getElementById('quest-result')?.textContent || '').trim(),
+      names: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).map((c) => c.querySelector('h3.card__title').textContent.trim()),
+    }));
+    assert.equal(s.line, `1 quest match ${Q_OPEN}togepi${Q_CLOSE}`, 'the Vanilla reward text matches exactly one Vanilla card');
+    assert.deepEqual(s.names, ['Iron Kaizo'], 'that card is Iron Kaizo');
+
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('quests.html (EX, issue #151): the mirror direction — Vanilla-only text is labeled "Match in Vanilla"', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'quests.html', version: 'ex' });
+  try {
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+    await page.click('#site-search-trigger');
+    await waitForOpen(page, 'quests.html (EX) open');
+
+    // "togepi" under EX — only the Vanilla reward mentions it
+    await typeQuery(page, 'togepi');
+    await waitForCount(page, COUNT(1, 'togepi'), 'quests.html (EX, "togepi")');
+    let f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 1, 'one row — Iron Kaizo (no pokedex chunk on this page)');
+    assert.equal(f.rows[0].name, 'Iron Kaizo', 'Iron Kaizo (data/quests.json IRON_KAIZO)');
+    assert.equal(f.rows[0].meta, site.pages.quests.title + ' \u00B7 Match in Vanilla', `labeled as a Vanilla cross-version match (meta: ${JSON.stringify(f.rows[0].meta)})`);
+    assert.ok(f.rows[0].snippet.includes('Shiny Togepi'), 'the snippet is the Vanilla edition\'s reward text');
+
+    // "kingambit" under EX — the EX reward IS the active text → no label
+    await typeQuery(page, 'kingambit');
+    await waitForCount(page, COUNT(1, 'kingambit'), 'quests.html (EX, "kingambit")');
+    f = await page.evaluate(paletteFacts);
+    assert.equal(f.rows.length, 1, 'one row — Iron Kaizo');
+    assert.equal(f.rows[0].meta, site.pages.quests.title, 'active-edition match → no cross-version label');
+    assert.ok(f.rows[0].snippet.includes('Shiny Kingambit'), 'the snippet is the EX edition\'s reward text');
+
+    // the on-page filter over the EX cards: no EX card carries the
+    // Vanilla-only reward text
+    await page.keyboard.press('Escape');
+    await waitForClosed(page, 'quests.html (EX) close');
+    await page.fill('#quest-search', 'togepi');
+    await page.waitForFunction(() => (document.getElementById('quest-result')?.textContent || '').includes('match'), null, { timeout: SETTLE_TIMEOUT_MS });
+    const s = await page.evaluate(() => ({
+      line: (document.getElementById('quest-result')?.textContent || '').trim(),
+      visible: [...document.querySelectorAll('.quest-card')].filter((c) => !c.hidden).length,
+    }));
+    assert.equal(s.line, `No quests match ${Q_OPEN}togepi${Q_CLOSE}.`, 'no EX card carries the Vanilla-only reward text (quests.js applyFilter empty state)');
+    assert.equal(s.visible, 0, 'zero cards for "togepi" under EX');
+
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('the scope footer (issue #152): every page says what the search covers; non-dex pages route species search to the Pokédex', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const scopeFacts = () => {
+    const el = document.getElementById('search-palette-scope');
+    return { text: (el?.textContent || '').trim(), link: el?.querySelector('a')?.getAttribute('href') ?? null };
+  };
+
+  // a non-Pokédex page: the scope sentence + the dex route as a relative
+  // link, and the focused-state hint is a "what to type" hint (not the old
+  // "Press / to search")
+  const a = await openPage({ path: 'index.html' });
+  try {
+    assert.deepEqual(a.errors, [], `unexpected page errors: ${a.errors.join('; ')}`);
+    await a.page.click('#site-search-trigger');
+    await waitForOpen(a.page, 'index.html open');
+    const f = await a.page.evaluate(paletteFacts);
+    assert.equal(f.empty, site.search.hint, `the focused-state empty state is the config "what to type" hint (got: ${JSON.stringify(f.empty)})`);
+    const s1 = await a.page.evaluate(scopeFacts);
+    assert.ok(s1.text.includes(site.search.scope), `the scope sentence renders (got: ${JSON.stringify(s1.text)})`);
+    assert.ok(s1.text.includes(site.search.dexRoute.split('{dex}')[0]), 'the dex-route sentence renders');
+    assert.equal(s1.link, './pokedex.html', 'the {dex} slot is a relative link to the Pokédex page');
+  } finally {
+    await a.close();
+  }
+
+  // the Pokédex page itself: the dex-included sentence, no route link
+  const b = await openPage({ path: 'pokedex.html' });
+  try {
+    assert.deepEqual(b.errors, [], `unexpected page errors: ${b.errors.join('; ')}`);
+    await b.page.click('#site-search-trigger');
+    await waitForOpen(b.page, 'pokedex.html open');
+    const s2 = await b.page.evaluate(scopeFacts);
+    assert.ok(s2.text.includes(site.search.scope), 'the scope sentence renders');
+    assert.ok(s2.text.includes(site.search.dexIncluded), `the dex-included sentence renders (got: ${JSON.stringify(s2.text)})`);
+    assert.equal(s2.link, null, 'no dex-route link on the Pokédex page itself');
+  } finally {
+    await b.close();
   }
 });
 

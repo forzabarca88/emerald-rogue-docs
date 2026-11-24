@@ -22,13 +22,16 @@
  * query for "Pokémon" matches cards that display it.
  *
  * A global .search filter narrows cards across all groups (client-side,
- * over each card's precomputed lowercase data-search) — the SAME field
- * union the site-wide palette indexes: ROGUE.questSearchText (shared with
- * search-index.js) covers name, description, trigger, requirements and
- * rewards across BOTH per-version variants, flags, and the display
- * group(s), placeholder-resolved, so a query findable in the palette is
- * findable in the on-page filter (issue #50). Groups with no matches are
- * hidden, and the group counts update live.
+ * over each card's precomputed lowercase data-search). The haystack is
+ * ROGUE.questSearchText (shared with search-index.js) scoped to the
+ * ACTIVE edition: name, description, trigger, requirements and rewards
+ * of the build the card displays, plus flags and the display group(s),
+ * placeholder-resolved — the same field coverage as the palette (issue
+ * #50) with no other-edition wording (issue #151: a card's haystack
+ * carries the text the card shows, so a Vanilla card never matches an
+ * EX-only reward; the palette keeps the union and labels those matches
+ * as cross-version instead). Groups with no matches are hidden, and the
+ * group counts update live.
  * Version changes re-render the whole log (filtered records + variants);
  * the current query is reapplied.
  */
@@ -93,16 +96,21 @@
       var flags = Array.isArray(eff.flags) ? eff.flags : [];
       var requirements = Array.isArray(eff.requirements) ? eff.requirements : [];
       var rewards = Array.isArray(eff.rewards) ? eff.rewards : [];
-      /* the data-search haystack is the palette's quest field union
-       * (ROGUE.questSearchText — version-independent, both variants),
-       * so the on-page filter agrees with the site-wide palette; the
-       * id is the per-card deep link (issue #45) — stable across the
-       * Vanilla/EX re-renders (record-identity-derived) */
+      /* the data-search haystack is the quest field union (name,
+       * description, trigger, requirements and rewards, flags, display
+       * group(s) — issue #50 coverage) SCOPED to the active edition
+       * (issue #151): the card displays this build's fields, so its
+       * haystack carries no other-edition wording — e.g. the Vanilla
+       * Iron Kaizo card (reward: Shiny Togepi) does not match
+       * "kingambit", while the palette still surfaces it labeled as a
+       * cross-version match. The id is the per-card deep link (issue
+       * #45) — stable across the Vanilla/EX re-renders (record-
+       * identity-derived) */
       var html =
         '<article class="card quest-card" id="' +
         ROGUE.esc(ROGUE.recId('quests', record.id)) +
         '" data-search="' +
-        ROGUE.esc(ROGUE.questSearchText(record)) +
+        ROGUE.esc(ROGUE.questSearchText(record, ROGUE.version)) +
         '">';
       html +=
         '<div class="card__head"><h3 class="card__title">' +

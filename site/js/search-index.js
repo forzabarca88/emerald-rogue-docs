@@ -16,7 +16,7 @@
  *
  * Entry shape:
  *   { id, title, titleLower, text, textCase, page, anchor, versions,
- *     foldedText, foldMap, titleFolded, tokens, tokenPos }
+ *     foldedText, foldMap, titleFolded, tokens, tokenPos, editions? }
  *     id          stable unique key ('page-…' / 'prose-…' / 'rec-…')
  *     title       display title (quest {PKMN}/{POKEBLOCK} placeholders resolved)
  *     titleLower  lowercased title
@@ -49,6 +49,17 @@
  *                 first-occurrence order
  *     tokenPos    parallel first-occurrence position of each token in
  *                 foldedText (the fuzzy tier's matchIndex source)
+ *     editions    split records ONLY (quest `differences` object sides, the
+ *                 pokedex `vanilla` overlay, settings `optionsByVersion`):
+ *                 { vanilla: Ed, ex: Ed } — one edition-scoped haystack per
+ *                 build, Ed having the same { text, textCase, foldedText,
+ *                 foldMap, tokens, tokenPos } shape as the entry (the
+ *                 active build's field values, no other-edition text). The
+ *                 entry's own text stays the UNION (issue #50 coverage);
+ *                 searchQuery re-scopes the RESULT's text/textCase/span to
+ *                 the active edition's Ed (issue #151 — see the snippet
+ *                 policy below) and labels other-edition-only matches
+ *                 result.crossVersion
  *
  * Entry sources — one entry each: every data/site.json nav page (title +
  * description, anchor ''), data/site.json's own home-page content — the
@@ -85,6 +96,13 @@
  *     sides at build time. variantValues() is the same "top-level +
  *     structured overrides" resolution parameterised by side; the B3
  *     tests lock its parity against ROGUE.effective for both versions.
+ *     String-side notes likewise contribute BOTH sides to the union,
+ *     while each edition haystack carries only its OWN note
+ *     (stringDiffNotes) — a note IS that build's wording — and the
+ *     FAIRY-swap routes additionally swap their wild types per edition
+ *     (the vanilla edition carries the parsed vanilla types, mirroring
+ *     routes.js's effectiveTypes; the top-level `type` is the EX
+ *     wording), so no edition's haystack carries the other build's types.
  *   - The entry's `versions` array (straight from the record) scopes
  *     results at query time, so EX-only quests never surface under
  *     Vanilla.
@@ -98,12 +116,22 @@
  *     the union is auto-generated page chrome (e.g. "19 on/off switches
  *     in EX"), which is not record content and is deliberately not
  *     indexed.
- *   - Snippets: because they are union-derived, a shared record can match
- *     on the other build's wording and show it in the snippet; the
- *     destination card (navigated to on Enter) renders the active
- *     version's fields. They are sliced from `textCase` (original
- *     casing) at the matchIndex/matchEnd computed against the folded
- *     lowercased `text` — the two strings are 1:1 aligned per code unit.
+ *   - Snippets (issue #151): the union makes a shared record match on
+ *     either build's wording — that coverage stays (issue #50) — but the
+ *     RESULT shown to the reader is edition-scoped: searchQuery re-scopes
+ *     the result's text/textCase/matchIndex/matchEnd to the ACTIVE build's
+ *     haystack (entry.editions[activeVersion]) whenever the entry carries
+ *     one, and sets result.crossVersion to the other build's id when the
+ *     match exists ONLY in the other build's text (the overlay then labels
+ *     the row explicitly, e.g. "Match in EX"). A match in the active
+ *     build's text is never labeled, and its snippet carries none of the
+ *     other build's wording. (The one unlabelable edge: a multi-word match
+ *     that exists only at the seam between the union's two edition
+ *     segments — neither edition text contains it — keeps the union
+ *     snippet without a label.) Snippets are sliced from `textCase`
+ *     (original casing) at the matchIndex/matchEnd computed against the
+ *     folded lowercased `text` — the two strings are 1:1 aligned per code
+ *     unit — inside the selected haystack.
  *
  * Deep-link granularity (issue #45): record entries anchor at the
  * per-card DOM id 'rec-<fileId>-<recordId>' — the id every page renderer
@@ -287,14 +315,41 @@
     return parts;
   }
 
-  /** Both string-form `differences` notes (the "Differs in …" card text). */
-  function stringDiffNotes(record) {
+  /**
+   * One field value SCOPED to a single edition (issue #151): the record's
+   * `differences` object side for that edition (object sides only —
+   * string-side notes are that build's own wording and are handled by
+   * stringDiffNotes), falling back to the top-level (EX base) value when
+   * the side does not override the key. edition null/absent → the UNION
+   * via variantValues (the issue-#50 coverage).
+   */
+  function fieldValues(record, key, edition) {
+    if (!edition) return variantValues(record, key);
+    var diff = record && record.differences;
+    if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
+      var side = diff[edition];
+      if (side && typeof side === 'object' && !Array.isArray(side) && side[key] !== undefined) {
+        return toParts(side[key]);
+      }
+    }
+    return toParts(record ? record[key] : undefined);
+  }
+
+  /** String-form `differences` notes (the "Differs in …" card text).
+   *  edition null/absent: BOTH notes (the union — the other side's
+   *  wording is searchably included, the issue-#50 coverage). edition
+   *  set: only that build's own note — a note IS that build's wording,
+   *  so the other build's note must stay out of this edition's haystack
+   *  (issue #151). */
+  function stringDiffNotes(record, edition) {
     var out = [];
     var diff = record && record.differences;
     if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
       for (var i = 0; i < VERSION_IDS.length; i++) {
         var side = diff[VERSION_IDS[i]];
-        if (typeof side === 'string') out.push(side);
+        if (typeof side !== 'string') continue;
+        if (edition && VERSION_IDS[i] !== edition) continue;
+        out.push(side);
       }
     }
     return out;
@@ -596,8 +651,9 @@
    * are added centrally by recordParts).
    * ------------------------------------------------------------------ */
 
-  function descriptionParts(record) {
-    return variantValues(record, 'description');
+  /** Edition-scoped description parts (union when edition is null). */
+  function descriptionParts(record, edition) {
+    return fieldValues(record, 'description', edition);
   }
 
   var RECORD_EXTRACTORS = {
@@ -651,27 +707,37 @@
     // shorthand word), the ride moves and the notes. Strings only — the
     // bare stat numbers, the catch rate and the EXP are data, not user
     // text (the module's rule).
-    pokedex: pokedexParts,
+    pokedex: function (r, edition) {
+      return pokedexParts(r, edition);
+    },
 
-    quests: function (r) {
+    quests: function (r, edition) {
       // name is added centrally; everything else is the UNION of both
-      // per-version variants (broader than the renderer's 5-key scope).
-      var parts = variantValues(r, 'description');
+      // per-version variants (broader than the renderer's 5-key scope)
+      // when edition is null, or the single edition's own values when it
+      // is set (issue #151 — the edition haystacks carry no other-
+      // edition text).
+      var parts = fieldValues(r, 'description', edition);
       parts = parts.concat(toParts(r.flags));
-      parts = parts.concat(variantValues(r, 'trigger'));
-      parts = parts.concat(variantValues(r, 'requirements'));
-      parts = parts.concat(variantValues(r, 'rewards'));
-      // the display group(s) as rendered group headings (both variants)
+      parts = parts.concat(fieldValues(r, 'trigger', edition));
+      parts = parts.concat(fieldValues(r, 'requirements', edition));
+      parts = parts.concat(fieldValues(r, 'rewards', edition));
+      // the display group(s) as rendered group headings (both variants in
+      // the union; the edition's own in a scoped haystack)
       var groups = {};
       var pushGroup = function (g) {
         if (typeof g === 'string' && g) groups[g] = true;
       };
-      pushGroup(r.display_group);
-      var diff = r.differences;
-      if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
-        for (var i = 0; i < VERSION_IDS.length; i++) {
-          var side = diff[VERSION_IDS[i]];
-          if (side && typeof side === 'object' && !Array.isArray(side)) pushGroup(side.display_group);
+      if (edition) {
+        pushGroup(fieldValues(r, 'display_group', edition)[0]);
+      } else {
+        pushGroup(r.display_group);
+        var diff = r.differences;
+        if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
+          for (var i = 0; i < VERSION_IDS.length; i++) {
+            var side = diff[VERSION_IDS[i]];
+            if (side && typeof side === 'object' && !Array.isArray(side)) pushGroup(side.display_group);
+          }
         }
       }
       for (var g in groups) {
@@ -680,11 +746,26 @@
       return parts;
     },
 
-    routes: function (r) {
-      var parts = descriptionParts(r);
+    routes: function (r, edition) {
+      var parts = descriptionParts(r, edition);
       parts = parts.concat(toParts(r.region), toParts(r.terrain));
-      parts = parts.concat(arr(r.type)); // top-level = EX wild types
-      parts = parts.concat(vanillaWildTypes(r)); // FAIRY-swap Vanilla variant
+      // Wild types, edition-scoped (the top-level `type` is the EX
+      // wording): the union carries the EX types + the parsed Vanilla
+      // variant (the 6 FAIRY-swap routes); the ex edition carries the EX
+      // types; the vanilla edition carries the parsed vanilla types —
+      // mirroring routes.js's effectiveTypes, which is what the card
+      // displays per build (issue #151: the other build's types stay
+      // out of this edition's haystack)
+      if (edition === 'vanilla') {
+        var vt = vanillaWildTypes(r);
+        parts = parts.concat(vt.length ? vt : arr(r.type));
+      } else {
+        parts = parts.concat(arr(r.type));
+        if (!edition) {
+          var vtU = vanillaWildTypes(r);
+          if (vtU.length) parts = parts.concat(vtU);
+        }
+      }
       if (typeof r.dropRarity === 'number') parts.push('Drop +' + r.dropRarity);
       return parts;
     },
@@ -694,8 +775,8 @@
       return parts.concat(toParts(r.steps)); // Legends Cave catch-flow steps
     },
 
-    settings: function (r) {
-      var parts = descriptionParts(r);
+    settings: function (r, edition) {
+      var parts = descriptionParts(r, edition);
       if (r.category === 'toggle') {
         parts = parts.concat(toParts(r.menu), toParts(r.code));
         if (r.values && typeof r.values === 'object' && !Array.isArray(r.values)) {
@@ -704,11 +785,17 @@
       } else if (r.category === 'range') {
         parts = parts.concat(toParts(r.menu), toParts(r.code));
         // option lists: top-level, or BOTH per-version variants (the
-        // Pokédex slider is 7 options in Vanilla vs 37 in EX)
+        // Pokédex slider is 7 options in Vanilla vs 37 in EX) in the
+        // union — or the single edition's own list when scoped (issue
+        // #151)
         var options = [];
         if (r.optionsByVersion && typeof r.optionsByVersion === 'object' && !Array.isArray(r.optionsByVersion)) {
-          for (var i = 0; i < VERSION_IDS.length; i++) {
-            options = options.concat(arr(r.optionsByVersion[VERSION_IDS[i]]));
+          if (edition) {
+            options = arr(r.optionsByVersion[edition]);
+          } else {
+            for (var i = 0; i < VERSION_IDS.length; i++) {
+              options = options.concat(arr(r.optionsByVersion[VERSION_IDS[i]]));
+            }
           }
         } else {
           options = arr(r.options);
@@ -754,16 +841,28 @@
    * (issue #149, e.g. "Dudunsprce" for Dudunsparce) — is repeated here,
    * right after the name, so the menu's own truncated spelling still
    * finds the species; only the overlay's DIFFERING vanilla name is
-   * repeated again at the end. `forms` is the structured object list
+   * repeated again at the end of the union. When `edition` is set
+   * (issue #151) the parts are the single build's own values — the
+   * vanilla overlay's overriding fields for the vanilla edition, the
+   * top level otherwise — and the edition's own name spelling closes
+   * the list instead of the overlay block. `forms` is the structured object list
    * (issue #85) and contributes the form display NAMES only — the
    * per-form types/stats/abilities/descriptions stay out of the haystack.
    * Strings only: a field value that is not a string (a bare number, a
    * null) contributes nothing.
    */
-  function pokedexParts(r) {
+  function pokedexParts(r, edition) {
     var parts = [];
     var push = function (v) {
       if (typeof v === 'string' && v) parts.push(v);
+    };
+    // edition scope (issue #151): the vanilla overlay's overriding fields
+    // replace the top level for the vanilla edition; ex / null keep the
+    // top level (ex IS the top level; null = the union, the overlay block
+    // below adds the differing vanilla values on top)
+    var overlay = edition === 'vanilla' && r.vanilla && typeof r.vanilla === 'object' ? r.vanilla : null;
+    var get = function (key) {
+      return overlay && overlay[key] !== undefined ? overlay[key] : r[key];
     };
     var pushList = function (v) {
       if (Array.isArray(v)) {
@@ -797,65 +896,122 @@
     // only when it diverges from the canonical name recordParts added)
     push(r.gameName);
     push(String(r.dexNum));
-    push(r.category);
+    push(get('category'));
     push(r.region);
-    push(r.description);
-    pushList(r.types);
-    pushForms(r.forms);
-    pushList(r.ride);
-    pushList(r.notes);
-    pushVariants(r.dexVariants);
-    pushMoves(r.moves);
-    var v = r.vanilla;
-    if (v && typeof v === 'object') {
-      push(v.name);
-      push(v.category);
-      push(v.description);
-      pushList(v.types);
-      pushForms(v.forms);
-      pushList(v.ride);
-      pushList(v.notes);
-      pushVariants(v.dexVariants);
-      pushMoves(v.moves);
+    push(get('description'));
+    pushList(get('types'));
+    pushForms(get('forms'));
+    pushList(get('ride'));
+    pushList(get('notes'));
+    pushVariants(get('dexVariants'));
+    pushMoves(get('moves'));
+    if (edition === 'vanilla') {
+      // the vanilla build's own name spelling (the scoped form of the
+      // union's closing overlay block — no EX values in this haystack)
+      push(get('name'));
+    } else {
+      var v = r.vanilla;
+      if (v && typeof v === 'object') {
+        push(v.name);
+        push(v.category);
+        push(v.description);
+        pushList(v.types);
+        pushForms(v.forms);
+        pushList(v.ride);
+        pushList(v.notes);
+        pushVariants(v.dexVariants);
+        pushMoves(v.moves);
+      }
     }
     return parts;
   }
 
-  /** name + file-specific parts + structured diagram fields + both string-form difference notes. */
-  function recordParts(fileId, record) {
+  /** name + file-specific parts + structured diagram fields + the string-form difference notes (both in the union; the edition's own when scoped). */
+  function recordParts(fileId, record, edition) {
     var parts = [str(record.name)];
     var extract = RECORD_EXTRACTORS[fileId];
-    if (extract) parts = parts.concat(extract(record));
+    if (extract) parts = parts.concat(extract(record, edition));
     parts = parts.concat(structuredText(record, RECORD_STRUCTURED));
-    return parts.concat(stringDiffNotes(record));
+    return parts.concat(stringDiffNotes(record, edition));
   }
 
   /**
-   * A quest record's search haystack — the SAME field union the palette
-   * indexes (name + description, trigger, requirements and rewards across
-   * BOTH per-version variants + flags + the display group(s) as rendered
-   * group headings), placeholder-resolved and lowercased. The palette's
-   * quest entry `text` and the Quests page's per-card data-search are
-   * BOTH this string (issue #50: the on-page filter has the same coverage
-   * as the site-wide palette — a query findable in one is findable in the
-   * other). Version-independent by design, like the palette index.
+   * True when a record's haystack differs per build (issue #151): any of
+   * the data shapes carrying per-edition values — a `differences` side
+   * that is an OBJECT (overriding fields) or a STRING (that build's own
+   * variant note), the pokedex `vanilla` overlay, or settings
+   * `optionsByVersion`.
    */
-  ROGUE.questSearchText = function (record) {
-    return ROGUE.resolvePlaceholders(recordParts('quests', record).join(' ')).toLowerCase();
+  function hasEditionSplit(fileId, record) {
+    if (fileId === 'pokedex' && record.vanilla && typeof record.vanilla === 'object') return true;
+    if (fileId === 'settings') {
+      if (record.optionsByVersion && typeof record.optionsByVersion === 'object' && !Array.isArray(record.optionsByVersion)) return true;
+    }
+    var diff = record && record.differences;
+    if (diff && typeof diff === 'object' && !Array.isArray(diff)) {
+      for (var i = 0; i < VERSION_IDS.length; i++) {
+        var side = diff[VERSION_IDS[i]];
+        if (side && (typeof side === 'object' || typeof side === 'string')) return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * The two edition-scoped haystacks of a split record (issue #151) —
+   * the same precomputed shape as an entry's own fields, each carrying
+   * ONLY that build's field values (placeholder-resolved once). Used by
+   * searchQuery to re-scope a result's text/textCase/span to the active
+   * edition and to label other-edition-only matches.
+   */
+  function buildEditions(fileId, record) {
+    var out = {};
+    for (var i = 0; i < VERSION_IDS.length; i++) {
+      var ed = VERSION_IDS[i];
+      var resolved = ROGUE.resolvePlaceholders(recordParts(fileId, record, ed).join(' '));
+      var text = resolved.toLowerCase();
+      var folded = foldAccents(text);
+      var toks = foldedTokens(folded.text);
+      out[ed] = {
+        text: text,
+        textCase: resolved,
+        foldedText: folded.text,
+        foldMap: folded.map,
+        tokens: toks.tokens,
+        tokenPos: toks.pos
+      };
+    }
+    return out;
+  }
+
+  /**
+   * A quest record's search haystack, placeholder-resolved and lowercased.
+   * `edition` null/absent: the field UNION the palette indexes (name +
+   * description, trigger, requirements and rewards across BOTH per-version
+   * variants + flags + the display group(s) as rendered group headings) —
+   * the palette's quest entry `text` IS this string (issue #50: a query
+   * findable in one surface is findable in the other). `edition` set:
+   * that build's own field values only (issue #151) — the Quests page
+   * writes ROGUE.questSearchText(record, ROGUE.version) into each card's
+   * data-search, so a card's haystack carries the same wording the card
+   * displays, and no other-edition reward text.
+   */
+  ROGUE.questSearchText = function (record, edition) {
+    return ROGUE.resolvePlaceholders(recordParts('quests', record, edition).join(' ')).toLowerCase();
   };
 
   /**
-   * A pokedex record's search haystack — the SAME field union the palette
-   * indexes (name, dex number, category, region, description, both
-   * variants' types, all move names, form display names, variant names,
-   * ride, notes — strings only, bare stat numbers out), lowercased. The
-   * palette's
-   * pokedex entry `text` and the Pokedex page's on-page filter are BOTH
-   * this string (the issue-#50 on-page/palette parity for the dex),
-   * version-independent by design, like the palette index.
+   * A pokedex record's search haystack, lowercased. `edition`
+   * null/absent: the SAME field union the palette indexes (name, dex
+   * number, category, region, description, both variants' types, all move
+   * names, form display names, variant names, ride, notes — strings only,
+   * bare stat numbers out) — the palette's pokedex entry `text` and the
+   * Pokedex page's on-page filter are BOTH this string (the issue-#50
+   * on-page/palette parity for the dex), version-independent by design.
+   * `edition` set (issue #151): that build's own fields only.
    */
-  ROGUE.pokedexSearchText = function (record) {
-    return ROGUE.resolvePlaceholders(recordParts('pokedex', record).join(' ')).toLowerCase();
+  ROGUE.pokedexSearchText = function (record, edition) {
+    return ROGUE.resolvePlaceholders(recordParts('pokedex', record, edition).join(' ')).toLowerCase();
   };
 
   /* ------------------------------------------------------------------ *
@@ -1042,18 +1198,22 @@
         // Pokedex page's on-page filter uses; the record entry's anchor
         // is the per-card DOM id (issue #45)
         var sharedHaystack = fileId === 'quests' ? ROGUE.questSearchText(record) : fileId === 'pokedex' ? ROGUE.pokedexSearchText(record) : undefined;
-        entries.push(
-          makeEntry(
-            'rec-' + fileId + '-' + recKey,
-            str(record.name),
-            recordParts(fileId, record),
-            recTarget.page,
-            recTarget.anchor,
-            Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS,
-            sharedHaystack,
-            recTarget.section
-          )
+        var entry = makeEntry(
+          'rec-' + fileId + '-' + recKey,
+          str(record.name),
+          recordParts(fileId, record),
+          recTarget.page,
+          recTarget.anchor,
+          Array.isArray(record.versions) ? record.versions : BOTH_VERSIONS,
+          sharedHaystack,
+          recTarget.section
         );
+        // issue #151 — split records (per-edition field values) carry the
+        // two edition-scoped haystacks alongside the union entry text;
+        // searchQuery uses them to re-scope the result and to label
+        // other-edition-only matches
+        if (hasEditionSplit(fileId, record)) entry.editions = buildEditions(fileId, record);
+        entries.push(entry);
       }
     }
 
@@ -1082,6 +1242,19 @@
       // text would misalign and matchIndex/matchEnd would slice it wrongly
       if (typeof e.textCase !== 'string' || e.textCase.toLowerCase() !== e.text)
         problems.push('textCase not the 1:1 original-case parallel of text: ' + e.id);
+      if (e.editions) {
+        // issue #151 — the edition haystacks carry the same invariants
+        for (var ed = 0; ed < VERSION_IDS.length; ed++) {
+          var editionText = e.editions[VERSION_IDS[ed]];
+          if (!editionText) {
+            problems.push('missing edition haystack: ' + e.id + ' ' + VERSION_IDS[ed]);
+          } else if (editionText.text !== String(editionText.text).toLowerCase()) {
+            problems.push('edition text not lowercased: ' + e.id + ' ' + VERSION_IDS[ed]);
+          } else if (typeof editionText.textCase !== 'string' || editionText.textCase.toLowerCase() !== editionText.text) {
+            problems.push('edition textCase not the 1:1 original-case parallel: ' + e.id + ' ' + VERSION_IDS[ed]);
+          }
+        }
+      }
       if (typeof e.page !== 'string' || e.page.slice(0, 2) !== './' || e.page.slice(-5) !== '.html') problems.push('page not a relative .html link: ' + e.id + ' → ' + e.page);
       if (e.anchor !== '' && e.anchor.charAt(0) !== '#') problems.push('anchor must be "" or "#<id>": ' + e.id + ' → ' + e.anchor);
       var badVersions = !Array.isArray(e.versions) || e.versions.length === 0;
@@ -1215,6 +1388,15 @@
    *     matchEnd     EXCLUSIVE end of that span in `text`/`textCase`
    *                  (-1 with matchIndex) — the snippet's highlight span
    *                  for exact rows; the fuzzy rows' snippet anchor
+   *     text/        for entries carrying `editions` (issue #151): the
+   *     textCase     result's haystacks are re-scoped to the ACTIVE build's
+   *                  edition haystack (see the snippet policy in the header
+   *                  doc), and matchIndex/matchEnd are recomputed inside it
+   *     crossVersion the OTHER build's id ('vanilla' | 'ex') when the match
+   *                  exists ONLY in the other build's text — the overlay
+   *                  labels such rows explicitly (e.g. "Match in EX");
+   *                  absent for active-edition matches and for entries
+   *                  without `editions`
    */
   ROGUE.searchQuery = function (entries, query, activeVersion) {
     // fold the QUERY the same way the haystacks are folded at match time
@@ -1267,6 +1449,7 @@
         versions: e.versions,
         section: e.section
       };
+      var best = null;
       if (tier !== -1) {
         // exact substring: the first occurrence of the folded query in
         // the folded haystack, mapped back to the un-folded text via the
@@ -1281,10 +1464,9 @@
         // occurrence in the folded text (all candidates are at distance
         // exactly 1) — the snippet centres on it; the `fuzzy` flag keeps
         // the palette from highlighting it (no contiguous match)
-        var best = null;
         for (var t = 0; t < f.tokens.length; t++) {
           if (!candidates[f.tokens[t]]) continue;
-          if (!best || f.pos[t] < best.pos) best = { pos: f.pos[t], len: f.tokens[t].length };
+          if (!best || f.pos[t] < best.pos) best = { pos: f.pos[t], len: f.tokens[t].length, tok: f.tokens[t] };
         }
         if (best) {
           result.tier = 3;
@@ -1293,7 +1475,44 @@
           result.matchEnd = f.map[best.pos + best.len - 1] + 1;
         }
       }
-      if (result.tier !== undefined) buckets[result.tier].push(result);
+      if (result.tier !== undefined) {
+        // issue #151 — edition-scoped snippet: MATCHING stays on the
+        // union (issue #50 coverage — every edition's field values are
+        // findable), but the RESULT the reader sees is re-scoped to the
+        // ACTIVE build's haystack whenever the entry carries one. When
+        // the match exists ONLY in the other build's text, the result
+        // takes that build's text/span and is flagged crossVersion, so
+        // the overlay labels the row explicitly (e.g. "Match in EX"). A
+        // match in the active build's text is never labeled. (The one
+        // unlabelable edge — a multi-word match at the seam between the
+        // union's two edition segments, absent from both edition texts —
+        // keeps the union text/span without a label.)
+        if (e.editions) {
+          var otherId = activeVersion === 'vanilla' ? 'ex' : 'vanilla';
+          var activeEd = e.editions[activeVersion];
+          var otherEd = e.editions[otherId];
+          var inActive =
+            result.tier === 3 ? activeEd.tokens.indexOf(best.tok) !== -1 : activeEd.foldedText.indexOf(q) !== -1;
+          var inOther =
+            result.tier === 3 ? otherEd.tokens.indexOf(best.tok) !== -1 : otherEd.foldedText.indexOf(q) !== -1;
+          if (inActive || inOther) {
+            var sel = inActive ? activeEd : otherEd;
+            if (result.tier === 3) {
+              var tIdx = sel.tokens.indexOf(best.tok);
+              result.matchIndex = sel.tokenPos[tIdx];
+              result.matchEnd = sel.foldMap[sel.tokenPos[tIdx] + best.len - 1] + 1;
+            } else {
+              var sIdx = sel.foldedText.indexOf(q);
+              result.matchIndex = sel.foldMap[sIdx];
+              result.matchEnd = sel.foldMap[sIdx + q.length - 1] + 1;
+            }
+            result.text = sel.text;
+            result.textCase = sel.textCase;
+            if (!inActive) result.crossVersion = otherId;
+          }
+        }
+        buckets[result.tier].push(result);
+      }
     }
 
     var out = buckets[0].concat(buckets[1], buckets[2], buckets[3]);
