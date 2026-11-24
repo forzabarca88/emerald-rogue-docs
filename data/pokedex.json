@@ -72,13 +72,13 @@
       "text": "How a species holds up in a run, computed from this file alone — the typeChart, the records and the routes wild tables. Every formula below is exact, and the dex toolbar reads the same fields when it sorts or filters.",
       "list": [
         "typeChart — the build's damage-multiplier table: EX is a dense 20×20 matrix (20 types, Mystery and Stellar included); Vanilla is a flat triple list that becomes an 18×18 matrix (an unlisted pair is neutral); every multiplier is ×0, ×0.5, ×1 or ×2",
-        "offensive coverage — for each defender type d: mult(d) = the product of chart[t][d] over the species' types t; super coverage = the standard defender types with mult(d) ≥ 2 (a dual type can reach ×4 — Bug + Grass on Psychic)",
-        "immunity count — the standard defender types with mult(d) = 0; the standard defenders are the build's species types — 18 in EX (Fairy included), 17 in Vanilla (no Fairy) — since Mystery and Stellar are never defenders",
+        "offensive coverage (best-of-own-types, issue #150) — for each SINGLE defender type d: best(d) = the best of chart[t][d] over the species' own attack types t; a move is one type, so the strongest of its own-type moves decides and best(d) tops out at ×2 (the product rule let Bug + Grass on Psychic reach ×4); super coverage = the standard defenders with best(d) = 2, at-or-below-neutral = best(d) ≤ 1. A type-chart-only bound — it ignores learnable moves, STAB and dual-type defenders",
+        "zero-hit count (offense, not a defensive immunity) — the standard defender types that none of the species' own attack types hits (best(d) = 0); the standard defenders are the build's species types — 18 in EX (Fairy included), 17 in Vanilla (no Fairy) — since Mystery and Stellar are never defenders",
         "role percentile — 100 × (species in the active dex strictly below the stat) ÷ (N − 1), N = the active dex size: physical = Atk, special = Sp. Atk, wall = HP + Def + Sp. Def, speed = Speed",
-        "wild exposure — the number of the 36 routes whose 3-type wild table shares a type with the species (per build: the six Fairy-swap routes read their Vanilla wild types)",
+        "wild hint overlap — the number of the 36 routes whose 3-type wild HINT table shares a type with the species (an overlap of the route hint tables, not encounter odds — the hint types are not guaranteed rosters; per build: the six Fairy-swap routes read their Vanilla wild types)",
         "economy — catch rate (3–255; higher is easier to pocket, legendaries sit at 3) and base EXP straight from the record (the Vanilla overlay holds the differing values)",
         "movepool depth — the count of distinct move types across the species' level-up/TM/tutor learnset, each move's type from the active build's catalog",
-        "the two charts differ on exactly two shared cells: Ghost and Dark keep their ×0.5 Steel resistance in Vanilla and lose it in EX (B_STEEL_RESISTANCES = GEN_LATEST)"
+        "the two charts differ on exactly two shared cells: Steel resists incoming Ghost and Dark moves (×0.5) in Vanilla and loses that resistance in EX (B_STEEL_RESISTANCES = GEN_LATEST)"
       ],
       "source": "src/battle_util.c @origin/expansion L1196-1230; src/battle_main.c @vanilla L329-443 (the metrics are computed from the site data at run time — typeChart, the records and data/routes.json)"
     }
@@ -548,7 +548,7 @@
         1
       ]
     ],
-    "source": "src/battle_util.c @origin/expansion L1196-1230 (dense uq4_12 matrix; the B_STEEL_RESISTANCES = GEN_LATEST guard resolves to the Gen 6 rule, so Ghost and Dark do not resist Steel); src/battle_main.c @vanilla L329-443 (flat attacker-defender-multiplier triples; unlisted pairs are neutral by default)",
+    "source": "src/battle_util.c @origin/expansion L1196-1230 (dense uq4_12 matrix; the B_STEEL_RESISTANCES = GEN_LATEST guard resolves to the Gen 6 rule, so Steel does not resist incoming Ghost/Dark moves — the Vanilla branch keeps the ×0.5 resistance); src/battle_main.c @vanilla L329-443 (flat attacker-defender-multiplier triples; unlisted pairs are neutral by default)",
     "vanilla": {
       "types": [
         "Normal",
@@ -76930,7 +76930,7 @@
           {
             "id": "dudunsparce",
             "method": "Level up at 38",
-            "form": "Dudunsprce (Three Segment)"
+            "form": "Dudunsparce (Three Segment)"
           }
         ]
       },
@@ -167065,7 +167065,7 @@
               {
                 "id": "basculegion",
                 "method": "Level up at 36 (female)",
-                "form": "Bsculegion (Female)"
+                "form": "Basculegion (Female)"
               }
             ]
           }
@@ -188654,7 +188654,8 @@
     },
     {
       "id": "fletchinder",
-      "name": "Flechinder",
+      "name": "Fletchinder",
+      "gameName": "Flechinder",
       "versions": [
         "ex"
       ],
@@ -204389,7 +204390,8 @@
     },
     {
       "id": "crabominable",
-      "name": "Crabminabl",
+      "name": "Crabominable",
+      "gameName": "Crabminabl",
       "versions": [
         "ex"
       ],
@@ -204555,7 +204557,7 @@
       },
       "forms": [
         {
-          "name": "Mega Crabminabl",
+          "name": "Mega Crabominable",
           "types": [
             "Fighting",
             "Ice"
@@ -216726,7 +216728,8 @@
     },
     {
       "id": "blacephalon",
-      "name": "Blacephaln",
+      "name": "Blacephalon",
+      "gameName": "Blacephaln",
       "versions": [
         "ex"
       ],
@@ -219416,7 +219419,8 @@
     },
     {
       "id": "corvisquire",
-      "name": "Corvisquir",
+      "name": "Corvisquire",
+      "gameName": "Corvisquir",
       "versions": [
         "ex"
       ],
@@ -219564,7 +219568,8 @@
     },
     {
       "id": "corviknight",
-      "name": "Corviknigh",
+      "name": "Corviknight",
+      "gameName": "Corviknigh",
       "versions": [
         "ex"
       ],
@@ -219732,7 +219737,7 @@
       },
       "forms": [
         {
-          "name": "Gigantamax Corviknigh",
+          "name": "Gigantamax Corviknight",
           "types": [
             "Flying",
             "Steel"
@@ -223378,7 +223383,8 @@
     },
     {
       "id": "barraskewda",
-      "name": "Barraskewd",
+      "name": "Barraskewda",
+      "gameName": "Barraskewd",
       "versions": [
         "ex"
       ],
@@ -224050,7 +224056,8 @@
     },
     {
       "id": "centiskorch",
-      "name": "Centiskorc",
+      "name": "Centiskorch",
+      "gameName": "Centiskorc",
       "versions": [
         "ex"
       ],
@@ -224195,7 +224202,7 @@
       },
       "forms": [
         {
-          "name": "Gigantamax Centiskorc",
+          "name": "Gigantamax Centiskorch",
           "types": [
             "Fire",
             "Bug"
@@ -224710,7 +224717,7 @@
               {
                 "id": "polteageist",
                 "method": "Use Chipped Pot",
-                "form": "Polteageis (Antique)"
+                "form": "Polteageist (Antique)"
               }
             ]
           }
@@ -224730,7 +224737,8 @@
     },
     {
       "id": "polteageist",
-      "name": "Polteageis",
+      "name": "Polteageist",
+      "gameName": "Polteageis",
       "versions": [
         "ex"
       ],
@@ -224885,7 +224893,7 @@
       },
       "forms": [
         {
-          "name": "Polteageis (Antique)",
+          "name": "Polteageist (Antique)",
           "types": [
             "Ghost"
           ],
@@ -229384,7 +229392,8 @@
     },
     {
       "id": "stonjourner",
-      "name": "Stonjourne",
+      "name": "Stonjourner",
+      "gameName": "Stonjourne",
       "versions": [
         "ex"
       ],
@@ -234535,7 +234544,8 @@
     },
     {
       "id": "basculegion",
-      "name": "Bsculegion",
+      "name": "Basculegion",
+      "gameName": "Bsculegion",
       "versions": [
         "ex"
       ],
@@ -234710,7 +234720,7 @@
       },
       "forms": [
         {
-          "name": "Bsculegion (Male)",
+          "name": "Basculegion (Male)",
           "types": [
             "Water",
             "Ghost"
@@ -234741,7 +234751,7 @@
           }
         },
         {
-          "name": "Bsculegion (Female)",
+          "name": "Basculegion (Female)",
           "types": [
             "Water",
             "Ghost"
@@ -235723,7 +235733,8 @@
     },
     {
       "id": "meowscarada",
-      "name": "Meowscarad",
+      "name": "Meowscarada",
+      "gameName": "Meowscarad",
       "versions": [
         "ex"
       ],
@@ -239677,7 +239688,8 @@
     },
     {
       "id": "squawkabilly",
-      "name": "Sqawkabily",
+      "name": "Squawkabilly",
+      "gameName": "Sqawkabily",
       "versions": [
         "ex"
       ],
@@ -239829,7 +239841,7 @@
       },
       "forms": [
         {
-          "name": "Sqawkabily (Blue Plumage)",
+          "name": "Squawkabilly (Blue Plumage)",
           "types": [
             "Normal",
             "Flying"
@@ -239854,7 +239866,7 @@
           "sprite": "squawkabilly_blue_plumage"
         },
         {
-          "name": "Sqawkabily (Yellow Plumage)",
+          "name": "Squawkabilly (Yellow Plumage)",
           "types": [
             "Normal",
             "Flying"
@@ -239879,7 +239891,7 @@
           "sprite": "squawkabilly_yellow_plumage"
         },
         {
-          "name": "Sqawkabily (White Plumage)",
+          "name": "Squawkabilly (White Plumage)",
           "types": [
             "Normal",
             "Flying"
@@ -241404,7 +241416,8 @@
     },
     {
       "id": "kilowattrel",
-      "name": "Kilowatrel",
+      "name": "Kilowattrel",
+      "gameName": "Kilowatrel",
       "versions": [
         "ex"
       ],
@@ -242416,7 +242429,8 @@
     },
     {
       "id": "brambleghast",
-      "name": "Brmblghast",
+      "name": "Brambleghast",
+      "gameName": "Brmblghast",
       "versions": [
         "ex"
       ],
@@ -248502,7 +248516,8 @@
     },
     {
       "id": "dudunsparce",
-      "name": "Dudunsprce",
+      "name": "Dudunsparce",
+      "gameName": "Dudunsprce",
       "versions": [
         "ex"
       ],
@@ -248708,7 +248723,7 @@
       },
       "forms": [
         {
-          "name": "Dudunsprce (Two Segment)",
+          "name": "Dudunsparce (Two Segment)",
           "types": [
             "Normal"
           ],
@@ -248737,7 +248752,7 @@
           }
         },
         {
-          "name": "Dudunsprce (Three Segment)",
+          "name": "Dudunsparce (Three Segment)",
           "types": [
             "Normal"
           ],
@@ -249150,7 +249165,8 @@
     },
     {
       "id": "scream_tail",
-      "name": "ScreamTail",
+      "name": "Scream Tail",
+      "gameName": "ScreamTail",
       "versions": [
         "ex"
       ],
@@ -249350,7 +249366,8 @@
     },
     {
       "id": "brute_bonnet",
-      "name": "BruteBonet",
+      "name": "Brute Bonnet",
+      "gameName": "BruteBonet",
       "versions": [
         "ex"
       ],
@@ -249509,7 +249526,8 @@
     },
     {
       "id": "flutter_mane",
-      "name": "FluttrMane",
+      "name": "Flutter Mane",
+      "gameName": "FluttrMane",
       "versions": [
         "ex"
       ],
@@ -249679,7 +249697,8 @@
     },
     {
       "id": "slither_wing",
-      "name": "SlithrWing",
+      "name": "Slither Wing",
+      "gameName": "SlithrWing",
       "versions": [
         "ex"
       ],
@@ -249858,7 +249877,8 @@
     },
     {
       "id": "sandy_shocks",
-      "name": "SndyShocks",
+      "name": "Sandy Shocks",
+      "gameName": "SndyShocks",
       "versions": [
         "ex"
       ],
@@ -250036,7 +250056,8 @@
     },
     {
       "id": "iron_treads",
-      "name": "IronTreads",
+      "name": "Iron Treads",
+      "gameName": "IronTreads",
       "versions": [
         "ex"
       ],
@@ -250210,7 +250231,8 @@
     },
     {
       "id": "iron_bundle",
-      "name": "IronBundle",
+      "name": "Iron Bundle",
+      "gameName": "IronBundle",
       "versions": [
         "ex"
       ],
@@ -250534,7 +250556,8 @@
     },
     {
       "id": "iron_jugulis",
-      "name": "IronJuguls",
+      "name": "Iron Jugulis",
+      "gameName": "IronJuguls",
       "versions": [
         "ex"
       ],
@@ -250894,7 +250917,8 @@
     },
     {
       "id": "iron_thorns",
-      "name": "IronThorns",
+      "name": "Iron Thorns",
+      "gameName": "IronThorns",
       "versions": [
         "ex"
       ],
@@ -252584,7 +252608,8 @@
     },
     {
       "id": "roaring_moon",
-      "name": "RoarngMoon",
+      "name": "Roaring Moon",
+      "gameName": "RoarngMoon",
       "versions": [
         "ex"
       ],
@@ -252778,7 +252803,8 @@
     },
     {
       "id": "iron_valiant",
-      "name": "IronVliant",
+      "name": "Iron Valiant",
+      "gameName": "IronVliant",
       "versions": [
         "ex"
       ],
@@ -253363,7 +253389,8 @@
     },
     {
       "id": "walking_wake",
-      "name": "WalkngWake",
+      "name": "Walking Wake",
+      "gameName": "WalkngWake",
       "versions": [
         "ex"
       ],
@@ -253532,7 +253559,8 @@
     },
     {
       "id": "iron_leaves",
-      "name": "IronLeaves",
+      "name": "Iron Leaves",
+      "gameName": "IronLeaves",
       "versions": [
         "ex"
       ],
@@ -253879,7 +253907,8 @@
     },
     {
       "id": "poltchageist",
-      "name": "Ptchageist",
+      "name": "Poltchageist",
+      "gameName": "Ptchageist",
       "versions": [
         "ex"
       ],
@@ -254021,7 +254050,7 @@
       },
       "forms": [
         {
-          "name": "Ptchageist (Counterfeit)",
+          "name": "Poltchageist (Counterfeit)",
           "types": [
             "Grass",
             "Ghost"
@@ -254052,7 +254081,7 @@
           }
         },
         {
-          "name": "Ptchageist (Artisan)",
+          "name": "Poltchageist (Artisan)",
           "types": [
             "Grass",
             "Ghost"
@@ -254292,7 +254321,7 @@
             "prev": {
               "id": "poltchageist",
               "method": "Use MstrpceTeacup",
-              "form": "Ptchageist (Artisan)"
+              "form": "Poltchageist (Artisan)"
             }
           }
         }
@@ -254638,7 +254667,8 @@
     },
     {
       "id": "fezandipiti",
-      "name": "Fezndipiti",
+      "name": "Fezandipiti",
+      "gameName": "Fezndipiti",
       "versions": [
         "ex"
       ],
@@ -255375,7 +255405,8 @@
     },
     {
       "id": "gouging_fire",
-      "name": "GouginFire",
+      "name": "Gouging Fire",
+      "gameName": "GouginFire",
       "versions": [
         "ex"
       ],
@@ -255560,7 +255591,8 @@
     },
     {
       "id": "raging_bolt",
-      "name": "RagingBolt",
+      "name": "Raging Bolt",
+      "gameName": "RagingBolt",
       "versions": [
         "ex"
       ],
@@ -255739,7 +255771,8 @@
     },
     {
       "id": "iron_boulder",
-      "name": "IronBouldr",
+      "name": "Iron Boulder",
+      "gameName": "IronBouldr",
       "versions": [
         "ex"
       ],

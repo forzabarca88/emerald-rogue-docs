@@ -3259,6 +3259,15 @@
   margin: 0;
 }
 
+/* the coverage limit line (issue #150) — the metric's stated bound:
+   type-chart only, no learnable moves / STAB / dual-type defenders */
+.page--pokedex .dex-typechart__limit {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
 /* --- mechanics -----------------------------------------------------------------------
    One .section per system (Charms & Curses, Followmons, Game Show,
    Time of Day & Seasons, Unique mons, Campaigns): an in-page anchor-chip

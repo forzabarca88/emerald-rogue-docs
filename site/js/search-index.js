@@ -749,8 +749,12 @@
    * overlay's differing fields on top; mirrors the on-page reader), in
    * the order the local pokedex.js filter used before Step 7 promoted
    * this to the shared ROGUE.pokedexSearchText. The species name itself
-   * is added centrally by recordParts — only the overlay's DIFFERING
-   * vanilla name is repeated here. `forms` is the structured object list
+   * is added centrally by recordParts (the canonical `name`), and its
+   * `gameName` — the actual in-game spelling of a name-mangled species
+   * (issue #149, e.g. "Dudunsprce" for Dudunsparce) — is repeated here,
+   * right after the name, so the menu's own truncated spelling still
+   * finds the species; only the overlay's DIFFERING vanilla name is
+   * repeated again at the end. `forms` is the structured object list
    * (issue #85) and contributes the form display NAMES only — the
    * per-form types/stats/abilities/descriptions stay out of the haystack.
    * Strings only: a field value that is not a string (a bare number, a
@@ -789,6 +793,9 @@
       pushList(m.tm);
       pushList(m.tutor);
     };
+    // issue #149 — the in-game spelling (a mangled name's alias, present
+    // only when it diverges from the canonical name recordParts added)
+    push(r.gameName);
     push(String(r.dexNum));
     push(r.category);
     push(r.region);

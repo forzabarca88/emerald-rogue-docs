@@ -469,6 +469,18 @@ test('the pokedex entries land on the Pokedex page with the shared on-page hayst
   const byName = rogue.searchQuery(entries, 'pikachu', 'ex');
   assert.equal(byName.results[0].id, 'rec-pokedex-pikachu', '"pikachu" ranks the Pikachu species card first');
   assert.equal(byName.results[0].page, './pokedex.html');
+
+  // ACT + ASSERT — issue #149: a name-mangled species' entry title is the
+  // CANONICAL name, and its in-game spelling (gameName — truncated /
+  // word-joined by the game's name tables) still finds the species
+  const mangled = data.pokedex.records.filter((r) => r.gameName).length;
+  assert.equal(mangled, 33, 'issue #149: 33 species carry an in-game spelling alias (gameName)');
+  assert.equal(byPokeId('dudunsparce').title, 'Dudunsparce', 'the entry title is the canonical name, not the in-game "Dudunsprce"');
+  assert.equal(rogue.searchQuery(entries, 'dudunsparce', 'ex').results[0].id, 'rec-pokedex-dudunsparce', 'the canonical name ranks the card first');
+  assert.ok(
+    rogue.searchQuery(entries, 'dudunsprce', 'ex').results.some((r) => r.id === 'rec-pokedex-dudunsparce'),
+    'the in-game spelling (gameName) finds the species'
+  );
   const byMove = rogue.searchQuery(entries, 'thunderbolt', 'ex');
   assert.ok(byMove.results.some((r) => r.id === 'rec-pokedex-rattata'), '"thunderbolt" surfaces a species that learns it (TM)');
   assert.ok(byMove.results.some((r) => r.id === 'rec-pokedex-pikachu'), '"thunderbolt" surfaces Pikachu');

@@ -15,10 +15,11 @@
  * The contract tested here: the shapes are valid (the type axes in
  * TYPE_* value order, square matrices, the game's multiplier set), the
  * well-known chart cells read correctly (incl. the EX #if resolution —
- * Ghost/Dark do NOT resist Steel in the shipped build), the vanilla
- * overlay differs from the EX-restricted table on EXACTLY the two
- * pre-Gen-6 Steel-resistance cells, and the "Viability" prose block is
- * present with its formulas and the dual citation.
+ * in the shipped build Steel does NOT resist incoming Ghost or Dark
+ * moves), the vanilla overlay differs from the EX-restricted table on
+ * EXACTLY the two pre-Gen-6 cells where Steel resists Ghost/Dark, and
+ * the "Viability" prose block is present with its formulas and the dual
+ * citation.
  *
  * Plain file reads of the committed data — no mocks, no build.
  */
@@ -58,13 +59,14 @@ test('the EX typeChart shape: 20 type axes in TYPE_* value order, a square matri
   assert.match(tc.source, /src\/battle_main\.c @vanilla/, 'cites the vanilla table');
 });
 
-test('the EX chart reads the well-known cells (incl. the #if resolution — Ghost/Dark do not resist Steel)', () => {
+test('the EX chart reads the well-known cells (incl. the #if resolution — Steel does not resist incoming Ghost/Dark)', () => {
   const tc = dex.typeChart;
   const c = (atk, def) => tc.mult[tc.types.indexOf(atk)][tc.types.indexOf(def)];
-  // the pre-Gen-6 branch would give 0.5 here — the shipped build
-  // (B_STEEL_RESISTANCES = GEN_LATEST ≥ GEN_6) gives neutral
-  assert.equal(c('Ghost', 'Steel'), 1, 'EX: Ghost is neutral against Steel (B_STEEL_RESISTANCES ≥ GEN_6)');
-  assert.equal(c('Dark', 'Steel'), 1, 'EX: Dark is neutral against Steel (B_STEEL_RESISTANCES ≥ GEN_6)');
+  // the pre-Gen-6 branch would give 0.5 here (Steel resists them) —
+  // the shipped build (B_STEEL_RESISTANCES = GEN_LATEST ≥ GEN_6) gives
+  // neutral
+  assert.equal(c('Ghost', 'Steel'), 1, 'EX: a Ghost move is neutral against Steel (B_STEEL_RESISTANCES ≥ GEN_6)');
+  assert.equal(c('Dark', 'Steel'), 1, 'EX: a Dark move is neutral against Steel (B_STEEL_RESISTANCES ≥ GEN_6)');
   // immunities
   assert.equal(c('Ghost', 'Normal'), 0);
   assert.equal(c('Normal', 'Ghost'), 0);
@@ -103,9 +105,9 @@ test('the vanilla overlay: 18 axes, the pre-Gen-6 chart, and it differs from the
   }
   const v = (atk, def) => van.mult[van.types.indexOf(atk)][van.types.indexOf(def)];
   const e = (atk, def) => tc.mult[tc.types.indexOf(atk)][tc.types.indexOf(def)];
-  // the vanilla (pre-Gen-6) Steel resistances
-  assert.equal(v('Ghost', 'Steel'), 0.5, 'vanilla: Ghost resists Steel');
-  assert.equal(v('Dark', 'Steel'), 0.5, 'vanilla: Dark resists Steel');
+  // the vanilla (pre-Gen-6) rule: Steel resists incoming Ghost/Dark
+  assert.equal(v('Ghost', 'Steel'), 0.5, 'vanilla: a Ghost move is resisted by Steel');
+  assert.equal(v('Dark', 'Steel'), 0.5, 'vanilla: a Dark move is resisted by Steel');
   // other well-known vanilla cells (the triple-list defaults)
   assert.equal(v('Poison', 'Steel'), 0);
   assert.equal(v('Bug', 'Grass'), 2);
@@ -121,7 +123,7 @@ test('the vanilla overlay: 18 axes, the pre-Gen-6 chart, and it differs from the
     }
   }
   assert.deepEqual(diffs.sort(), ['Dark>Steel: vanilla=0.5 ex=1', 'Ghost>Steel: vanilla=0.5 ex=1'],
-    'the only shared-cell differences are the two pre-Gen-6 Steel resistances');
+    'the only shared-cell differences are the two pre-Gen-6 cells where Steel resists Ghost/Dark');
 });
 
 test('the "Viability" prose block: formulas + the dual citation, and none of the pinned search words', () => {

@@ -388,7 +388,7 @@ test('know-move profile HIT: 15 EX branches are the level evo at max(38, profile
     duns.evos,
     [
       { id: 'dudunsparce', method: 'Level up at 38' },
-      { id: 'dudunsparce', method: 'Level up at 38', form: 'Dudunsprce (Three Segment)' },
+      { id: 'dudunsparce', method: 'Level up at 38', form: 'Dudunsparce (Three Segment)' },
     ],
     'dunsparce ex: both segments are the level-38 rewrite (Hyper Drill @32)',
   );
