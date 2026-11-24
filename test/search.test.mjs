@@ -976,7 +976,10 @@ test('known words never gain fuzzy matches (the unknown-word guard, issue #46)',
   // every broad query would flood tier 3 and break the pinned counts
   const pinned = [
     ['mega evolution', 5], // the screenshot literal (EX, pokedex page; 4 on the pages without the lazy chunk)
-    ['the final run', 2],
+    // issue #153: the versions quest-availability record now names the quest
+    // ("…e.g. Iron Kaizo and The Final Run…"), one more body match than the
+    // old 2 — the tier-0 title match (the quest) still ranks first
+    ['the final run', 3],
     ['spring', 18] // the 5 pre-pokedex hits + 13 pokedex species with spring-season dex text
   ];
 

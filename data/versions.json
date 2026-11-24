@@ -2,23 +2,23 @@
   "meta": {
     "id": "versions",
     "title": "Vanilla vs Expansion",
-    "description": "How the two builds relate: the Expansion (EX) build is not a fork but the same game tree compiled with EXPANSION=1, which flips a single feature flag (-D ROGUE_EXPANSION=1) and unlocks Generations 4–9 of Pokémon, mechanics, trainers, music and hub content. Everything else — the adventure path generator, followmons, the clock, campaigns, the Safari Zone and the game modes — behaves identically in both builds, with only behaviour-neutral code differences (listed with the verified identical core below). This page is the master list of what differs and where each difference is documented in detail."
+    "description": "How the two builds relate. EX is not a fork — it is the same source tree compiled with -D ROGUE_EXPANSION=1, which unlocks Generations 4–9, modern mechanics, new trainers, music and hub content. Each record below states what the code does in each build and carries its citation; 'identical' is used only where the sources were verified to match, and the shared files that do differ are itemised with their actual diffs (The identical core). Compiler switches and diff counts appear as supporting source notes."
   },
   "prose": [
     {
       "id": "one-codebase-two-builds",
       "heading": "One codebase, two builds",
-      "text": "Vanilla and EX are compiled from the same source tree. Building with EXPANSION=1 adds -D ROGUE_EXPANSION=1 to the compile (and a ROGUE_VERSION_EXPANSION flag to the pory scripts), and every version difference in the game is an #ifdef ROGUE_EXPANSION block — in the C, in the pory scripts or at build time in the generated data. Nothing is 'EX-only code that Vanilla lacks'; it is all present in both trees and selected at build time. That's why, when a file contains no such blocks, the two builds behave exactly the same in it."
+      "text": "Vanilla and EX are compiled from the same source tree. Building with EXPANSION=1 adds -D ROGUE_EXPANSION=1 to the compile (and a ROGUE_VERSION_EXPANSION flag to the pory scripts). Most version differences live in #ifdef ROGUE_EXPANSION blocks — in the C, in the pory scripts or at build time in the generated data — but a few are plain line differences in shared code (the Grace cap, the Game Show shelf, and the small controller, hub and gifts diffs below). So: a file with no differences between the branches behaves the same in both builds, while a file that does differ has to be read — the identical core section items each one."
     },
     {
       "id": "what-stays-the-same",
       "heading": "What does not change",
-      "text": "The core loop is version-proof: the adventure-path generator and every room type, the overworld followmon system, the time-of-day and season clocks, the legacy campaigns, the Safari Zone rules, the three game modes (Classic, Gauntlet, Fast Path), and the 36-route wild table layout (save for six Fairy typing swaps in EX) all behave identically between the builds (the only per-file code differences outside the documented ones are behaviour-neutral — see 'The identical core (verified)' below). The 138 quests that exist in both builds are byte-identical; EX adds 94 of its own on top."
+      "text": "Verified between the branches: the adventure-path generator and every room type, the overworld followmon system, the time-of-day and season clocks, the legacy campaigns, the three game modes (Classic, Gauntlet, Fast Path) and trainer generation all come from seven shared C files that are byte-identical on both branches, as is every adventure-path and encounter-map pory script. The Safari Zone rules (rogue_safari.c) differ only in a commented-out unused variable. The 36-route wild tables match except for six documented Fairy typing swaps in EX. The 138 quests that exist in both builds come from byte-identical quest files — but 81 of them carry edition-specific conditions or rewards (see the record below), and the other 57 play the same in both. EX adds 94 quests of its own on top."
     },
     {
       "id": "what-changes",
       "heading": "What changes",
-      "text": "EX is fundamentally a much bigger game — the strip below counts its differences per category, and the master list beneath it points to the pages where most of them are documented in detail."
+      "text": "EX is fundamentally a much bigger game — the strip below counts its documented differences per category, and the records beneath it point to the pages where each is documented in detail."
     }
   ],
   "records": [
@@ -131,7 +131,7 @@
       "name": "Unique Lab pools",
       "category": "unique-mons",
       "versions": ["vanilla", "ex"],
-      "description": "The Unique Lab's bonus pools differ: the special-ability pool is a 44-ability Gen 1–3 list in Vanilla versus a 63-ability Gen 1–9 list in EX, the curated bonus-move pool is extended in EX, and the default-spawn Exotic species swap (Vanilla: Chimecho, Aron, Misdreavus, Hoothoot, Azurill, Ekans; EX: Tympole, Burmy, Carbink, Wattrel, Shinx, Venipede, Trapinch). Documented on the Unique Pokémon page.",
+      "description": "The Unique Lab's bonus pools differ: the special-ability pool is a 44-ability Gen 1–3 list in Vanilla versus a 63-ability Gen 1–9 list in EX, the curated bonus-move pool is extended in EX, and the default-spawn Exotic species swap (Vanilla: Chimecho, Aron, Misdreavus, Hoothoot, Azurill, Ekans; EX: Tympole, Burmy, Carbink, Wattrel, Shinx, Venipede, Trapinch). Documented in the Unique mons section of the Mechanics page.",
       "source": "src/rogue_gifts.c @vanilla L118-161 (Vanilla ability pool, 44 entries) / @origin/expansion L54-116 (expanded pool, 63 entries); src/data/rogue/custom_mons.json @vanilla (build-time #if species gates) (identical @origin/expansion); data/unique-mons.json (bonus-abilities and static-custom-mons records) (site data)"
     },
     {
@@ -139,7 +139,7 @@
       "name": "Seasonal species gating",
       "category": "timeofday",
       "versions": ["ex"],
-      "description": "EX's seasonal forms are gated to their season when wild encounters roll (Deerling/Sawsbuck in their matching form only, Lycanroc excluded from Dusk/Night pools). In Vanilla the gating block simply does not exist — and neither do the species. Documented on the Time of Day & Seasons page.",
+      "description": "EX's seasonal forms are gated to their season when wild encounters roll (Deerling/Sawsbuck in their matching form only, Lycanroc excluded from Dusk/Night pools). In Vanilla the gating block simply does not exist — and neither do the species. Documented in the Time of Day section of the Mechanics page.",
       "source": "src/rogue_controller.c @origin/expansion L9504-9527 (wild-encounter weight gating inside the EX-only block)"
     },
     {
@@ -147,7 +147,7 @@
       "name": "Quest availability",
       "category": "quests",
       "versions": ["vanilla", "ex"],
-      "description": "The quest catalogue is shared for 138 quests (identical in both builds); EX adds 94 quests of its own, built on the new regions, species and mechanics. The per-quest version flags and source citations are on the Quests page.",
+      "description": "The quest files are byte-identical between the branches: both builds contain the same 138 shared quests, of which 81 carry per-edition conditions or rewards (e.g. Iron Kaizo and The Final Run — tracked per quest on the Quests page). EX adds 94 quests of its own, built on the new regions, species and mechanics. The per-quest version flags and source citations are on the Quests page.",
       "source": "data/quests.json (per-quest versions fields: 138 shared, 94 EX-only) (site data); src/data/rogue/quests.json @vanilla (quest data with build-time #if gates) (identical @origin/expansion)"
     },
     {
@@ -179,8 +179,8 @@
       "name": "The identical core (verified)",
       "category": "version-mechanic",
       "versions": ["vanilla", "ex"],
-      "description": "Verified between the branches: both builds behave the same in the adventure-path generator and room weights (rogue_adventurepaths.c), overworld followmons (rogue_followmon.c), time-of-day and seasons (rogue_timeofday.c), legacy campaigns (rogue_campaign.c), the adventure-path and all encounter-room pory scripts, trainer generation (rogue_trainers.c), baked battle flows (rogue_baked.c), the run script hub (rogue_script.c), the Safari Zone rules and the three game modes. The per-file code diffs outside the documented differences are behaviour-neutral: a commented-out unused variable in rogue_safari.c, small cleanups in rogue_hub.c (a SPECIES_OR_EGG check, an UNUSED marker and a struct initialisation), rogue_assistant.c (an unused forward declaration), rogue_assistantbox.c and rogue_worldmap.c (malloc→Alloc), rogue_player_customisation.c (an unused variable), rogue_voltorbflip.c (u8→u32) and src/data/rogue_strings.h (the version string); the SafariZone map.json files differ only in key order, and the hub's pory scripts only in the EXPANSION-flag-gated multichoice counts. The only functional divergences in the run's core code are the single-line Grace cap, the Game Show shelf repositioning, the Pikin Mega exception and the small roster/mechanics blocks listed above.",
-      "source": "git diff origin/vanilla origin/expansion -- src/ (no diff for rogue_adventurepaths.c, rogue_followmon.c, rogue_timeofday.c, rogue_campaign.c, rogue_trainers.c, rogue_baked.c, rogue_script.c; behaviour-neutral diffs in rogue_safari.c, rogue_hub.c, rogue_assistant.c, rogue_assistantbox.c, rogue_player_customisation.c, rogue_voltorbflip.c, rogue_worldmap.c and src/data/rogue_strings.h) and all encounter map scripts under data/maps/ (Rogue_AdventurePaths, all Rogue_Encounter_* maps — 0 diffs)"
+      "description": "Verified line-for-line against the baseline branches. Byte-identical in both builds: the seven shared run-core files — the adventure-path generator and room weights (rogue_adventurepaths.c), overworld followmons (rogue_followmon.c), time-of-day and seasons (rogue_timeofday.c), legacy campaigns (rogue_campaign.c), trainer generation (rogue_trainers.c), the baked battle flows (rogue_baked.c) and the run script hub (rogue_script.c) — the quest data files (all 138 shared quests live in both builds; 81 of them carry per-edition conditions or rewards, tracked separately) and every adventure-path and encounter-map pory script. The shared files that do differ were diffed and read: the diffs in rogue_safari.c, rogue_assistant.c, rogue_assistantbox.c, rogue_player_customisation.c, rogue_voltorbflip.c and rogue_worldmap.c are neutral in effect (a commented-out unused variable, an unused forward declaration, allocator calls, an unused variable, a u8→u32 loop counter), src/data/rogue_strings.h carries only the version string, the SafariZone map.json files differ only in JSON key order, and the hub's pory scripts only in the EXPANSION-flag-gated 9th-generation multichoice count. Two small shared-code differences are real: in the expansion-only block of the item checks, EX's 'not game ready yet' Mega-stone disable list no longer disables eleven stones (the vanilla build never compiles that block), and the settings-menu highlight after a save upgrade is shown in the vanilla build but not in EX when the saved run was already on 2.2.0 or later; the hub's box-mon query uses a renamed data id (MON_DATA_SPECIES_OR_EGG) whose egg handling is the same. The documented functional divergences remain the Grace cap, the Game Show shelf repositioning and the Pikin Mega exception. What this page does not claim: the rest of the codebase — species data, battle code and assets — differs between the editions by design; only the cited files were verified.",
+      "source": "src/rogue_adventurepaths.c @vanilla identical @origin/expansion, src/rogue_followmon.c @vanilla identical @origin/expansion, src/rogue_timeofday.c @vanilla identical @origin/expansion, src/rogue_campaign.c @vanilla identical @origin/expansion, src/rogue_trainers.c @vanilla identical @origin/expansion, src/rogue_baked.c @vanilla identical @origin/expansion, src/rogue_script.c @vanilla identical @origin/expansion, src/data/rogue/quests.json @vanilla identical @origin/expansion, src/rogue_controller.c @vanilla L2376-2434 (the expansion-only 'not game ready yet' Mega-stone list; the eleven stones still listed here are disabled in the vanilla tree) / @origin/expansion L2374-2421 (the same list minus those eleven stones), src/rogue_controller.c @vanilla L3394-3398 (settings highlight set on any save upgrade) / @origin/expansion L3381-3389 (set only when upgrading a save from before 2.2.0), src/rogue_hub.c @vanilla L663-669 (box-mon query checks MON_DATA_SPECIES2) / @origin/expansion L663-669 (renamed id MON_DATA_SPECIES_OR_EGG; the egg handling is the same in src/pokemon.c), src/data/rogue_strings.h @vanilla L6 / @origin/expansion L6 (the version string), git diff --name-only origin/vanilla origin/expansion -- data/maps/ (hub pory scripts: the EXPANSION-gated 9th-generation multichoice only; all Rogue_AdventurePaths and Rogue_Encounter_* scripts: no diff)"
     }
   ]
 }
