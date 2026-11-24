@@ -1326,12 +1326,19 @@
     }
 
     /**
-     * The viability prose's offensive coverage for one record: for
-     * every standard defender type d, mult(d) = the PRODUCT of
-     * chart[t][d] over the species' (version-scoped, deduped) types —
-     * a dual type can reach ×4 — then: super = the defenders with
-     * product ≥ 2, atOrBelow = the defenders with product ≤ 1, N =
-     * the active build's standard-type count.
+     * The viability prose's offensive coverage for one record (issue
+     * #150 — best-of-own-types against a SINGLE defender type): for
+     * every standard defender type d, best(d) = the BEST of chart[t][d]
+     * over the species' (version-scoped, deduped) own attack types —
+     * a move is one type, so the strongest of its own-type moves decides
+     * and best(d) tops out at ×2 (the old product rule let a dual type
+     * reach ×4, and a resist row could hide a super-effective row: a
+     * Bug/Steel vs Fairy is ×2 via Steel, not the ×1 the product gave).
+     * Then: super = the defenders with best(d) ≥ 2, atOrBelow = the
+     * defenders with best(d) ≤ 1, N = the active build's standard-type
+     * count. The metric is labeled on the page with its limit: the type
+     * chart alone — it ignores learnable moves, STAB and dual-type
+     * defenders.
      */
     function coverageOf(record) {
       var tc = activeTypeChart();
@@ -1345,13 +1352,13 @@
       var atOrBelow = 0;
       std.forEach(function (def) {
         var defI = tc.types.indexOf(def);
-        var prod = 1;
+        var best = 0;
         types.forEach(function (t) {
           var atkI = tc.types.indexOf(t);
-          if (atkI !== -1 && defI !== -1) prod *= tc.mult[atkI][defI];
+          if (atkI !== -1 && defI !== -1 && tc.mult[atkI][defI] > best) best = tc.mult[atkI][defI];
         });
-        if (prod >= 2) sup++;
-        if (prod <= 1) atOrBelow++;
+        if (best >= 2) sup++;
+        if (best <= 1) atOrBelow++;
       });
       return { sup: sup, atOrBelow: atOrBelow, N: std.length };
     }
@@ -1465,8 +1472,9 @@
         var cov = coverageOf(rec);
         if (coverage) {
           coverage.innerHTML =
-            '<p class="dex-typechart__line">hits super-effective: ' + cov.sup + '/' + cov.N + '</p>' +
-            '<p class="dex-typechart__line">at-or-below-neutral: ' + cov.atOrBelow + '/' + cov.N + '</p>';
+            '<p class="dex-typechart__line">super-effective (best of its own types vs. a single defender): ' + cov.sup + '/' + cov.N + '</p>' +
+            '<p class="dex-typechart__line">at-or-below-neutral (best of its own types vs. a single defender): ' + cov.atOrBelow + '/' + cov.N + '</p>' +
+            '<p class="dex-typechart__limit">type-chart only \u2014 ignores learnable moves, STAB and dual-type defenders</p>';
           coverage.hidden = false;
         }
       } else if (coverage) {

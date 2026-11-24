@@ -30,6 +30,14 @@
  * the Expansion values; the `vanilla` object holds only the fields that differ
  * under Vanilla.
  *
+ * #149 — canonical names: 33 EX species whose in-game display string is
+ * truncated or word-joined by the game's name tables ("Dudunsprce", …).
+ * Their `name` carries the full canonical spelling (titleCaseId of the
+ * species enum id) and the record's optional `gameName` carries the actual
+ * in-game spelling as a search/menu alias (the site renders `name` in
+ * labels/a11y; the search index indexes BOTH). Ids, URLs, artwork and
+ * flavor text are untouched.
+ *
  * Loader semantics replicated:
  *   - A miniature C preprocessor (line continuations, string-aware comments,
  *     #if/#ifdef/#ifndef/#elif/#else/#endif with integer-expression
@@ -826,7 +834,9 @@ function extract(repo) {
   //            matrix of uq4_12; each cell is X(n.n) or ______ (the X(1.0)
   //            shorthand). The one #if guard (B_STEEL_RESISTANCES >= GEN_6)
   //            resolves through the build config (GEN_LATEST = GEN_9)
-  //            — in the shipped build Ghost and Dark do NOT resist Steel.
+  //            — in the shipped build Steel does NOT resist incoming
+  //            Ghost or Dark moves (the #else arm, the Vanilla build's
+  //            rule, keeps Steel's ×0.5 resistance to them).
   //   Vanilla  src/battle_main.c's gTypeEffectiveness[336] — a flat list of
   //            (attacker, defender, multiplier) triples; UNLISTED pairs
   //            default to neutral (x1). Multiplier codes: 20 = x2, 10 = x1,
@@ -987,7 +997,7 @@ function extract(repo) {
     types: exTypeChart.types,
     mult: exTypeChart.mult,
     source:
-      'src/battle_util.c @origin/expansion L1196-1230 (dense uq4_12 matrix; the B_STEEL_RESISTANCES = GEN_LATEST guard resolves to the Gen 6 rule, so Ghost and Dark do not resist Steel); src/battle_main.c @vanilla L329-443 (flat attacker-defender-multiplier triples; unlisted pairs are neutral by default)',
+      'src/battle_util.c @origin/expansion L1196-1230 (dense uq4_12 matrix; the B_STEEL_RESISTANCES = GEN_LATEST guard resolves to the Gen 6 rule, so Steel does not resist incoming Ghost/Dark moves — the Vanilla branch keeps the ×0.5 resistance); src/battle_main.c @vanilla L329-443 (flat attacker-defender-multiplier triples; unlisted pairs are neutral by default)',
   };
   if (JSON.stringify(exOnVanillaAxes) !== JSON.stringify(vanTypeChart.mult)) {
     typeChart.vanilla = { types: vanTypeChart.types, mult: vanTypeChart.mult };
@@ -1722,6 +1732,55 @@ function extract(repo) {
     if (!exFamilyBase.has(table)) exFamilyBase.set(table, ids[0] ?? null);
   }
 
+  // #149 — canonical names: 33 EX species whose in-game display string is
+  // truncated or word-joined by the game's name tables ("Dudunsprce",
+  // "GouginFire", "ScreamTail" …). The record's `name` carries the full
+  // canonical spelling — titleCaseId of the species enum id (SPECIES_X →
+  // the same rule the record ids use) — and `gameName` keeps the actual
+  // in-game string as a search/menu alias (the site renders `name` in
+  // labels/a11y; the search index carries BOTH). Ids, URLs, artwork and
+  // flavor text are untouched; the forms of these bases derive their
+  // display names from the corrected base ("Dudunsparce (Three Segment)").
+  const CANONICAL_NAME_FIXES = [
+    'fletchinder', 'crabominable', 'blacephalon', 'corvisquire', 'corviknight',
+    'barraskewda', 'centiskorch', 'polteageist', 'stonjourner', 'basculegion',
+    'meowscarada', 'squawkabilly', 'kilowattrel', 'brambleghast', 'dudunsparce',
+    'scream_tail', 'brute_bonnet', 'flutter_mane', 'slither_wing', 'sandy_shocks',
+    'iron_treads', 'iron_bundle', 'iron_jugulis', 'iron_thorns', 'roaring_moon',
+    'iron_valiant', 'walking_wake', 'iron_leaves', 'poltchageist', 'fezandipiti',
+    'gouging_fire', 'raging_bolt', 'iron_boulder',
+  ];
+  // The set is EXHAUSTIVE over mangling: a mangled in-game name is one
+  // whose LETTERS differ from the enum id's — the test is the normalized
+  // string (lowercased, diacritics folded, non-alphanumerics dropped), so
+  // punctuation spellings (Porygon-Z, Mime Jr., Type: Null, Wo-Chien …)
+  // and character variants (Flabébé, Sirfetch'd) are legitimate and
+  // unflagged, while a dropped/joined letter (Dudunsprce, ScreamTail)
+  // is not. A newly divergent species fails loudly instead of shipping
+  // a truncated name. Legitimate letter-free spellings (the Nidoran
+  // gender glyphs) are exempt — their in-game names ship as-is.
+  const nameLetters = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+  const NAME_GLYPH_VARIANTS = new Set(['nidoran_f', 'nidoran_m']);
+  for (const entry of exEntries.values()) {
+    // skip the family's non-base members (the record base — which may sit
+    // in its own form family — is still checked)
+    if (entry.formTable && exFamilyBase.get(entry.formTable) !== entry.id) continue;
+    if (NAME_GLYPH_VARIANTS.has(entry.id)) continue;
+    if (nameLetters(entry.name) !== nameLetters(entry.id) && !CANONICAL_NAME_FIXES.includes(entry.id))
+      fail(`#149: ${entry.id}'s in-game name "${entry.name}" is a mangled spelling of its enum name but is not in CANONICAL_NAME_FIXES`);
+  }
+  for (const id of CANONICAL_NAME_FIXES) {
+    const entry = exEntries.get(id);
+    if (!entry) fail(`#149: ${id} is in CANONICAL_NAME_FIXES but has no EX species initializer`);
+    // a record base may sit in its OWN form family (Mega/Gigantamax
+    // members) — only a non-base member of a family is rejected
+    if (entry.formTable && exFamilyBase.get(entry.formTable) !== id) fail(`#149: ${id} is a form entry, not a record base`);
+    const canonical = titleCaseId(id);
+    if (entry.name === canonical) fail(`#149: ${id}'s in-game name no longer diverges from its enum name ("${entry.name}") — drop it from CANONICAL_NAME_FIXES`);
+    entry.gameName = entry.name;
+    entry.name = canonical;
+  }
+
   // form membership + display names for every parsed entry: the records AND
   // the dex-less forms (the base's forms list needs the no-dex names too)
   const allExEntries = [...exEntries.values(), ...exNoDexMap.values()];
@@ -2403,6 +2462,11 @@ function extract(repo) {
     const rec = {};
     rec.id = id;
     rec.name = exDisplayNames.get(exId);
+    // #149 — the in-game spelling of a mangled base (the record's `name`
+    // is the canonical form): a search/menu alias, emitted ONLY when it
+    // diverges
+    const exEntryName = exEntries.get(exId);
+    if (exEntryName && exEntryName.gameName) rec.gameName = exEntryName.gameName;
     rec.versions = vanId ? ['vanilla', 'ex'] : ['ex'];
     rec.region = regionFor(ex.dexNum);
     rec.dexNum = ex.dexNum;
@@ -2687,13 +2751,13 @@ function buildDoc({ records, counts, catalog, typeChart }) {
         text: 'How a species holds up in a run, computed from this file alone — the typeChart, the records and the routes wild tables. Every formula below is exact, and the dex toolbar reads the same fields when it sorts or filters.',
         list: [
           'typeChart — the build\'s damage-multiplier table: EX is a dense 20×20 matrix (20 types, Mystery and Stellar included); Vanilla is a flat triple list that becomes an 18×18 matrix (an unlisted pair is neutral); every multiplier is ×0, ×0.5, ×1 or ×2',
-          'offensive coverage — for each defender type d: mult(d) = the product of chart[t][d] over the species\' types t; super coverage = the standard defender types with mult(d) ≥ 2 (a dual type can reach ×4 — Bug + Grass on Psychic)',
-          'immunity count — the standard defender types with mult(d) = 0; the standard defenders are the build\'s species types — 18 in EX (Fairy included), 17 in Vanilla (no Fairy) — since Mystery and Stellar are never defenders',
+          'offensive coverage (best-of-own-types, issue #150) — for each SINGLE defender type d: best(d) = the best of chart[t][d] over the species\' own attack types t; a move is one type, so the strongest of its own-type moves decides and best(d) tops out at ×2 (the product rule let Bug + Grass on Psychic reach ×4); super coverage = the standard defenders with best(d) = 2, at-or-below-neutral = best(d) ≤ 1. A type-chart-only bound — it ignores learnable moves, STAB and dual-type defenders',
+          'zero-hit count (offense, not a defensive immunity) — the standard defender types that none of the species\' own attack types hits (best(d) = 0); the standard defenders are the build\'s species types — 18 in EX (Fairy included), 17 in Vanilla (no Fairy) — since Mystery and Stellar are never defenders',
           'role percentile — 100 × (species in the active dex strictly below the stat) ÷ (N − 1), N = the active dex size: physical = Atk, special = Sp. Atk, wall = HP + Def + Sp. Def, speed = Speed',
-          'wild exposure — the number of the 36 routes whose 3-type wild table shares a type with the species (per build: the six Fairy-swap routes read their Vanilla wild types)',
+          'wild hint overlap — the number of the 36 routes whose 3-type wild HINT table shares a type with the species (an overlap of the route hint tables, not encounter odds — the hint types are not guaranteed rosters; per build: the six Fairy-swap routes read their Vanilla wild types)',
           'economy — catch rate (3–255; higher is easier to pocket, legendaries sit at 3) and base EXP straight from the record (the Vanilla overlay holds the differing values)',
           'movepool depth — the count of distinct move types across the species\' level-up/TM/tutor learnset, each move\'s type from the active build\'s catalog',
-          'the two charts differ on exactly two shared cells: Ghost and Dark keep their ×0.5 Steel resistance in Vanilla and lose it in EX (B_STEEL_RESISTANCES = GEN_LATEST)',
+          'the two charts differ on exactly two shared cells: Steel resists incoming Ghost and Dark moves (×0.5) in Vanilla and loses that resistance in EX (B_STEEL_RESISTANCES = GEN_LATEST)',
         ],
         source:
           'src/battle_util.c @origin/expansion L1196-1230; src/battle_main.c @vanilla L329-443 (the metrics are computed from the site data at run time — typeChart, the records and data/routes.json)',

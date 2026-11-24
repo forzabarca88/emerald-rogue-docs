@@ -26,9 +26,12 @@
  *      click (a defender column header → the gold column band + the
  *      "<Def>: ×2: … · ×0: …" caption). The species select highlights
  *      the species' own type rows (emerald bands) and appends the two
- *      derived coverage lines ("hits super-effective: S/N" /
- *      "at-or-below-neutral: A/N"). A column pin and a species
- *      selection are mutually exclusive. The SVG keeps a 480px
+ *      derived coverage lines — BEST-OF-OWN-TYPES against a single
+ *      defender type (issue #150: "super-effective (best of its own
+ *      types vs. a single defender): S/N" / "at-or-below-neutral (…):
+ *      A/N") — plus the metric's limit line (type-chart only: no
+ *      learnable moves, no STAB, no dual-type defenders). A column pin
+ *      and a species selection are mutually exclusive. The SVG keeps a 480px
  *      min-width inside an overflow-x:auto wrapper — the 360px block
  *      scroll (never page overflow).
  *
@@ -59,6 +62,11 @@
  *      species selection taking over (mutual exclusivity) with the
  *      derived row bands + coverage lines.
  *   4. typechart coverage (Vanilla) — the derived lines + bands.
+ *   4b. typechart coverage (EX, issue #150) — best-of-own-types:
+ *       Scizor (Bug/Steel vs Fairy: one resist row + one super row ⇒
+ *       ×2, not neutral) and Beedrill (Bug/Poison vs Grass: two super
+ *       rows ⇒ ×2, never ×4) — the derived labeled lines + the limit
+ *       line for both.
  *   5. typechart re-render — the EX-only species selection resets
  *      under the live toggle.
  *   6. radar (EX detail) — the derived main polygon (ring/axis/sector
@@ -130,26 +138,48 @@ const typesOf = (r, version) => {
   return Array.isArray(t) ? t : [];
 };
 
-/* The page's coverage lines for one record (the coverageOf rule). */
-function coverageOf(record, version) {
+/* The best-of-own-types multiplier against ONE defender type (the
+ * issue-#150 rule behind coverageOf): the BEST of chart[t][d] over the
+ * record's own (version-scoped) attack types — a move is one type, so
+ * the strongest of its own-type moves decides and best(d) tops out at
+ * ×2 (the old product rule let a dual type reach ×4, and a resist row
+ * could hide a super-effective row: Scizor's Bug → Fairy ×0.5 vs its
+ * Steel → Fairy ×2). */
+function bestAgainst(record, version, def) {
   const chart = chartOf(version);
+  const defI = chart.types.indexOf(def);
+  let best = 0;
+  for (const t of typesOf(record, version)) {
+    const atkI = chart.types.indexOf(t);
+    if (atkI !== -1 && defI !== -1 && chart.mult[atkI][defI] > best) best = chart.mult[atkI][defI];
+  }
+  return best;
+}
+
+/* The page's coverage lines for one record (the coverageOf rule, issue
+ * #150): for each standard defender d, best(d) = bestAgainst(record,
+ * version, d); super = the defenders with best(d) ≥ 2, atOrBelow = the
+ * defenders with best(d) ≤ 1, N = the active build's standard-type
+ * count. */
+function coverageOf(record, version) {
   const std = typeOptionsOf(version);
-  const types = [];
-  for (const t of typesOf(record, version)) if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
   let sup = 0;
   let atOrBelow = 0;
   for (const def of std) {
-    const defI = chart.types.indexOf(def);
-    let prod = 1;
-    for (const t of types) {
-      const atkI = chart.types.indexOf(t);
-      if (atkI !== -1 && defI !== -1) prod *= chart.mult[atkI][defI];
-    }
-    if (prod >= 2) sup++;
-    if (prod <= 1) atOrBelow++;
+    const best = bestAgainst(record, version, def);
+    if (best >= 2) sup += 1;
+    if (best <= 1) atOrBelow += 1;
   }
   return { sup, atOrBelow, N: std.length };
 }
+
+/* The page's coverage-line labels (the metric labeled, issue #150) +
+ * the limit line (what the metric deliberately does NOT see). */
+const covLine = (cov, which) =>
+  (which === 'sup' ? 'super-effective' : 'at-or-below-neutral') +
+  ' (best of its own types vs. a single defender): ' +
+  (which === 'sup' ? cov.sup : cov.atOrBelow) + '/' + cov.N;
+const COVERAGE_LIMIT = 'type-chart only \u2014 ignores learnable moves, STAB and dual-type defenders';
 
 /* The page's caption formats (tcCellCaption / tcColumnCaption). */
 const cellCaptionOf = (atk, def, m) => atk + ' \u2192 ' + def + ': \u00D7' + String(m);
@@ -226,6 +256,24 @@ const WORMADAM_COV = coverageOf(EX_ONLY_COMPARE, 'ex');
 const BUTTERFREE_COV_VAN = coverageOf(DETAIL, 'vanilla');
 assert.ok(WORMADAM_COV.sup > 0 && WORMADAM_COV.atOrBelow > 0, 'a non-trivial EX coverage');
 assert.ok(BUTTERFREE_COV_VAN.sup > 0 && BUTTERFREE_COV_VAN.atOrBelow > 0, 'a non-trivial Vanilla coverage');
+
+/* The issue-#150 coverage fixtures: the two mandated best-of-own-types
+ * cases (both EX, both dual type). Scizor (Bug/Steel) vs Fairy: one
+ * resist row (Bug → Fairy ×0.5) + one super row (Steel → Fairy ×2) ⇒
+ * best ×2, not neutral (the product rule gave ×1). Beedrill (Bug/Poison,
+ * the compare fixture) vs Grass: two super rows (×2 ×2) ⇒ best ×2,
+ * never ×4 (the product rule gave ×4). */
+const SCIZOR = byId.scizor;
+assert.ok(SCIZOR && SCIZOR.versions.includes('ex'), 'the issue-#150 fixture needs scizor in EX');
+assert.deepEqual(typesOf(SCIZOR, 'ex'), ['Bug', 'Steel'], 'scizor is Bug/Steel');
+assert.deepEqual(typesOf(COMPARE, 'ex'), ['Bug', 'Poison'], 'beedrill is Bug/Poison');
+assert.equal(bestAgainst(SCIZOR, 'ex', 'Fairy'), 2, 'Scizor vs Fairy in EX: one resist row + one super row ⇒ ×2, not neutral');
+assert.equal(bestAgainst(COMPARE, 'ex', 'Grass'), 2, 'Beedrill vs Grass in EX: two super rows ⇒ ×2, never ×4');
+assert.ok(bestAgainst(SCIZOR, 'ex', 'Fairy') <= 2 && bestAgainst(COMPARE, 'ex', 'Grass') <= 2, 'best-of-own-types tops out at ×2 (a move is one type)');
+const SCIZOR_COV = coverageOf(SCIZOR, 'ex');
+const BEEDRILL_COV = coverageOf(COMPARE, 'ex');
+assert.ok(SCIZOR_COV.sup > 0 && SCIZOR_COV.atOrBelow > 0, 'a non-trivial Scizor coverage');
+assert.ok(BEEDRILL_COV.sup > 0 && BEEDRILL_COV.atOrBelow > 0, 'a non-trivial Beedrill coverage');
 
 /* Spot cells (derived from the matrix): a ×2, a ×0, a ×1 (EX-only cell),
  * and the two build-drift cells (Ghost/Dark → Steel). */
@@ -411,8 +459,8 @@ test('typechart interaction (EX): the cell caption, the column pin, and the spec
     assert.equal(sp.coverageHidden, false, 'the coverage lines appear');
     assert.deepEqual(
       sp.lines,
-      ['hits super-effective: ' + WORMADAM_COV.sup + '/' + WORMADAM_COV.N, 'at-or-below-neutral: ' + WORMADAM_COV.atOrBelow + '/' + WORMADAM_COV.N],
-      'the coverage lines are the derived offensive-coverage counts'
+      [covLine(WORMADAM_COV, 'sup'), covLine(WORMADAM_COV, 'at')],
+      'the coverage lines are the derived best-of-own-types counts (labeled)'
     );
     assert.equal(sp.select, EX_ONLY_COMPARE.id, 'the select holds the species');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
@@ -437,8 +485,44 @@ test('typechart coverage (Vanilla): the derived lines + row bands under the 17-t
     assert.deepEqual(sp.rowBands, bandsOf(DETAIL, 'vanilla'), 'the Vanilla row bands are the Vanilla types (in chart order)');
     assert.deepEqual(
       sp.lines,
-      ['hits super-effective: ' + BUTTERFREE_COV_VAN.sup + '/' + BUTTERFREE_COV_VAN.N, 'at-or-below-neutral: ' + BUTTERFREE_COV_VAN.atOrBelow + '/' + BUTTERFREE_COV_VAN.N],
-      'the Vanilla coverage counts run over the 17 standard defenders'
+      [covLine(BUTTERFREE_COV_VAN, 'sup'), covLine(BUTTERFREE_COV_VAN, 'at')],
+      'the Vanilla coverage counts run over the 17 standard defenders (labeled)'
+    );
+    assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
+  } finally {
+    await close();
+  }
+});
+
+test('typechart coverage (EX): best-of-own-types — Scizor and Beedrill (issue #150)', async (t) => {
+  if (skipIfNoPlaywright(t)) return;
+  const { page, errors, close } = await openPage({ path: 'pokedex.html' });
+  try {
+    // ACT — Scizor (Bug/Steel): the resist row (Bug → Fairy ×0.5) must
+    // not hide the super row (Steel → Fairy ×2) — Fairy is counted
+    // super-effective (6/18), not neutral (the product rule gave 5/18)
+    await page.selectOption('#dex-typechart-species', SCIZOR.id);
+    const sp = await page.evaluate(() => ({
+      lines: [...document.querySelectorAll('#dex-typechart-coverage .dex-typechart__line')].map((p) => p.textContent),
+      limit: document.querySelector('#dex-typechart-coverage .dex-typechart__limit') ? document.querySelector('#dex-typechart-coverage .dex-typechart__limit').textContent : null,
+    }));
+    assert.deepEqual(
+      sp.lines,
+      [covLine(SCIZOR_COV, 'sup'), covLine(SCIZOR_COV, 'at')],
+      'Scizor\u2019s coverage counts Fairy as super-effective (best-of-own-types), not neutral'
+    );
+    assert.equal(sp.limit, COVERAGE_LIMIT, 'the metric\u2019s limit is stated');
+
+    // ACT — Beedrill (Bug/Poison): two super rows vs Grass ⇒ ×2, never ×4
+    // (the product rule counted Grass as ×4)
+    await page.selectOption('#dex-typechart-species', COMPARE.id);
+    const be = await page.evaluate(() => ({
+      lines: [...document.querySelectorAll('#dex-typechart-coverage .dex-typechart__line')].map((p) => p.textContent),
+    }));
+    assert.deepEqual(
+      be.lines,
+      [covLine(BEEDRILL_COV, 'sup'), covLine(BEEDRILL_COV, 'at')],
+      'Beedrill\u2019s coverage counts Grass once at ×2 (never ×4)'
     );
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
