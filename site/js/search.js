@@ -13,8 +13,11 @@
  *      field is the header trigger's, emitted by nav.js) holding the
  *      search input (placeholder +
  *      aria-label from the same config), a live result-count line
- *      (role="status"), an empty-state element and the results list
- *      (role="listbox");
+ *      (role="status"), an empty-state element, the results list
+ *      (role="listbox") and a scope footer line (#search-palette-scope,
+ *      issue #152) — always visible, stating what the site search covers
+ *      and routing species search to the Pokédex page from every page
+ *      except the Pokédex itself (there it says the dex is included);
  *   3. binds the open triggers:
  *        - the header's icon-only button #site-search-trigger (emitted by
  *          nav.js between the nav and the version toggle). It TOGGLES:
@@ -36,7 +39,11 @@
  *      (markup, not copy) — FUZZY tier-3 rows (issue #46, result.fuzzy)
  *      have no contiguous matched substring, so their span only CENTRES
  *      the snippet and is never <mark>-wrapped — and the page's NAV title
- *      from data/site.json (never the raw filename);
+ *      from data/site.json (never the raw filename), plus — when the
+ *      match exists ONLY in the other build's text (result.crossVersion,
+ *      issue #151) — an explicit "Match in <edition label>" marker after
+ *      the page title (the snippet is that other edition's text; a match
+ *      in the active build's text is never labeled);
  *   5. keyboard: ArrowDown/ArrowUp move the active row (WRAP-AROUND, via
  *      aria-activedescendant + [data-active]); Enter navigates to
  *      entry.page + entry.anchor as a RELATIVE url (./quests.html#rec-…
@@ -77,8 +84,14 @@
  *      with the new version while the palette is open (results re-scope
  *      live — e.g. EX-only quests drop out under Vanilla).
  *
- * Copy: an empty query shows the config `hint`; a non-empty query shows
- * "N result(s) match "q"" or "No results match "q"." in the count line —
+ * Copy: an empty query shows the config `hint` — a focused-state "what to
+ * type" hint (the palette opens with its input focused, so the hint never
+ * mentions the open shortcut); the scope footer (issue #152) renders
+ * `search.scope` on every page, plus `search.dexIncluded` on the Pokédex
+ * page and `search.dexRoute` (its `{dex}` slot filled by a relative link
+ * to the Pokédex page, the nav title as link text) on every other page.
+ * A non-empty query shows
+ * "N result(s) match “q”" or "No results match “q”." in the count line —
  * the quests.js result-line style (curly quotes, no verb agreement). When
  * the query's pre-cap total (searchQuery's `total`) exceeds the rows
  * shown, the count line appends the config `moreResults` template (its
@@ -98,7 +111,8 @@
  *
  * Stable ids (used by tests): #site-search-trigger (nav.js),
  * #search-palette (the root), #search-palette-list (the listbox),
- * #search-result-<i> (rows, aria-activedescendant targets).
+ * #search-palette-scope (the scope footer), #search-result-<i> (rows,
+ * aria-activedescendant targets).
  */
 (function () {
   'use strict';
@@ -111,6 +125,10 @@
   var LIST_ID = 'search-palette-list';
   /** Row ids: 'search-result-0', … (aria-activedescendant targets). */
   var ROW_ID_PREFIX = 'search-result-';
+  /** The scope footer (issue #152 — what the search covers + dex route). */
+  var SCOPE_ID = 'search-palette-scope';
+  /** The Pokédex page's stem — the species-search route target. */
+  var DEX_STEM = 'pokedex';
   /** Snippet window around the match (the search-index module contract). */
   var SNIPPET_BEFORE = 40;
   var SNIPPET_AFTER = 80;
@@ -130,7 +148,10 @@
       placeholder: typeof s.placeholder === 'string' && s.placeholder !== '' ? s.placeholder : 'Search the site\u2026',
       hint: typeof s.hint === 'string' && s.hint !== '' ? s.hint : 'Press / to search',
       shortcut: typeof s.shortcut === 'string' && s.shortcut !== '' ? s.shortcut : '/',
-      moreResults: typeof s.moreResults === 'string' && s.moreResults !== '' ? s.moreResults : '{n} more'
+      moreResults: typeof s.moreResults === 'string' && s.moreResults !== '' ? s.moreResults : '{n} more',
+      scope: typeof s.scope === 'string' && s.scope !== '' ? s.scope : 'Searches the site\u2019s records and guides.',
+      dexRoute: typeof s.dexRoute === 'string' && s.dexRoute !== '' ? s.dexRoute : 'Pok\u00e9dex species are searched on the {dex}.',
+      dexIncluded: typeof s.dexIncluded === 'string' && s.dexIncluded !== '' ? s.dexIncluded : 'It includes every Pok\u00e9dex species.'
     };
   }
 
@@ -142,6 +163,12 @@
     } catch (e) {
       pages = {};
     }
+    var versionLabels = {};
+    try {
+      versionLabels = (ROGUE.site().versions && ROGUE.site().versions.labels) || {};
+    } catch (e) {
+      versionLabels = {};
+    }
 
     /* The index is built ONCE — version-independent (see search-index.js). */
     var entries = [];
@@ -152,7 +179,7 @@
     }
 
     /* ---- state + elements ------------------------------------------------ */
-    var root, backdrop, panel, form, input, countLine, emptyEl, list, trigger;
+    var root, backdrop, panel, form, input, countLine, emptyEl, list, trigger, scopeEl;
     var isOpen = false;
     var activeIndex = -1;
     var currentResults = [];
@@ -184,7 +211,10 @@
         '<p class="search-palette__empty" role="status" hidden></p>' +
         '<ul class="search-palette__list" id="' +
         LIST_ID +
-        '" role="listbox" aria-label="Search results" hidden></ul></div>';
+        '" role="listbox" aria-label="Search results" hidden></ul>' +
+        '<p class="search-palette__count" id="' +
+        SCOPE_ID +
+        '"></p></div>';
       backdrop = root.querySelector('.search-palette__backdrop');
       panel = root.querySelector('.search-palette__panel');
       form = root.querySelector('.search-palette__form');
@@ -193,6 +223,8 @@
       emptyEl = root.querySelector('.search-palette__empty');
       list = root.querySelector('#' + LIST_ID);
       trigger = document.getElementById(TRIGGER_ID);
+      scopeEl = root.querySelector('#' + SCOPE_ID);
+      scopeEl.innerHTML = scopeHtml();
       document.body.appendChild(root);
     }
 
@@ -203,6 +235,30 @@
       var stem = String(entry.page || '').replace(/^\.\//, '').replace(/\.html$/, '');
       var page = pages[stem];
       return page && page.title ? page.title : stem || '\u2026';
+    }
+
+    /** The current page's stem ('pokedex', 'quests', …; 'index' at home). */
+    function currentPageStem() {
+      var p = String(window.location.pathname).split('/').filter(Boolean).pop() || '';
+      return p ? p.replace(/\.html$/, '') : 'index';
+    }
+
+    /**
+     * The scope footer's HTML (issue #152): the `search.scope` sentence
+     * always; on the Pokédex page the `dexIncluded` sentence (the dex
+     * data loads there, so species are part of the index); on every other
+     * page the `dexRoute` sentence with its `{dex}` slot filled by a
+     * relative link to the Pokédex page (the nav title as link text) —
+     * the route to species search from the other pages.
+     */
+    function scopeHtml() {
+      var html = ROGUE.esc(config.scope);
+      if (currentPageStem() === DEX_STEM) {
+        return html + ' ' + ROGUE.esc(config.dexIncluded);
+      }
+      var dexTitle = pages[DEX_STEM] && pages[DEX_STEM].title ? pages[DEX_STEM].title : 'Pok\u00e9dex';
+      var link = '<a href="./' + DEX_STEM + '.html">' + ROGUE.esc(dexTitle) + '</a>';
+      return html + ' ' + config.dexRoute.split('{dex}').map(ROGUE.esc).join(link);
     }
 
     /**
@@ -251,11 +307,20 @@
         ROGUE.esc(result.title) +
         '</span>';
       if (singleVersion) html += ROGUE.badge({ versions: result.versions });
+      /* the meta line: the page's nav title, plus — for a cross-version
+       * match (result.crossVersion: the match exists ONLY in the other
+       * build's text, issue #151) — the explicit "Match in <edition>"
+       * label; a match in the active build's text is never labeled */
+      var meta = pageLabel(result);
+      if (result.crossVersion) {
+        var vlabel = versionLabels[result.crossVersion];
+        meta += ' \u00B7 Match in ' + (vlabel || result.crossVersion);
+      }
       html +=
         '</div><p class="search-palette__row-snippet">' +
         snippet(result) +
         '</p><p class="search-palette__row-meta">' +
-        ROGUE.esc(pageLabel(result)) +
+        ROGUE.esc(meta) +
         '</p></li>';
       return html;
     }
