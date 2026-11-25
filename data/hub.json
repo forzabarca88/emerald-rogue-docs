@@ -134,6 +134,7 @@
       "category": "hub-area",
       "initiallyPresent": false,
       "buildCost": 0,
+      "gateNote": "after meeting the game’s developer",
       "versions": ["vanilla", "ex"],
       "description": "“Access various new quests and items…” A free-to-build postgame area that only becomes available after meeting the game's developer in the hub — he appears in the Adventure Entrance once you are Champion — and its build gate is the only one: no cost, no prerequisites, just the conversation. It is the hub's home for Challenge-based quests (such as the region-style battles and, in EX, the Z-A Royale).",
       "source": "src/data/rogue_hub.h @vanilla L223-241 (identical @origin/expansion); data/scripts/Rogue/Strings/Rogue_Strings_Items.pory @vanilla L381-385 (identical @origin/expansion); src/rogue_hub.c @vanilla L493-503 / @origin/expansion L493-503 (build gate: FLAG_ROGUE_MET_POKABBIE); data/maps/Rogue_Area_AdventureEntrance/scripts.pory @vanilla L68, L145-148, L677-679 (Pokabbie appears once FLAG_IS_CHAMPION is set; meeting him sets FLAG_ROGUE_MET_POKABBIE) (identical @origin/expansion)"

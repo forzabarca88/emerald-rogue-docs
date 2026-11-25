@@ -221,6 +221,16 @@ const PAGES = [
         expected: 3,
         why: 'data/hub.json: the 4 initially-present areas form the starting chain — Square—Labs—Exit—Safari per rogue_hub.c RogueHub_ClearProgress (cited by the area-labs record source) → 3 connecting arrows between the 4 built blocks (hub.js areaMap)',
       },
+      gateTags: {
+        sel: '#hub-areas .hub-map__gate',
+        expected: 1,
+        why: 'data/hub.json: exactly one free hub-area record (the Challenge Area) carries a non-empty `gateNote` field → one postgame gate tag in the area overview map (hub.js areaMap renders it from the field — the tag is pinned here so a reworded description can never silently drop it)',
+      },
+      gateTagText: {
+        sel: '#hub-areas .hub-map__gate',
+        text: 'after meeting the game’s developer',
+        why: 'the gate tag renders the Challenge Area record’s own `gateNote` text verbatim (data/hub.json) — the data field is the contract, not the description’s phrasing',
+      },
       upgradeCards: {
         sel: '.hub-upgrade',
         expected: 48,

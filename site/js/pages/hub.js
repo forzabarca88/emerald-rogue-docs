@@ -166,9 +166,12 @@
             ? r.buildCost + ' Build Parts'
             : 'free';
         /* the postgame gate sits right under 'free' on the block
-         * (issue #156) — same mono style as the cost line */
-        var gate = gatedNames[r.name]
-          ? '<span class="hub-map__cost hub-map__gate">after meeting the game\u2019s developer</span>'
+         * (issue #156) — same mono style as the cost line; the note
+         * text comes from the record's own `gateNote` field (the data
+         * owns the wording, so rewording the description can never
+         * silently drop or change the tag) */
+        var gate = gatedNotes[r.name]
+          ? '<span class="hub-map__cost hub-map__gate">' + ROGUE.esc(gatedNotes[r.name]) + '</span>'
           : '';
         return (
           '<div class="hub-map__block' + (extra ? ' ' + extra : '') + '">' +
@@ -191,13 +194,15 @@
       }
 
       /* the gate is data-driven: only a free area whose own record
-       * states the developer-meeting requirement earns it (issue #156) —
-       * matched on the data's phrasing (the developer name itself is
+       * carries a non-empty `gateNote` (the postgame developer-meeting
+       * requirement, issue #156) earns it — the tag renders the field
+       * verbatim (no prose matching, so the tag never depends on the
+       * description's phrasing; the developer name itself is
        * hygiene-banned from user-facing copy), shown next to 'free' on
        * the block and repeated in the caption */
-      var gated = free.filter(function (a) { return /the game's developer/.test(a.description || ''); });
-      var gatedNames = {};
-      gated.forEach(function (a) { gatedNames[a.name] = true; });
+      var gated = free.filter(function (a) { return typeof a.gateNote === 'string' && a.gateNote; });
+      var gatedNotes = {};
+      gated.forEach(function (a) { gatedNotes[a.name] = a.gateNote; });
 
       var html = '<div class="hub-map"><div class="hub-map__tiers" aria-hidden="true">';
       html +=

@@ -12,13 +12,22 @@ on:
 # to itself (job-level permissions: below) — the token surface for the
 # jobs that run on every PR stays at the default minimum.
 
-# Per-ref concurrency (issue #127): pull_request runs share one cancellable
-# group per PR ref; deployable runs (push / workflow_dispatch) share a
-# separate, NON-cancellable group per ref. A PR run can no longer cancel an
-# in-flight Pages deployment (and a queued run of the same deployable ref
-# waits behind it instead of cancelling it).
+# Per-ref concurrency (issue #127): each (event, ref) pair gets its own
+# group — pages-<event>-<ref>, e.g. pages-pull_request-refs/pull/123/merge
+# (CANCELLABLE) and pages-push-refs/heads/main (NON-cancellable). A PR run
+# can no longer cancel an in-flight Pages deployment (its group can never
+# collide with a deployable ref's), and a queued run of the same deployable
+# ref waits behind it instead of cancelling it. The group key embeds the
+# event name instead of using a `?` ternary to pick a 'pages-pr-' /
+# 'pages-push-' prefix: GitHub's workflow validator rejects the ternary in
+# this expression ("Unexpected symbol: '?'" — checked by CI workflow
+# validation, invisible to plain YAML parsers; both the bare-comparison and
+# parenthesised-condition forms were rejected). An earlier attempt also used
+# `&&`/`||` to pick the prefix, but those are LOGICAL operators (non-empty
+# strings are truthy) and reduced every run of every event to the boolean
+# string "true" — one shared group.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.ref) || format('pages-push-{0}', github.ref) }}
+  group: ${{ format('pages-{0}-{1}', github.event_name, github.ref) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -79,7 +88,12 @@ jobs:
           set -euo pipefail
           # SHAs from scripts/verify/baseline.json, upstream URL from
           # data/site.json citations.repo (the single source for both).
-          GAME_REPO="$(node -p 'JSON.parse(require("fs").readFileSync("data/site.json","utf8")).citations.repo').git"
+          # strip any trailing ".git" before appending one: citations.repo
+          # is the bare clone URL, so a value that already ends in ".git"
+          # would otherwise clone as "…/repo.git.git" (a silently broken
+          # clone — the checkout below would fail on the missing SHA)
+          GAME_REPO="$(node -p 'JSON.parse(require("fs").readFileSync("data/site.json","utf8")).citations.repo')"
+          GAME_REPO="${GAME_REPO%.git}.git"
           VANILLA_SHA="$(node -p 'JSON.parse(require("fs").readFileSync("scripts/verify/baseline.json","utf8")).vanilla.sha')"
           EXPANSION_SHA="$(node -p 'JSON.parse(require("fs").readFileSync("scripts/verify/baseline.json","utf8")).expansion.sha')"
           git clone --depth 1 "$GAME_REPO" references/pokeemerald-rogue
