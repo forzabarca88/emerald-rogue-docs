@@ -25,8 +25,11 @@ on:
 concurrency:
   # double-quoted: a plain (unquoted) YAML scalar cannot contain the
   # ternary's ` : ` — the colon-plus-space would be read as a mapping
-  # indicator and fail to parse
-  group: "${{ github.event_name == 'pull_request' ? format('pages-pr-{0}', github.ref) : format('pages-push-{0}', github.ref) }}"
+  # indicator and fail to parse. The condition is parenthesised because
+  # the Actions expression compiler rejects a bare `==` comparison as a
+  # ternary condition ("Unexpected symbol: '?'" — GitHub workflow
+  # validation, not plain YAML, so it only surfaces in CI).
+  group: "${{ (github.event_name == 'pull_request') ? format('pages-pr-{0}', github.ref) : format('pages-push-{0}', github.ref) }}"
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
