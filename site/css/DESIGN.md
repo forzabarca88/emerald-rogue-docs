@@ -20,9 +20,11 @@ disciplined; the boldness is spent on the run path and the version toggle.
 
 ## 2. Palette
 
-Six named hex tokens in `tokens.css` — **these are the only hues on the
-site**. All other colors are the three *derived* tokens below. If a page
-needs a new hue (e.g. a per-type `.chip--fire` modifier for routes), add a
+Six named hex tokens in `tokens.css` — **the identity hues**. All other
+colors are the three *derived* tokens below or a named token added under
+the rule that follows — applied once by the 18 type-hue rows (issue
+#173, the `.chip--<type>` family the clause anticipated for routes). If a
+page needs a new hue (e.g. a per-type `.chip--fire` modifier), add a
 **named token to tokens.css** and a row to this table **in the same task**.
 
 | Token | Hex | Name | Use |
@@ -34,6 +36,24 @@ needs a new hue (e.g. a per-type `.chip--fire` modifier for routes), add a
 | `--color-muted` | `#96b5a4` | Fern | secondary text, labels, inactive options |
 | `--color-emerald` | `#2ec27e` | Emerald | Vanilla accent, links, focus ring, eyebrows, active tab indicator, Vanilla toggle fill, default (inactive) run-path nodes |
 | `--color-gold` | `#f2b63c` | Amber | EX accent: link hover, EX badge/toggle fill, boss node, anything that says "EX" |
+| `--type-normal` | `#a8a77a` | Normal | `.chip--normal` fill (issue #173) — `--color-bg` text, 6.6:1 |
+| `--type-fighting` | `#c22e28` | Fighting | `.chip--fighting` fill — `--color-ink` text, 5.1:1 |
+| `--type-flying` | `#a98ff3` | Flying | `.chip--flying` fill — `--color-bg` text, 6.1:1 |
+| `--type-poison` | `#a33ea1` | Poison | `.chip--poison` fill — `--color-ink` text, 5.0:1 |
+| `--type-ground` | `#e2bf65` | Ground | `.chip--ground` fill — `--color-bg` text, 9.2:1 |
+| `--type-rock` | `#b6a136` | Rock | `.chip--rock` fill — `--color-bg` text, 6.3:1 |
+| `--type-bug` | `#a6b91a` | Bug | `.chip--bug` fill — `--color-bg` text, 7.4:1 |
+| `--type-ghost` | `#735797` | Ghost | `.chip--ghost` fill — `--color-ink` text, 5.3:1 |
+| `--type-steel` | `#b7b7ce` | Steel | `.chip--steel` fill — `--color-bg` text, 8.3:1 |
+| `--type-fire` | `#ee8130` | Fire | `.chip--fire` fill — `--color-bg` text, 6.1:1 |
+| `--type-water` | `#6390f0` | Water | `.chip--water` fill — `--color-bg` text, 5.3:1 |
+| `--type-grass` | `#7ac74c` | Grass | `.chip--grass` fill — `--color-bg` text, 7.8:1 |
+| `--type-electric` | `#f7d02c` | Electric | `.chip--electric` fill — `--color-bg` text, 10.9:1 |
+| `--type-psychic` | `#f95587` | Psychic | `.chip--psychic` fill — `--color-bg` text, 5.2:1 |
+| `--type-ice` | `#96d9d6` | Ice | `.chip--ice` fill — `--color-bg` text, 10.2:1 |
+| `--type-dragon` | `#6f35fc` | Dragon | `.chip--dragon` fill — `--color-ink` text, 5.2:1 |
+| `--type-dark` | `#705746` | Dark | `.chip--dark` fill — `--color-ink` text, 6.0:1 |
+| `--type-fairy` | `#d685ad` | Fairy | `.chip--fairy` fill — `--color-bg` text, 6.1:1 |
 
 Derived (pre-computed mixes/shades — no new hues, do not edit without
 re-deriving):
@@ -46,7 +66,12 @@ re-deriving):
 
 Contrast (measured, all pass WCAG AA for text; badges pass AAA):
 ink on bg 14.9:1 · muted on bg 7.0:1 · emerald on bg 7.4:1 · gold on bg
-9.3:1 · dark bg text on emerald/gold/both fills 7–9:1.
+9.3:1 · dark bg text on emerald/gold/both fills 7–9:1 · type chips
+(issue #173) — dark `--color-bg` text on the 13 light type fills
+5.2–10.9:1, `--color-ink` on the 5 dark fills (fighting/poison/ghost/
+dragon/dark) 5.0–6.0:1, all ≥ 4.5:1 AA; the badge 7–9:1 style holds on
+the six lightest fills (bug, grass, steel, ground, electric, ice), the
+rest sit at 5.0–6.6:1.
 
 ## 3. Typography
 
@@ -195,7 +220,7 @@ under your own `.page--<stem>`):
 | `.card` / `.card__head` / `.card__title` / `.card__desc` / `.card__source` | record card as emitted by `ROGUE.cards()`: head = title + `.badge` |
 | `.card--link` | whole-card `<a>` (home quick links); hover lift is motion-gated |
 | `.table` | `ROGUE.table()` output; block-scrolled on mobile; header row is mono uppercase on `--color-raised`. A column flagged `html: true` passes its cell through pre-escaped (the caller owns escaping) — the Pokedex move tables' Move/Type/Pow/Acc/PP cells (issue #99); their Effect column stays plain |
-| `.chip` | mono tag (types, regions, modes). Neutral by default; new per-type colors = new token + new row in §2, same task |
+| `.chip` | mono tag (types, regions, modes). Neutral by default; the 18 `.chip--<type>` modifiers (issue #173 — the family the §2 clause anticipated for routes) fill from the `--type-*` tokens with the text token each row's §2 contrast note measured (dark `--color-bg` on the light fills, `--color-ink` on fighting/poison/ghost/dragon/dark) — emitted by `ROGUE.typeChip`; Mystery/Stellar (move-only non-defenders) and unknown values keep the neutral chip |
 | `.chip-row` | flex-wrap container for inline `.chip`s (quest flags, forced toggles, option lists) |
 | `.section-nav` (`__count`) | the shared sticky SECTION STRIP (issue #98): one `<nav class="section-nav">` of `.chip` anchor links to the page's own sections/records, emitted by `ROGUE.sectionNav(items, label)` in `js/render.js` (items = `{id, label, count?, anchor?, target?}`; the `anchor` override is how quests keep the live `[data-count]` key = the raw group id while linking to the prefixed group div; an item carrying a string `target` emits a `<button type="button" class="chip" data-target>` ACTION chip instead of an anchor — an in-page jump the caller executes through its own delegated click listener, which makes a hash-routed page's hash contract unbreakable by construction (reopened #98 — the pokedex species detail's strip)). `position: sticky; top: var(--site-header-h, 118px)` — the header's MEASURED height published on `<html>` by `js/nav.js` (never hardcoded; the 118px is a pre-measurement fallback), z-index 10 (above content, below the header's 20 and the search palette), solid `--color-bg` fill + 1px hairline. At ≤560px it is ONE line that scrolls horizontally (hidden scrollbar) — chips never wrap. `__count` is the per-chip live count (quests group sizes). On the nine strip pages (gameplay, versions, quests, config, hub, safari, routes, pokedex, mechanics) it sits at the top of the content, just under the site `h1`; the pokedex carries TWO strips — the overview's sits between the sticky `.dex-browse` bar and the grid and pins UNDER the bar instead (a `pages.css` `top: var(--dex-scroll-clear)` override scoped to `#dex-overview .section-nav`) so it pins while paging, releases with its section, and hides with the overview when a detail is open, while the species detail carries its OWN strip (after the head/prev-next, before the body; record-derived action chips — one `button.chip[data-target]` per present section in body order) that jump via a delegated `scrollIntoView()` WITHOUT writing the hash (the detail's hash is always `#rec-pokedex-<id>`) and pins at the base `--site-header-h` for the whole detail. The home page carries NO strip by design: it is a short landing whose quick-link cards ARE the navigation |
 | `.field-label` | small mono uppercase label above a card field (quests: Trigger/Requirements/Rewards; config: forced toggles/options) |

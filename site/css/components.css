@@ -216,8 +216,9 @@
 
 /* --- Chips --------------------------------------------------------------------
    Small mono tags (route wild types, region tags, room types). Neutral by
-   default; a future `.chip--<type>` modifier MUST be built from a named
-   token added to tokens.css + documented in DESIGN.md §2 (same task). */
+   default; the per-type `.chip--<type>` modifier family (issue #173) is
+   built exactly as this clause demanded — a named token in tokens.css,
+   documented in DESIGN.md §2, same task — and lives immediately below. */
 
 .chip {
   display: inline-flex;
@@ -232,6 +233,33 @@
   color: var(--color-ink);
   white-space: nowrap;
 }
+
+/* The .chip--<type> modifier family (issue #173): one rule per EX-standard
+   type — the fill from the named --type-<type> token (tokens.css) and the
+   text token that type's DESIGN.md §2 contrast note measured (dark
+   --color-bg on the 13 light fills, --color-ink on the 5 dark ones —
+   fighting, poison, ghost, dragon, dark). Mystery/Stellar (move-only
+   non-defenders) and unknown values get no modifier: ROGUE.typeChip
+   (site/js/render.js) emits the neutral .chip for them, so a wrong call is
+   a visible miss, never a silent re-color. */
+.chip--normal { background: var(--type-normal); color: var(--color-bg); }
+.chip--fighting { background: var(--type-fighting); color: var(--color-ink); }
+.chip--flying { background: var(--type-flying); color: var(--color-bg); }
+.chip--poison { background: var(--type-poison); color: var(--color-ink); }
+.chip--ground { background: var(--type-ground); color: var(--color-bg); }
+.chip--rock { background: var(--type-rock); color: var(--color-bg); }
+.chip--bug { background: var(--type-bug); color: var(--color-bg); }
+.chip--ghost { background: var(--type-ghost); color: var(--color-ink); }
+.chip--steel { background: var(--type-steel); color: var(--color-bg); }
+.chip--fire { background: var(--type-fire); color: var(--color-bg); }
+.chip--water { background: var(--type-water); color: var(--color-bg); }
+.chip--grass { background: var(--type-grass); color: var(--color-bg); }
+.chip--electric { background: var(--type-electric); color: var(--color-bg); }
+.chip--psychic { background: var(--type-psychic); color: var(--color-bg); }
+.chip--ice { background: var(--type-ice); color: var(--color-bg); }
+.chip--dragon { background: var(--type-dragon); color: var(--color-ink); }
+.chip--dark { background: var(--type-dark); color: var(--color-ink); }
+.chip--fairy { background: var(--type-fairy); color: var(--color-bg); }
 
 /* --- Chip row ------------------------------------------------------------
    Flex-wrap container for inline .chip elements (quest flags / forced

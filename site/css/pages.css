@@ -2436,6 +2436,26 @@
   color: var(--color-muted);
 }
 
+/* issue #174 — the functional-form entries: the .dex-tile--form
+   modifier marks the form tiles (a persistent emerald border — the
+   hover state they already carry, held at rest so a form reads as
+   different from its base) and .dex-tile__form is the mono form-name
+   label (a form may render the base's sprite — the label is what
+   tells the tile apart); the label is the 360px ellipsis point. */
+.page--pokedex .dex-tile--form {
+  border-color: var(--color-emerald);
+}
+
+.page--pokedex .dex-tile__form {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
 .page--pokedex .dex-tile:hover {
   border-color: var(--color-emerald);
   background: var(--color-raised);
@@ -2451,6 +2471,119 @@
 
   .page--pokedex .dex-tile:hover {
     transform: translateY(-3px);
+  }
+}
+
+/* issue #171 — the tile tooltip: ONE shared .dex-tip node (a sibling of
+   #dex-grid, emitted by browseSection) that the grid's delegated
+   listeners (bindTip in pokedex.js) re-key per hover/focus — the
+   entry's own name + #NNN, its own type chips (ROGUE.typeChip — the
+   issue-#173 colour-coded family) and the six stat rows + BST. It is
+   JS-positioned (position: fixed — measured above the tile, flipped
+   below when it would clip the viewport top, clamped into the viewport:
+   the 8px edge margin matches the 16px-total max-width, so
+   scrollWidth can never exceed the viewport at 360px by construction),
+   aria-hidden (the detail page is the accessible path — the base
+   tile's old native `title` is gone, the aria-labels carry the names)
+   and pointer-events: none (it never intercepts the hover that opened
+   it). Elevation follows the site's card language: a solid
+   --color-raised fill + the 2px --color-line border + --radius-md (the
+   site carries no drop shadows). Reveal: the opacity (+2px rise)
+   transition at var(--motion-fast) INSIDE no-preference only — instant
+   under reduced motion. */
+.page--pokedex .dex-tip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: calc(var(--z-header) + 10);
+  width: max-content;
+  max-width: min(320px, calc(100vw - 16px));
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-raised);
+  border: 2px solid var(--color-line);
+  border-radius: var(--radius-md);
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.page--pokedex .dex-tip--on {
+  visibility: visible;
+  opacity: 1;
+}
+
+.page--pokedex .dex-tip__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.page--pokedex .dex-tip__name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  line-height: 1.15;
+  color: var(--color-ink);
+}
+
+.page--pokedex .dex-tip__num {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-tip__types {
+  margin-bottom: var(--space-3);
+}
+
+.page--pokedex .dex-tip__stats {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.page--pokedex .dex-tip__stat {
+  display: grid;
+  grid-template-columns: minmax(0, 48px) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.page--pokedex .dex-tip__label {
+  color: var(--color-muted);
+}
+
+.page--pokedex .dex-tip__value {
+  text-align: right;
+  color: var(--color-ink);
+}
+
+.page--pokedex .dex-tip__stat--bst {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-line);
+}
+
+.page--pokedex .dex-tip__stat--bst .dex-tip__value {
+  color: var(--color-emerald);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .page--pokedex .dex-tip {
+    transform: translateY(2px);
+    transition:
+      opacity var(--motion-fast) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out),
+      visibility 0s linear var(--motion-fast);
+  }
+
+  .page--pokedex .dex-tip--on {
+    transform: translateY(0);
+    transition:
+      opacity var(--motion-fast) var(--ease-out),
+      transform var(--motion-fast) var(--ease-out),
+      visibility 0s;
   }
 }
 

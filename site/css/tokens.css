@@ -109,6 +109,34 @@
   --color-grid:    #173127; /* faint pixel-grid page texture */
 
   /* ---------------------------------------------------------------------
+     Type hues (issue #173) — the one named extension the DESIGN.md §2
+     clause anticipated: the 18 EX-standard Pokémon type fills (the
+     official type colours, in typeChart order minus the move-only
+     non-defenders Mystery/Stellar, which get no token — their chips stay
+     the neutral .chip) behind the .chip--<type> modifier family in
+     components.css. Each is documented in DESIGN.md §2 with its text
+     token and measured WCAG contrast (AA ≥ 4.5:1 on every fill).
+     --------------------------------------------------------------------- */
+  --type-normal:   #a8a77a; /* --color-bg text, 6.6:1 */
+  --type-fighting: #c22e28; /* --color-ink text, 5.1:1 */
+  --type-flying:   #a98ff3; /* --color-bg text, 6.1:1 */
+  --type-poison:   #a33ea1; /* --color-ink text, 5.0:1 */
+  --type-ground:   #e2bf65; /* --color-bg text, 9.2:1 */
+  --type-rock:     #b6a136; /* --color-bg text, 6.3:1 */
+  --type-bug:      #a6b91a; /* --color-bg text, 7.4:1 */
+  --type-ghost:    #735797; /* --color-ink text, 5.3:1 */
+  --type-steel:    #b7b7ce; /* --color-bg text, 8.3:1 */
+  --type-fire:     #ee8130; /* --color-bg text, 6.1:1 */
+  --type-water:    #6390f0; /* --color-bg text, 5.3:1 */
+  --type-grass:    #7ac74c; /* --color-bg text, 7.8:1 */
+  --type-electric: #f7d02c; /* --color-bg text, 10.9:1 */
+  --type-psychic:  #f95587; /* --color-bg text, 5.2:1 */
+  --type-ice:      #96d9d6; /* --color-bg text, 10.2:1 */
+  --type-dragon:   #6f35fc; /* --color-ink text, 5.2:1 */
+  --type-dark:     #705746; /* --color-ink text, 6.0:1 */
+  --type-fairy:    #d685ad; /* --color-bg text, 6.1:1 */
+
+  /* ---------------------------------------------------------------------
      Typography — exactly two web font families (self-hosted woff2, the
      @font-face rules above), each with full system fallbacks so the site
      works offline.

@@ -20,9 +20,17 @@
  *      HP, Atk, Def, Sp. Atk, Sp. Def, Speed, Catch rate, Base EXP)
  *      with a stable decorate-sort-undecorate, and #dex-type, the
  *      active build's standard types from the top-level typeChart with
- *      an "All types" default), the live
- *      #dex-count line ("<N> species · page <x> of <y>") and the
- *      .dex-pager (prev / next buttons + "page X of Y"), with the pager
+ *      an "All types" default). The listing's unit is the ENTRY
+ *      (issue #174): every version-scoped record yields its base entry
+ *      plus one entry per form the data flags `functional: true` (a
+ *      stats/abilities/typing difference vs the record's top-level
+ *      values — the extractor owns the rule, the page reads the flag
+ *      and never re-derives it), so the EX default is 1308 entries
+ *      while Vanilla's `forms: []` overlays keep it at 386 base
+ *      entries (the invariant). The live
+ *      #dex-count line ("<N> entries · page <x> of <y>") and the
+ *      .dex-pager (prev / next buttons + "page X of Y") count them, with
+ *      the pager
  *      BETWEEN the count and the grid, so paging never requires
  *      scrolling down. The bar sticks under the site header: the
  *      position: sticky rule in pages.css reads --dex-browse-top on
@@ -39,9 +47,31 @@
  *      follows the strip: exactly site.json
  *      dex.pageSize (24 — the site's tile page; the in-game Overview
  *      draws 28) .dex-tile
- *      <a> links per page, each a lazy-loaded sprite (onerror → the
- *      placeholder tile showing the dex number in mono) + the active
- *      version's #NNN. The prose blocks (issue #84 — each renders its
+ *      <a> links per page — one per entry, each a lazy-loaded sprite
+ *      (onerror → the placeholder tile showing the dex number in mono)
+ *      + the active version's #NNN. The base entry is the base tile
+ *      plus data-dex-entry="<key>"; a functional-form entry is the
+ *      SAME species link (#rec-pokedex-<id> — the form's detail is the
+ *      species' structured Forms section; no new hash scheme) plus the
+ *      dex-tile--form modifier, the form's sprite (the base's for the
+ *      no-art forms — the existing fallback) and the .dex-tile__form
+ *      mono form-name label. Hovering or keyboard-focusing a tile opens
+ *      the issue-#171 tooltip — ONE shared .dex-tip node (a sibling of
+ *      #dex-grid) re-keyed per entry: the entry's own name + #NNN, its
+ *      own type chips (ROGUE.typeChip — issue #173's colour-coded
+ *      family; a form entry shows the FORM's typing/stats, never the
+ *      base's) and the six stat rows + BST. The reveal is the house
+ *      delegated-listener idiom (static markup + data-dex-entry + one
+ *      listener set on the STABLE #dex-grid in bindTip — the grid
+ *      element survives updateBrowse's innerHTML swap, so the set binds
+ *      once per full render, never per tile) and the position is
+ *      MEASURED (above the tile by default, flipped below when it would
+ *      clip the viewport top, clamped into the viewport — the 8px edge
+ *      margin keeps scrollWidth ≤ the viewport at 360px by
+ *      construction); it is aria-hidden (the detail page is the
+ *      accessible path) and supersedes the base tile's old native
+ *      title (removed — native + custom must not double up; the
+ *      aria-labels carry the names). The prose blocks (issue #84 — each renders its
  *      short 1–2 sentence `text` plus its `list` facts as a
  *      scannable .dex-facts list — including the issue-#100 "Viability"
  *      block, whose fact list documents the metrics the analytics
@@ -53,7 +83,8 @@
  *      selection exists; the .dex-species panel's root carries
  *      id = ROGUE.recId('pokedex', record.id) (the issue-#45 deep-link
  *      scheme, #rec-pokedex-<id>): the pixelated sprite, the name, the
- *      version badge, the #NNN chip, the type chips, the category, the
+ *      version badge, the #NNN chip, the colour-coded type chips (ROGUE.typeChip — the .chip--<type>
+ *      family, issue #173), the category, the
  *      .dex-nav prev/next strip (issue #86 — plain #rec-pokedex-<id>
  *      hash links to the neighbours in the active version's FULL
  *      dex-order list, the grid's list before the on-page filter, so
@@ -459,11 +490,14 @@
     }
 
     /* The issue-#100 sort keys: [SORT_KEYS id, display label]. The stat
-     * keys (bst = stats.total, hp..spe) and catch/exp read through
+     * keys (bst = stats.total, hp..spe) read the ENTRY's own stats
+     * (issue #174 — a form entry sorts on its form's stats, never the
+     * base's); dexnum/catch/exp read the base record through
      * dexVariant(), so the Vanilla stats/catchRate/baseExp overlays are
      * what the sort compares under Vanilla. "dexnum-asc" is the data
-     * order (records are already in national-dex order), so the default
-     * sort is the identity and the default view is byte-identical. */
+     * order (records in national-dex order, each base entry before its
+     * forms — the entry list's own order), so the default sort is the
+     * identity and the default view is byte-identical. */
     var SORT_KEYS = [
       ['dexnum', 'Dex #'],
       ['bst', 'BST'],
@@ -486,18 +520,21 @@
       return 'dexnum-asc';
     }
 
-    /** The version-scoped value of one sort key (null → sorts last). */
-    function sortValue(record, key) {
-      if (key === 'dexnum') return typeof record.dexNum === 'number' ? record.dexNum : null;
+    /** The version-scoped value of one sort key for one ENTRY (null →
+     * sorts last): the stat keys read the entry's own stats (a form
+     * entry carries its form's — issue #174), dexnum/catch/exp read the
+     * base record (forms share them). */
+    function sortValue(entry, key) {
+      if (key === 'dexnum') return typeof entry.dexNum === 'number' ? entry.dexNum : null;
       if (key === 'catch') {
-        var c = dexVariant(record, 'catchRate');
+        var c = dexVariant(entry.record, 'catchRate');
         return typeof c === 'number' ? c : null;
       }
       if (key === 'exp') {
-        var e = dexVariant(record, 'baseExp');
+        var e = dexVariant(entry.record, 'baseExp');
         return typeof e === 'number' ? e : null;
       }
-      var s = dexVariant(record, 'stats');
+      var s = entry.stats;
       if (!s) return null;
       /* "bst" is the total stat (the record field is stats.total) */
       var f = key === 'bst' ? 'total' : key;
@@ -585,31 +622,85 @@
 
     /**
      * The active version's FULL record list in data order (= dex
-     * order) — the base the browse grid derives its filtered list
-     * from (filteredList applies the region/variant/type/query filters
-     * and the sort on top of it). The detail's prev/next neighbours
-     * (issue #86) come from this unfiltered list, so they always match
-     * what the grid shows for the active build.
+     * order) — the RECORD-level list. The detail's prev/next
+     * neighbours (issue #86) come from this unfiltered list, so they
+     * always match the records the grid shows for the active build (the
+     * listing itself is entries — buildEntries below).
      */
     function orderedList() {
       return ROGUE.filter(records);
     }
 
-    /** The (version-scoped, region-, variant-, type- and query-filtered) list, sorted per state.sort. */
+    /* The browse listing (issue #174): the grid's unit is the ENTRY —
+     * every version-scoped record yields its base entry plus one entry
+     * per form the data flags `functional: true` (the extractor's
+     * pinned rule — types/stats/abilities differing from the record's
+     * top-level values; the page reads the flag, never re-derives it).
+     * Deterministic order: records in dex order, the base entry first,
+     * then its functional forms in `forms`-array order (the dexnum-asc
+     * tiebreak relies on exactly that order, and a form entry follows
+     * its base, so the default view reads base-first-then-forms).
+     * Version-scoped through dexVariant(): Vanilla's `forms: []`
+     * overlays expand to base entries only (386 entries, zero form
+     * tiles). Rebuilt on every render (load, hashchange, version
+     * re-render) — trivial at 1308 entries. */
+    var entries = buildEntries();
+
+    function buildEntries() {
+      var out = [];
+      ROGUE.filter(records).forEach(function (record) {
+        var baseTypes = Array.isArray(dexVariant(record, 'types')) ? dexVariant(record, 'types') : [];
+        var baseStats = dexVariant(record, 'stats');
+        out.push({
+          key: record.id,
+          record: record,
+          form: null,
+          name: dexVariant(record, 'name'),
+          dexNum: record.dexNum,
+          types: baseTypes,
+          stats: baseStats,
+          spriteSrc: spriteSrc(record)
+        });
+        var forms = Array.isArray(dexVariant(record, 'forms')) ? dexVariant(record, 'forms') : [];
+        for (var i = 0; i < forms.length; i++) {
+          var f = forms[i];
+          if (!f || f.functional !== true) continue;
+          out.push({
+            key: record.id + '~' + i,
+            record: record,
+            form: f,
+            name: typeof f.name === 'string' ? f.name : '',
+            dexNum: record.dexNum,
+            /* the name-only functional forms carry none of
+             * types/stats/abilities — the fallbacks render them
+             * identically to the base, only the display name differs */
+            types: Array.isArray(f.types) ? f.types : baseTypes,
+            stats: f.stats && typeof f.stats === 'object' ? f.stats : baseStats,
+            spriteSrc: formSpriteSrc(f, record)
+          });
+        }
+      });
+      return out;
+    }
+
+    /** The (version-, region-, variant-, type- and query-filtered) ENTRIES, sorted per state.sort.
+     * The type filter reads the ENTRY's own types (a Dragon filter
+     * surfaces Mega Charizard X); region/variant inherit the base
+     * record; the query stays keyed by record.id, so a matching record
+     * surfaces its base entry AND its functional forms (they share the
+     * record's haystack). */
     function filteredList() {
       var q = state.query.trim().toLowerCase();
-      var list = ROGUE.filter(records).filter(function (r) {
-        if (state.region !== 'all' && r.region !== state.region) return false;
-        if (state.variant !== 'all' && !variantIncludes(r, state.variant)) return false;
-        if (state.type !== 'all') {
-          var ts = dexVariant(r, 'types');
-          if (!Array.isArray(ts) || ts.indexOf(state.type) === -1) return false;
-        }
-        if (q && searchText[r.id].indexOf(q) === -1) return false;
+      var list = entries.filter(function (e) {
+        if (state.region !== 'all' && e.record.region !== state.region) return false;
+        if (state.variant !== 'all' && !variantIncludes(e.record, state.variant)) return false;
+        if (state.type !== 'all' && e.types.indexOf(state.type) === -1) return false;
+        if (q && searchText[e.record.id].indexOf(q) === -1) return false;
         return true;
       });
-      /* the default sort is the data order (dex order) — skip the
-       * decorate pass entirely so the default view is byte-identical */
+      /* the default sort is the entry list's own order (records in dex
+       * order, base first, then its forms) — skip the decorate pass
+       * entirely so the default view is byte-identical */
       return state.sort === 'dexnum-asc' ? list : sortList(list);
     }
 
@@ -662,17 +753,41 @@
       return html + '</div></section>';
     }
 
-    /** One .dex-tile link: lazy sprite (+ onerror placeholder), #NNN. */
-    function dexTile(record) {
-      var id = ROGUE.esc(ROGUE.recId('pokedex', record.id));
+    /**
+     * One .dex-tile link for one ENTRY (issue #174): lazy sprite
+     * (+ onerror placeholder), the #NNN line. Every tile carries
+     * `data-dex-entry="<key>"` (the base entry's key is the record id;
+     * a form entry's is `<id>~<formIndex>`) and links the SPECIES' record
+     * in both cases — the hash stays #rec-pokedex-<id> (the form's
+     * detail is the species' structured Forms section). The form entry
+     * adds the `dex-tile--form` modifier, the form's sprite (the base's
+     * for the no-art forms — formSpriteSrc's fallback), and the
+     * `.dex-tile__form` mono label naming the form, with
+     * `aria-label="<form name> (#<NNN>)"`. Neither tile carries a native
+     * `title` (issue #171 — the delegated .dex-tip tooltip supersedes it;
+     * the aria-labels carry the names and the tooltip is aria-hidden).
+     */
+    function dexTile(entry) {
+      var id = ROGUE.esc(ROGUE.recId('pokedex', entry.record.id));
+      if (entry.form) {
+        return (
+          '<a class="dex-tile dex-tile--form" href="#' + id + '" data-dex-entry="' + ROGUE.esc(entry.key) + '" aria-label="' +
+          ROGUE.esc(entry.name) + ' (#' + entry.dexNum + ')">' +
+          '<img class="dex-tile__sprite" src="' + ROGUE.esc(entry.spriteSrc) + '" alt="" loading="lazy" width="128" height="128">' +
+          '<span class="dex-tile__ph" aria-hidden="true">#' + entry.dexNum + '</span>' +
+          '<span class="dex-tile__num">#' + entry.dexNum + '</span>' +
+          '<span class="dex-tile__form">' + ROGUE.esc(entry.name) + '</span>' +
+          '</a>'
+        );
+      }
       /* the active version's name — the vanilla overlay carries a
        * `name` only when it differs (e.g. ho_oh: "Ho-Oh" → "Ho-oh") */
-      var name = ROGUE.esc(dexVariant(record, 'name'));
+      var name = ROGUE.esc(entry.name);
       return (
-        '<a class="dex-tile" href="#' + id + '" title="' + name + '" aria-label="' + name + '">' +
-        '<img class="dex-tile__sprite" src="' + ROGUE.esc(spriteSrc(record)) + '" alt="" loading="lazy" width="128" height="128">' +
-        '<span class="dex-tile__ph" aria-hidden="true">#' + record.dexNum + '</span>' +
-        '<span class="dex-tile__num">#' + record.dexNum + '</span>' +
+        '<a class="dex-tile" href="#' + id + '" data-dex-entry="' + ROGUE.esc(entry.key) + '" aria-label="' + name + '">' +
+        '<img class="dex-tile__sprite" src="' + ROGUE.esc(entry.spriteSrc) + '" alt="" loading="lazy" width="128" height="128">' +
+        '<span class="dex-tile__ph" aria-hidden="true">#' + entry.dexNum + '</span>' +
+        '<span class="dex-tile__num">#' + entry.dexNum + '</span>' +
         '</a>'
       );
     }
@@ -803,6 +918,11 @@
         '</div>' +
         sectionNav +
         '<div class="dex-grid" id="dex-grid"></div>' +
+        /* the issue-#171 tile tooltip: ONE shared node (a sibling of the
+         * grid — it survives every updateBrowse swap; bindTip's
+         * delegated listeners re-key it per hover/focus, the aria-hidden
+         * is its visible mechanism's twin) */
+        '<div class="dex-tip" id="dex-tip" role="tooltip" aria-hidden="true"></div>' +
         '<p class="dex-empty" id="dex-empty" hidden></p>'
       );
     }
@@ -1839,7 +1959,9 @@
      * build's catalog entry (moveEntry — catalog.vanilla under Vanilla);
      * cells the catalog lacks render "—", never a fabricated stat. The
      * Move cell's mono level tag is the Level Up group's `Lv n` (level 0 →
-     * `(Evo)` per the moves prose); Type is a .chip; Pow/Acc/PP are mono
+     * `(Evo)` per the moves prose); Type is a ROGUE.typeChip (the coloured
+     * .chip--<type>, issue #173 — Mystery/Stellar moves stay the neutral
+     * .chip); Pow/Acc/PP are mono
      * <code> values. The html-flagged columns are pre-escaped here. */
     var MOVE_COLUMNS = [
       { key: 'move', label: 'Move', html: true },
@@ -1857,7 +1979,7 @@
       };
       return {
         move: ROGUE.esc(name) + (levelTag ? ' ' + levelTag : ''),
-        type: entry && entry.type ? ROGUE.chip(entry.type) : '\u2014',
+        type: entry && entry.type ? ROGUE.typeChip(entry.type) : '\u2014',
         pow: num(entry ? entry.power : null),
         acc: num(entry ? entry.accuracy : null),
         pp: num(entry ? entry.pp : null),
@@ -1962,7 +2084,7 @@
         '<h3 class="dex-form__name">' +
         ROGUE.esc(name) +
         '</h3>';
-      if (types.length) html += '<div class="chip-row">' + types.map(ROGUE.chip).join('') + '</div>';
+      if (types.length) html += '<div class="chip-row">' + types.map(ROGUE.typeChip).join('') + '</div>';
       if (stats) html += '<div class="dex-stats">' + statRowsHtml(stats) + '</div>';
       if (abilities.length) html += abilitiesHtml(abilities);
       if (height || weight) {
@@ -2091,7 +2213,7 @@
         '<div class="dex-species__id">' +
         '<h2>' + ROGUE.esc(name) + '</h2>' +
         '<div class="dex-species__badges">' + ROGUE.badge(record) + '<span class="chip">#' + record.dexNum + '</span></div>' +
-        (types.length ? '<div class="chip-row dex-species__types">' + types.map(ROGUE.chip).join('') + '</div>' : '') +
+        (types.length ? '<div class="chip-row dex-species__types">' + types.map(ROGUE.typeChip).join('') + '</div>' : '') +
         (category ? '<p class="dex-species__category">' + ROGUE.esc(category) + '</p>' : '') +
         '</div>' +
         '</div>';
@@ -2174,6 +2296,14 @@
     function render() {
       var main = document.querySelector('main');
       if (!main) return;
+      /* re-scope the listing to the active version (load, hashchange
+       * and version re-renders all funnel through render; the entry
+       * list is version-scoped). The fresh main.innerHTML below drops
+       * the old grid and its tooltip node, so close the tooltip first
+       * (its tile is about to go away). */
+      hideTip();
+      entries = buildEntries();
+      indexEntries();
       var selected = selectedRecord();
       var title = ((site.pages || {}).pokedex || {}).title || 'Pokédex';
 
@@ -2202,6 +2332,7 @@
        * guard keeps the last visible value. */
       setBrowseTop();
       bindToolbar();
+      bindTip();
       /* The issue-#100 visualisations (PR 4b): the typechart renders
        * with the overview on every render (hidden — but present —
        * while the detail is open, so its bindings run regardless);
@@ -2256,17 +2387,20 @@
 
       grid.innerHTML = slice.map(dexTile).join('');
       grid.hidden = slice.length === 0;
+      /* the tiles are fresh — the tooltip's old tile is gone (and a
+       * removed element's focusout never reaches the grid), so close it */
+      hideTip();
       if (empty) {
         empty.hidden = slice.length !== 0;
         empty.textContent = q
-          ? 'No species match \u201C' + q + '\u201D.'
+          ? 'No entries match \u201C' + q + '\u201D.'
           : state.type !== 'all'
-            ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' ' + ROGUE.esc(state.type) + '-type species in ' + ROGUE.esc(state.region) + '.'
+            ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' ' + ROGUE.esc(state.type) + '-type entries in ' + ROGUE.esc(state.region) + '.'
             : state.variant !== 'all'
-              ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + ' under ' + state.variant + '.'
-              : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' species in ' + state.region + '.';
+              ? 'No ' + ROGUE.versionLabel(ROGUE.version) + ' entries in ' + state.region + ' under ' + state.variant + '.'
+              : 'No ' + ROGUE.versionLabel(ROGUE.version) + ' entries in ' + state.region + '.';
       }
-      count.textContent = list.length + ' species \u00B7 page ' + state.page + ' of ' + pages;
+      count.textContent = list.length + ' entries \u00B7 page ' + state.page + ' of ' + pages;
       pager.innerHTML = pagerInner(pages);
       bindBrowse();
 
@@ -2298,6 +2432,201 @@
           if (tile) tile.classList.add('dex-tile--placeholder');
           img.hidden = true;
         });
+      });
+    }
+
+    /* --- issue-#171: the tile tooltip ------------------------------------
+     * Hover or keyboard-focus a grid tile → the entry's quick overview:
+     * the name + #NNN line, the ENTRY's own type chips (ROGUE.typeChip —
+     * issue #173's colour-coded family; a form entry shows the FORM's
+     * typing, never the base's — the entry model) and the six stat rows
+     * + BST (mono, the entry's own stats). ONE shared node — the
+     * .dex-tip sibling of #dex-grid (emitted by browseSection, recreated
+     * with main on a full render) — is re-keyed on every hover, so the
+     * cost is bounded: 24 visible tiles, one tooltip node.
+     *
+     * The reveal is ONE delegated listener set on the STABLE #dex-grid
+     * (the house typechart/radar idiom — static markup + data-* + one
+     * listener): the grid ELEMENT survives updateBrowse()'s innerHTML
+     * swaps (only its children are replaced), so bindTip runs once per
+     * full render and never per swap — and updateBrowse() hides the
+     * tooltip after each swap (its tile is gone, and a removed
+     * element's focusout would not reach the grid anyway).
+     *
+     * Positioning is MEASURED, not pure CSS (the edge cases need
+     * geometry): above the tile by default, flipped below when it would
+     * clip the viewport top, clamped horizontally into the viewport —
+     * the 8px edge margin (the max-width's 16px total) keeps the node
+     * strictly inside the viewport at every width, so scrollWidth can
+     * never exceed the viewport at 360px with a tip open on a
+     * first-row/edge-column tile. A one-shot window scroll (capture) +
+     * resize pair repositions the open tooltip — a wheel under the
+     * cursor or the keyboard's focus-into-view scroll moves the tile
+     * without any mouse event.
+     *
+     * Accessibility: the native `title` the base tile used to carry is
+     * GONE (the tooltip supersedes it — native + custom must not double
+     * up); the aria-labels carry the names (the form entry's since
+     * issue #174), and the tooltip node is aria-hidden (the detail
+     * page is the accessible path). Keyboard parity: the tiles are
+     * links, and focusin/focusout on the grid give Tab the same reveal
+     * (the base.css :focus-visible ring is untouched).
+     */
+    var tipTile = null; /* the .dex-tile the tooltip is currently on (null = closed) */
+    var entryIndex = {}; /* data-dex-entry key → entry — rebuilt with `entries` in render() */
+
+    /** Rebuild the data-dex-entry key → entry lookup (with `entries`). */
+    function indexEntries() {
+      entryIndex = {};
+      for (var i = 0; i < entries.length; i++) entryIndex[entries[i].key] = entries[i];
+    }
+
+    /** The tooltip's content for one entry — the entry's OWN data. */
+    function tipHtml(entry) {
+      /* the in-game representation repeats a mono type twice — display
+       * the distinct types only (the detail head's rule) */
+      var types = [];
+      (Array.isArray(entry.types) ? entry.types : []).forEach(function (t) {
+        if (typeof t === 'string' && types.indexOf(t) === -1) types.push(t);
+      });
+      var html =
+        '<div class="dex-tip__head">' +
+        '<span class="dex-tip__name">' + ROGUE.esc(entry.name) + '</span>' +
+        '<span class="dex-tip__num">#' + entry.dexNum + '</span>' +
+        '</div>';
+      if (types.length) html += '<div class="chip-row dex-tip__types">' + types.map(ROGUE.typeChip).join('') + '</div>';
+      html +=
+        '<div class="dex-tip__stats">' +
+        STAT_ROWS
+          .map(function (row) {
+            var value = Number(entry.stats ? entry.stats[row[0]] : NaN);
+            if (!Number.isFinite(value) || value < 0) value = 0;
+            return (
+              '<div class="dex-tip__stat' + (row[0] === 'total' ? ' dex-tip__stat--bst' : '') + '">' +
+              '<span class="dex-tip__label">' + row[1] + '</span>' +
+              '<span class="dex-tip__value">' + value + '</span>' +
+              '</div>'
+            );
+          })
+          .join('') +
+        '</div>';
+      return html;
+    }
+
+    /**
+     * Position the content-set tooltip against tipTile's measured rect:
+     * centred above the tile by default, flipped below when it would
+     * clip the viewport top, clamped horizontally into the viewport.
+     * The EDGE margin (16px total in the max-width) keeps the node
+     * strictly inside the viewport at every width — 360px safe by
+     * construction. Measured, never guessed (offsetWidth/Height +
+     * getBoundingClientRect on the live node).
+     *
+     * The node is position:fixed, but a `position:fixed` element's
+     * containing block is the viewport ONLY when no ancestor carries a
+     * non-none transform — the house base-page-rise entrance (fill
+     * `both`) leaves .page with an identity-matrix transform for the
+     * page's life, which makes .page the containing block instead. So
+     * the computed VIEWPORT coordinates are converted to the containing
+     * block's local space (its live getBoundingClientRect) before they
+     * are written. fixedContainingBlock() finds that ancestor by
+     * inspecting the computed transform (null = plain-viewport block).
+     */
+    function positionTip() {
+      var tip = document.getElementById('dex-tip');
+      var tile = tipTile;
+      if (!tip || !tile) return;
+      var EDGE = 8; /* the viewport edge margin — half of the max-width's 16px total */
+      var GAP = 8; /* the offset between the tooltip and its tile */
+      var rect = tile.getBoundingClientRect();
+      var vw = window.innerWidth;
+      var vh = window.innerHeight;
+      var tw = tip.offsetWidth;
+      var th = tip.offsetHeight;
+      var x = rect.left + rect.width / 2 - tw / 2;
+      if (x < EDGE) x = EDGE;
+      if (x + tw > vw - EDGE) x = vw - EDGE - tw;
+      var y = rect.top - th - GAP; /* above the tile by default */
+      if (y < EDGE) y = rect.bottom + GAP; /* flip below when it would clip the viewport top */
+      if (y + th > vh - EDGE) y = vh - EDGE - th; /* keep the below case inside the viewport */
+      var cb = fixedContainingBlock(tip); /* the transformed ancestor, or null (plain viewport) */
+      var cbRect = cb ? cb.getBoundingClientRect() : { left: 0, top: 0 };
+      tip.style.left = Math.round(x - cbRect.left) + 'px';
+      tip.style.top = Math.round(y - cbRect.top) + 'px';
+    }
+
+    /** The nearest ancestor of el whose computed transform is not none —
+     * the containing block el's position:fixed coordinates are applied
+     * in (css-transforms: a non-none transform on any ancestor makes it
+     * the containing block for fixed descendants, even an identity
+     * matrix left over from a filled animation). Null when none exists
+     * (the viewport is the containing block). */
+    function fixedContainingBlock(el) {
+      var n = el && el.parentElement;
+      while (n) {
+        var cs = window.getComputedStyle(n);
+        if (cs.transform !== 'none' || cs.perspective !== 'none' || cs.filter !== 'none') return n;
+        n = n.parentElement;
+      }
+      return null;
+    }
+
+    /** Open (or re-point) the tooltip on one tile's entry. */
+    function showTip(tile) {
+      var key = tile.getAttribute('data-dex-entry');
+      var entry = key && entryIndex[key] ? entryIndex[key] : null;
+      var tip = document.getElementById('dex-tip');
+      if (!entry || !tip) {
+        hideTip();
+        return;
+      }
+      tipTile = tile;
+      tip.innerHTML = tipHtml(entry);
+      tip.setAttribute('aria-hidden', 'false');
+      positionTip();
+      tip.classList.add('dex-tip--on');
+    }
+
+    /** Close the tooltip (the hover/focus left the tile, or the grid was re-swapped). */
+    function hideTip() {
+      if (!tipTile) return;
+      tipTile = null;
+      var tip = document.getElementById('dex-tip');
+      if (!tip) return;
+      tip.classList.remove('dex-tip--on');
+      tip.setAttribute('aria-hidden', 'true');
+    }
+
+    /** The .dex-tile under a delegated grid event target (null outside a tile). */
+    function tileOf(el) {
+      return el && el.closest ? el.closest('.dex-tile') : null;
+    }
+
+    /**
+     * The delegated tooltip listeners on #dex-grid — bound ONCE per full
+     * render (the grid element is fresh then; it survives
+     * updateBrowse()'s innerHTML swaps, so never re-bound per swap).
+     */
+    function bindTip() {
+      var grid = document.getElementById('dex-grid');
+      if (!grid) return;
+      grid.addEventListener('mouseover', function (e) {
+        var tile = tileOf(e.target);
+        if (tile && tile !== tipTile) showTip(tile);
+      });
+      grid.addEventListener('mouseout', function (e) {
+        var tile = tileOf(e.target);
+        if (tile && tile === tipTile && tileOf(e.relatedTarget) === tile) return; /* still inside the same tile */
+        if (tile === tipTile) hideTip();
+      });
+      grid.addEventListener('focusin', function (e) {
+        var tile = tileOf(e.target);
+        if (tile) showTip(tile);
+      });
+      grid.addEventListener('focusout', function (e) {
+        var tile = tileOf(e.target);
+        if (tile && tile === tipTile && tileOf(e.relatedTarget) === tile) return;
+        if (tile === tipTile) hideTip();
       });
     }
 
@@ -2480,7 +2809,32 @@
      * search.js resize-listener pattern for --palette-top). */
     window.addEventListener('resize', function () {
       setBrowseTop();
+      if (tipTile) positionTip(); /* the open tooltip tracks its tile across viewport changes */
     });
+
+    /* The open tooltip tracks its tile: a wheel under the cursor or the
+     * keyboard's focus-into-view scroll moves the tile without any mouse
+     * event (mouseover/mouseout only fire on actual pointer movement),
+     * so reposition on EVERY scroll (capture — any scrolling ancestor)
+     * while it is open. One-shot on window (tipTile is the live guard;
+     * it survives every render, unlike the per-render grid listeners). */
+    window.addEventListener(
+      'scroll',
+      function () {
+        if (tipTile) positionTip();
+      },
+      true
+    );
+
+    /* A webfont swap after the first position can reflow the tooltip's
+     * content (the display name) and shift its measured height: when the
+     * initial font load settles, reposition the open tooltip once (the
+     * tipTile guard no-ops it when nothing is open). */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(function () {
+        if (tipTile) positionTip();
+      });
+    }
 
     /* Version changes re-render (the grid re-scopes, the sprites and
      * per-version fields flip, an EX-only selection clears to the

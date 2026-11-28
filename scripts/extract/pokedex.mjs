@@ -30,6 +30,16 @@
  * the Expansion values; the `vanilla` object holds only the fields that differ
  * under Vanilla.
  *
+ * #174 — per-form `functional` flag: each form in a record's `forms`
+ * list carries `functional: true` only when it is functionally different
+ * from the record's top-level (Expansion) values — `types` (JSON equality
+ * of the arrays), `stats` (the six base stats + `total`), or `abilities`
+ * (compared after collapsing consecutive duplicates — the display rule of
+ * abilitiesHtml() in site/js/pages/pokedex.js). A form missing a field
+ * carries no value equal to the base's, so absence counts as a difference
+ * (the name-only rogue custom forms are functional). The flag is
+ * data-owned: the site reads it, never re-derives it.
+ *
  * #149 — canonical names: 33 EX species whose in-game display string is
  * truncated or word-joined by the game's name tables ("Dudunsprce", …).
  * Their `name` carries the full canonical spelling (titleCaseId of the
@@ -562,6 +572,58 @@ function formatHeight(decimeters) {
 function formatWeight(hectograms) {
   const kg = hectograms / 10;
   return `${Number.isInteger(kg) ? kg.toFixed(1) : String(kg)} kg`;
+}
+
+// ---------------------------------------------------------------------------
+// Per-form `functional` flag (issue #174)
+// ---------------------------------------------------------------------------
+//
+// "Functionally different" is a DATA fact, not a JS re-derivation: the
+// extractor marks each form that differs from its record's TOP-LEVEL
+// (Expansion) values in any of the three combat-relevant fields, and the
+// site later reads `form.functional` without ever re-deriving it. The rule
+// (pinned — the drift guard in test/ui/pokedex-forms.test.mjs re-derives
+// it): a form is functional iff any of
+//   - `types` — JSON inequality of the arrays; a form with no `types`
+//     field carries no array equal to the base's, so absence counts as a
+//     difference (the name-only rogue custom forms are functional),
+//   - `stats` — the form has no `stats` field, or any of the six base
+//     stats hp/atk/def/spa/spd/spe plus `total` differs,
+//   - `abilities` — the form has no `abilities` field, or the arrays
+//     differ AFTER collapsing consecutive duplicates — the display rule
+//     mirrored by abilitiesHtml() in site/js/pages/pokedex.js (the
+//     in-game print loop emits a slot only when it is non-empty AND
+//     differs from the raw previous slot — prev starts as ABILITY_NONE
+//     and is updated unconditionally, so a name repeated across an empty
+//     slot survives the collapse).
+// The field is written ONLY when true — non-functional forms omit it,
+// keeping the data diff minimal.
+
+const FUNCTIONAL_STAT_KEYS = ['hp', 'atk', 'def', 'spa', 'spd', 'spe', 'total'];
+
+/** Collapse consecutive duplicate ability slots — the exact loop of
+ *  abilitiesHtml() in site/js/pages/pokedex.js (data arrays never carry
+ *  null slots; the guard keeps the mirror faithful for the first slot). */
+function collapseAbilities(abilities) {
+  const kept = [];
+  let prev = null; // the raw previous slot (ABILITY_NONE initially)
+  for (const a of abilities ?? []) {
+    if (a && a !== prev) kept.push(a);
+    prev = a;
+  }
+  return kept;
+}
+
+/** Issue #174 — is the form functionally different from the record's
+ *  top-level (Expansion) values? (See the rule text above.) */
+function formIsFunctional(form, rec) {
+  if (JSON.stringify(form.types) !== JSON.stringify(rec.types)) return true;
+  if (form.stats === undefined) return true;
+  for (const key of FUNCTIONAL_STAT_KEYS) {
+    if (form.stats[key] !== rec.stats[key]) return true;
+  }
+  if (form.abilities === undefined) return true;
+  return JSON.stringify(collapseAbilities(form.abilities)) !== JSON.stringify(collapseAbilities(rec.abilities));
 }
 
 // ---------------------------------------------------------------------------
@@ -2491,7 +2553,12 @@ function extract(repo) {
     const exProfileFile = profile('ex', movesProfileId)?.file ?? null;
 
     const forms = formsOf(exId, movesProfileId);
-    if (forms) rec.forms = forms;
+    if (forms) {
+      // #174 — mark the forms functionally different from this record's
+      // top-level (Expansion) values; the flag is written only when true
+      for (const f of forms) if (formIsFunctional(f, rec)) f.functional = true;
+      rec.forms = forms;
+    }
 
     rec.dexVariants = variantMembership(exId, exVariants, exSpecies.idByValue, exBaseId);
 

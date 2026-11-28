@@ -46,9 +46,11 @@
  *   safari.html   — a version-identical page: stable counts, only the
  *                   Legends Cave roster note flips (data/safari.json).
  *   pokedex.html  — the lazy data/pokedex.json dex: the #dex-count line
- *                   flips "1025 species · page 1 of 43" (EX: all 1025
- *                   records) → "386 species · page 1 of 17" (Vanilla:
- *                   the 386 shared records), 24 .dex-tile tiles in both
+ *                   flips "1308 entries · page 1 of 55" (EX: the 1025
+ *                   records' base entries + their 283 functional forms —
+ *                   issue #174) → "386 entries · page 1 of 17" (Vanilla:
+ *                   the 386 shared records, base entries only), 24
+ *                   .dex-tile tiles in both
  *                   (data/site.json dex.pageSize); an EX-only selection
  *                   (turtwig, deep-link #rec-pokedex-turtwig) closes the
  *                   .dex-species detail back to the overview under
@@ -73,6 +75,31 @@ import { startServer, openPage, closeAll, resolvePlaywright, skipIfNoPlaywright 
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+
+/* issue #174 — the pokedex count line counts ENTRIES: each
+   version-scoped record yields its base entry + one entry per form
+   the data flags `functional: true` in that version's forms array
+   (Vanilla's `forms: []` overlays → base entries only). Derived the
+   same way site/js/pages/pokedex.js builds the entry list. */
+const dexData = JSON.parse(readFileSync(path.join(root, 'data', 'pokedex.json'), 'utf8'));
+const dexRecords = Array.isArray(dexData.records) ? dexData.records : [];
+const versionFormsOf = (r, v) => {
+  if (v === 'ex') return Array.isArray(r.forms) ? r.forms : [];
+  const overlay = r[v];
+  return overlay && Array.isArray(overlay.forms) ? overlay.forms : [];
+};
+const entryCountOf = (v) =>
+  dexRecords.reduce(
+    (n, r) =>
+      Array.isArray(r.versions) && r.versions.includes(v)
+        ? n + 1 + versionFormsOf(r, v).filter((f) => f && f.functional === true).length
+        : n,
+    0
+  );
+const EX_ENTRY_COUNT = entryCountOf('ex');
+const VAN_ENTRY_COUNT = entryCountOf('vanilla');
+const EX_COUNT_LINE = EX_ENTRY_COUNT + ' entries \u00B7 page 1 of ' + Math.ceil(EX_ENTRY_COUNT / site.dex.pageSize);
+const VAN_COUNT_LINE = VAN_ENTRY_COUNT + ' entries \u00B7 page 1 of ' + Math.ceil(VAN_ENTRY_COUNT / site.dex.pageSize);
 
 let server;
 before(async () => {
@@ -167,14 +194,14 @@ async function assertToggle(page, active, ctx) {
  * rewrite (setVersion → history.replaceState, version.js) AND a
  * version-specific DOM predicate — the re-render's own visible result.
  */
-async function clickToggle(page, version, settled, ctx) {
+async function clickToggle(page, version, settled, ctx, settledArg = null) {
   await page.click(`.version-toggle__option[data-version="${version}"]`);
   await page.waitForFunction(
     (v) => new URLSearchParams(window.location.search).get('version') === v,
     version,
     { timeout: SETTLE_TIMEOUT_MS }
   );
-  await page.waitForFunction(settled, null, { timeout: SETTLE_TIMEOUT_MS });
+  await page.waitForFunction(settled, settledArg, { timeout: SETTLE_TIMEOUT_MS });
   const urlVersion = new URL(page.url()).searchParams.get('version');
   assert.equal(urlVersion, version, `${ctx}: clicking the toggle should rewrite the URL to ?version=${version}, got ${page.url()}`);
 }
@@ -475,15 +502,15 @@ test('index.html: a ?version=vanilla override clicked on the active Vanilla pers
     // — not the site default — must drive the render
     await page.goto(`${server.url}/pokedex.html`, { waitUntil: 'domcontentloaded' });
     await page.waitForFunction(
-      () => (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 17',
-      null,
+      (line) => (document.getElementById('dex-count')?.textContent || '').trim() === line,
+      VAN_COUNT_LINE,
       { timeout: SETTLE_TIMEOUT_MS }
     );
     await assertToggle(page, 'vanilla', 'pokedex.html (persisted Vanilla choice)');
     assert.equal(
       new URL(page.url()).searchParams.get('version'),
       null,
-      'pokedex.html reached without ?version= — the 386-species Vanilla state must come from the stored choice, not a URL override'
+      'pokedex.html reached without ?version= — the 386-entry Vanilla state must come from the stored choice, not a URL override'
     );
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
@@ -686,7 +713,7 @@ test('config.html: the 7 EX-only settings disappear under Vanilla (19 → 12 tog
   }
 });
 
-test('pokedex.html: the count line flips EX → Vanilla (1025/43 → 386/17) and an EX-only selection closes to the overview under Vanilla, reopening on the round-trip', async (t) => {
+test('pokedex.html: the count line flips EX → Vanilla (1308/55 → 386/17) and an EX-only selection closes to the overview under Vanilla, reopening on the round-trip', async (t) => {
   if (skipIfNoPlaywright(t)) return;
   const { page, errors, close } = await openPage({ path: 'pokedex.html' });
   try {
@@ -694,13 +721,14 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/43 → 386/17) and
     await assertToggle(page, 'ex', 'pokedex.html (default)');
 
     // EX initial state: 24 tiles (data/site.json dex.pageSize) and the
-    // count line over all 1025 EX records (386 shared + 639 EX-only);
-    // no selection at load → no detail panel
+    // count line over all 1025 EX records (386 shared + 639 EX-only)
+    // plus their functional forms (issue #174: 283 functional-form
+    // entries) → 1308 entries; no selection at load → no detail panel
     assert.equal(await page.locator('.dex-tile').count(), 24, 'data/site.json dex.pageSize = 24 → 24 .dex-tile links on page 1 (pokedex.js)');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '1025 species · page 1 of 43',
-      'data/pokedex.json: all 1025 records include ex → 1025 species; ceil(1025 / 24) = 43 pages (pokedex.js updateBrowse)'
+      EX_COUNT_LINE,
+      `data/pokedex.json: all 1025 records include ex (386 shared + 639 EX-only), each yielding its base entry + its functional forms (${EX_ENTRY_COUNT - 1025}) → ${EX_ENTRY_COUNT} entries; ceil(${EX_ENTRY_COUNT} / 24) = ${Math.ceil(EX_ENTRY_COUNT / 24)} pages (pokedex.js updateBrowse, issue #174)`
     );
     assert.equal(await page.locator('.dex-species').count(), 0, 'no #rec-pokedex-<id> hash at load → the .dex-species detail panel is not rendered');
 
@@ -725,21 +753,23 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/43 → 386/17) and
 
     // EX → Vanilla: turtwig does not exist in Vanilla → the selection
     // clears to the overview, and the count line re-scopes to the 386
-    // shared records (ceil(386 / 24) = 17 pages)
+    // shared records' base entries — Vanilla's `forms: []` overlays
+    // expand to zero form entries (ceil(386 / 24) = 17 pages)
     await clickToggle(
       page,
       'vanilla',
-      () =>
-        (document.getElementById('dex-count')?.textContent || '').trim() === '386 species · page 1 of 17' &&
+      (line) =>
+        (document.getElementById('dex-count')?.textContent || '').trim() === line &&
         document.querySelector('.dex-species') === null,
-      'pokedex.html (EX→Vanilla)'
+      'pokedex.html (EX→Vanilla)',
+      VAN_COUNT_LINE
     );
     await assertToggle(page, 'vanilla', 'pokedex.html (after click)');
-    assert.equal(await page.locator('.dex-tile').count(), 24, 'data/pokedex.json: the 386 Vanilla records still fill the first page → 24 tiles (pokedex.js)');
+    assert.equal(await page.locator('.dex-tile').count(), 24, 'data/pokedex.json: the 386 Vanilla entries still fill the first page → 24 tiles (pokedex.js)');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '386 species · page 1 of 17',
-      'data/pokedex.json: only the 386 shared records include vanilla → 386 species, ceil(386 / 24) = 17 pages'
+      VAN_COUNT_LINE,
+      `data/pokedex.json: only the 386 shared records include vanilla, and their vanilla.forms overlays are all empty → ${VAN_ENTRY_COUNT} entries, ceil(${VAN_ENTRY_COUNT} / 24) = ${Math.ceil(VAN_ENTRY_COUNT / 24)} pages (pokedex.js updateBrowse, issue #174)`
     );
     assert.equal(
       await page.locator('.dex-species').count(),
@@ -759,8 +789,8 @@ test('pokedex.html: the count line flips EX → Vanilla (1025/43 → 386/17) and
     assert.equal(await page.locator('.dex-species').count(), 1, 'the retained EX-only selection re-resolves under EX → the detail panel reopens');
     assert.equal(
       (await page.locator('#dex-count').first().textContent())?.trim(),
-      '1025 species · page 1 of 43',
-      'the round-trip restores the full 1025-record EX count line'
+      EX_COUNT_LINE,
+      'the round-trip restores the full EX entry count line (1025 base entries + 283 functional-form entries)'
     );
   } finally {
     await close();

@@ -24,10 +24,10 @@
  *   b. #rec-pokedex-arceus — at least one plate form with its OWN sprite
  *      src (data-derived), loaded (and no unloaded sprite anywhere in
  *      the panel);
- *   c. the first record in data order with a plain {name}-only form
- *      (derived — a no-entry rogue custom form) — its .dex-form--plain
- *      row's img src equals the BASE record's spriteSrc (the fallback
- *      proven in-DOM), loaded;
+ *   c. the first record in data order with a name-only form (no per-form
+ *      data fields — derived; a no-entry rogue custom form) — its
+ *      .dex-form--plain row's img src equals the BASE record's spriteSrc
+ *      (the fallback proven in-DOM), loaded;
  *   d. ?version=vanilla #rec-pokedex-charizard — ZERO .dex-form blocks
  *      (the vanilla overlay's forms: [] — Vanilla renders no forms at
  *      all) while the detail itself renders;
@@ -72,10 +72,21 @@ if (!arceus) throw new Error('data/pokedex.json: no arceus record');
 const ARCEUS_OWN_SRCS = (arceus.forms || []).filter((f) => typeof f.sprite === 'string').map((f) => './assets/pokemon/' + f.sprite + '.png');
 if (ARCEUS_OWN_SRCS.length === 0) throw new Error('data/pokedex.json: no arceus plate form carries a form.sprite');
 
-/* the first record in data (dex) order with a plain {name}-only form — a
- * no-entry rogue custom form whose --plain row renders the base sprite */
-const plainRec = records.find((r) => (r.forms || []).some((f) => Object.keys(f).length === 1 && typeof f.name === 'string'));
-if (!plainRec) throw new Error('data/pokedex.json: no record carries a plain {name}-only form');
+/** A name-only form: no per-form data fields — the site's formHtml()
+ * plain branch (field-absence detection, never exact key set: the #174
+ * `functional` flag may ride along on such forms). */
+const isNameOnly = (f) =>
+  typeof f.name === 'string' &&
+  f.types === undefined &&
+  f.stats === undefined &&
+  f.abilities === undefined &&
+  f.height === undefined &&
+  f.weight === undefined &&
+  f.description === undefined;
+/* the first record in data (dex) order with a name-only form — a no-entry
+ * rogue custom form whose --plain row renders the base sprite */
+const plainRec = records.find((r) => (r.forms || []).some(isNameOnly));
+if (!plainRec) throw new Error('data/pokedex.json: no record carries a name-only form');
 
 const SETTLE_TIMEOUT_MS = 10_000; // guard for the settle waits (a bound, not a sleep)
 
@@ -186,8 +197,8 @@ test('arceus (EX): a plate form carries its own loaded form sprite', async (t) =
 
 test('a no-entry custom-form detail: the --plain row renders the BASE sprite fallback', async (t) => {
   if (skipIfNoPlaywright(t)) return;
-  // ARRANGE — the first record in data order with a plain {name}-only
-  // form (a no-entry rogue custom form — the data names it, the test
+  // ARRANGE — the first record in data order with a name-only form
+  // (a no-entry rogue custom form — the data names it, the test
   // never hardcodes it)
   const { page, errors, close } = await openPage({ path: 'pokedex.html' });
   try {
