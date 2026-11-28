@@ -39,10 +39,11 @@
  *     loaded into a node:vm sandbox with the real data — the same
  *     no-mock setup as test/search.test.mjs), because the on-page filter
  *     indexes that exact string;
- *   - the two project-wide pinned count lines ("1025 species · page 1 of
- *     43" EX / "386 species · page 1 of 17" Vanilla) are asserted as
- *     literals (they are pinned by smoke/version suites) and cross-checked
- *     against the data-derived value at load.
+ *   - the two project-wide pinned count lines ("1308 entries · page 1 of
+ *     55" EX / "386 entries · page 1 of 17" Vanilla — issue #174: the
+ *     listing is entries, records + their functional forms) are asserted
+ *     as literals (they are pinned by smoke/version suites) and
+ *     cross-checked against the data-derived value at load.
  *
  * Coverage:
  *   1. #91 — click the Paldea chip (derived count) → the clicked chip is
@@ -109,15 +110,29 @@ const recordsOf = (version) => records.filter((r) => Array.isArray(r.versions) &
 const exRecords = recordsOf('ex');
 const vanillaRecords = recordsOf('vanilla');
 
+/* issue #174 — the page's listing is ENTRIES, not records: each
+   version-scoped record yields its base entry + one entry per form the
+   data flags `functional: true` (the extractor's pinned diff rule). This
+   suite's fixtures are all EX-scoped, so the top-level forms array is
+   the version-scoped one; Vanilla's `forms: []` overlays expand to base
+   entries only (vanillaRecords.length). Derived the same way
+   site/js/pages/pokedex.js builds the entry list. */
+const entryN = (subset) =>
+  subset.reduce(
+    (n, r) =>
+      n + 1 + (Array.isArray(r.forms) ? r.forms.filter((f) => f && f.functional === true).length : 0),
+    0
+  );
+
 /** The page's count line for a filtered list at page 1 (pokedex.js updateBrowse). */
-const countLine = (n) => n + ' species · page 1 of ' + Math.max(1, Math.ceil(n / PAGE_SIZE));
+const countLine = (n) => n + ' entries · page 1 of ' + Math.max(1, Math.ceil(n / PAGE_SIZE));
 
 /* The project-wide pinned full lines — cross-checked against the data at
  * load so a drifted extraction fails HERE, not as a stale literal. */
-const FULL_EX_LINE = countLine(exRecords.length);
+const FULL_EX_LINE = countLine(entryN(exRecords));
 const FULL_VANILLA_LINE = countLine(vanillaRecords.length);
-assert.equal(FULL_EX_LINE, '1025 species · page 1 of 43', 'data/pokedex.json: the pinned EX full count line drifted — update the pinned literal');
-assert.equal(FULL_VANILLA_LINE, '386 species · page 1 of 17', 'data/pokedex.json: the pinned Vanilla full count line drifted — update the pinned literal');
+assert.equal(FULL_EX_LINE, '1308 entries · page 1 of 55', 'data/pokedex.json: the pinned EX full count line drifted — update the pinned literal');
+assert.equal(FULL_VANILLA_LINE, '386 entries · page 1 of 17', 'data/pokedex.json: the pinned Vanilla full count line drifted — update the pinned literal');
 
 /* #91 fixture: a region with a non-trivial EX count (the issue's own
  * example), derived from the data; the chip labels derive from the same
@@ -125,7 +140,7 @@ assert.equal(FULL_VANILLA_LINE, '386 species · page 1 of 17', 'data/pokedex.jso
 const REGIONS = [...new Set(records.map((r) => r.region))];
 assert.equal(REGIONS.length + 1, 10, 'data/pokedex.json: the pinned 10 .dex-filter__btn (All + 9 regions) drifted');
 const REGION = 'Paldea';
-const PALDEA_N = exRecords.filter((r) => r.region === REGION).length;
+const PALDEA_N = entryN(exRecords.filter((r) => r.region === REGION));
 assert.ok(REGIONS.includes(REGION) && PALDEA_N > 0, `data/pokedex.json: no "${REGION}" region records for the #91 fixture`);
 
 /* The EX-only "Modern" Rogue dex — the in-game default variant; the
@@ -157,7 +172,7 @@ function variantMember(r, version, option) {
   const suffix = ' (' + option + ')';
   return dv.some((v) => typeof v === 'string' && v.length >= suffix.length && v.slice(v.length - suffix.length) === suffix);
 }
-const MODERN_N = exRecords.filter((r) => variantMember(r, 'ex', MODERN)).length;
+const MODERN_N = entryN(exRecords.filter((r) => variantMember(r, 'ex', MODERN)));
 assert.ok(MODERN_N > 0, 'data/pokedex.json: no records under the Modern variant — the #92 fixture is degenerate');
 
 /* #92 combined spot-check: region + variant + query, each dimension a
@@ -190,14 +205,18 @@ const haystack = (() => {
   return out;
 })();
 
-const COMBINED_REGION_N = exRecords.filter((r) => r.region === COMBINED.region).length;
-const COMBINED_REGION_VARIANT_N = exRecords.filter((r) => r.region === COMBINED.region && variantMember(r, 'ex', COMBINED.variant)).length;
-const COMBINED_REGION_QUERY_N = exRecords.filter(
-  (r) => r.region === COMBINED.region && haystack[r.id].includes(COMBINED.query.toLowerCase())
-).length;
-const COMBINED_N = exRecords.filter(
-  (r) => r.region === COMBINED.region && variantMember(r, 'ex', COMBINED.variant) && haystack[r.id].includes(COMBINED.query.toLowerCase())
-).length;
+const COMBINED_REGION_N = entryN(exRecords.filter((r) => r.region === COMBINED.region));
+const COMBINED_REGION_VARIANT_N = entryN(
+  exRecords.filter((r) => r.region === COMBINED.region && variantMember(r, 'ex', COMBINED.variant))
+);
+const COMBINED_REGION_QUERY_N = entryN(
+  exRecords.filter((r) => r.region === COMBINED.region && haystack[r.id].includes(COMBINED.query.toLowerCase()))
+);
+const COMBINED_N = entryN(
+  exRecords.filter(
+    (r) => r.region === COMBINED.region && variantMember(r, 'ex', COMBINED.variant) && haystack[r.id].includes(COMBINED.query.toLowerCase())
+  )
+);
 assert.ok(
   COMBINED_N > 0 && COMBINED_N < COMBINED_REGION_VARIANT_N && COMBINED_N < COMBINED_REGION_QUERY_N && COMBINED_N < COMBINED_REGION_N,
   `combined fixture must be non-trivial (region ${COMBINED_REGION_N}, +variant ${COMBINED_REGION_VARIANT_N}, +query ${COMBINED_REGION_QUERY_N}, combined ${COMBINED_N})`
@@ -261,7 +280,7 @@ test('#91: clicking a region chip moves the pressed indicator and the count line
     assert.equal(
       await page.evaluate(() => (document.getElementById('dex-count')?.textContent || '').trim()),
       countLine(PALDEA_N),
-      `data/pokedex.json: ${PALDEA_N} ${REGION} records → "${countLine(PALDEA_N)}"`
+      `data/pokedex.json: ${PALDEA_N} ${REGION} entries (records + their functional forms, issue #174) → "${countLine(PALDEA_N)}"`
     );
 
     // ACT — click "All": the indicator and the count return
@@ -346,7 +365,7 @@ test('#92: selecting the EX-only "Modern" variant filters to the data-derived me
       tiles: document.querySelectorAll('.dex-tile').length,
     }));
     assert.equal(facts.variant, MODERN, `the select holds "${MODERN}"`);
-    assert.equal(facts.count, countLine(MODERN_N), `data/pokedex.json: ${MODERN_N} records under ${MODERN} → "${countLine(MODERN_N)}"`);
+    assert.equal(facts.count, countLine(MODERN_N), `data/pokedex.json: ${MODERN_N} entries under ${MODERN} (records + their functional forms, issue #174) → "${countLine(MODERN_N)}"`);
     assert.equal(facts.tiles, Math.min(PAGE_SIZE, MODERN_N), 'the grid shows the first (partial) page of the filtered list');
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
@@ -391,7 +410,7 @@ test('#92: region + variant + query combine (one derived spot-check)', async (t)
     assert.equal(
       facts.count,
       countLine(COMBINED_N),
-      `data/pokedex.json: ${COMBINED_N} records in ${COMBINED.region} under ${COMBINED.variant} matching "${COMBINED.query}" → "${countLine(COMBINED_N)}"`
+      `data/pokedex.json: ${COMBINED_N} entries in ${COMBINED.region} under ${COMBINED.variant} matching "${COMBINED.query}" (records + their functional forms, issue #174) → "${countLine(COMBINED_N)}"`
     );
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
@@ -455,7 +474,7 @@ test('360px: the browse bar with the variant select carries no horizontal overfl
     await page.selectOption('#dex-variant', LONGEST_OPTION);
     await page.waitForFunction(
       (line) => (document.getElementById('dex-count')?.textContent || '').trim() === line,
-      countLine(exRecords.filter((r) => variantMember(r, 'ex', LONGEST_OPTION)).length),
+      countLine(entryN(exRecords.filter((r) => variantMember(r, 'ex', LONGEST_OPTION)))),
       { timeout: SETTLE_TIMEOUT_MS }
     );
 

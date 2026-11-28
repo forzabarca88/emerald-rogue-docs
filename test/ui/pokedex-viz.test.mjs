@@ -545,7 +545,7 @@ test('typechart re-render: the EX-only species selection resets under the live t
     // ACT — the LIVE toggle to Vanilla (the species is not in its dex)
     await page.click('.version-toggle__option[data-version="vanilla"]');
     await page.waitForFunction(
-      (n) => (document.getElementById('dex-count')?.textContent || '').includes(n + ' species'),
+      (n) => (document.getElementById('dex-count')?.textContent || '').includes(n + ' entries'),
       '386',
       { timeout: SETTLE_TIMEOUT_MS }
     );

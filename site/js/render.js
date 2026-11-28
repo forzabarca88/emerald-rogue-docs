@@ -7,6 +7,7 @@
  * ROGUE.simpleCard(record[, id]), ROGUE.recId(fileStem, recordId),
  * ROGUE.table(records, columns), ROGUE.proseSections(prose),
  * ROGUE.section(id, eyebrow, heading, intro, body), ROGUE.chip(text),
+ * ROGUE.typeChip(type),
  * ROGUE.stepStrip(steps[, label]), ROGUE.proseById(data, id),
  * ROGUE.byCategory(records, category), ROGUE.versionLabel(id),
  * ROGUE.resolvePlaceholders(text), ROGUE.groupTitle(id),
@@ -186,6 +187,46 @@
   /** A single .chip tag of escaped text. */
   ROGUE.chip = function (text) {
     return '<span class="chip">' + ROGUE.esc(text) + '</span>';
+  };
+
+  /* The 18 EX-standard Pokémon types (the typeChart order minus the
+   * move-only non-defenders Mystery/Stellar) — the values the .chip--<type>
+   * modifier family in components.css is named for. */
+  var TYPE_MODIFIERS = {
+    normal: 'chip--normal',
+    fighting: 'chip--fighting',
+    flying: 'chip--flying',
+    poison: 'chip--poison',
+    ground: 'chip--ground',
+    rock: 'chip--rock',
+    bug: 'chip--bug',
+    ghost: 'chip--ghost',
+    steel: 'chip--steel',
+    fire: 'chip--fire',
+    water: 'chip--water',
+    grass: 'chip--grass',
+    electric: 'chip--electric',
+    psychic: 'chip--psychic',
+    ice: 'chip--ice',
+    dragon: 'chip--dragon',
+    dark: 'chip--dark',
+    fairy: 'chip--fairy'
+  };
+
+  /** A type chip (issue #173): the .chip--<type> modifier for one of the
+   * 18 EX-standard types (case-insensitive, trimmed), the plain neutral
+   * .chip for Mystery/Stellar/unknown — ROGUE.chip itself stays neutral
+   * for the ~30 non-typing call sites (config/hub/section-nav/variants…).
+   * The #171 tooltip reuses this — do not change its shape. */
+  ROGUE.typeChip = function (type) {
+    var key = typeof type === 'string' ? type.trim().toLowerCase() : '';
+    return (
+      '<span class="chip' +
+      (TYPE_MODIFIERS[key] ? ' ' + TYPE_MODIFIERS[key] : '') +
+      '">' +
+      ROGUE.esc(type) +
+      '</span>'
+    );
   };
 
   /** The shared sticky in-page section strip (issue #98): one a.chip anchor

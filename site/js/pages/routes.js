@@ -18,8 +18,11 @@
  *      terrain, its active version's wild type table as .chip tags — the
  *      three types its encounters and weather can use, a pool rather than
  *      a guaranteed roster (issue #145; the six FAIRY-swap routes re-read
- *      the Vanilla variant from their `differences`) — its drop rarity,
- *      its version badge and a per-version difference note
+ *      the Vanilla variant from their `differences`) — the wild-type chips
+ *      are colour-coded via ROGUE.typeChip (the .chip--<type> family,
+ *      issue #173; the terrain and drop-rarity chips stay the neutral
+ *      ROGUE.chip) — its drop rarity, its version badge and a per-version
+ *      difference note
  *   6. How routes appear on the adventure path (prose)
  */
 (function () {
@@ -81,8 +84,11 @@
     function routeCard(record) {
       var tags = [];
       if (record.terrain) tags.push(ROGUE.chip(record.terrain));
+      /* the wild types are the card's typing surface — ROGUE.typeChip
+       * (issue #173); the terrain chip above and the drop-rarity chip
+       * below are not types and stay the neutral ROGUE.chip */
       effectiveTypes(record).forEach(function (t) {
-        tags.push(ROGUE.chip(t));
+        tags.push(ROGUE.typeChip(t));
       });
       if (typeof record.dropRarity === 'number') tags.push(ROGUE.chip('Drop +' + record.dropRarity));
 

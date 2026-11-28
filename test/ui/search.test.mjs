@@ -110,11 +110,13 @@
  *                       re-scope drops it out).
  *   "thunderbolt"     — pokedex.html: a MOVE name (absent from every species
  *                       NAME) — 255 rows under EX (the learnset union made
- *                       moves searchable); the SAME 255 on-page (the dex
- *                       filter shares ROGUE.pokedexSearchText with the
- *                       palette — the on-page/palette parity), first grid
- *                       tile Rattata (#19, the first TM-86 learner in dex
- *                       order).
+ *                       moves searchable); the SAME 255 records on-page (the
+ *                       dex filter shares ROGUE.pokedexSearchText with the
+ *                       palette — the on-page/palette parity), which render
+ *                       as 368 ENTRIES (issue #174: each matching record plus
+ *                       its functional forms; the palette stays record-based),
+ *                       first grid tile Rattata (#19, the first TM-86 learner
+ *                       in dex order).
  *   "/" (a second press while open) — 37 index entries contain a "/" → the
  *                       search.maxResults cap (data/site.json: 30) applies
  *                       (30 rows + the moreResults overflow suffix, 7 more).
@@ -132,11 +134,12 @@
  *   "wobbuffet" (issue #50 parity) → 1 card ("The Final Run." — the word is
  *   in its REWARD, absent from every quest's name + description);
  *   hub.html "unique" → 8 of 48 upgrades; routes.html Hoenn → 12 of 36;
- *   pokedex.html EX "thunderbolt" → "255 species · page 1 of 11" (the
- *   count line — the 255-record match of the palette's "thunderbolt"),
- *   first tile Rattata; "pikachu" → "1 species · page 1 of 1"; clearing
- *   restores "1025 species · page 1 of 43" (EX) / "386 species · page 1
- *   of 17" (Vanilla).
+ *   pokedex.html EX "thunderbolt" → "368 entries · page 1 of 16" (the
+ *   count line — the 255-record match of the palette's "thunderbolt"
+ *   expanded to its functional forms; issue #174), first tile Rattata;
+ *   "pikachu" → "1 entries · page 1 of 1"; clearing restores
+ *   "1308 entries · page 1 of 55" (EX) / "386 entries · page 1 of 17"
+ *   (Vanilla — its `forms: []` overlays keep it at 386 base entries).
  *
  * Waiting is always on a DOM state (the count line, aria-activedescendant,
  * the anchor's bounding box) with a bounded timeout — no arbitrary sleeps;
@@ -152,11 +155,45 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { startServer, openPage, closeAll, resolvePlaywright, skipIfNoPlaywright } from './harness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
+
+/* issue #174 — the pokedex on-page filter's count line counts ENTRIES:
+ * each version-scoped record yields its base entry + one entry per form
+ * the data flags `functional: true` (Vanilla's `forms: []` overlays →
+ * base entries only). Derived with the SHARED ROGUE.pokedexSearchText
+ * haystack (the same no-mock vm setup as the unit test/search.test.mjs),
+ * so the thunderbolt/pikachu expectations run on the exact string the
+ * on-page filter indexes. */
+const DEX_FILES = [
+  'adventure', 'campaigns', 'charms', 'followmons', 'game-modes', 'gameshow', 'hub', 'pokedex',
+  'quests', 'routes', 'safari', 'settings', 'timeofday', 'unique-mons', 'versions',
+];
+const dexCfg = {};
+for (const f of DEX_FILES) dexCfg[f] = JSON.parse(readFileSync(path.join(root, 'data', f + '.json'), 'utf8'));
+const dexWindow = { ROGUE_DATA_SITE: site };
+for (const f of DEX_FILES) dexWindow['ROGUE_DATA_' + f.toUpperCase()] = dexCfg[f];
+const dexSandbox = { window: dexWindow };
+vm.createContext(dexSandbox);
+for (const mod of ['data', 'render', 'search-index']) {
+  vm.runInContext(readFileSync(path.join(root, 'site', 'js', mod + '.js'), 'utf8'), dexSandbox, { filename: mod + '.js' });
+}
+const DEX_RECORDS = Array.isArray(dexCfg.pokedex.records) ? dexCfg.pokedex.records : [];
+const DEX_HAYSTACK = {};
+for (const r of DEX_RECORDS) DEX_HAYSTACK[r.id] = dexSandbox.window.ROGUE.pokedexSearchText(r);
+const DEX_FUNC_FORMS = (r) => (Array.isArray(r.forms) ? r.forms.filter((f) => f && f.functional === true).length : 0);
+const DEX_EX_RECORDS = DEX_RECORDS.filter((r) => Array.isArray(r.versions) && r.versions.includes('ex'));
+const DEX_EX_ENTRIES = DEX_EX_RECORDS.reduce((n, r) => n + 1 + DEX_FUNC_FORMS(r), 0);
+const DEX_VAN_ENTRIES = DEX_RECORDS.filter((r) => Array.isArray(r.versions) && r.versions.includes('vanilla')).length;
+const DEX_COUNT_LINE = (n) => n + ' entries \u00B7 page 1 of ' + Math.max(1, Math.ceil(n / site.dex.pageSize));
+const DEX_TB_RECORDS = DEX_EX_RECORDS.filter((r) => DEX_HAYSTACK[r.id].includes('thunderbolt'));
+const DEX_TB_ENTRIES = DEX_TB_RECORDS.reduce((n, r) => n + 1 + DEX_FUNC_FORMS(r), 0);
+const DEX_PK_RECORDS = DEX_EX_RECORDS.filter((r) => DEX_HAYSTACK[r.id].includes('pikachu'));
+const DEX_PK_ENTRIES = DEX_PK_RECORDS.reduce((n, r) => n + 1 + DEX_FUNC_FORMS(r), 0);
 
 let server;
 before(async () => {
@@ -1338,38 +1375,60 @@ test('pokedex.html (in-page regression): the dex filter runs on the shared ROGUE
     // "thunderbolt" — a MOVE name absent from every species NAME: the
     // on-page filter must match the same 255 EX records the palette's
     // "thunderbolt" query hits (both surfaces share ROGUE.pokedexSearchText
-    // — the learnset union made moves searchable)
+    // — the learnset union made moves searchable). The count line counts
+    // ENTRIES (issue #174): those 255 records plus their functional
+    // forms — the palette stays record-based, the grid lists entries.
     await page.fill('#dex-search', 'thunderbolt');
-    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('255'), null, { timeout: SETTLE_TIMEOUT_MS });
+    await page.waitForFunction(
+      (n) => (document.getElementById('dex-count')?.textContent || '').startsWith(n + ' entries'),
+      DEX_TB_ENTRIES,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
     const d1 = await dexState();
-    assert.equal(d1.line, '255 species \u00B7 page 1 of 11', 'the count line: the 255-record match paged at the 24-tile page size (data/site.json dex.pageSize; the same 255 the palette surfaces)');
+    assert.equal(d1.line, DEX_COUNT_LINE(DEX_TB_ENTRIES),
+      `the count line: the ${DEX_TB_RECORDS.length}-record match paged at the 24-tile page size (data/site.json dex.pageSize; the same ${DEX_TB_RECORDS.length} the palette surfaces) expanded to its ${DEX_TB_ENTRIES} entries (issue #174)`);
     assert.equal(d1.visible, 24, 'page 1 draws exactly 24 tiles');
     assert.equal(d1.firstTile, 'Rattata', 'first grid tile in dex order: Rattata #19, the first TM-86 learner (data/pokedex.json learnset union)');
 
-    // "pikachu" — the species NAME: exactly one record (its forms live in
-    // that record's forms field, not as separate entries)
+    // "pikachu" — the species NAME: exactly one record, and one ENTRY —
+    // its only form (Gigantamax) is not functional, so it does not
+    // expand into its own entry (issue #174)
     await page.fill('#dex-search', 'pikachu');
-    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('1 '), null, { timeout: SETTLE_TIMEOUT_MS });
+    await page.waitForFunction(
+      (n) => (document.getElementById('dex-count')?.textContent || '').startsWith(n + ' entries'),
+      DEX_PK_ENTRIES,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
     const d1b = await dexState();
-    assert.equal(d1b.line, '1 species \u00B7 page 1 of 1', 'the name match: exactly the Pikachu record');
+    assert.equal(d1b.line, DEX_COUNT_LINE(DEX_PK_ENTRIES), 'the name match: exactly the Pikachu record (one entry — no functional forms)');
     assert.equal(d1b.firstTile, 'Pikachu');
 
     // nonsense: the empty state + no tiles
     await page.fill('#dex-search', NOISE);
     await page.waitForFunction(() => document.getElementById('dex-empty') && !document.getElementById('dex-empty').hidden, null, { timeout: SETTLE_TIMEOUT_MS });
     const d2 = await dexState();
-    assert.equal(d2.line, '0 species \u00B7 page 1 of 1', 'no matches for a non-matching query');
-    assert.equal(d2.empty, `No species match ${Q_OPEN}${NOISE}${Q_CLOSE}.`, 'the empty state message (pokedex.js updateBrowse)');
+    assert.equal(d2.line, DEX_COUNT_LINE(0), 'no matches for a non-matching query');
+    assert.equal(d2.empty, `No entries match ${Q_OPEN}${NOISE}${Q_CLOSE}.`, 'the empty state message (pokedex.js updateBrowse)');
     assert.equal(d2.visible, 0, 'no tiles for a non-matching query');
 
     // clearing restores the full dex, and the Vanilla re-scope keeps the
     // shared count line
     await page.fill('#dex-search', '');
-    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('1025'), null, { timeout: SETTLE_TIMEOUT_MS });
-    assert.equal((await dexState()).line, '1025 species \u00B7 page 1 of 43', 'clearing restores all 1025 EX species (data/pokedex.json; ceil(1025 / 24) = 43 pages)');
+    await page.waitForFunction(
+      (n) => (document.getElementById('dex-count')?.textContent || '').startsWith(n + ' entries'),
+      DEX_EX_ENTRIES,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    assert.equal((await dexState()).line, DEX_COUNT_LINE(DEX_EX_ENTRIES),
+      `clearing restores the full EX listing: ${DEX_EX_RECORDS.length} records + their functional forms = ${DEX_EX_ENTRIES} entries (data/pokedex.json, issue #174)`);
     await page.click('.version-toggle__option[data-version="vanilla"]');
-    await page.waitForFunction(() => (document.getElementById('dex-count')?.textContent || '').startsWith('386'), null, { timeout: SETTLE_TIMEOUT_MS });
-    assert.equal((await dexState()).line, '386 species \u00B7 page 1 of 17', 'the Vanilla build re-scopes to the 386 shared species (ceil(386 / 24) = 17 pages)');
+    await page.waitForFunction(
+      (n) => (document.getElementById('dex-count')?.textContent || '').startsWith(n + ' entries'),
+      DEX_VAN_ENTRIES,
+      { timeout: SETTLE_TIMEOUT_MS }
+    );
+    assert.equal((await dexState()).line, DEX_COUNT_LINE(DEX_VAN_ENTRIES),
+      `the Vanilla build re-scopes to the ${DEX_VAN_ENTRIES} shared base entries (its forms overlays are all empty — issue #174's 386-entry invariant)`);
     assert.deepEqual(errors, [], `unexpected page errors: ${errors.join('; ')}`);
   } finally {
     await close();

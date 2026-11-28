@@ -9375,7 +9375,8 @@
           "height": "2.4 m",
           "weight": "155.5 kg",
           "description": "In order to support its flower, which\nhas grown larger due to Mega Evolution,\nits back and legs have become stronger.",
-          "sprite": "venusaur_mega"
+          "sprite": "venusaur_mega",
+          "functional": true
         },
         {
           "name": "Gigantamax Venusaur",
@@ -10406,7 +10407,8 @@
           "height": "1.7 m",
           "weight": "110.5 kg",
           "description": "The overwhelming power that fills its\nentire body causes it to turn black\nand creates intense blue flames.",
-          "sprite": "charizard_mega_x"
+          "sprite": "charizard_mega_x",
+          "functional": true
         },
         {
           "name": "Mega Charizard Y",
@@ -10431,7 +10433,8 @@
           "height": "1.7 m",
           "weight": "100.5 kg",
           "description": "Its bond with its Trainer is the source\nof its power. It boasts speed and\nmaneuverability greater than that of a\njet fighter.",
-          "sprite": "charizard_mega_y"
+          "sprite": "charizard_mega_y",
+          "functional": true
         },
         {
           "name": "Gigantamax Charizard",
@@ -11491,7 +11494,8 @@
           "height": "1.6 m",
           "weight": "101.1 kg",
           "description": "The cannon on its back is as powerful\nas a tank gun. Its tough legs and back\nenable it to withstand the recoil from\nfiring the cannon.",
-          "sprite": "blastoise_mega"
+          "sprite": "blastoise_mega",
+          "functional": true
         },
         {
           "name": "Gigantamax Blastoise",
@@ -12653,7 +12657,8 @@
           "height": "1.4 m",
           "weight": "40.5 kg",
           "description": "Its legs have become poison stingers.\nIt stabs its prey repeatedly with the\nstingers on its limbs, dealing the final\nblow with the stinger on its rear.",
-          "sprite": "beedrill_mega"
+          "sprite": "beedrill_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -13521,7 +13526,8 @@
           "height": "2.2 m",
           "weight": "50.5 kg",
           "description": "With its muscular strength now greatly\nincreased, it can fly continuously\nfor two weeks without resting.",
-          "sprite": "pidgeot_mega"
+          "sprite": "pidgeot_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -13859,7 +13865,8 @@
                 "form": "Alolan Raticate (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -14205,7 +14212,8 @@
               "method": "Level up at 20",
               "form": "Alolan Rattata (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -16226,7 +16234,8 @@
           "height": "0.8 m",
           "weight": "30.0 kg",
           "description": "If it stores too much electricity, its\nbehavior turns aggressive. To avoid this,\nit occasionally discharges excess energy\nand calms itself down.",
-          "sprite": "raichu_mega_x"
+          "sprite": "raichu_mega_x",
+          "functional": true
         },
         {
           "name": "Mega Raichu Y",
@@ -16250,7 +16259,8 @@
           "height": "0.8 m",
           "weight": "30.0 kg",
           "description": "If it stores too much electricity, its\nbehavior turns aggressive. To avoid this,\nit occasionally discharges excess energy\nand calms itself down.",
-          "sprite": "raichu_mega_y"
+          "sprite": "raichu_mega_y",
+          "functional": true
         },
         {
           "name": "Alolan Raichu (Alolan)",
@@ -16279,7 +16289,8 @@
               "id": "pikachu",
               "method": "Use Alola Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -16657,7 +16668,8 @@
                 "form": "Alolan Sandslash (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -17038,7 +17050,8 @@
               "method": "Use Ice Stone",
               "form": "Alolan Sandshrew (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -19777,7 +19790,8 @@
           "height": "1.3 m",
           "weight": "40.0 kg",
           "description": "A Clefable uses its wings to skip lightly \nas if it were flying. Its bouncy step\nlets it even walk on water. On quiet,\nmoonlit nights, it strolls on lakes.",
-          "sprite": "clefable_mega"
+          "sprite": "clefable_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -20159,7 +20173,8 @@
                 "form": "Alolan Ninetales (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -20467,7 +20482,8 @@
               "method": "Use Ice Stone",
               "form": "Alolan Vulpix (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -24283,7 +24299,8 @@
                 "form": "Alolan Dugtrio (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -24626,7 +24643,8 @@
               "method": "Level up at 26",
               "form": "Alolan Diglett (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -25014,7 +25032,8 @@
                 "form": "Alolan Persian (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         },
         {
           "name": "Galarian Meowth (Galarian)",
@@ -25046,7 +25065,8 @@
                 "method": "Level up at 28"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -25418,7 +25438,8 @@
               "method": "Level up at 30",
               "form": "Alolan Meowth (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -27204,7 +27225,8 @@
                 "form": "Hisuian Arcanine (Hisuian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -27570,7 +27592,8 @@
               "method": "Use Fire Stone",
               "form": "Hisuian Growlithe (Hisuian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -29428,7 +29451,8 @@
           "height": "1.2 m",
           "weight": "48.0 kg",
           "description": "Having traded away its muscles, Alakazam's\ntrue power has been unleashed. With its\npsychic powers, it can foresee all things.",
-          "sprite": "alakazam_mega"
+          "sprite": "alakazam_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -31433,7 +31457,8 @@
           "height": "1.7 m",
           "weight": "15.5 kg",
           "description": "The long vine extending from its head is\nwaved about as if it were a living thing to\nattract prey. When an unsuspecting victim\napproaches, it is swallowed whole.",
-          "sprite": "victreebel_mega"
+          "sprite": "victreebel_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -32387,7 +32412,8 @@
                 "form": "Alolan Graveler (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -32762,7 +32788,8 @@
                 "form": "Alolan Golem (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -33127,7 +33154,8 @@
               "method": "Use Link Cable",
               "form": "Alolan Graveler (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -33487,7 +33515,8 @@
                 "form": "Galarian Rapidash (Galarian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -33829,7 +33858,8 @@
               "method": "Level up at 40",
               "form": "Galarian Ponyta (Galarian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -34211,7 +34241,8 @@
                 "form": "Galarian Slowking (Galarian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -34615,7 +34646,8 @@
           "height": "2.0 m",
           "weight": "120.0 kg",
           "description": "When bathed in the energy of Mega\nEvolution, Shellder converts into\nimpregnable armor. There is virtually no\nchange in Slowpoke.",
-          "sprite": "slowbro_mega"
+          "sprite": "slowbro_mega",
+          "functional": true
         },
         {
           "name": "Galarian Slowbro (Galarian)",
@@ -34647,7 +34679,8 @@
               "method": "Use GalaricaCuff",
               "form": "Galarian Slowpoke (Galarian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -35645,7 +35678,8 @@
                 "method": "Level up at 36"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -37220,7 +37254,8 @@
                 "form": "Alolan Muk (Alolan)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -37597,7 +37632,8 @@
               "method": "Level up at 38",
               "form": "Alolan Grimer (Alolan)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -39232,7 +39268,8 @@
           "height": "1.4 m",
           "weight": "40.5 kg",
           "description": "Gengar's relationships are warped. It\ntries to take the lives of anyone and\neveryone. It will even try to curse the\nTrainer who is its master!",
-          "sprite": "gengar_mega"
+          "sprite": "gengar_mega",
+          "functional": true
         },
         {
           "name": "Gigantamax Gengar",
@@ -41303,7 +41340,8 @@
                 "form": "Hisuian Electrode (Hisuian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -41638,7 +41676,8 @@
               "method": "Use Leaf Stone",
               "form": "Hisuian Voltorb (Hisuian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -42319,7 +42358,8 @@
               "id": "exeggcute",
               "method": "Use Alola Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -43024,7 +43064,8 @@
               "id": "cubone",
               "method": "Use Alola Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -44764,7 +44805,8 @@
               "id": "koffing",
               "method": "Use Galar Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -46614,7 +46656,8 @@
           "height": "2.2 m",
           "weight": "100.0 kg",
           "description": "When the mother sees the back of her\nMega-Evolved child, it makes her think\nof the day when her child will inevitably\nleave her.",
-          "sprite": "kangaskhan_mega"
+          "sprite": "kangaskhan_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -48453,7 +48496,8 @@
           "height": "1.1 m",
           "weight": "80.0 kg",
           "description": "People in ancient times imagined that\nStarmie were transformed from the\nreflections of stars that twinkled on\ngentle waves at night.",
-          "sprite": "starmie_mega"
+          "sprite": "starmie_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -48847,7 +48891,8 @@
                 "method": "Level up at 42"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -50576,7 +50621,8 @@
           "height": "1.7 m",
           "weight": "59.0 kg",
           "description": "The influence of Mega Evolution leaves it\nin a state of constant excitement.\nIt pierces enemies with its two large\nhorns before shredding them.",
-          "sprite": "pinsir_mega"
+          "sprite": "pinsir_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -50914,7 +50960,8 @@
           "height": "1.4 m",
           "weight": "115.0 kg",
           "description": "This Pokémon has a muscular body\nand excels at close-quarters combat.\nIt uses its short horns to strike\nthe opponent’s weak spots.",
-          "sprite": "tauros_paldean_combat_breed"
+          "sprite": "tauros_paldean_combat_breed",
+          "functional": true
         },
         {
           "name": "Paldean Tauros (Blaze Breed)",
@@ -50939,7 +50986,8 @@
           "height": "1.4 m",
           "weight": "85.0 kg",
           "description": "When heated by fire energy, its horns can\nget hotter than 1,800 degrees Fahrenheit.\nThose gored by them will suffer\nboth wounds and burns.",
-          "sprite": "tauros_paldean_blaze_breed"
+          "sprite": "tauros_paldean_blaze_breed",
+          "functional": true
         },
         {
           "name": "Paldean Tauros (Aqua Breed)",
@@ -50964,7 +51012,8 @@
           "height": "1.4 m",
           "weight": "110.0 kg",
           "description": "This Pokémon blasts water from holes on\nthe tips of its horns--the high-pressure\njets pierce right through\nTauros’s enemies.",
-          "sprite": "tauros_paldean_aqua_breed"
+          "sprite": "tauros_paldean_aqua_breed",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -51476,7 +51525,8 @@
           "height": "6.5 m",
           "weight": "305.0 kg",
           "description": "Although it obeys its instinctive drive to\ndestroy everything within its reach, it\nwill respond to orders from a Trainer it\ntruly trusts.",
-          "sprite": "gyarados_mega"
+          "sprite": "gyarados_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -55368,7 +55418,8 @@
           "height": "2.1 m",
           "weight": "79.0 kg",
           "description": "The power of Mega Evolution has\ncompletely restored its genes. The rocks\non its body are harder than diamond.",
-          "sprite": "aerodactyl_mega"
+          "sprite": "aerodactyl_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -56187,7 +56238,8 @@
           "height": "1.7 m",
           "weight": "50.9 kg",
           "description": "It fires beams that immobilize opponents\nas if they had been frozen solid.\nIts feather-like blades of psychic energy\nrip through thick iron sheets like paper.",
-          "sprite": "articuno_galarian"
+          "sprite": "articuno_galarian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -56524,7 +56576,8 @@
           "height": "1.6 m",
           "weight": "58.2 kg",
           "description": "When its feathers rub together, they\nproduce a crackling sound like the\nzapping of electricity. Apparently, it runs\nthrough the mountains at over 180 mph.",
-          "sprite": "zapdos_galarian"
+          "sprite": "zapdos_galarian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -56860,7 +56913,8 @@
           "height": "2.0 m",
           "weight": "66.0 kg",
           "description": "This Pokémon's sinister, flame-like aura\nwill consume the spirit of any creature\nit hits. Victims become burned-out\nshadows of themselves.",
-          "sprite": "moltres_galarian"
+          "sprite": "moltres_galarian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -57916,7 +57970,8 @@
           "height": "2.2 m",
           "weight": "210.0 kg",
           "description": "It can circle the globe in just 16 hours.\nIt is a kindhearted Pokémon that leads\nlost and foundering ships in a storm\nto the safety of land.",
-          "sprite": "dragonite_mega"
+          "sprite": "dragonite_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -58356,7 +58411,8 @@
           "height": "2.3 m",
           "weight": "127.0 kg",
           "description": "Psychic power has augmented its muscles.\nIt has a grip strength of one ton and can\nsprint a hundred meters in two seconds\nflat!",
-          "sprite": "mewtwo_mega_x"
+          "sprite": "mewtwo_mega_x",
+          "functional": true
         },
         {
           "name": "Mega Mewtwo Y",
@@ -58380,7 +58436,8 @@
           "height": "1.5 m",
           "weight": "33.0 kg",
           "description": "Despite its diminished size, its mental\npower has grown phenomenally. With a mere\nthought, it can smash a skyscraper to\nsmithereens.",
-          "sprite": "mewtwo_mega_y"
+          "sprite": "mewtwo_mega_y",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -59963,7 +60020,8 @@
           "height": "1.8 m",
           "weight": "100.5 kg",
           "description": "The fragrance of a Meganium's flower\nsoothes and calms emotions. In battle,\nit gives off more of its becalming scent\nto blunt the foe's fighting spirit.",
-          "sprite": "meganium_mega"
+          "sprite": "meganium_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -60935,7 +60993,8 @@
               "id": "quilava",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -61944,7 +62003,8 @@
           "height": "2.3 m",
           "weight": "88.8 kg",
           "description": "It opens its huge mouth to intimidate\nenemies. In battle, it runs using its thick\nand powerful hind legs to charge the\nfoe with incredible speed.",
-          "sprite": "feraligatr_mega"
+          "sprite": "feraligatr_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -67987,7 +68047,8 @@
           "height": "1.4 m",
           "weight": "61.5 kg",
           "description": "Massive amounts of energy intensely\nstimulated Ampharos's cells, apparently\nawakening its long-sleeping dragon's\nblood.",
-          "sprite": "pikin_mega"
+          "sprite": "pikin_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -68641,7 +68702,8 @@
           "height": "1.4 m",
           "weight": "61.5 kg",
           "description": "Massive amounts of energy intensely\nstimulated Ampharos's cells, apparently\nawakening its long-sleeping dragon's\nblood.",
-          "sprite": "ampharos_mega"
+          "sprite": "ampharos_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -72725,7 +72787,8 @@
                 "method": "Level up at 20"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -74524,7 +74587,8 @@
               "method": "Use GalrcaWreath",
               "form": "Galarian Slowpoke (Galarian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -75822,7 +75886,8 @@
           "height": "1.3 m",
           "weight": "28.5 kg",
           "description": "Usually docile, a Wobbuffet strikes back\nferociously if its black tail is attacked.\nIt makes its lair in caves where it waits\nfor nightfall.",
-          "sprite": "wobbuffet_punching"
+          "sprite": "wobbuffet_punching",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -77826,7 +77891,8 @@
           "height": "10.5 m",
           "weight": "740.0 kg",
           "description": "The cells within its body, crystallized by\nthe energy produced from Mega Evolution,\nare stronger than any mineral and able\nto withstand any temperature.",
-          "sprite": "steelix_mega"
+          "sprite": "steelix_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -78976,7 +79042,8 @@
                 "method": "Level up at 38"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -79344,7 +79411,8 @@
           "height": "2.0 m",
           "weight": "125.0 kg",
           "description": "The excess energy that bathes this\nPokémon keeps it in constant danger of\noverflow. It can't sustain a battle over\nlong periods of time.",
-          "sprite": "scizor_mega"
+          "sprite": "scizor_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -79987,7 +80055,8 @@
           "height": "1.7 m",
           "weight": "62.5 kg",
           "description": "A tremendous influx of energy builds it up,\nbut when Mega Evolution ends, Heracross\nis bothered by terrible soreness in its\nmuscles.",
-          "sprite": "heracross_mega"
+          "sprite": "heracross_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -80357,7 +80426,8 @@
                 "method": "Use Razor Claw"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -82704,7 +82774,8 @@
                 "method": "Level up at 38"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -84265,7 +84336,8 @@
           "height": "1.7 m",
           "weight": "50.5 kg",
           "description": "A Pokémon that has a body and wings of\nsteel. People in the past used feathers\nfallen from SkarmoryMega to make swords and\nknives.",
-          "sprite": "skarmory_mega"
+          "sprite": "skarmory_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -84964,7 +85036,8 @@
           "height": "1.9 m",
           "weight": "49.5 kg",
           "description": "Its red claws and the tips of its tail are\nmelting from high internal temperatures\nthat are painful to Houndoom itself.",
-          "sprite": "houndoom_mega"
+          "sprite": "houndoom_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -90928,7 +91001,8 @@
           "height": "2.5 m",
           "weight": "255.0 kg",
           "description": "Due to the colossal power poured into it,\nthis Pokémon's back split right open. Its\ndestructive instincts are the only thing\nkeeping it moving.",
-          "sprite": "tyranitar_mega"
+          "sprite": "tyranitar_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -93014,7 +93088,8 @@
           "height": "1.9 m",
           "weight": "55.2 kg",
           "description": "Thanks to the power in its quick legs,\nMega Sceptile can be on its opponent in a\nflash. It can cut off a portion of its tail\nto fire it like a missile at an opponent.",
-          "sprite": "sceptile_mega"
+          "sprite": "sceptile_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -94038,7 +94113,8 @@
           "height": "1.9 m",
           "weight": "52.0 kg",
           "description": "As it unleashes a flurry of savage kicks,\nits legs can begin to burn from the\nfriction of the surrounding atmosphere.\nThey're always a source of pride to it.",
-          "sprite": "blaziken_mega"
+          "sprite": "blaziken_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -95074,7 +95150,8 @@
           "height": "1.9 m",
           "weight": "102.0 kg",
           "description": "When it Mega Evolves, the strength that it\nneeds to act in the water is increased.\nIt can use its tenacious power\nboth on land and in the water.",
-          "sprite": "swampert_mega"
+          "sprite": "swampert_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -96071,7 +96148,8 @@
                 "form": "Galarian Linoone (Galarian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -96441,7 +96519,8 @@
                 "method": "Level up at 35"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -101449,7 +101528,8 @@
           "height": "1.6 m",
           "weight": "48.4 kg",
           "description": "By opening its heart, Mega Gardevoir\nbecomes able to use tremendous psychic\npower. The red plate in its chest is said to\nbe a physical manifestation of its heart.",
-          "sprite": "gardevoir_mega"
+          "sprite": "gardevoir_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -107788,7 +107868,8 @@
           "height": "0.5 m",
           "weight": "161.0 kg",
           "description": "Bathed in the energy of Mega Evolution,\nthe gemstone on its chest expands, rips\nthrough its skin, and falls out.",
-          "sprite": "sableye_mega"
+          "sprite": "sableye_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -108190,7 +108271,8 @@
           "height": "1.0 m",
           "weight": "23.5 kg",
           "description": "Its two sets of jaws thrash about\nviolently as if they each had a will of\ntheir own. One gnash from them can turn a\nboulder to dust.",
-          "sprite": "mawile_mega"
+          "sprite": "mawile_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -109247,7 +109329,8 @@
           "height": "2.2 m",
           "weight": "395.0 kg",
           "description": "When Aggron Mega Evolves into\nMega Aggron, the destructive ability of\nits fearsome horns can turn a steel-clad\ntank into so much scrap metal.",
-          "sprite": "aggron_mega"
+          "sprite": "aggron_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -110009,7 +110092,8 @@
           "height": "1.3 m",
           "weight": "31.5 kg",
           "description": "It uses its amped-up willpower to create\nadditional arms for itself. The more it has\ntrained its spirit, the more realistic and\ndexterous these self-created arms become.",
-          "sprite": "medicham_mega"
+          "sprite": "medicham_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -110650,7 +110734,8 @@
           "height": "1.8 m",
           "weight": "44.0 kg",
           "description": "Too much electricity has built up in its\nbody, irritating Manectric. Its explosive\nspeed is equal to that of a lightning bolt.",
-          "sprite": "manectric_mega"
+          "sprite": "manectric_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -113567,7 +113652,8 @@
           "height": "2.5 m",
           "weight": "130.3 kg",
           "description": "The yellow patterns it bears are old scars.\nThe energy from Mega Evolution runs\nthrough them, causing it sharp pain and\nsuffering.",
-          "sprite": "sharpedo_mega"
+          "sprite": "sharpedo_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -114898,7 +114984,8 @@
           "height": "2.5 m",
           "weight": "320.5 kg",
           "description": "The humps on its back have transformed\ninto one large and very active volcano. It\nhas a deep hatred of water or any moisture\nand has an explosive personality.",
-          "sprite": "camerupt_mega"
+          "sprite": "camerupt_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -118556,7 +118643,8 @@
           "height": "1.5 m",
           "weight": "20.6 kg",
           "description": "It sings with a voice that is even more\nbeautiful than before it Mega Evolved.\nIts feathers became larger for protection\nand glimmer with an iridescent sheen.",
-          "sprite": "altaria_mega"
+          "sprite": "altaria_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -123953,7 +124041,8 @@
           "height": "0.3 m",
           "weight": "0.8 kg",
           "description": "Castform takes this form on bright days.\nIn an experiment where is was placed in\nfront of a heater, it didn't change to this\nform. Its body is warm and toasty.",
-          "sprite": "castform_sunny"
+          "sprite": "castform_sunny",
+          "functional": true
         },
         {
           "name": "Castform (Rainy)",
@@ -123975,7 +124064,8 @@
           "height": "0.3 m",
           "weight": "0.8 kg",
           "description": "This is Castform's form while it's raining.\nIn an experiment where it was placed in a\nshower, it didn't change to this form. Its\nbody is soft, slightly swollen with water.",
-          "sprite": "castform_rainy"
+          "sprite": "castform_rainy",
+          "functional": true
         },
         {
           "name": "Castform (Snowy)",
@@ -123997,7 +124087,8 @@
           "height": "0.3 m",
           "weight": "0.8 kg",
           "description": "This is Castform's form in a hailstorm.\nIn an experiment where it was placed\nin a freezer, it didn't change to this form.\nIts cold skin is as smooth as ice.",
-          "sprite": "castform_snowy"
+          "sprite": "castform_snowy",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -125037,7 +125128,8 @@
           "height": "1.2 m",
           "weight": "13.0 kg",
           "description": "Extraordinary energy amplifies its\ncursing power to such an extent that it\ncan't help but curse its own Trainer.",
-          "sprite": "banette_mega"
+          "sprite": "banette_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -126395,7 +126487,8 @@
           "height": "0.6 m",
           "weight": "1.0 kg",
           "description": "They fly about very actively when the hot\nseason arrives. They communicate among\nthemselves using seven different and\ndistinguishing cries.",
-          "sprite": "chimecho_mega"
+          "sprite": "chimecho_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -126757,10 +126850,12 @@
           "height": "1.2 m",
           "weight": "49.0 kg",
           "description": "As the energy of Mega Evolution fills it,\nits fur bristles. What you see on its back\nare not true wings, and this Pokémon isn't\nable to fly.",
-          "sprite": "absol_mega"
+          "sprite": "absol_mega",
+          "functional": true
         },
         {
-          "name": "Mega Absol Z"
+          "name": "Mega Absol Z",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -127613,7 +127708,8 @@
           "height": "2.1 m",
           "weight": "350.2 kg",
           "description": "The power of Mega Evolution was so strong\nthat it smashed Glalie's jaw. Its inability\nto eat very well leaves Glalie irritated.",
-          "sprite": "glalie_mega"
+          "sprite": "glalie_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -130922,7 +131018,8 @@
           "height": "1.8 m",
           "weight": "112.6 kg",
           "description": "Mega Evolution fuels its brutality, and it\nmay even turn on the Trainer who raised it.\nIt's been dubbed the blood-soaked.\ncrescent.",
-          "sprite": "salamence_mega"
+          "sprite": "salamence_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -131763,7 +131860,8 @@
           "height": "2.5 m",
           "weight": "942.9 kg",
           "description": "When it knows it can't win, it digs the\nclaws on its legs into its opponent and\nstarts the countdown to a big explosion.",
-          "sprite": "metagross_mega"
+          "sprite": "metagross_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -133108,7 +133206,8 @@
           "height": "1.8 m",
           "weight": "52.0 kg",
           "description": "Its body is smaller than Mega Latios's\nbody. It is more agile and can make very\nsharp turns. When it Mega Evolves, its\ndefensive strength grows substantially.",
-          "sprite": "latias_mega"
+          "sprite": "latias_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -133500,7 +133599,8 @@
           "height": "2.3 m",
           "weight": "70.0 kg",
           "description": "It's larger than Mega Latias, and can\nachieve higher speeds in flight.\nThis Pokémon can use its speed in battle\nto unleash a flurry of attacks.",
-          "sprite": "latios_mega"
+          "sprite": "latios_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -133843,7 +133943,8 @@
           "height": "9.8 m",
           "weight": "430.0 kg",
           "description": "When Kyogre roared, water poured forth\nand the seas spread outward.\nDark clouds enshrouded the world,\nand the deluge fell upon all…",
-          "sprite": "kyogre_primal"
+          "sprite": "kyogre_primal",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -134204,7 +134305,8 @@
           "height": "5.0 m",
           "weight": "999.7 kg",
           "description": "When Groudon howled, the earth swelled and\nthe land grew wide. The sun blazed atop\nand all the world around the creature\nwas enveloped in incandescent heat.",
-          "sprite": "groudon_primal"
+          "sprite": "groudon_primal",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -134602,7 +134704,8 @@
           "height": "10.8 m",
           "weight": "392.0 kg",
           "description": "Particles stream from the filaments that\nextend from its jaw. They can control the\ndensity and humidity of the air, allowing\nRayquaza to manipulate the weather.",
-          "sprite": "rayquaza_mega"
+          "sprite": "rayquaza_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -135345,7 +135448,8 @@
           "height": "1.7 m",
           "weight": "60.8 kg",
           "description": "Deoxys emerged from a virus that came\nfrom space. It is highly intelligent and\ncan shoot lasers from the crystalline\norgan on its chest.",
-          "sprite": "deoxys_attack"
+          "sprite": "deoxys_attack",
+          "functional": true
         },
         {
           "name": "Deoxys (Defense)",
@@ -135367,7 +135471,8 @@
           "height": "1.7 m",
           "weight": "60.8 kg",
           "description": "Deoxys emerged from a virus that came\nfrom space. It is highly intelligent and\ncan shoot lasers from the crystalline\norgan on its chest.",
-          "sprite": "deoxys_defense"
+          "sprite": "deoxys_defense",
+          "functional": true
         },
         {
           "name": "Deoxys (Speed)",
@@ -135389,7 +135494,8 @@
           "height": "1.7 m",
           "weight": "60.8 kg",
           "description": "Deoxys emerged from a virus that came\nfrom space. It is highly intelligent and\ncan shoot lasers from the crystalline\norgan on its chest.",
-          "sprite": "deoxys_speed"
+          "sprite": "deoxys_speed",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -137732,7 +137838,8 @@
           "height": "1.2 m",
           "weight": "24.9 kg",
           "description": "When Staravia evolve into StaraptorMega,\nthey leave the flock to live alone. It has\na savage nature. It will courageously\nchallenge foes that are much larger.",
-          "sprite": "staraptor_mega"
+          "sprite": "staraptor_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -140419,7 +140526,8 @@
               "method": "Level up at 20 (female)",
               "form": "Burmy (Sandy Cloak)"
             }
-          }
+          },
+          "functional": true
         },
         {
           "name": "Wormadam (Trash Cloak)",
@@ -140450,7 +140558,8 @@
               "method": "Level up at 20 (female)",
               "form": "Burmy (Trash Cloak)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -143281,7 +143390,8 @@
           "height": "1.3 m",
           "weight": "28.3 kg",
           "description": "Mega Evolution awakens its combative\ninstincts. It has shed any fur that got in\nthe way of its attacks.\ncrescent.",
-          "sprite": "lopunny_mega"
+          "sprite": "lopunny_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -146425,10 +146535,12 @@
           "height": "1.9 m",
           "weight": "95.0 kg",
           "description": "Excess energy melted its arms and wings\ninto giant scythes, sending it mad with\nrage. It swings its scythes wildly and\nslices the ground to pieces.",
-          "sprite": "garchomp_mega"
+          "sprite": "garchomp_mega",
+          "functional": true
         },
         {
-          "name": "Mega Garchomp Z"
+          "name": "Mega Garchomp Z",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -147125,10 +147237,12 @@
           "height": "1.3 m",
           "weight": "57.5 kg",
           "description": "It readies itself to face its enemies by\nfocusing its mental energies. Its fighting\nstyle can be summed up in a single word:\nheartless.",
-          "sprite": "lucario_mega"
+          "sprite": "lucario_mega",
+          "functional": true
         },
         {
-          "name": "Mega Lucario Z"
+          "name": "Mega Lucario Z",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -149399,7 +149513,8 @@
           "height": "2.7 m",
           "weight": "185.0 kg",
           "description": "The sprouts on Abomasnow's back grow into\ngreat shafts of ice when it Mega Evolves.\nDislikes associating with others and\nchooses to live quietly deep in mountains.",
-          "sprite": "abomasnow_mega"
+          "sprite": "abomasnow_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -152697,7 +152812,8 @@
           "height": "1.6 m",
           "weight": "56.4 kg",
           "description": "Mega Gallade has a knightly appearance.\nIt can use its psychic power to reshape\nboth arms into blades simultaneously and\nfight using a dual-wielding style.",
-          "sprite": "gallade_mega"
+          "sprite": "gallade_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -153393,7 +153509,8 @@
           "height": "1.3 m",
           "weight": "26.6 kg",
           "description": "When it finds people or Pokémon it likes,\nit freezes them and takes them to its\nchilly den, where they become its\ndecorations.",
-          "sprite": "froslass_mega"
+          "sprite": "froslass_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -153590,7 +153707,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If the convection microwave oven is not\nworking properly, then the Rotom inhabiting\nit will become lethargic. It will gleefully\nburn your favorite outfit in mischief.",
-          "sprite": "rotom_heat"
+          "sprite": "rotom_heat",
+          "functional": true
         },
         {
           "name": "Rotom (Wash)",
@@ -153613,7 +153731,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "It enjoys coming up with water-based\npranks. The model of washing machine that\nRotom can inspirit has been discontinued,\nso they are now traded at high prices.",
-          "sprite": "rotom_wash"
+          "sprite": "rotom_wash",
+          "functional": true
         },
         {
           "name": "Rotom (Frost)",
@@ -153636,7 +153755,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "In this form, Rotom likes to play freezing\ncold pranks. You may find it's turned the\nbath you just filled to solid ice!\nIt battles by spewing cold air.",
-          "sprite": "rotom_frost"
+          "sprite": "rotom_frost",
+          "functional": true
         },
         {
           "name": "Rotom (Fan)",
@@ -153659,7 +153779,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "The first appliance developed that Rotom\ncoud inspirit was the electric fan. It uses\nits power over wind in its pranks, happily\nblowing any important documents it finds.",
-          "sprite": "rotom_fan"
+          "sprite": "rotom_fan",
+          "functional": true
         },
         {
           "name": "Rotom (Mow)",
@@ -153682,7 +153803,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "The lawn mower is an appliance that led to\nthe development of the Rotom Dex. It will\nmow down grass and flowers, then swagger\naround with pride at its accomplishments.",
-          "sprite": "rotom_mow"
+          "sprite": "rotom_mow",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -154474,7 +154596,8 @@
           "height": "7.0 m",
           "weight": "850.0 kg",
           "description": "Radiant light caused Dialga to take on a\nform bearing a striking resemblance to the\ncreator Pokémon. It wields such a colossal\nstrength that this might be its true form.",
-          "sprite": "dialga_origin"
+          "sprite": "dialga_origin",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -154699,7 +154822,8 @@
           "height": "6.3 m",
           "weight": "660.0 kg",
           "description": "It soars across the sky in a form that\nresembles the creator of all things.\nPerhaps this imitation of appearance is a\nstrategy for gaining Arceus's powers.",
-          "sprite": "palkia_origin"
+          "sprite": "palkia_origin",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -154894,7 +155018,8 @@
       },
       "forms": [
         {
-          "name": "Mega Heatran"
+          "name": "Mega Heatran",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -155309,7 +155434,8 @@
           "height": "6.9 m",
           "weight": "650.0 kg",
           "description": "Giratina loses its legs upon changing into\nthis form. It's believed it hails from a\nworld where the heavens and the earth\nare as one.",
-          "sprite": "giratina_origin"
+          "sprite": "giratina_origin",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -155969,7 +156095,8 @@
       },
       "forms": [
         {
-          "name": "Mega Darkrai"
+          "name": "Mega Darkrai",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -156169,7 +156296,8 @@
           "height": "0.4 m",
           "weight": "5.2 kg",
           "description": "Upon taking in the scent of a particular\nrare flower, Shaymin is enveloped in light\nand its tiny body transforms, confering\nthe power of flight upon it.",
-          "sprite": "shaymin_sky"
+          "sprite": "shaymin_sky",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -156447,7 +156575,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_fighting"
+          "sprite": "arceus_fighting",
+          "functional": true
         },
         {
           "name": "Arceus (Flying)",
@@ -156469,7 +156598,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_flying"
+          "sprite": "arceus_flying",
+          "functional": true
         },
         {
           "name": "Arceus (Poison)",
@@ -156491,7 +156621,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_poison"
+          "sprite": "arceus_poison",
+          "functional": true
         },
         {
           "name": "Arceus (Ground)",
@@ -156513,7 +156644,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_ground"
+          "sprite": "arceus_ground",
+          "functional": true
         },
         {
           "name": "Arceus (Rock)",
@@ -156535,7 +156667,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_rock"
+          "sprite": "arceus_rock",
+          "functional": true
         },
         {
           "name": "Arceus (Bug)",
@@ -156557,7 +156690,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_bug"
+          "sprite": "arceus_bug",
+          "functional": true
         },
         {
           "name": "Arceus (Ghost)",
@@ -156579,7 +156713,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_ghost"
+          "sprite": "arceus_ghost",
+          "functional": true
         },
         {
           "name": "Arceus (Steel)",
@@ -156601,7 +156736,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_steel"
+          "sprite": "arceus_steel",
+          "functional": true
         },
         {
           "name": "Arceus (Fire)",
@@ -156623,7 +156759,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_fire"
+          "sprite": "arceus_fire",
+          "functional": true
         },
         {
           "name": "Arceus (Water)",
@@ -156645,7 +156782,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_water"
+          "sprite": "arceus_water",
+          "functional": true
         },
         {
           "name": "Arceus (Grass)",
@@ -156667,7 +156805,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_grass"
+          "sprite": "arceus_grass",
+          "functional": true
         },
         {
           "name": "Arceus (Electric)",
@@ -156689,7 +156828,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_electric"
+          "sprite": "arceus_electric",
+          "functional": true
         },
         {
           "name": "Arceus (Psychic)",
@@ -156711,7 +156851,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_psychic"
+          "sprite": "arceus_psychic",
+          "functional": true
         },
         {
           "name": "Arceus (Ice)",
@@ -156733,7 +156874,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_ice"
+          "sprite": "arceus_ice",
+          "functional": true
         },
         {
           "name": "Arceus (Dragon)",
@@ -156755,7 +156897,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_dragon"
+          "sprite": "arceus_dragon",
+          "functional": true
         },
         {
           "name": "Arceus (Dark)",
@@ -156777,7 +156920,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_dark"
+          "sprite": "arceus_dark",
+          "functional": true
         },
         {
           "name": "Arceus (Fairy)",
@@ -156799,7 +156943,8 @@
           "height": "3.2 m",
           "weight": "320.0 kg",
           "description": "It is told in mythology that this Pokémon\nemerged from an egg and shaped all there\nis in this world, before the universe\neven existed.",
-          "sprite": "arceus_fairy"
+          "sprite": "arceus_fairy",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -158144,7 +158289,8 @@
           "height": "1.6 m",
           "weight": "150.0 kg",
           "description": "It is adept at using many different moves.\nIt can throw a fire punch by setting its\nfists on fire with its fiery chin.\nIt cares deeply about its friends.",
-          "sprite": "emboar_mega"
+          "sprite": "emboar_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -158743,7 +158889,8 @@
               "id": "dewott",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -163396,7 +163543,8 @@
           "height": "0.7 m",
           "weight": "40.4 kg",
           "description": "More than 300 feet below the surface,\nthey build mazelike nests. Their activity\ncan be destructive to subway tunnels,\nbut it can also help with construction.",
-          "sprite": "excadrill_mega"
+          "sprite": "excadrill_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -163635,7 +163783,8 @@
           "height": "1.5 m",
           "weight": "32.0 kg",
           "description": "Mega Audino emits a soothing pulse from\nits body that reduces hostility in others.\nAnything that comes into contact with its\nsecond feelers will fall into a deep sleep.",
-          "sprite": "audino_mega"
+          "sprite": "audino_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -166022,7 +166171,8 @@
           "height": "2.5 m",
           "weight": "200.5 kg",
           "description": "With quick movements, it chases down\nits foes, attacking relentlessly with its\nhorns until it prevails. Then it finishes\nthem off with deadly poison.",
-          "sprite": "scolipede_mega"
+          "sprite": "scolipede_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -166809,7 +166959,8 @@
               "id": "petilil",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -167031,7 +167182,8 @@
           "height": "1.0 m",
           "weight": "18.0 kg",
           "description": "They form schools with others of the same\ncolor. The greatest foe of a school of blue\nBasculin is a school of red Basculin.\nIts flavor is light and inoffensive.",
-          "sprite": "basculin_blue_striped"
+          "sprite": "basculin_blue_striped",
+          "functional": true
         },
         {
           "name": "Basculin (White Striped)",
@@ -167068,7 +167220,8 @@
                 "form": "Basculegion (Female)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -167900,7 +168053,8 @@
                 "form": "Galarian Darmanitan (Standard Mode)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -168122,7 +168276,8 @@
           "height": "1.3 m",
           "weight": "92.9 kg",
           "description": "When wounded, it stops moving. It\ngoes as still as stone to meditate,\nsharpening its mind and spirit.",
-          "sprite": "darmanitan_zen_mode"
+          "sprite": "darmanitan_zen_mode",
+          "functional": true
         },
         {
           "name": "Galarian Darmanitan (Standard Mode)",
@@ -168152,7 +168307,8 @@
               "method": "Use Ice Stone",
               "form": "Galarian Darumaka (Galarian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -169117,7 +169273,8 @@
           "height": "1.1 m",
           "weight": "30.0 kg",
           "description": "Groups of them beat up anything that\nenters their territory. The one with the\nbiggest crest is the group leader, and\nis the most respected.",
-          "sprite": "scrafty_mega"
+          "sprite": "scrafty_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -169515,7 +169672,8 @@
                 "method": "Level up at 34"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -171106,7 +171264,8 @@
                 "form": "Hisuian Zoroark (Hisuian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -171337,7 +171496,8 @@
               "method": "Level up at 30",
               "form": "Hisuian Zorua (Hisuian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -177204,7 +177364,8 @@
           "height": "2.1 m",
           "weight": "80.5 kg",
           "description": "They crawl out of the ocean using their\narms. They will attack prey on shore and\nimmediately drag it into the ocean, with\ntheir sucker mouths.",
-          "sprite": "eelektross_mega"
+          "sprite": "eelektross_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -178167,7 +178328,8 @@
           "height": "1.0 m",
           "weight": "34.3 kg",
           "description": "Being consumed in ChandelureMega's flame burns\nup the spirit, leaving the body behind.\nBy waving the flames on its arms, it puts\nits foes into a hypnotic trance.",
-          "sprite": "chandelure_mega"
+          "sprite": "chandelure_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -179965,7 +180127,8 @@
           "height": "0.7 m",
           "weight": "20.5 kg",
           "description": "Its conspicuous lips lure prey in\nas it lies in wait in the mud. When\nprey gets close, Stunfisk clamps its\njagged steel fins down on them.",
-          "sprite": "stunfisk_galarian"
+          "sprite": "stunfisk_galarian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -180963,7 +181126,8 @@
           "height": "2.8 m",
           "weight": "330.0 kg",
           "description": "GolurkMega were created to protect people\nand Pokémon by an ancient civilisation.\nRemoving the seal on its chest makes its\ninternal energy go out of control.",
-          "sprite": "golurk_mega"
+          "sprite": "golurk_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -181933,7 +182097,8 @@
               "id": "rufflet",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -184450,7 +184615,8 @@
           "height": "1.4 m",
           "weight": "63.0 kg",
           "description": "An example of what is known as a\n“form change”. Tornadus has been\nsighted crossing the ocean while in this\nform.",
-          "sprite": "tornadus_therian"
+          "sprite": "tornadus_therian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -184700,7 +184866,8 @@
           "height": "3.0 m",
           "weight": "61.0 kg",
           "description": "It pulverizes foes into\nnothingness with showers of devastatingly\npowerful lightning bolts launched from\nthe string of orbs on its tail.",
-          "sprite": "thundurus_therian"
+          "sprite": "thundurus_therian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -185347,7 +185514,8 @@
           "height": "1.3 m",
           "weight": "68.0 kg",
           "description": "Landorus soars through the sky in\nthis form, bestowing plentiful\nharvests upon the land and earning the\npeople's reverence.",
-          "sprite": "landorus_therian"
+          "sprite": "landorus_therian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -185567,7 +185735,8 @@
           "height": "3.6 m",
           "weight": "325.0 kg",
           "description": "The sameness of Reshiram's and\nKyurem's genes allowed Kyurem to\nabsorb Reshiram. Kyurem can now use the\npower of both fire and ice.",
-          "sprite": "kyurem_white"
+          "sprite": "kyurem_white",
+          "functional": true
         },
         {
           "name": "Kyurem (Black)",
@@ -185590,7 +185759,8 @@
           "height": "3.3 m",
           "weight": "325.0 kg",
           "description": "The sameness of Zekrom's and\nKyurem's genes allowed Kyurem to absorb\nZekrom. Kyurem can now use the\npower of both electricity and ice.",
-          "sprite": "kyurem_black"
+          "sprite": "kyurem_black",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -186018,7 +186188,8 @@
           "height": "0.6 m",
           "weight": "6.5 kg",
           "description": "Meloetta's melodies are sung with\na special vocalization method that can\ncontrol the feelings of those who hear it.",
-          "sprite": "meloetta_pirouette"
+          "sprite": "meloetta_pirouette",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -186907,7 +187078,8 @@
           "height": "1.6 m",
           "weight": "90.0 kg",
           "description": "It shields its allies from danger with\nits own body. When it takes a defensive\nposture with its fists guarding its face,\nit can withstand a bomb blast.",
-          "sprite": "chesnaught_mega"
+          "sprite": "chesnaught_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -187522,7 +187694,8 @@
           "height": "1.5 m",
           "weight": "39.0 kg",
           "description": "It gazes into the flame at the tip of its\nbranch to achieve a focused state, which\nallows it to see into the future. It uses\npsychic power to incinerate its foes.",
-          "sprite": "delphox_mega"
+          "sprite": "delphox_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -188105,7 +188278,8 @@
           "height": "1.5 m",
           "weight": "40.0 kg",
           "description": "It appears and vanishes with a ninja's\ngrace. It toys with its enemies using swift\nmovements, while slicing them with throwing\nstars made of compressed water.",
-          "sprite": "greninja_mega"
+          "sprite": "greninja_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -190188,7 +190362,8 @@
           "height": "1.5 m",
           "weight": "81.5 kg",
           "description": "The male with the largest mane of fire\nis the leader of the pride. The females\nprotect the pride's cubs. They viciously\nthreaten any challenger.",
-          "sprite": "pyroar_mega"
+          "sprite": "pyroar_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -192612,7 +192787,8 @@
           "height": "0.6 m",
           "weight": "8.5 kg",
           "description": "The defensive instinct of the\nmales is strong. It's when they're\nprotecting themselves or their partners\nthat they unleash their full power.",
-          "sprite": "meowstic_male_mega"
+          "sprite": "meowstic_male_mega",
+          "functional": true
         },
         {
           "name": "Meowstic (Female)",
@@ -192642,7 +192818,8 @@
               "id": "espurr",
               "method": "Level up at 25 (female)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -193163,7 +193340,8 @@
           "height": "1.7 m",
           "weight": "53.0 kg",
           "description": "Once upon a time, a king with an\nAegislash reigned over the land. His\nPokémon eventually drained him of\nlife, and his kingdom fell with him.",
-          "sprite": "aegislash_blade"
+          "sprite": "aegislash_blade",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -194249,7 +194427,8 @@
           "height": "1.5 m",
           "weight": "47.0 kg",
           "description": "It lures prey close with hypnotic motions,\nthen wraps its tentacles around it before\nfinishing it off with digestive fluids. It\nforces others to do whatever it wants.",
-          "sprite": "malamar_mega"
+          "sprite": "malamar_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -194662,7 +194841,8 @@
           "height": "1.3 m",
           "weight": "96.0 kg",
           "description": "BarbaracleMega's legs and hands have minds\nof their own, and they will move\nindependently. But they usually follow\nthe head's orders.",
-          "sprite": "barbaracle_mega"
+          "sprite": "barbaracle_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -195049,7 +195229,8 @@
           "height": "1.8 m",
           "weight": "81.5 kg",
           "description": "Their poison is strong enough to eat\nthrough the hull of a tanker. Tales are\ntold of ships that wander into seas where\nDragalgeMega live, never to return.",
-          "sprite": "dragalge_mega"
+          "sprite": "dragalge_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -196987,7 +197168,8 @@
           "height": "0.8 m",
           "weight": "21.5 kg",
           "description": "With its wings, it controls its position in\nthe air. Its proficient fighting skills\nenable it to keep up with big bruisers\nlike Machamp and Hariyama.",
-          "sprite": "hawlucha_mega"
+          "sprite": "hawlucha_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -197718,7 +197900,8 @@
                 "form": "Hisuian Goodra (Hisuian)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -197956,7 +198139,8 @@
               "method": "Level up at 50",
               "form": "Hisuian Sliggoo (Hisuian)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -198746,7 +198930,8 @@
                 "form": "Gourgeist (Small)"
               }
             ]
-          }
+          },
+          "functional": true
         },
         {
           "name": "Pumpkaboo (Large)",
@@ -198780,7 +198965,8 @@
                 "form": "Gourgeist (Large)"
               }
             ]
-          }
+          },
+          "functional": true
         },
         {
           "name": "Pumpkaboo (Super)",
@@ -198814,7 +199000,8 @@
                 "form": "Gourgeist (Super)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -199035,7 +199222,8 @@
               "method": "Use Link Cable",
               "form": "Pumpkaboo (Small)"
             }
-          }
+          },
+          "functional": true
         },
         {
           "name": "Gourgeist (Large)",
@@ -199067,7 +199255,8 @@
               "method": "Use Link Cable",
               "form": "Pumpkaboo (Large)"
             }
-          }
+          },
+          "functional": true
         },
         {
           "name": "Gourgeist (Super)",
@@ -199099,7 +199288,8 @@
               "method": "Use Link Cable",
               "form": "Pumpkaboo (Super)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -199506,7 +199696,8 @@
               "id": "bergmite",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -200523,10 +200714,12 @@
           ],
           "height": "5.0 m",
           "weight": "305.0 kg",
-          "description": "It's said to be monitoring the ecosystem\nfrom deep in the caves where it lives.\nThere are rumors that even greater power\nlies hidden within its cells."
+          "description": "It's said to be monitoring the ecosystem\nfrom deep in the caves where it lives.\nThere are rumors that even greater power\nlies hidden within its cells.",
+          "functional": true
         },
         {
-          "name": "Mega Zygarde"
+          "name": "Mega Zygarde",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -200749,7 +200942,8 @@
           "height": "1.1 m",
           "weight": "27.8 kg",
           "description": "The impurities upon its body's surface\nhave fallen away, sparkling so brilliantly\nthat cannot be observed directly.\nIt is known as “the Royal Pink Princess”.",
-          "sprite": "diancie_mega"
+          "sprite": "diancie_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -200992,7 +201186,8 @@
           "height": "6.5 m",
           "weight": "49.0 kg",
           "description": "It is the true form of Hoopa, which has had\nits power sealed away. The rings it carries\nhave the power to bend dimensions and are\nable to seize anything in the world.",
-          "sprite": "hoopa_unbound"
+          "sprite": "hoopa_unbound",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -201811,7 +202006,8 @@
               "id": "dartrix",
               "method": "Use Hisui Artefact"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -204579,7 +204775,8 @@
           "height": "1.7 m",
           "weight": "180.0 kg",
           "description": "It aimed for the top but got lost and\nended up on a snowy mountain. Being forced\nto endure the cold, this Pokémon evolved\nand grew thick fur.",
-          "sprite": "crabominable_mega"
+          "sprite": "crabominable_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -204794,7 +204991,8 @@
           "height": "0.6 m",
           "weight": "3.4 kg",
           "description": "This form of Oricorio has sipped\nyellow nectar. It uses nimble steps to\napproach opponents, then knocks\nthem out with electric punches.",
-          "sprite": "oricorio_pom_pom"
+          "sprite": "oricorio_pom_pom",
+          "functional": true
         },
         {
           "name": "Oricorio (Pau)",
@@ -204817,7 +205015,8 @@
           "height": "0.6 m",
           "weight": "3.4 kg",
           "description": "This form of Oricorio has sipped\npink nectar. It elevates its mind with\nthe gentle steps of its dance, then\nunleashes its psychic energy.",
-          "sprite": "oricorio_pau"
+          "sprite": "oricorio_pau",
+          "functional": true
         },
         {
           "name": "Oricorio (Sensu)",
@@ -204840,7 +205039,8 @@
           "height": "0.6 m",
           "weight": "3.4 kg",
           "description": "It charms its opponents with its\nrefined dancing. When they let their\nguard down, it places a curse on\nthem that will bring on their demise.",
-          "sprite": "oricorio_sensu"
+          "sprite": "oricorio_sensu",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -205386,7 +205586,8 @@
                 "form": "Lycanroc (Dusk)"
               }
             ]
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -205643,7 +205844,8 @@
               "id": "rockruff",
               "method": "Level up at 25 (night)"
             }
-          }
+          },
+          "functional": true
         },
         {
           "name": "Lycanroc (Dusk)",
@@ -205672,7 +205874,8 @@
               "method": "Level up at 25 (dusk)",
               "form": "Rockruff (Own Tempo)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -205855,7 +206058,8 @@
           "height": "8.2 m",
           "weight": "78.6 kg",
           "description": "When facing tough opponents, they\nget into formation. But if they get\nwounded in battle, they'll scatter\nand become solitary again.",
-          "sprite": "wishiwashi_school"
+          "sprite": "wishiwashi_school",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -209548,7 +209752,8 @@
       },
       "forms": [
         {
-          "name": "Mega Golisopod"
+          "name": "Mega Golisopod",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -210465,7 +210670,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_fighting"
+          "sprite": "silvally_fighting",
+          "functional": true
         },
         {
           "name": "Silvally (Flying)",
@@ -210487,7 +210693,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_flying"
+          "sprite": "silvally_flying",
+          "functional": true
         },
         {
           "name": "Silvally (Poison)",
@@ -210509,7 +210716,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_poison"
+          "sprite": "silvally_poison",
+          "functional": true
         },
         {
           "name": "Silvally (Ground)",
@@ -210531,7 +210739,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_ground"
+          "sprite": "silvally_ground",
+          "functional": true
         },
         {
           "name": "Silvally (Rock)",
@@ -210553,7 +210762,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_rock"
+          "sprite": "silvally_rock",
+          "functional": true
         },
         {
           "name": "Silvally (Bug)",
@@ -210575,7 +210785,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_bug"
+          "sprite": "silvally_bug",
+          "functional": true
         },
         {
           "name": "Silvally (Ghost)",
@@ -210597,7 +210808,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_ghost"
+          "sprite": "silvally_ghost",
+          "functional": true
         },
         {
           "name": "Silvally (Steel)",
@@ -210619,7 +210831,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_steel"
+          "sprite": "silvally_steel",
+          "functional": true
         },
         {
           "name": "Silvally (Fire)",
@@ -210641,7 +210854,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_fire"
+          "sprite": "silvally_fire",
+          "functional": true
         },
         {
           "name": "Silvally (Water)",
@@ -210663,7 +210877,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_water"
+          "sprite": "silvally_water",
+          "functional": true
         },
         {
           "name": "Silvally (Grass)",
@@ -210685,7 +210900,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_grass"
+          "sprite": "silvally_grass",
+          "functional": true
         },
         {
           "name": "Silvally (Electric)",
@@ -210707,7 +210923,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_electric"
+          "sprite": "silvally_electric",
+          "functional": true
         },
         {
           "name": "Silvally (Psychic)",
@@ -210729,7 +210946,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_psychic"
+          "sprite": "silvally_psychic",
+          "functional": true
         },
         {
           "name": "Silvally (Ice)",
@@ -210751,7 +210969,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_ice"
+          "sprite": "silvally_ice",
+          "functional": true
         },
         {
           "name": "Silvally (Dragon)",
@@ -210773,7 +210992,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_dragon"
+          "sprite": "silvally_dragon",
+          "functional": true
         },
         {
           "name": "Silvally (Dark)",
@@ -210795,7 +211015,8 @@
           "height": "2.3 m",
           "weight": "100.5 kg",
           "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
-          "sprite": "silvally_dark"
+          "sprite": "silvally_dark",
+          "functional": true
         },
         {
           "name": "Silvally (Fairy)",
@@ -210816,7 +211037,8 @@
           ],
           "height": "2.3 m",
           "weight": "100.5 kg",
-          "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies."
+          "description": "Upon awakening, its RKS System is\nactivated. By employing specific\nmemories, this Pokémon can adapt its\ntype to confound its enemies.",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -210993,25 +211215,32 @@
       },
       "forms": [
         {
-          "name": "Minior (Orange)"
+          "name": "Minior (Orange)",
+          "functional": true
         },
         {
-          "name": "Minior (Yellow)"
+          "name": "Minior (Yellow)",
+          "functional": true
         },
         {
-          "name": "Minior (Green)"
+          "name": "Minior (Green)",
+          "functional": true
         },
         {
-          "name": "Minior (Blue)"
+          "name": "Minior (Blue)",
+          "functional": true
         },
         {
-          "name": "Minior (Indigo)"
+          "name": "Minior (Indigo)",
+          "functional": true
         },
         {
-          "name": "Minior (Violet)"
+          "name": "Minior (Violet)",
+          "functional": true
         },
         {
-          "name": "Minior (Core)"
+          "name": "Minior (Core)",
+          "functional": true
         },
         {
           "name": "Minior (Core Orange)",
@@ -211034,7 +211263,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_orange"
+          "sprite": "minior_core_orange",
+          "functional": true
         },
         {
           "name": "Minior (Core Yellow)",
@@ -211057,7 +211287,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_yellow"
+          "sprite": "minior_core_yellow",
+          "functional": true
         },
         {
           "name": "Minior (Core Green)",
@@ -211080,7 +211311,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_green"
+          "sprite": "minior_core_green",
+          "functional": true
         },
         {
           "name": "Minior (Core Blue)",
@@ -211103,7 +211335,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_blue"
+          "sprite": "minior_core_blue",
+          "functional": true
         },
         {
           "name": "Minior (Core Indigo)",
@@ -211126,7 +211359,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_indigo"
+          "sprite": "minior_core_indigo",
+          "functional": true
         },
         {
           "name": "Minior (Core Violet)",
@@ -211149,7 +211383,8 @@
           "height": "0.3 m",
           "weight": "0.3 kg",
           "description": "If its core stays exposed, it will\nsoon die off. It's possible that it\nmay survive if it's put into a Poké Ball\nquickly enough.",
-          "sprite": "minior_core_violet"
+          "sprite": "minior_core_violet",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -212253,7 +212488,8 @@
           "height": "3.0 m",
           "weight": "185.0 kg",
           "description": "This Pokémon is friendly to people and\nloves children most of all. It comes from\ndeep in the mountains to play with\nchildren it likes in town.",
-          "sprite": "drampa_mega"
+          "sprite": "drampa_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -215710,7 +215946,8 @@
           "height": "3.8 m",
           "weight": "460.0 kg",
           "description": "This is its form while it is\ndevouring the light of Solgaleo. It pounces\non foes and then slashes them with\nthe claws on its four limbs and back.",
-          "sprite": "necrozma_dusk_mane"
+          "sprite": "necrozma_dusk_mane",
+          "functional": true
         },
         {
           "name": "Necrozma (Dawn Wings)",
@@ -215733,7 +215970,8 @@
           "height": "4.2 m",
           "weight": "350.0 kg",
           "description": "This is its form while it's\ndevouring the light of Lunala. It grasps\nfoes in its giant claws and rips them\napart with brute force.",
-          "sprite": "necrozma_dawn_wings"
+          "sprite": "necrozma_dawn_wings",
+          "functional": true
         },
         {
           "name": "Ultra Necrozma",
@@ -215756,7 +215994,8 @@
           "height": "7.5 m",
           "weight": "230.0 kg",
           "description": "The light pouring out from all over\nits body affects living things and\nnature, impacting them in various\nways.",
-          "sprite": "necrozma_ultra"
+          "sprite": "necrozma_ultra",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -215973,7 +216212,8 @@
       },
       "forms": [
         {
-          "name": "Mega Magearna"
+          "name": "Mega Magearna",
+          "functional": true
         },
         {
           "name": "Magearna (Original Color)",
@@ -215999,7 +216239,8 @@
           "sprite": "magearna_original_color"
         },
         {
-          "name": "Mega Magearna (Original Color)"
+          "name": "Mega Magearna (Original Color)",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -217079,7 +217320,8 @@
       },
       "forms": [
         {
-          "name": "Mega Zeraora"
+          "name": "Mega Zeraora",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -223898,7 +224140,8 @@
               "id": "toxel",
               "method": "Level up at 30 with a low-key nature"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -227587,31 +227830,40 @@
       },
       "forms": [
         {
-          "name": "Alcremie (Ruby Cream)"
+          "name": "Alcremie (Ruby Cream)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Matcha Cream)"
+          "name": "Alcremie (Matcha Cream)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Mint Cream)"
+          "name": "Alcremie (Mint Cream)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Lemon Cream)"
+          "name": "Alcremie (Lemon Cream)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Salted Cream)"
+          "name": "Alcremie (Salted Cream)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Ruby Swirl)"
+          "name": "Alcremie (Ruby Swirl)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Caramel Swirl)"
+          "name": "Alcremie (Caramel Swirl)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Rainbow Swirl)"
+          "name": "Alcremie (Rainbow Swirl)",
+          "functional": true
         },
         {
-          "name": "Alcremie (Berry)"
+          "name": "Alcremie (Berry)",
+          "functional": true
         },
         {
           "name": "Alcremie (Berry Ruby Cream)",
@@ -227798,7 +228050,8 @@
           "sprite": "alcremie_berry_rainbow_swirl"
         },
         {
-          "name": "Alcremie (Love)"
+          "name": "Alcremie (Love)",
+          "functional": true
         },
         {
           "name": "Alcremie (Love Ruby Cream)",
@@ -227985,7 +228238,8 @@
           "sprite": "alcremie_love_rainbow_swirl"
         },
         {
-          "name": "Alcremie (Star)"
+          "name": "Alcremie (Star)",
+          "functional": true
         },
         {
           "name": "Alcremie (Star Ruby Cream)",
@@ -228172,7 +228426,8 @@
           "sprite": "alcremie_star_rainbow_swirl"
         },
         {
-          "name": "Alcremie (Clover)"
+          "name": "Alcremie (Clover)",
+          "functional": true
         },
         {
           "name": "Alcremie (Clover Ruby Cream)",
@@ -228359,7 +228614,8 @@
           "sprite": "alcremie_clover_rainbow_swirl"
         },
         {
-          "name": "Alcremie (Flower)"
+          "name": "Alcremie (Flower)",
+          "functional": true
         },
         {
           "name": "Alcremie (Flower Ruby Cream)",
@@ -228546,7 +228802,8 @@
           "sprite": "alcremie_flower_rainbow_swirl"
         },
         {
-          "name": "Alcremie (Ribbon)"
+          "name": "Alcremie (Ribbon)",
+          "functional": true
         },
         {
           "name": "Alcremie (Ribbon Ruby Cream)",
@@ -228936,7 +229193,8 @@
           "height": "3.0 m",
           "weight": "62.0 kg",
           "description": "Five of them are troopers, and one is the\nbrass. The brass's orders are absolute.",
-          "sprite": "falinks_mega"
+          "sprite": "falinks_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -229709,7 +229967,8 @@
           "height": "1.4 m",
           "weight": "89.0 kg",
           "description": "The hair on its head connects to\nthe surface of its brain. When this\nPokémon has something on its mind,\nits hair chills the air around it.",
-          "sprite": "eiscue_noice_face"
+          "sprite": "eiscue_noice_face",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -229915,7 +230174,8 @@
           "height": "0.9 m",
           "weight": "28.0 kg",
           "description": "They diligently serve people and\nPokémon so they can gather feelings\nof gratitude. The females are\nparticularly good at babysitting.",
-          "sprite": "indeedee_female"
+          "sprite": "indeedee_female",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -232031,7 +232291,8 @@
           "height": "2.8 m",
           "weight": "355.0 kg",
           "description": "Able to cut down anything with a\nsingle strike, it became known as the\nFairy King's Sword, and it inspired\nawe in friend and foe alike.",
-          "sprite": "zacian_crowned_sword"
+          "sprite": "zacian_crowned_sword",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -232245,7 +232506,8 @@
           "height": "2.9 m",
           "weight": "785.0 kg",
           "description": "Its ability to deflect any attack\nled to it being known as the Fighting\nMaster's Shield. It was feared and\nrespected by all.",
-          "sprite": "zamazenta_crowned_shield"
+          "sprite": "zamazenta_crowned_shield",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -232440,7 +232702,8 @@
           "height": "100.0 m",
           "weight": "0.0 kg",
           "description": "As a result of Rose's meddling,\nEternatus absorbed all the energy in\nthe Galar region. It's now in a state\nof power overload.",
-          "sprite": "eternatus_eternamax"
+          "sprite": "eternatus_eternamax",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -232853,7 +233116,8 @@
               "id": "kubfu",
               "method": "Use Water Stone"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -233892,7 +234156,8 @@
           "height": "2.4 m",
           "weight": "809.1 kg",
           "description": "According to lore, this Pokémon\nshowed no mercy to those who got in\nits way, yet it would heal its\nopponents' wounds after battle.",
-          "sprite": "calyrex_ice_rider"
+          "sprite": "calyrex_ice_rider",
+          "functional": true
         },
         {
           "name": "Calyrex (Shadow Rider)",
@@ -233915,7 +234180,8 @@
           "height": "2.4 m",
           "weight": "53.6 kg",
           "description": "It's said that Calyrex and a\nPokémon that had bonded with it ran all\nacross the Galar region to bring green\nto the wastelands.",
-          "sprite": "calyrex_shadow_rider"
+          "sprite": "calyrex_shadow_rider",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -234526,7 +234792,8 @@
               "id": "ursaring",
               "method": "Use Moon Stone"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -234780,7 +235047,8 @@
               "method": "Level up at 36 (female)",
               "form": "Basculin (White Striped)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -235394,7 +235662,8 @@
           "height": "1.6 m",
           "weight": "48.0 kg",
           "description": "From the clouds, it descends upon\nthose who treat any form of life\nwith disrespect and metes out\nwrathful, ruthless punishment.",
-          "sprite": "enamorus_therian"
+          "sprite": "enamorus_therian",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -237311,7 +237580,8 @@
               "id": "lechonk",
               "method": "Level up at 18 (female)"
             }
-          }
+          },
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -239888,7 +240158,8 @@
           "height": "0.6 m",
           "weight": "2.4 kg",
           "description": "These Squawkabilly are hotheaded,\nand their fighting style is vicious.\nThey'll leap within reach of their\nfoes to engage in close combat.",
-          "sprite": "squawkabilly_yellow_plumage"
+          "sprite": "squawkabilly_yellow_plumage",
+          "functional": true
         },
         {
           "name": "Squawkabilly (White Plumage)",
@@ -239913,7 +240184,8 @@
           "height": "0.6 m",
           "weight": "2.4 kg",
           "description": "Though these Squawkabilly are the\nfewest in number, they have no\ntrouble living in towns since they blend\nin with the white buildings.",
-          "sprite": "squawkabilly_white_plumage"
+          "sprite": "squawkabilly_white_plumage",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -243457,7 +243729,8 @@
           "height": "0.9 m",
           "weight": "15.0 kg",
           "description": "The green head has turned vicious\ndue to the spicy chemicals\nstimulating its brain. Once it goes on a\nrampage, there is no stopping it.",
-          "sprite": "scovillain_mega"
+          "sprite": "scovillain_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -245502,7 +245775,8 @@
           "height": "1.8 m",
           "weight": "97.4 kg",
           "description": "This Pokémon's ancient genes have\nawakened. It is now so\nextraordinarily strong that it can easily lift a\ncruise ship with one fin.",
-          "sprite": "palafin_hero"
+          "sprite": "palafin_hero",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -246544,7 +246818,8 @@
           "height": "1.5 m",
           "weight": "45.0 kg",
           "description": "GlimmoraMega's petals are made of\ncrystallized poison energy. It has\nrecently become evident that these\npetals resemble Tera Jewels.",
-          "sprite": "glimmora_mega"
+          "sprite": "glimmora_mega",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -247845,7 +248120,8 @@
       },
       "forms": [
         {
-          "name": "Mega Tatsugiri (Curly)"
+          "name": "Mega Tatsugiri (Curly)",
+          "functional": true
         },
         {
           "name": "Tatsugiri (Droopy)",
@@ -247872,7 +248148,8 @@
           "sprite": "tatsugiri_droopy"
         },
         {
-          "name": "Mega Tatsugiri (Droopy)"
+          "name": "Mega Tatsugiri (Droopy)",
+          "functional": true
         },
         {
           "name": "Tatsugiri (Stretchy)",
@@ -247899,7 +248176,8 @@
           "sprite": "tatsugiri_stretchy"
         },
         {
-          "name": "Mega Tatsugiri (Stretchy)"
+          "name": "Mega Tatsugiri (Stretchy)",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -251605,7 +251883,8 @@
       },
       "forms": [
         {
-          "name": "Mega Baxcalibur"
+          "name": "Mega Baxcalibur",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -251747,7 +252026,8 @@
           "height": "0.1 m",
           "weight": "0.1 kg",
           "description": "It wanders around, carrying an old\ncoin on its back. It survives by\ndraining the life-force from humans who\ntry to pick up its coin.",
-          "sprite": "gimmighoul_roaming"
+          "sprite": "gimmighoul_roaming",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -255019,7 +255299,8 @@
           "height": "1.2 m",
           "weight": "39.8 kg",
           "description": "This Pokémon's type changes based on\nwhich mask it's wearing. It confounds\nits enemies with nimble movements\nand kicks.",
-          "sprite": "ogerpon_teal_mask_tera"
+          "sprite": "ogerpon_teal_mask_tera",
+          "functional": true
         }
       ],
       "dexVariants": [
@@ -256296,7 +256577,8 @@
           "height": "0.3 m",
           "weight": "16.0 kg",
           "description": "The shell is made of crystallized\nTerastal energy. When struck by a move,\nthis shell absorbs the move's energy\nand transfers it to Terapagos.",
-          "sprite": "terapagos_terastal"
+          "sprite": "terapagos_terastal",
+          "functional": true
         },
         {
           "name": "Terapagos (Stellar, Tera)",
@@ -256318,7 +256600,8 @@
           "height": "1.7 m",
           "weight": "77.0 kg",
           "description": "An old expedition journal describes the\nsight of this Pokémon buried in the,\ndepths of the earth as resembling a\nplanet floating in space.",
-          "sprite": "terapagos_stellar"
+          "sprite": "terapagos_stellar",
+          "functional": true
         }
       ],
       "dexVariants": [

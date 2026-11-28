@@ -9,9 +9,10 @@
  *   - every form's `sprite` field is a non-empty string naming a file on
  *     disk per formSpriteFile(), and that file is a 128×128 PNG (the IHDR
  *     bytes are parsed from the raw file — no decoder dependency);
- *   - every name-only form (a plain {name} object) carries NO `sprite` —
- *     the base-sprite fallback the page renders for the no-art forms;
- *   - the no-entry rogue custom megas (the plain {name} forms under
+ *   - every name-only form (no per-form data fields — the site's
+ *     formHtml() plain branch) carries NO `sprite` — the base-sprite
+ *     fallback the page renders for the no-art forms;
+ *   - the no-entry rogue custom megas (the name-only forms under
  *     heatran / darkrai / zygarde / golisopod / magearna / zeraora /
  *     baxcalibur) all fall back — no sprite field;
  *   - charizard's two megas reference the plan-named ids
@@ -42,6 +43,18 @@ const records = Array.isArray(dex.records) ? dex.records : [];
 if (records.length === 0) throw new Error('data/pokedex.json has no records');
 const byId = Object.fromEntries(records.map((r) => [r.id, r]));
 const recordIds = new Set(records.map((r) => r.id));
+
+/** A name-only form: no per-form data at all — the plain sprite+name row
+ * the site's formHtml() renders (field-absence detection, never exact key
+ * set: the #174 `functional` flag may ride along on such forms). */
+const isNameOnly = (f) =>
+  typeof f.name === 'string' &&
+  f.types === undefined &&
+  f.stats === undefined &&
+  f.abilities === undefined &&
+  f.height === undefined &&
+  f.weight === undefined &&
+  f.description === undefined;
 
 const assetDir = path.join(root, 'site', 'assets', 'pokemon');
 const pngFiles = readdirSync(assetDir).filter((f) => f.endsWith('.png'));
@@ -86,12 +99,12 @@ test('every form.sprite names an on-disk 128×128 PNG per formSpriteFile()', () 
   }
 });
 
-test('every name-only form (a plain {name} object) carries no sprite', () => {
+test('every name-only form (no per-form data) carries no sprite', () => {
   // ARRANGE — walk every form object of every record
   let plain = 0;
   for (const r of records) {
     for (const f of Array.isArray(r.forms) ? r.forms : []) {
-      const isPlain = Object.keys(f).length === 1 && typeof f.name === 'string';
+      const isPlain = isNameOnly(f);
       if (isPlain) {
         plain++;
         assert.equal(f.sprite, undefined, `${r.id}: the plain form "${f.name}" must not carry a sprite`);
@@ -103,7 +116,7 @@ test('every name-only form (a plain {name} object) carries no sprite', () => {
   }
   // ASSERT — the no-art set is non-trivial (the plain rows + the
   // base-identical data-carrying forms both exist in the data)
-  assert.ok(plain > 0, 'no plain {name}-only forms found in the data');
+  assert.ok(plain > 0, 'no name-only forms found in the data');
 });
 
 test('the no-entry rogue custom megas fall back to the base sprite (no sprite field)', () => {
@@ -116,8 +129,8 @@ test('the no-entry rogue custom megas fall back to the base sprite (no sprite fi
 
   for (const id of noEntry) {
     assert.ok(byId[id], `data/pokedex.json: no record "${id}"`);
-    const plain = (byId[id].forms || []).filter((f) => Object.keys(f).length === 1 && typeof f.name === 'string');
-    assert.ok(plain.length > 0, `${id}: expected at least one plain {name}-only form (the no-entry custom form)`);
+    const plain = (byId[id].forms || []).filter(isNameOnly);
+    assert.ok(plain.length > 0, `${id}: expected at least one name-only form (the no-entry custom form)`);
     for (const f of plain) assert.equal(f.sprite, undefined, `${id}: ${f.name} must not carry a sprite`);
   }
 });

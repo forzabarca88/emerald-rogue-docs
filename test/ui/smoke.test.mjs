@@ -41,6 +41,19 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.
 const site = JSON.parse(readFileSync(path.join(root, 'data', 'site.json'), 'utf8'));
 const VERSION = site.defaultVersion;
 
+// issue #174: the dex count line counts ENTRIES — each version-scoped
+// record's base entry + one entry per form the data flags functional: true
+// (the flag is read, never re-derived).
+const dex = JSON.parse(readFileSync(path.join(root, 'data', 'pokedex.json'), 'utf8'));
+const DEX_RECORDS = Array.isArray(dex.records) ? dex.records : [];
+if (DEX_RECORDS.length === 0) throw new Error('data/pokedex.json: no records');
+const versionRecords = DEX_RECORDS.filter((r) => Array.isArray(r.versions) && r.versions.includes(VERSION));
+const EX_ENTRY_COUNT = versionRecords.length + versionRecords.reduce((n, r) => n + (r.forms ?? []).filter((f) => f.functional === true).length, 0);
+const EX_COUNT_LINE = EX_ENTRY_COUNT + ' entries \u00B7 page 1 of ' + Math.max(1, Math.ceil(EX_ENTRY_COUNT / site.dex.pageSize));
+if (EX_ENTRY_COUNT !== 1308 || EX_COUNT_LINE !== '1308 entries \u00B7 page 1 of 55') {
+  throw new Error(`data/pokedex.json: the pinned EX entry count drifted (${EX_ENTRY_COUNT}) — re-derive the smoke fixture (it is derived for the ${JSON.stringify(VERSION)} default version)`);
+}
+
 let server;
 before(async () => {
   // No Playwright → every test self-skips; skip the dist/ build too so a
@@ -357,12 +370,12 @@ const PAGES = [
       dexTiles: {
         sel: '.dex-tile',
         expected: 24,
-        why: `data/site.json dex.pageSize = 24 (the site's tile page — the in-game Overview draws 28) → pokedex.js renders exactly pageSize .dex-tile links on page 1 of the default ${VERSION} version`,
+        why: `data/site.json dex.pageSize = 24 (the site's tile page — the in-game Overview draws 28) → pokedex.js renders exactly pageSize .dex-tile entries on page 1 of the default ${VERSION} version (issue #174: one tile per entry — base entries + functional-form entries)`,
       },
       dexCount: {
         sel: '#dex-count',
-        text: '1025 species · page 1 of 43',
-        why: `data/pokedex.json: all 1025 records include version ${VERSION} (386 shared + 639 EX-only) → “1025 species”; ceil(1025 / dex.pageSize 24) = 43 → “page 1 of 43” (pokedex.js updateBrowse)`,
+        text: EX_COUNT_LINE,
+        why: `data/pokedex.json: all 1025 records include version ${VERSION} (386 shared + 639 EX-only), each yielding its base entry + one entry per form the data flags functional: true (283 forms) → ${EX_ENTRY_COUNT} entries; ceil(${EX_ENTRY_COUNT} / dex.pageSize 24) = ${Math.ceil(EX_ENTRY_COUNT / site.dex.pageSize)} → “page 1 of ${Math.ceil(EX_ENTRY_COUNT / site.dex.pageSize)}” (pokedex.js updateBrowse, issue #174)`,
       },
       regionButtons: {
         sel: '.dex-filter__btn',
